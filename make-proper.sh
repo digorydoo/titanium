@@ -14,8 +14,8 @@ OS_TYPE="$(uname -o)"
 
 if [[ ! -d "$ASSETS_DIR" ]]; then
    echo 2>&1 "Cannot access assets dir: $ASSETS_DIR"
-   echo 2>&1 "The assets are not currently part of this git repository! Providing sample assets is an open issue."
-   echo 2>&1 "Sorry, can't continue at this time!"
+   echo 2>&1 "The above path should be a symbolic link that points to the separate titanium-assets repository."
+   echo 2>&1 "The titanium-assets repository is NOT publicly available on Github at this time."
    exit 1
 fi
 
@@ -31,30 +31,47 @@ fi
 
 if [[ ! -d "$KUTILS_DIR" ]]; then
    echo 2>&1 "Cannot access directory of kutils: $KUTILS_DIR"
-   echo 2>&1 "If you don't have kutils as a separate project, you can ignore the above message."
-else
-   cd "$KUTILS_DIR"
-   GIT_STATUS="$(git status --porcelain)"
+   echo 2>&1 "kutils is a separate repository that is publicly available. Please consult README.md!"
+   exit 1
+fi
 
-   if [[ "$GIT_STATUS" != "" ]]; then
-      echo 2>&1 "Working directory of kutils is not clean:"
-      echo 2>&1 "$GIT_STATUS"
-      echo 2>&1 "Please commit uncommitted changes in kutils first."
-      exit 1
+KUTILS_DIR="$(realpath "$KUTILS_DIR")"
+cd "$KUTILS_DIR"
+GIT_STATUS="$(git status --porcelain)"
+
+if [[ "$GIT_STATUS" != "" ]]; then
+   echo 2>&1 "Working directory of kutils is not clean:"
+   echo 2>&1 "$GIT_STATUS"
+   echo 2>&1 "Please commit uncommitted changes in kutils first."
+   exit 1
+fi
+
+echo "Pulling latest sources of kutils (branch develop)..."
+git checkout develop
+git pull --ff-only || (
+   echo 2>&1 "Warning: Failed to pull latest sources of kutils:"
+   echo 2>&1 "$KUTILS_DIR"
+   exit 1
+)
+
+cd "$SELF_DIR"/kutils
+
+if [[ "$OS_TYPE" == "Darwin" ]]; then
+   # Under macOS, kutils is symbolically linked into titanium's source tree.
+   if [[ -L "src" ]]; then
+      rm src || true
    fi
-
-   echo "Pulling latest sources of kutils..."
-   git pull --ff-only || (
-      echo 2>&1 "Warning: Failed to pull latest sources of kutils:"
-      echo 2>&1 "$KUTILS_DIR"
-      exit 1
-   )
-
+   ln -s ../../kutils/main/src src
+else
+   # Under Windows, symbolic links are poorly supported, so we copy kutils into titanium's source tree instead.
    echo "Copying kutils sources here..."
-   cd "$SELF_DIR"
-   rm -rf kutils/src
+   if [[ -d "src" ]]; then
+      rm -rf src || true
+   fi
    cp -r "$KUTILS_DIR"/main/src kutils/
 fi
+
+cd ..
 
 echo "Pulling latest sources of titanium..."
 git pull --ff-only || (
