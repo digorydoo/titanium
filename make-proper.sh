@@ -4,6 +4,7 @@
 #
 # Run this script to set up the project after having cloned it, or when updating a stale project directory.
 # It pulls the latest sources of kutils and titanium, builds all the sources and re-imports all the assets.
+# NOTE: All assets under assets/generated will be DELETED and re-created from originals under assets/private.
 
 set -e
 

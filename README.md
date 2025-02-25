@@ -21,27 +21,23 @@ the physics engine is fully implemented in Kotlin, and no other library is invol
 
 The project is divided into the following parts:
 
-   * engine: The core of the engine. There is NO dependency to OpenGL or other third-party libraries here. There is
-     NO dependency to game-specific code either. Everything is abstracted with proper interfaces.
-   * game: The code of the concrete game. All scenes, NPCs, enemies, etc. that are specific to the game will go here.
-     There is NO dependency to OpenGL or other third-party libraries here.
-   * main: The main entry point is here. This glues together the engine and the game parts. This is the only part of the
-     project that has any dependency to OpenGL or other third-party libraries (apart from import_asset).
-   * import_asset: A command-line tool that helps with importing assets such as Collada mesh files into the engine.
-     Titanium uses its own proprietary mesh format; import_asset can convert Collada mesh files into our own format.
-     (We could easily support other mesh formats like this while keeping the code simple that's involved at game time.)
-   * kutils: Generic Kotlin utilities, which may be useful in other projects. May be considered part of engine.
-
-## Before uploading to Github
-
-To get a clean history on Github, commit your work to a local develop branch. When ready for uploading the changes to
-Github, switch to the github and squash the changes from develop:
-
-    $ git checkout github
-    $ git merge --squash develop
-    $ git commit
-    $ git push github
-    $ git checkout develop
+   * engine: The core of the engine
+      * There is NO dependency to OpenGL or other third-party libraries here.
+      * There is NO dependency to game-specific code either.
+      * GL and game-specific stuff is abstracted away with proper interfaces.
+   * game: The code of the concrete game
+      * All scenes, NPCs, enemies, etc. that are specific to the game will go here.
+      * There is NO dependency to OpenGL or other third-party libraries here.
+   * main: The main entry point
+      * This glues together the engine and the game parts.
+      * This is the only part of the project that has any dependency to OpenGL or other third-party libraries (apart
+        from import_asset).
+   * import_asset: A command line tool for importing assets into the engine
+      * Import Collada files and store them as Titanium binary mesh files
+      * Import PNG texture files and put them together into a single PNG that can be used as a FrameCollection
+   * kutils: Various utility functions
+      * These are generic Kotlin utilities that deal with math, strings, and other aspects.
+      * They are a separate project, because these functions are useful in other projects, too.
 
 ## Game assets
 
@@ -87,6 +83,9 @@ On Windows, symbolic links are poorly supported, so you have to copy the sources
 
     $ cd titanium/kutils
     $ cp -R ../../kutils/main/src src
+
+On Windows, a Cygwin installation is necessary. Apart from make-proper.sh (see below), there is also a bash-based
+post-build step (called post-build.sh) that will be called from gradle on every build.
 
 If everything looks good, you can now run the script make-proper that does the rest of the setup for you.
 
