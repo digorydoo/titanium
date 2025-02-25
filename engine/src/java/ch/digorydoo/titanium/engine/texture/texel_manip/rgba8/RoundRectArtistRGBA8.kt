@@ -1,8 +1,8 @@
-package ch.digorydoo.titanium.engine.image.rgba8
+package ch.digorydoo.titanium.engine.texture.texel_manip.rgba8
 
 import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.rect.Recti
-import ch.digorydoo.titanium.engine.image.RoundRectArtist
+import ch.digorydoo.titanium.engine.texture.texel_manip.RoundRectArtist
 import kotlin.math.min
 
 internal class RoundRectArtistRGBA8(

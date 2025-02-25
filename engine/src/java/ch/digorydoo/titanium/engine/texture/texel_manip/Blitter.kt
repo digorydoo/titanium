@@ -1,6 +1,7 @@
-package ch.digorydoo.titanium.engine.image
+package ch.digorydoo.titanium.engine.texture.texel_manip
 
 import ch.digorydoo.kutils.rect.Recti
+import ch.digorydoo.titanium.engine.texture.ImageData
 
 internal interface Blitter {
     fun blit(src: ImageData, dstX: Int, dstY: Int)

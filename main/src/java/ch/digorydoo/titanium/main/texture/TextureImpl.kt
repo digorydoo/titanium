@@ -1,7 +1,7 @@
 package ch.digorydoo.titanium.main.texture
 
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.titanium.engine.image.ImageData
+import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.main.opengl.checkGLError
 import ch.digorydoo.titanium.main.texture.TextureManagerImpl.SamplerUnit

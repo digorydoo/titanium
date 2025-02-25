@@ -1,8 +1,8 @@
-package ch.digorydoo.titanium.engine.image.rgba8
+package ch.digorydoo.titanium.engine.texture.texel_manip.rgba8
 
 import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.math.sign
-import ch.digorydoo.titanium.engine.image.LineArtist
+import ch.digorydoo.titanium.engine.texture.texel_manip.LineArtist
 import java.nio.ByteBuffer
 import kotlin.math.abs
 

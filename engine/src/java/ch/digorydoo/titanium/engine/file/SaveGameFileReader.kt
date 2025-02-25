@@ -7,9 +7,9 @@ import ch.digorydoo.titanium.engine.file.FileMarker.*
 import ch.digorydoo.titanium.engine.file.SaveGameFileWriter.Companion.POSTFIX
 import ch.digorydoo.titanium.engine.file.SaveGameFileWriter.Companion.PREFIX
 import ch.digorydoo.titanium.engine.file.SaveGameFileWriter.Summary
-import ch.digorydoo.titanium.engine.image.ImageData
 import ch.digorydoo.titanium.engine.state.StateManager.MutableSerializedState
 import ch.digorydoo.titanium.engine.state.StateManager.SerializedState
+import ch.digorydoo.titanium.engine.texture.ImageData
 import java.io.File
 
 class SaveGameFileReader private constructor(

@@ -1,7 +1,7 @@
-package ch.digorydoo.titanium.engine.image.rgba8
+package ch.digorydoo.titanium.engine.texture.texel_manip.rgba8
 
 import ch.digorydoo.kutils.colour.Colour
-import ch.digorydoo.titanium.engine.image.RectArtist
+import ch.digorydoo.titanium.engine.texture.texel_manip.RectArtist
 import java.nio.ByteBuffer
 
 internal class RectArtistRGBA8(

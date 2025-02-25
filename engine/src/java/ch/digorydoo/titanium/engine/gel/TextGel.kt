@@ -7,7 +7,7 @@ import ch.digorydoo.titanium.engine.behaviours.Rotate
 import ch.digorydoo.titanium.engine.behaviours.Shake
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.font.FontManager.FontName
-import ch.digorydoo.titanium.engine.image.GreyscaleImageBuffer
+import ch.digorydoo.titanium.engine.texture.GreyscaleImageBuffer
 import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 

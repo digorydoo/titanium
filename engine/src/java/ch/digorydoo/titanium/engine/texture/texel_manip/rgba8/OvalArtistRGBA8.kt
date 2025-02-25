@@ -1,8 +1,8 @@
-package ch.digorydoo.titanium.engine.image.rgba8
+package ch.digorydoo.titanium.engine.texture.texel_manip.rgba8
 
 import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.rect.Recti
-import ch.digorydoo.titanium.engine.image.OvalArtist
+import ch.digorydoo.titanium.engine.texture.texel_manip.OvalArtist
 import java.nio.ByteBuffer
 import kotlin.math.sqrt
 

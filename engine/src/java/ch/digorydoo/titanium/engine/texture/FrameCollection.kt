@@ -1,9 +1,11 @@
-package ch.digorydoo.titanium.engine.anim
+package ch.digorydoo.titanium.engine.texture
 
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.texture.Texture
 
+/**
+ * This class interpretes a given texture as a collection of multiple frames in a regular texture grid.
+ */
 class FrameCollection {
     var tex: Texture? = null; private set
     val texOffset = MutablePoint2f()
@@ -13,12 +15,12 @@ class FrameCollection {
     private var numFramesY = 1
 
     fun setTexture(fname: String) {
-        tex = App.textures.getOrCreateTexture(fname)
+        tex = App.Companion.textures.getOrCreateTexture(fname)
         setSize(tex?.width ?: 0, tex?.height ?: 0)
     }
 
     fun setTexture(fname: String, theNumFramesX: Int, theNumFramesY: Int) {
-        tex = App.textures.getOrCreateTexture(fname)
+        tex = App.Companion.textures.getOrCreateTexture(fname)
         setFrameCountAndSize(theNumFramesX, theNumFramesY)
     }
 

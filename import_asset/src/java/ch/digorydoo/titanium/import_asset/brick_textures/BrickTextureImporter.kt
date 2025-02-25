@@ -3,7 +3,7 @@ package ch.digorydoo.titanium.import_asset.brick_textures
 import ch.digorydoo.kutils.rect.Recti
 import ch.digorydoo.kutils.tty.Kokuban
 import ch.digorydoo.kutils.tty.ShellCommandError
-import ch.digorydoo.titanium.engine.image.ImageData
+import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.import_asset.Options
 import ch.digorydoo.titanium.import_asset.Options.Verbosity
 import java.awt.image.BufferedImage

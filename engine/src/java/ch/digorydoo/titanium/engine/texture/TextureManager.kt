@@ -2,7 +2,6 @@ package ch.digorydoo.titanium.engine.texture
 
 import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.titanium.engine.font.FontManager.FontName
-import ch.digorydoo.titanium.engine.image.GreyscaleImageBuffer
 
 interface TextureManager {
     fun getOrCreateTexture(fname: String): Texture?

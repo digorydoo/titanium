@@ -1,18 +1,22 @@
-package ch.digorydoo.titanium.engine.image
+package ch.digorydoo.titanium.engine.texture
 
 import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.point.Point2f
 import ch.digorydoo.kutils.rect.Recti
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.font.FontManager.FontName
-import ch.digorydoo.titanium.engine.font.FontManager.FormattedText
-import ch.digorydoo.titanium.engine.image.rgb8.BlitterRGB8
-import ch.digorydoo.titanium.engine.image.rgb8.RectArtistRGB8
-import ch.digorydoo.titanium.engine.image.rgba8.BlitterRGBA8
-import ch.digorydoo.titanium.engine.image.rgba8.LineArtistRGBA8
-import ch.digorydoo.titanium.engine.image.rgba8.OvalArtistRGBA8
-import ch.digorydoo.titanium.engine.image.rgba8.RectArtistRGBA8
-import ch.digorydoo.titanium.engine.image.rgba8.RoundRectArtistRGBA8
+import ch.digorydoo.titanium.engine.font.FontManager
+import ch.digorydoo.titanium.engine.texture.texel_manip.Blitter
+import ch.digorydoo.titanium.engine.texture.texel_manip.LineArtist
+import ch.digorydoo.titanium.engine.texture.texel_manip.OvalArtist
+import ch.digorydoo.titanium.engine.texture.texel_manip.RectArtist
+import ch.digorydoo.titanium.engine.texture.texel_manip.RoundRectArtist
+import ch.digorydoo.titanium.engine.texture.texel_manip.rgb8.BlitterRGB8
+import ch.digorydoo.titanium.engine.texture.texel_manip.rgb8.RectArtistRGB8
+import ch.digorydoo.titanium.engine.texture.texel_manip.rgba8.BlitterRGBA8
+import ch.digorydoo.titanium.engine.texture.texel_manip.rgba8.LineArtistRGBA8
+import ch.digorydoo.titanium.engine.texture.texel_manip.rgba8.OvalArtistRGBA8
+import ch.digorydoo.titanium.engine.texture.texel_manip.rgba8.RectArtistRGBA8
+import ch.digorydoo.titanium.engine.texture.texel_manip.rgba8.RoundRectArtistRGBA8
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -55,7 +59,7 @@ class ImageData(val buf: ByteBuffer, val type: Type, val width: Int, val height:
         }
     }
 
-    fun clear(c: Colour = Colour.black) {
+    fun clear(c: Colour = Colour.Companion.black) {
         rectArtist.clear(c)
     }
 
@@ -106,21 +110,28 @@ class ImageData(val buf: ByteBuffer, val type: Type, val width: Int, val height:
         ovalArtist.draw(rect, c)
     }
 
-    fun drawText(text: String, x: Int, y: Int, c: Colour, fontName: FontName, otlColour: Colour? = null) {
+    fun drawText(text: String, x: Int, y: Int, c: Colour, fontName: FontManager.FontName, otlColour: Colour? = null) {
         if (type != Type.RGBA8) throw NotImplForType()
-        App.fonts.drawText(text, buf, x, y, width, height, fontName, c, otlColour)
+        App.Companion.fonts.drawText(text, buf, x, y, width, height, fontName, c, otlColour)
     }
 
-    fun drawTextCentred(text: String, centreX: Int, y: Int, c: Colour, fontName: FontName, otlColour: Colour? = null) {
+    fun drawTextCentred(
+        text: String,
+        centreX: Int,
+        y: Int,
+        c: Colour,
+        fontName: FontManager.FontName,
+        otlColour: Colour? = null,
+    ) {
         if (type != Type.RGBA8) throw NotImplForType()
-        val m = App.fonts.measureText(text, fontName)
+        val m = App.Companion.fonts.measureText(text, fontName)
         val x = (centreX - (m.x / 2.0f)).toInt()
-        App.fonts.drawText(text, buf, x, y, width, height, fontName, c, otlColour)
+        App.Companion.fonts.drawText(text, buf, x, y, width, height, fontName, c, otlColour)
     }
 
-    fun drawText(text: FormattedText, x: Int, y: Int, c: Colour, otlColour: Colour? = null) {
+    fun drawText(text: FontManager.FormattedText, x: Int, y: Int, c: Colour, otlColour: Colour? = null) {
         if (type != Type.RGBA8) throw NotImplForType()
-        App.fonts.drawText(text, buf, x, y, width, height, c, otlColour)
+        App.Companion.fonts.drawText(text, buf, x, y, width, height, c, otlColour)
     }
 
     fun drawImage(src: ImageData, dstX: Int, dstY: Int) {

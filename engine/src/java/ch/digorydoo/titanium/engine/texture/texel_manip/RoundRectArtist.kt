@@ -1,4 +1,4 @@
-package ch.digorydoo.titanium.engine.image
+package ch.digorydoo.titanium.engine.texture.texel_manip
 
 import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.rect.Recti

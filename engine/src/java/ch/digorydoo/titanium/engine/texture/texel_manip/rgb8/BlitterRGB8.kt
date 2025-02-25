@@ -1,8 +1,8 @@
-package ch.digorydoo.titanium.engine.image.rgb8
+package ch.digorydoo.titanium.engine.texture.texel_manip.rgb8
 
 import ch.digorydoo.kutils.rect.Recti
-import ch.digorydoo.titanium.engine.image.Blitter
-import ch.digorydoo.titanium.engine.image.ImageData
+import ch.digorydoo.titanium.engine.texture.ImageData
+import ch.digorydoo.titanium.engine.texture.texel_manip.Blitter
 import java.nio.ByteBuffer
 import kotlin.math.max
 import kotlin.math.min

@@ -1,7 +1,5 @@
 package ch.digorydoo.titanium.engine.texture
 
-import ch.digorydoo.titanium.engine.image.ImageData
-
 interface Texture {
     val width: Int
     val height: Int

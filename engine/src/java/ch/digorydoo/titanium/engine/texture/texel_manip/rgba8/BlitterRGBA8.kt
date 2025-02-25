@@ -1,8 +1,8 @@
-package ch.digorydoo.titanium.engine.image.rgba8
+package ch.digorydoo.titanium.engine.texture.texel_manip.rgba8
 
 import ch.digorydoo.kutils.rect.Recti
-import ch.digorydoo.titanium.engine.image.Blitter
-import ch.digorydoo.titanium.engine.image.ImageData
+import ch.digorydoo.titanium.engine.texture.ImageData
+import ch.digorydoo.titanium.engine.texture.texel_manip.Blitter
 import java.nio.ByteBuffer
 
 internal class BlitterRGBA8(
