@@ -6,6 +6,10 @@ import ch.digorydoo.titanium.engine.camera.CameraProps.Mode
 import ch.digorydoo.titanium.engine.core.App
 import kotlin.math.max
 
+/**
+ * This class implements a "director" that automatically controls various aspects of the Camera based on the current
+ * camera mode.
+ */
 class CameraDirector(private val props: CameraProps) {
     fun moveCamera() {
         when (props.mode) {

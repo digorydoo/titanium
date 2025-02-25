@@ -3,6 +3,10 @@ package ch.digorydoo.titanium.engine.behaviours
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement.Behaviour
 
+/**
+ * This class implements a gel behaviour that aligns the gel with one of the boundaries of the screen. Use this for UI
+ * gels only, as it does not make sense in 3D space.
+ */
 class Align(private val delegate: Delegate): Behaviour {
     enum class Anchor { TOP_LEFT, TOP_CENTRE, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_CENTRE, BOTTOM_RIGHT }
 
@@ -26,26 +30,26 @@ class Align(private val delegate: Delegate): Behaviour {
         val x = delegate.xOffset + when (delegate.anchor) {
             Anchor.TOP_LEFT,
             Anchor.BOTTOM_LEFT,
-            -> delegate.marginLeft
+                -> delegate.marginLeft
 
             Anchor.TOP_CENTRE,
             Anchor.BOTTOM_CENTRE,
-            -> App.screenWidthDp / 2 - delegate.width / 2
+                -> App.screenWidthDp / 2 - delegate.width / 2
 
             Anchor.TOP_RIGHT,
             Anchor.BOTTOM_RIGHT,
-            -> App.screenWidthDp - delegate.width - delegate.marginRight
+                -> App.screenWidthDp - delegate.width - delegate.marginRight
         }
         val y = delegate.yOffset + when (delegate.anchor) {
             Anchor.TOP_LEFT,
             Anchor.TOP_CENTRE,
             Anchor.TOP_RIGHT,
-            -> delegate.marginTop
+                -> delegate.marginTop
 
             Anchor.BOTTOM_LEFT,
             Anchor.BOTTOM_CENTRE,
             Anchor.BOTTOM_RIGHT,
-            -> App.screenHeightDp - delegate.height - delegate.marginBottom
+                -> App.screenHeightDp - delegate.height - delegate.marginBottom
         }
         delegate.setPos(x, y)
     }

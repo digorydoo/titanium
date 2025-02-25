@@ -3,6 +3,10 @@ package ch.digorydoo.titanium.engine.core
 import ch.digorydoo.titanium.engine.core.App.Companion.FIXED_ASPECT_RATIO
 import kotlin.math.abs
 
+/**
+ * This is the abstract part of the manager class that deals with screen resolutions. We try to find the best match
+ * among a given list of resolutions ("best" referring to a resolution that we expect the game should run smoothly in).
+ */
 abstract class ResolutionManager {
     enum class ReasonOfPick(val asText: String) {
         SAME_AS_DESKTOP("Resolution is same as desktop"),

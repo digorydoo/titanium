@@ -11,6 +11,10 @@ import ch.digorydoo.titanium.engine.sky.SkydomeRenderer
 import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 
+/**
+ * The factory is accessible through App.factory, and is used to instantiate various objects, whose implementation are
+ * not part of the engine.
+ */
 interface Factory {
     fun createBrickVolumeRenderer(translation: Point3f, tex: Texture, modelData: BrickModelData): BrickVolumeRenderer
     fun createSkydomeRenderer(props: SkydomeRenderer.Delegate): SkydomeRenderer

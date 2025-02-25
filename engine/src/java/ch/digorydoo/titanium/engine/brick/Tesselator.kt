@@ -9,6 +9,9 @@ import ch.digorydoo.kutils.utils.Log
 import kotlin.math.floor
 import kotlin.math.min
 
+/**
+ * This class is used by the various brick models to generate the triangle lists of a BrickVolume.
+ */
 class Tesselator(
     private val translation: Point3f,
     private val texWidth: Int,

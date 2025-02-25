@@ -2,6 +2,9 @@ package ch.digorydoo.titanium.engine.core
 
 import java.io.File
 
+/**
+ * This is the abstract part of the class that deals with game asset paths.
+ */
 abstract class Assets {
     protected lateinit var assetsDir: String
     protected lateinit var prefsDir: String

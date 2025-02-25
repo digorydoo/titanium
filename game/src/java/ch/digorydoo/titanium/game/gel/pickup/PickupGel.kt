@@ -2,13 +2,13 @@ package ch.digorydoo.titanium.game.gel.pickup
 
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.Point3f
-import ch.digorydoo.titanium.engine.anim.FrameCollection
 import ch.digorydoo.titanium.engine.behaviours.TurnTowardsCamera
 import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.physics.FixedSphereBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
+import ch.digorydoo.titanium.engine.texture.FrameCollection
 import ch.digorydoo.titanium.game.gel.pickup.PickupSpawnPt.Kind
 import ch.digorydoo.titanium.game.gel.pickup.PickupSpawnPt.Kind.VASE
 import kotlin.math.cos

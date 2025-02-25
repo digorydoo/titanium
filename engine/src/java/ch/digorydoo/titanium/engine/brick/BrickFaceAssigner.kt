@@ -3,9 +3,10 @@ package ch.digorydoo.titanium.engine.brick
 import ch.digorydoo.titanium.engine.brick.BrickMaterial.*
 
 /**
- * The brick texture (scene.brickTexFileName) is divided by TEX_BRICK_WIDTH and TEX_BRICK_WIDTH into brick faces. Each
- * face has an index. Indexes are counted from left to right and down. Each material can have one or more up faces, one
- * or more side faces, and one or more down faces.
+ * This class is used to assign brick face indices to a brick based on its BrickMaterial. Brick face indices define the
+ * portion of the brick texture that will be rendered for that brick. The brick texture (scene.brickTexFileName) is
+ * divided by TEX_BRICK_WIDTH and TEX_BRICK_WIDTH into brick faces. Indexes are counted from left to right and down.
+ * Each material can have one or more up faces, one or more side faces, and one or more down faces.
  */
 class BrickFaceAssigner(private val brick: Brick) {
     private interface FaceArray {

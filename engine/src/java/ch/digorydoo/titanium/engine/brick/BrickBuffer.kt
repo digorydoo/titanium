@@ -3,6 +3,9 @@ package ch.digorydoo.titanium.engine.brick
 import ch.digorydoo.kutils.point.Point3i
 import ch.digorydoo.kutils.utils.toIntBuffer
 
+/**
+ * This class implements a CPU-based buffer that holds brick information in a certain volume.
+ */
 class BrickBuffer(private val xsize: Int, private val ysize: Int, private val zsize: Int) {
     private val buffer = IntArray(xsize * ysize * zsize * COMPONENTS_PER_BRICK).toIntBuffer()
 

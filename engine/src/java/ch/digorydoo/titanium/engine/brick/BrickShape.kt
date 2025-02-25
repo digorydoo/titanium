@@ -2,6 +2,10 @@ package ch.digorydoo.titanium.engine.brick
 
 import ch.digorydoo.kutils.string.initCap
 
+/**
+ * The constants of BrickShape define the shape of the brick. Each shape corresponds to a brick model that will be used
+ * for generating the tesselated model data (see BrickModelHolder).
+ */
 enum class BrickShape(
     val id: Int,
     val relVolume: Float,

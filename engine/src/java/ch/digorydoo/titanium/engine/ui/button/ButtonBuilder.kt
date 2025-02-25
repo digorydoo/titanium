@@ -7,12 +7,12 @@ import ch.digorydoo.kutils.rect.MutableRecti
 import ch.digorydoo.kutils.rect.Recti
 import ch.digorydoo.kutils.string.toPrecision
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.titanium.engine.anim.FrameCollection
 import ch.digorydoo.titanium.engine.behaviours.Align
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.file.SaveGameFileWriter.Summary
 import ch.digorydoo.titanium.engine.font.FontManager.FontName.DIALOG_FONT
 import ch.digorydoo.titanium.engine.i18n.ITextId
+import ch.digorydoo.titanium.engine.texture.FrameCollection
 import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.engine.ui.*
 import ch.digorydoo.titanium.engine.ui.button.ButtonGel.ButtonIncDec

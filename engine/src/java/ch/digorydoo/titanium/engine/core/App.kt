@@ -26,6 +26,9 @@ import ch.digorydoo.titanium.engine.ui.game_menu.GameMenu
 import ch.digorydoo.titanium.engine.ui.game_status.GameStatusBar
 import java.io.File
 
+/**
+ * This is the abstract part of the App singleton. The implementation of it is in the main module.
+ */
 abstract class App {
     abstract val assets: Assets
     abstract val content: ActiveSceneContent

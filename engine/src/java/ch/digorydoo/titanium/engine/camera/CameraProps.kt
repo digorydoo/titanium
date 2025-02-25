@@ -10,6 +10,9 @@ import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.max
 
+/**
+ * This class holds the various properties of the camera
+ */
 class CameraProps {
     enum class Mode(val value: Int) {
         FIXED_SOURCE(1), FIXED_DISTANCE(2), SMART(3);

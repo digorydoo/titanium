@@ -7,6 +7,13 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
 import kotlin.math.max
 
+/**
+ * This class deals with various time-related things.
+ * The session time refers to the time since the game was launched. It may be used to base animations upon, etc.
+ * The story time refers to the time of day of the game story. The lighting may change based on the story time.
+ * The total playing time refers to the real time passed in all sessions for a particular savegame. It is not currently
+ * implemented.
+ */
 class GameTime {
     var sessionTime = 0.0f; private set // number of seconds since session start (corrected by sessionTimeOffset)
     private var sessionStartNanos = 0L // nanoTime of session start

@@ -6,6 +6,10 @@ import ch.digorydoo.kutils.point.Point3i
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.texture.Texture
 
+/**
+ * A brick subvolume is part of a BrickVolume. BrickSubvolume own its own BrickModelData, so BrickVolumeRendererImpl can
+ * render subvolumes independently (or decide not to render an entire subvolume).
+ */
 class BrickSubvolume(private val volume: BrickVolume, models: BrickModelHolder, private val box: Boxi, tex: Texture) {
     private val buffer = BrickBuffer(box.xsize, box.ysize, box.zsize)
 

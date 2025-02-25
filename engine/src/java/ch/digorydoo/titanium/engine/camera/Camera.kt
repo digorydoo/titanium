@@ -10,6 +10,9 @@ import ch.digorydoo.titanium.engine.core.GameTime.Companion.DELTA_TIME
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import kotlin.math.PI
 
+/**
+ * This class implements the facade that's used to access various aspects of the game camera.
+ */
 class Camera {
     private val props = CameraProps()
     private val director = CameraDirector(props)

@@ -7,6 +7,9 @@ import ch.digorydoo.titanium.engine.scene.Scene
 import kotlin.math.cos
 import kotlin.math.sin
 
+/**
+ * This is the abstract part of the class that implements a z-buffer that can be used to implement shadows.
+ */
 abstract class ShadowBuffer {
     private val shadowProjection = Projection()
     val projMatrix get() = shadowProjection.matrix

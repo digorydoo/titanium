@@ -7,6 +7,10 @@ import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point3f
 import kotlin.math.floor
 
+/**
+ * This class implements a way how to send a ray through a BrickVolume. The Camera uses it to determine its brick
+ * surroundings, for instance.
+ */
 class BrickWalker(private val volume: BrickVolume) {
     private val tempBrick = Brick()
 

@@ -2,8 +2,8 @@ package ch.digorydoo.titanium.game.player
 
 import ch.digorydoo.titanium.engine.anim.AnimCycle
 import ch.digorydoo.titanium.engine.anim.AnimCycleDef
-import ch.digorydoo.titanium.engine.anim.FrameCollection
 import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.texture.FrameCollection
 import ch.digorydoo.titanium.engine.utils.Direction
 import ch.digorydoo.titanium.game.core.GameSampleId.WALK1
 import ch.digorydoo.titanium.game.player.PlayerFrameManager.State.*

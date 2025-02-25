@@ -2,6 +2,9 @@ package ch.digorydoo.titanium.engine.brick
 
 import ch.digorydoo.titanium.engine.brick.Brick.Companion.WORLD_BRICK_SIZE
 
+/**
+ * This is the abstract base class for all brick models.
+ */
 abstract class AbstrBrickModel {
     protected val upside = Floor()
     protected val downside = Floor()

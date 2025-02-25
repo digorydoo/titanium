@@ -2,13 +2,13 @@ package ch.digorydoo.titanium.game.gel.test
 
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.Point3f
-import ch.digorydoo.titanium.engine.anim.FrameCollection
 import ch.digorydoo.titanium.engine.behaviours.Rotate
 import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
+import ch.digorydoo.titanium.engine.texture.FrameCollection
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
