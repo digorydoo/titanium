@@ -4,6 +4,11 @@ import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.utils.Log
 
+/**
+ * This class manages the lamps in a scene. Gels that implement lamps must register (add) and unregister (remove) their
+ * lamp structure. Lamps are sorted according to distance. Renderers will then assign the n closest lamps to their
+ * internal slots (which may vary between shaders).
+ */
 class LampManager {
     interface Lamp {
         val pos: Point3f

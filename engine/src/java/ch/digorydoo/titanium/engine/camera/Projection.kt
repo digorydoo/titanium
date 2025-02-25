@@ -11,6 +11,9 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.tan
 
+/**
+ * This class implements a projection matrix. Both perspective and orthogonal projection are supported.
+ */
 class Projection {
     private val _matrix = MutableMatrix4f()
     val matrix get() = _matrix as Matrix4f

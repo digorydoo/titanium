@@ -4,8 +4,8 @@ import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.kutils.utils.Moment
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.file.FileMarker.*
-import ch.digorydoo.titanium.engine.image.ImageData
 import ch.digorydoo.titanium.engine.state.StateManager.SerializedState
+import ch.digorydoo.titanium.engine.texture.ImageData
 import java.io.File
 
 class SaveGameFileWriter private constructor(

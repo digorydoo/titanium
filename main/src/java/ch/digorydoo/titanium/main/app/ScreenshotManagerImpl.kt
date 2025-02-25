@@ -5,7 +5,7 @@ import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.core.App.Companion.FIXED_ASPECT_RATIO
 import ch.digorydoo.titanium.engine.core.ScreenshotManager
-import ch.digorydoo.titanium.engine.image.ImageData
+import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.main.opengl.checkGLError
 import org.lwjgl.glfw.GLFW.glfwGetFramebufferSize
 import org.lwjgl.opengl.GL11.*

@@ -1,11 +1,11 @@
 package ch.digorydoo.titanium.engine.ui
 
 import ch.digorydoo.kutils.point.MutablePoint3f
-import ch.digorydoo.titanium.engine.anim.FrameCollection
 import ch.digorydoo.titanium.engine.behaviours.Glow
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.input.Input.InputMode
+import ch.digorydoo.titanium.engine.texture.FrameCollection
 
 class KeyBtnGel(
     private val kindWhenGamepad: Kind,

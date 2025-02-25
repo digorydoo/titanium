@@ -4,7 +4,7 @@ import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.font.FontManager.FontName
-import ch.digorydoo.titanium.engine.image.ImageData
+import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.engine.texture.TextureManager
 import ch.digorydoo.titanium.main.opengl.checkGLError

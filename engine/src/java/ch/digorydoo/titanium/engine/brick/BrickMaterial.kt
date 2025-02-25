@@ -2,6 +2,9 @@ package ch.digorydoo.titanium.engine.brick
 
 import ch.digorydoo.kutils.string.initCap
 
+/**
+ * The BrickMaterial constants define the various materials a brick can appear in.
+ */
 enum class BrickMaterial(val value: Int) {
     GREY_CONCRETE(0),
     ASPHALT_BLUE(1),

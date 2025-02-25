@@ -15,6 +15,10 @@ import ch.digorydoo.titanium.engine.brick.zz_various.CutModel
 import ch.digorydoo.titanium.engine.brick.zz_various.FlatFaceModel
 import ch.digorydoo.titanium.engine.brick.zz_various.UprightTubeModel
 
+/**
+ * This class serves as a lookup mechanism for brick model objects as well as a cache. Models are created lazily when
+ * they are first accessed.
+ */
 class BrickModelHolder {
     private var barFrameEast: BarFrameWEModel? = null
     private var barFrameNorth: BarFrameNSModel? = null

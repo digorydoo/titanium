@@ -4,6 +4,10 @@ import ch.digorydoo.kutils.waveforms.triang
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 
+/**
+ * This class implements a gel behaviour that adapt's the gel's brightness for a "glow" effect. Use this for active UI
+ * gels.
+ */
 class Glow(
     private val delegate: Delegate,
     var enabled: Boolean = true,

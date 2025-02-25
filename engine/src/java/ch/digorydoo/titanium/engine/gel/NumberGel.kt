@@ -6,8 +6,8 @@ import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.titanium.engine.behaviours.Align
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.font.FontManager.FontName
-import ch.digorydoo.titanium.engine.image.GreyscaleImageBuffer
 import ch.digorydoo.titanium.engine.shader.Renderer
+import ch.digorydoo.titanium.engine.texture.GreyscaleImageBuffer
 import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 

@@ -1,5 +1,8 @@
 package ch.digorydoo.titanium.engine.brick
 
+/**
+ * Brick run is used for ramp runs that span across multiple bricks.
+ */
 class BrickRun {
     var length = 0; private set
     var isFirstOfRun = false; private set

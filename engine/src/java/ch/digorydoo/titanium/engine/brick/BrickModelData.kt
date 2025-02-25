@@ -5,6 +5,9 @@ import ch.digorydoo.kutils.point.Point3i
 import ch.digorydoo.kutils.utils.newFloatBuffer
 import java.nio.FloatBuffer
 
+/**
+ * This class holds the tesselated model data of a BrickSubvolume.
+ */
 class BrickModelData(private val subvolume: BrickSubvolume, private val models: BrickModelHolder) {
     class FloatLists {
         val positions = mutableListOf<Float>()

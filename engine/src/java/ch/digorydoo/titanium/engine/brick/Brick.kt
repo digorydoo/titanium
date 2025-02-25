@@ -10,6 +10,9 @@ import ch.digorydoo.titanium.engine.utils.Side
 import ch.digorydoo.titanium.engine.utils.Side.*
 import kotlin.math.abs
 
+/**
+ * This class holds all properties assigned to a given brick positition.
+ */
 class Brick private constructor(
     var shape: BrickShape,
     var material: BrickMaterial,

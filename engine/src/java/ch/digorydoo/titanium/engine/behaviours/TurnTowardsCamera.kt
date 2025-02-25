@@ -10,11 +10,15 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
+/**
+ * This class implements a gel behaviour that turns the gel towards the camera. This can be used in combination with
+ * a PaperRenderer to place a 2D sprite in the 3D space.
+ */
 class TurnTowardsCamera(
     private val delegate: Delegate,
     private val usePosition: Boolean = false, // false=just turn with camera phi and rho; true=more accurate
     private val keepUpright: Boolean = false,
-    private val keepBehind: Float = 0.0f,
+    private val keepBehind: Float = 0.0f, // a value > 0 will move the gel behind the "centre"
 ): GraphicElement.Behaviour {
     abstract class Delegate {
         open var rotationPhi = 0.0f

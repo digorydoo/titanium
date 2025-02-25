@@ -6,7 +6,7 @@ import ch.digorydoo.kutils.rect.MutableRecti
 import ch.digorydoo.titanium.engine.font.FontManager
 import ch.digorydoo.titanium.engine.font.FontManager.FontName
 import ch.digorydoo.titanium.engine.font.FontManager.FormattedText
-import ch.digorydoo.titanium.engine.image.GreyscaleImageBuffer
+import ch.digorydoo.titanium.engine.texture.GreyscaleImageBuffer
 import org.lwjgl.stb.STBTruetype.stbtt_GetCodepointKernAdvance
 import org.lwjgl.stb.STBTruetype.stbtt_MakeCodepointBitmapSubpixel
 import java.nio.ByteBuffer

@@ -4,6 +4,11 @@ import ch.digorydoo.kutils.math.decel
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 
+/**
+ * This class implements a gel behaviour that rotates a gel once (with a given duration) or perpetually (when duration
+ * is 0). This was implemented as a proof of concept for gel behaviours, and may be removed in the future, because it's
+ * too specific and not generally useful.
+ */
 class Rotate(
     private val delegate: Delegate,
     val duration: Float = 0.0f, // 0 = perpetual

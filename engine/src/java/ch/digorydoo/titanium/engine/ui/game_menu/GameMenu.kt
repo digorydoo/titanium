@@ -4,7 +4,7 @@ import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.rect.Recti
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
-import ch.digorydoo.titanium.engine.image.ImageData
+import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.engine.ui.UIAreaGel
 import ch.digorydoo.titanium.engine.ui.tab.MenuTabDescriptor
 import ch.digorydoo.titanium.engine.ui.tab.MenuTabGel

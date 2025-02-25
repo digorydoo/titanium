@@ -12,6 +12,10 @@ import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.texture.Texture
 import kotlin.math.ceil
 
+/**
+ * A BrickVolume holds the brick model data of a large area. BrickVolume is divided into multiple BrickSubvolume for
+ * efficient rendering. Currently, there is only one instance of BrickVolume (App.bricks).
+ */
 class BrickVolume(
     val xsize: Int,
     val ysize: Int,

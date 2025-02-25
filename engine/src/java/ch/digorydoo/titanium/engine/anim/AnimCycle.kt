@@ -3,9 +3,12 @@ package ch.digorydoo.titanium.engine.anim
 import ch.digorydoo.titanium.engine.core.App
 import kotlin.math.max
 
-// FIXME remove this class once there are cycles for meshes
-// The cycle for meshes should be a Behaviour
-// Behaviour should have a flag evenWhenInactive, so we can animate cycles while the gel is inactive
+/**
+ * This class is used to describe a cycle animation of a 2D (paper) gel.
+ * This class is obsolete, because on the one hand, such code should be implemented with a Behaviour, while on the other
+ * hand, we only need this, because our MeshRenderer cannot handle bones/rigged models yet.
+ * FIXME remove this class once we support animations for bones/meshes
+ */
 class AnimCycle(private val delegate: Delegate) {
     interface Delegate {
         val cycleDef: AnimCycleDef
