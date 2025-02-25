@@ -1,0 +1,131 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'application'
+
+sourceSets {
+    main {
+        java.srcDirs "src/java"
+    }
+}
+
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(JAVA_LANG_VERSION))
+    }
+}
+
+application {
+    setMainClass 'ch.digorydoo.titanium.main.app.MainKt'
+}
+
+if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+    project.ext.lwjglNatives = "natives-windows"
+} else if (Os.isFamily(Os.FAMILY_MAC) && Os.isArch("aarch64")) {
+    project.ext.lwjglNatives = "natives-macos-arm64"
+    applicationDefaultJvmArgs = ["-XstartOnFirstThread"]
+} else {
+    project.ext.lwjglNatives = "natives-macos"
+    applicationDefaultJvmArgs = ["-XstartOnFirstThread"]
+}
+
+// Generate a BuildConfig.java, which can be imported from Kotlin.
+
+tasks.register('generateSources') {
+    ext.outputDir = "$buildDir/generated/java"
+    outputs.dir outputDir
+    doFirst {
+        mkdir "$outputDir/ch/digorydoo/titanium"
+        file("$outputDir/ch/digorydoo/titanium/BuildConfig.java").text =
+            """|package ch.digorydoo.titanium;
+               |public class BuildConfig {
+               |    public static Boolean isWindows() {
+               |        return ${if (Os.isFamily(Os.FAMILY_WINDOWS)) "true" else "false"};
+               |}
+               |}""".stripMargin()
+    }
+}
+
+compileKotlin.dependsOn generateSources
+sourceSets.main.java.srcDir generateSources.outputDir
+
+dependencies {
+    implementation platform('org.jetbrains.kotlin:kotlin-bom')
+    implementation project(':engine')
+    implementation project(':game')
+    implementation project(":kutils")
+
+    // To learn what libaries are available for LWJGL, see:
+    // https://www.lwjgl.org/customize
+
+    implementation platform("org.lwjgl:lwjgl-bom:3.3.5")
+    implementation "org.lwjgl:lwjgl"
+    implementation "org.lwjgl:lwjgl-glfw"
+    implementation "org.lwjgl:lwjgl-openal"
+    implementation "org.lwjgl:lwjgl-opengl"
+    implementation "org.lwjgl:lwjgl-stb"
+    //implementation "org.lwjgl:lwjgl-assimp"
+    //implementation "org.lwjgl:lwjgl-bgfx"
+    //implementation "org.lwjgl:lwjgl-nanovg"
+    //implementation "org.lwjgl:lwjgl-nuklear"
+    //implementation "org.lwjgl:lwjgl-par"
+    //implementation "org.lwjgl:lwjgl-vulkan"
+
+    runtimeOnly "org.lwjgl:lwjgl::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-glfw::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-openal::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-opengl::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-stb::$lwjglNatives"
+    //runtimeOnly "org.lwjgl:lwjgl-assimp::$lwjglNatives"
+    //runtimeOnly "org.lwjgl:lwjgl-bgfx::$lwjglNatives"
+    //runtimeOnly "org.lwjgl:lwjgl-nanovg::$lwjglNatives"
+    //runtimeOnly "org.lwjgl:lwjgl-nuklear::$lwjglNatives"
+    //runtimeOnly "org.lwjgl:lwjgl-par::$lwjglNatives"
+    //runtimeOnly "org.lwjgl:lwjgl-vulkan::$lwjglNatives"
+}
+
+tasks.register('customPostBuild', Exec) {
+    group = "Build" // assign task group
+    description = "Run post-build.sh script"
+    workingDir "$projectDir/.."
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        commandLine "C:\\cygwin64\\bin\\sh", "-c", "./post-build.sh"
+    } else {
+        commandLine "sh", "-c", "./post-build.sh"
+    }
+}
+
+tasks.named("customPostBuild") {
+    // Don't run customPostBuild step if build was skipped
+    onlyIf { !tasks.named("compileKotlin").get().state.skipped }
+}
+
+tasks.named("compileKotlin") {
+    finalizedBy "customPostBuild"
+}
+
+tasks.named("run") {
+    dependsOn ":engine:test"
+    dependsOn ":game:test"
+    dependsOn ":kutils:test"
+}
+
+jar {
+    // Not sure if this is the right way to do it, but without this I get
+    // lots of warnings when doing $ ./gradlew build --warning-mode all
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes('Main-Class': application.mainClass)
+    }
+
+    from sourceSets.main.output
+
+    dependsOn configurations.runtimeClasspath
+
+    from {
+        configurations.runtimeClasspath
+            .findAll { it.name.endsWith('jar') }
+            .collect { zipTree(it) }
+    }
+}

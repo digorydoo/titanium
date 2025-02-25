@@ -1,0 +1,49 @@
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'application'
+
+sourceSets {
+    main {
+        java.srcDirs "src/java"
+        // resources.srcDirs "src/res"
+    }
+}
+
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(JAVA_LANG_VERSION))
+    }
+}
+
+dependencies {
+    implementation platform('org.jetbrains.kotlin:kotlin-bom')
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$COROUTINES_VERSION"
+    implementation "com.oracle.database.xml:xmlparserv2:21.7.0.0" // an XML parser
+    implementation project(":kutils")
+    implementation project(":engine")
+    // testImplementation "org.jetbrains.kotlin:kotlin-test"
+    // testImplementation "org.junit.jupiter:junit-jupiter:$JUNIT_VERSION"
+}
+
+application {
+    mainClass.set('ch.digorydoo.titanium.import_asset.MainKt')
+}
+
+jar {
+    // Not sure if this is the right way to do it, but without this i get
+    // lots of warnings when doing $ ./gradlew build --warning-mode all
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes('Main-Class': application.mainClass)
+    }
+
+    from sourceSets.main.output
+
+    dependsOn configurations.runtimeClasspath
+
+    from {
+        configurations.runtimeClasspath
+            .findAll { it.name.endsWith('jar') }
+            .collect { zipTree(it) }
+    }
+}

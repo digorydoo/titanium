@@ -1,0 +1,46 @@
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'application'
+
+sourceSets {
+    main {
+        java.srcDirs "src/java"
+        // resources.srcDirs "src/res"
+    }
+}
+
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(JAVA_LANG_VERSION))
+    }
+}
+
+// Note that you can also use @BeforeAll, @BeforeEach, @AfterAll, @AfterEach, @Timeout, @Disabled annotations in tests!
+// See https://junit.org/junit5/docs/current/user-guide/
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "skipped", "failed" // emit details for skipped and failed tests only, not "passed"
+        showStandardStreams true // otherwise we won't see anything in console
+        exceptionFormat "full" // otherwise we won't see what went wrong
+
+        // This adds a summary at the end.
+        afterSuite { desc, result ->
+            if (!desc.parent) { // will match the outermost suite
+                println(
+                    "${desc.getName()} ${result.resultType}: " +
+                        "${result.successfulTestCount} passed, " +
+                        "${result.failedTestCount} failed, " +
+                        "${result.skippedTestCount} skipped"
+                )
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation platform('org.jetbrains.kotlin:kotlin-bom')
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$COROUTINES_VERSION"
+    testImplementation "org.jetbrains.kotlin:kotlin-test"
+    testImplementation "org.junit.jupiter:junit-jupiter:$JUNIT_VERSION"
+}

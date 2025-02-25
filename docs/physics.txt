@@ -1,0 +1,184 @@
+Physics
+=======
+
+Elastic collision between two spheres
+-------------------------------------
+
+Given:
+
+    M1: this sphere's centre   M2: the other sphere's centre
+    r1: this sphere's radius   r2: the other sphere's radius
+    v1: this sphere's speed    v2: the other sphere's speed
+    m1: this sphere's mass     m2: the other sphere's mass
+
+Define:
+
+    n := (M2 - M1) / |M2 - M1|
+    vreln := (v1 - v2) * n
+
+If vreln >= 0, the two spheres are separating.
+
+Split the speed vectors into a perpendicular and a parallel part:
+
+    v1 = v1⟂ + v1∥
+    v2 = v2⟂ + v2∥
+
+    v1∥ = (v1 * n) * n
+    v2∥ = (v2 * n) * n
+
+Preservation of momentum:
+
+    m1 v1 + m2 v2 = m1 v1' + m2 v2'
+
+Since v1⟂ = v1⟂' and v2⟂ = v2⟂', it follows that:
+
+    m1 v1∥ + m2 v2∥ = m1 v1∥' + m2 v2∥'
+
+Preservation of kinetic energy:
+
+    1/2 m1 v1∥^2 + 1/2 m2 v2∥^2 = 1/2 m1 v1∥'^2 + 1/2 m2 v2∥'^2
+
+Rearranging both equations:
+
+    m1 v1∥ + m2 v2∥ - m1 v1∥' - m2 v2∥' = 0
+    m1 v1∥^2 + m2 v2∥^2 - m1 v1∥'^2 - m2 v2∥'^2 = 0
+
+    m1 (v1∥ - v1∥') + m2 (v2∥ - v2∥') = 0
+    m1 (v1∥^2 - v1∥'^2) + m2 (v2∥^2 - v2∥'^2) = 0
+
+    m1 (v1∥ - v1∥') + m2 (v2∥ - v2∥') = 0
+    m1 (v1∥ - v1∥')(v1∥ + v1∥') + m2 (v2∥ - v2∥')(v2∥ + v2∥') = 0
+
+From the first equation, express (v2∥ - v2∥') in terms of (v1∥ - v1∥'):
+
+    (v2∥ - v2∥') = -(m1/m2) (v1∥ - v1∥')
+
+Substituting into the second equation:
+
+    m1 (v1∥ - v1∥') (v1∥ + v1∥') - m2 (m1/m2) (v1∥ - v1∥') (v2∥ + v2∥') = 0
+    m1 (v1∥ - v1∥') (v1∥ + v1∥') - m1 (v1∥ - v1∥') (v2∥ + v2∥') = 0
+    m1 ((v1∥ - v1∥') (v1∥ + v1∥') - (v1∥ - v1∥') (v2∥ + v2∥')) = 0
+    m1 (v1∥ - v1∥') ((v1∥ + v1∥') - (v2∥ + v2∥')) = 0
+    m1 (v1∥ - v1∥') (v1∥ + v1∥' - v2∥ - v2∥') = 0
+
+If m1 != 0, then:
+
+    (v1∥ - v1∥') (v1∥ + v1∥' - v2∥ - v2∥') = 0
+
+So either
+
+    v1∥ - v1∥' = 0, or
+    v1∥ + v1∥' - v2∥ - v2∥' = 0
+
+We know the first solution cannot be true, so:
+
+    v1∥' = v2∥ + v2∥' - v1∥
+
+Substituting into m1 (v1∥ - v1∥') + m2 (v2∥ - v2∥') = 0:
+
+    m1 (v1∥ - (v2∥ + v2∥' - v1∥)) + m2 (v2∥ - v2∥') = 0
+    m1 (2 v1∥ - v2∥ - v2∥') + m2 (v2∥ - v2∥') = 0
+    2 m1 v1∥ - m1 v2∥ - m1 v2∥' + m2 v2∥ - m2 v2∥' = 0
+    2 m1 v1∥ - m1 v2∥ + m2 v2∥ = m1 v2∥' + m2 v2∥'
+    2 m1 v1∥ - m1 v2∥ + m2 v2∥ = v2∥' (m1 + m2)
+    v2∥' = (2 m1 v1∥ - m1 v2∥ + m2 v2∥) / (m1 + m2)
+
+Substituting into v1∥' = v2∥ + v2∥' - v1∥:
+
+    v1∥' = v2∥ + (2 m1 v1∥ - m1 v2∥ + m2 v2∥) / (m1 + m2) - v1∥
+    v1∥' = v2∥ - v1∥ + (2 m1 v1∥ - m1 v2∥ + m2 v2∥) / (m1 + m2)
+    v1∥' = (v2∥ - v1∥)(m1 + m2) / (m1 + m2) + (2 m1 v1∥ - m1 v2∥ + m2 v2∥) / (m1 + m2)
+    v1∥' = (v2∥ m1 + v2∥ m2 - v1∥ m1 - v1∥ m2 + 2 m1 v1∥ - m1 v2∥ + m2 v2∥) / (m1 + m2)
+    v1∥' = (2 v2∥ m2 + v1∥ m1 - v1∥ m2) / (m1 + m2)
+
+Which gives the solution:
+
+    v1∥' = (2 m2 v2∥ + m1 v1∥ - m2 v1∥) / (m1 + m2)
+    v2∥' = (2 m1 v1∥ - m1 v2∥ + m2 v2∥) / (m1 + m2)
+
+    v1∥' = (2 m2 v2∥ + v1∥ * (m1 - m2)) / (m1 + m2)
+    v2∥' = (2 m1 v1∥ - v2∥ * (m1 + m2)) / (m1 + m2)
+
+    v1' = v1⟂ + (2 m2 v2∥ + v1∥ * (m1 - m2)) / (m1 + m2)
+    v2' = v2⟂ + (2 m1 v1∥ - v2∥ * (m1 + m2)) / (m1 + m2)
+
+Non-elastic collision between two spheres, ignoring angular momentum
+--------------------------------------------------------------------
+
+Given:
+
+    M1: this sphere's centre   M2: the other sphere's centre
+    r1: this sphere's radius   r2: the other sphere's radius
+    v1: this sphere's speed    v2: the other sphere's speed
+    m1: this sphere's mass     m2: the other sphere's mass
+    e: coefficient of restitution (for the pair)
+
+Define:
+
+    n := (M2 - M1) / |M2 - M1|
+    vreln := (v1 - v2) * n
+
+Split the speed vectors into a perpendicular and a parallel part:
+
+    v1 = v1⟂ + v1∥
+    v2 = v2⟂ + v2∥
+
+    v1∥ = (v1 * n) * n
+    v2∥ = (v2 * n) * n
+
+Preservation of momentum:
+
+    m1 v1 + m2 v2 = m1 v1' + m2 v2'
+
+Since v1⟂ = v1⟂' and v2⟂ = v2⟂', it follows that:
+
+    m1 v1∥ + m2 v2∥ = m1 v1∥' + m2 v2∥'
+
+The coefficient of restitution is defined as:
+
+    e = |v1∥' - v2∥'| / |v1∥ - v2∥|
+
+Since v1∥ − v2∥ is along the normal:
+
+    v1∥' − v2∥' = −e (v1∥ − v2∥)
+    v1∥' = v2∥' − e (v1∥ − v2∥)
+
+Substituting into the momentum equation:
+
+    m1 v1∥ + m2 v2∥ = m1 (v2∥' − e (v1∥ − v2∥)) + m2 v2∥'
+    m1 v1∥ + m2 v2∥ = m1 v2∥' − m1 e (v1∥ − v2∥) + m2 v2∥'
+    m1 v1∥ + m2 v2∥ + m1 e (v1∥ − v2∥) = v2∥' (m1 + m2)
+    v2∥' = (m1 v1∥ + m2 v2∥ + m1 e (v1∥ − v2∥)) / (m1 + m2)
+
+Solving for v1∥':
+
+    v1∥' = v2∥' − e (v1∥ − v2∥)
+    v1∥' = (m1 v1∥ + m2 v2∥ + m1 e (v1∥ − v2∥)) / (m1 + m2) − e (v1∥ − v2∥) * (m1 + m2) / (m1 + m2)
+    v1∥' = (m1 v1∥ + m2 v2∥ + m1 e (v1∥ − v2∥) − m1 e (v1∥ − v2∥) - m2 e (v1∥ − v2∥)) / (m1 + m2)
+    v1∥' = (m1 v1∥ + m2 v2∥ - m2 e (v1∥ − v2∥)) / (m1 + m2)
+
+Check if a sphere collides with a plane
+---------------------------------------
+
+Given:
+    C: the sphere's centre
+    r: the sphere's radius
+    P: a point in the plane
+    n: plane normal
+
+For any point X on the plane, the following holds:
+
+    n • (X - P) = 0
+
+The shortest distance from C to the plane is along the direction of the normal n. To find this signed distance, we
+project (C - P) onto n using the dot product:
+
+    d = ((C - P) • n) / |n|
+
+and since |n| = 1:
+
+    d = (C - P) • n
+
+If d > 0, then C is on the side of the plane pointed to by n.
+If d < 0, then C is on the opposite side.
+The sphere collides if |d| <= r.
