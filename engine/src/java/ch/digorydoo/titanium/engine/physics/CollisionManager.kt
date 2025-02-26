@@ -6,6 +6,10 @@ import ch.digorydoo.titanium.engine.brick.Brick.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.brick.BrickVolume
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.physics.regular.CollideCylinderVsCylinder
+import ch.digorydoo.titanium.engine.physics.regular.CollideSphereVsCylinder
+import ch.digorydoo.titanium.engine.physics.regular.CollideSphereVsPlane
+import ch.digorydoo.titanium.engine.physics.regular.CollideSphereVsSphere
 
 class CollisionManager {
     private val hitPt = MutablePoint3f()

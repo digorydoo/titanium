@@ -1,8 +1,9 @@
-package ch.digorydoo.titanium.engine.physics
+package ch.digorydoo.titanium.engine.physics.regular
 
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.utils.Log
+import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.STATIC_MASS
 import kotlin.math.abs
 import kotlin.math.max

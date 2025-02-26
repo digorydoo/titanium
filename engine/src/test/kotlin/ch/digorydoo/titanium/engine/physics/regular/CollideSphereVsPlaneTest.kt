@@ -1,6 +1,8 @@
-package ch.digorydoo.titanium.engine.physics
+package ch.digorydoo.titanium.engine.physics.regular
 
 import ch.digorydoo.kutils.point.MutablePoint3f
+import ch.digorydoo.titanium.engine.physics.FixedPlaneBody
+import ch.digorydoo.titanium.engine.physics.FixedSphereBody
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

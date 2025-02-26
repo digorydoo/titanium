@@ -1,22 +1,24 @@
-package ch.digorydoo.titanium.engine.physics
+package ch.digorydoo.titanium.engine.physics.regular
 
 import ch.digorydoo.kutils.point.MutablePoint3f
+import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-internal class CollideSphereVsCylinderTest {
+internal class CollideCylinderVsCylinderTest {
     @Test
-    fun `should not collide when the two objects are far enough along the x-axis`() {
+    fun `should not collide when the two cylinders are far enough along the x-axis`() {
         val p1 = MutablePoint3f(10.0f, 10.0f, 10.0f)
-        val b1 = FixedSphereBody(
+        val b1 = FixedCylinderBody(
             "b1",
             p1,
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
-            zOffset = 0.25f,
+            height = 1.0f,
+            zOffset = 0.5f,
             elasticity = 0.5f
         )
         b1.nextPos.set(p1)
@@ -34,21 +36,22 @@ internal class CollideSphereVsCylinderTest {
         )
         b2.nextPos.set(p2)
 
-        val ck = CollideSphereVsCylinder()
+        val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
         assertFalse(ck.check(b1, b2, hitPt))
     }
 
     @Test
-    fun `should not collide when the two objects are far enough along the y-axis`() {
+    fun `should not collide when the two cylinders are far enough along the y-axis`() {
         val p1 = MutablePoint3f(10.0f, 10.0f, 10.0f)
-        val b1 = FixedSphereBody(
+        val b1 = FixedCylinderBody(
             "b1",
             p1,
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
-            zOffset = 0.25f,
+            height = 1.0f,
+            zOffset = 0.5f,
             elasticity = 0.5f
         )
         b1.nextPos.set(p1)
@@ -66,26 +69,27 @@ internal class CollideSphereVsCylinderTest {
         )
         b2.nextPos.set(p2)
 
-        val ck = CollideSphereVsCylinder()
+        val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
         assertFalse(ck.check(b1, b2, hitPt))
     }
 
     @Test
-    fun `should not collide when the two objects are far enough along the z-axis`() {
+    fun `should not collide when the two cylinders are far enough along the z-axis`() {
         val p1 = MutablePoint3f(10.0f, 10.0f, 10.0f)
-        val b1 = FixedSphereBody(
+        val b1 = FixedCylinderBody(
             "b1",
             p1,
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
-            zOffset = 0.25f,
+            height = 1.0f,
+            zOffset = 0.5f,
             elasticity = 0.5f
         )
         b1.nextPos.set(p1)
 
-        val p2 = MutablePoint3f(10.0f, 10.0f, 10.51f)
+        val p2 = MutablePoint3f(10.0f, 10.0f, 11.01f)
         val b2 = FixedCylinderBody(
             "b2",
             p2,
@@ -98,21 +102,22 @@ internal class CollideSphereVsCylinderTest {
         )
         b2.nextPos.set(p2)
 
-        val ck = CollideSphereVsCylinder()
+        val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
         assertFalse(ck.check(b1, b2, hitPt))
     }
 
     @Test
-    fun `should collide when the two objects are too close, almost separated along the x-axis`() {
+    fun `should collide when the two cylinders are too close, almost separated along the x-axis`() {
         val p1 = MutablePoint3f(10.0f, 10.0f, 10.0f)
-        val b1 = FixedSphereBody(
+        val b1 = FixedCylinderBody(
             "b1",
             p1,
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
-            zOffset = 0.25f,
+            height = 1.0f,
+            zOffset = 0.5f,
             elasticity = 0.5f
         )
         b1.nextPos.set(p1)
@@ -130,24 +135,25 @@ internal class CollideSphereVsCylinderTest {
         )
         b2.nextPos.set(p2)
 
-        val ck = CollideSphereVsCylinder()
+        val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
         assertTrue(ck.check(b1, b2, hitPt))
         assertEquals(10.25f, hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(10.0f, hitPt.y, TOLERANCE, "hitPt.y")
-        assertEquals(10.25f, hitPt.z, TOLERANCE, "hitPt.z")
+        assertEquals(10.5f, hitPt.z, TOLERANCE, "hitPt.z")
     }
 
     @Test
-    fun `should collide when the two objects are too close, almost separated along the y-axis`() {
+    fun `should collide when the two cylinders are too close, almost separated along the y-axis`() {
         val p1 = MutablePoint3f(10.0f, 10.0f, 10.0f)
-        val b1 = FixedSphereBody(
+        val b1 = FixedCylinderBody(
             "b1",
             p1,
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
-            zOffset = 0.25f,
+            height = 1.0f,
+            zOffset = 0.5f,
             elasticity = 0.5f
         )
         b1.nextPos.set(p1)
@@ -165,29 +171,30 @@ internal class CollideSphereVsCylinderTest {
         )
         b2.nextPos.set(p2)
 
-        val ck = CollideSphereVsCylinder()
+        val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
         assertTrue(ck.check(b1, b2, hitPt))
         assertEquals(10.0f, hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(10.25f, hitPt.y, TOLERANCE, "hitPt.y")
-        assertEquals(10.25f, hitPt.z, TOLERANCE, "hitPt.z")
+        assertEquals(10.5f, hitPt.z, TOLERANCE, "hitPt.z")
     }
 
     @Test
-    fun `should collide when the two objects are too close, almost separated along the z-axis`() {
+    fun `should collide when the two cylinders are too close, almost separated along the z-axis`() {
         val p1 = MutablePoint3f(10.0f, 10.0f, 10.0f)
-        val b1 = FixedSphereBody(
+        val b1 = FixedCylinderBody(
             "b1",
             p1,
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
-            zOffset = 0.25f,
+            height = 1.0f,
+            zOffset = 0.5f,
             elasticity = 0.5f
         )
         b1.nextPos.set(p1)
 
-        val p2 = MutablePoint3f(10.0f, 10.0f, 10.49f)
+        val p2 = MutablePoint3f(10.0f, 10.0f, 10.99f)
         val b2 = FixedCylinderBody(
             "b2",
             p2,
@@ -200,25 +207,26 @@ internal class CollideSphereVsCylinderTest {
         )
         b2.nextPos.set(p2)
 
-        val ck = CollideSphereVsCylinder()
+        val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
 
         assertTrue(ck.check(b1, b2, hitPt))
         assertEquals(10.0f, hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(10.0f, hitPt.y, TOLERANCE, "hitPt.y")
-        assertEquals(10.5f, hitPt.z, TOLERANCE, "hitPt.z")
+        assertEquals(11.0f, hitPt.z, TOLERANCE, "hitPt.z")
     }
 
     @Test
-    fun `should correctly bounce the sphere off the cylinder when moving along the x-axis`() {
+    fun `should correctly bounce one cylinder off the other when moving along the x-axis`() {
         val p1 = MutablePoint3f(10.0f, 10.0f, 10.0f)
-        val b1 = FixedSphereBody(
+        val b1 = FixedCylinderBody(
             "b1",
             p1,
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
-            zOffset = 0.25f,
+            height = 1.0f,
+            zOffset = 0.5f,
             elasticity = 0.5f
         )
         b1.speed.set(1.0f, 0.0f, 0.0f)
@@ -237,7 +245,7 @@ internal class CollideSphereVsCylinderTest {
         )
         b2.applyForces() // updates nextPos and nextSpeed
 
-        val ck = CollideSphereVsCylinder()
+        val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
         assertTrue(ck.check(b1, b2, hitPt))
 
@@ -285,15 +293,16 @@ internal class CollideSphereVsCylinderTest {
     }
 
     @Test
-    fun `should correctly bounce the sphere off the cylinder when moving along the y-axis`() {
+    fun `should correctly bounce one cylinder off the other when moving along the y-axis`() {
         val p1 = MutablePoint3f(10.0f, 10.0f, 10.0f)
-        val b1 = FixedSphereBody(
+        val b1 = FixedCylinderBody(
             "b1",
             p1,
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
-            zOffset = 0.25f,
+            height = 1.0f,
+            zOffset = 0.5f,
             elasticity = 0.5f
         )
         b1.speed.set(0.0f, 1.0f, 0.0f)
@@ -312,7 +321,7 @@ internal class CollideSphereVsCylinderTest {
         )
         b2.applyForces() // updates nextPos and nextSpeed
 
-        val ck = CollideSphereVsCylinder()
+        val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
         assertTrue(ck.check(b1, b2, hitPt))
 
@@ -360,21 +369,22 @@ internal class CollideSphereVsCylinderTest {
     }
 
     @Test
-    fun `should correctly bounce the sphere off the cylinder when moving along the z-axis`() {
+    fun `should correctly bounce one cylinder off the other when moving along the z-axis`() {
         val p1 = MutablePoint3f(10.0f, 10.0f, 10.0f)
-        val b1 = FixedSphereBody(
+        val b1 = FixedCylinderBody(
             "b1",
             p1,
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
-            zOffset = 0.25f,
+            height = 1.0f,
+            zOffset = 0.5f,
             elasticity = 0.5f
         )
         b1.speed.set(0.0f, 0.0f, 1.0f)
         b1.applyForces() // updates nextPos and nextSpeed
 
-        val p2 = MutablePoint3f(10.0f, 10.0f, 10.51f)
+        val p2 = MutablePoint3f(10.0f, 10.0f, 11.01f)
         val b2 = FixedCylinderBody(
             "b2",
             p2,
@@ -387,7 +397,7 @@ internal class CollideSphereVsCylinderTest {
         )
         b2.applyForces() // updates nextPos and nextSpeed
 
-        val ck = CollideSphereVsCylinder()
+        val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
         assertTrue(ck.check(b1, b2, hitPt))
 
@@ -401,7 +411,7 @@ internal class CollideSphereVsCylinderTest {
         // b2.pos is unchanged
         assertEquals(10.0f, b2.pos.x, TOLERANCE, "b2.pos.x")
         assertEquals(10.0f, b2.pos.y, TOLERANCE, "b2.pos.y")
-        assertEquals(10.51f, b2.pos.z, TOLERANCE, "b2.pos.z")
+        assertEquals(11.01f, b2.pos.z, TOLERANCE, "b2.pos.z")
 
         // b1.speed is unchanged
         assertEquals(0.0f, b1.speed.x, TOLERANCE, "b1.speed.x")
@@ -421,7 +431,7 @@ internal class CollideSphereVsCylinderTest {
         // b2.nextPos is unchanged
         assertEquals(10.0f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(10.0f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(10.51f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(11.01f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified: still moves in the same direction, but slower
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
