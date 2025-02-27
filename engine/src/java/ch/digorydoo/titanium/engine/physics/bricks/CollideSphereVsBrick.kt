@@ -200,7 +200,7 @@ internal class CollideSphereVsBrick: BrickCollisionStrategy<FixedSphereBody>() {
         body.nextPos.y = hitPt.y + body.radius * dy / distance
         body.nextPos.z = hitPt.z + body.radius * dz / distance - body.zOffset
 
-        val e = body.elasticity * BRICK_ELASTICITY
+        val e = body.elasticity * brick.material.elasticity
         val n = hitNormal
         val v1 = body.nextSpeed
         val v1n = v1.dotProduct(n)

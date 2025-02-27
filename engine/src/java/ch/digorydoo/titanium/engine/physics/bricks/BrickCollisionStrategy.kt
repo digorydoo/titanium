@@ -15,8 +15,5 @@ internal abstract class BrickCollisionStrategy<B: RigidBody> {
     companion object {
         @JvmStatic
         protected val EPSILON = 0.000001f // small number to avoid division by almost zero
-
-        @JvmStatic
-        protected val BRICK_ELASTICITY = 0.8f // currently the same for all BrickMaterials
     }
 }
