@@ -3,6 +3,7 @@ package ch.digorydoo.titanium.game.player
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.behaviours.TurnTowardsCamera
+import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
@@ -49,6 +50,16 @@ class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): GraphicElement(
         override val scaleFactor get() = this@PlayerGel.frameScaleFactor
         override val rotationPhi get() = turnProps.rotationPhi
         override val rotationRho get() = turnProps.rotationRho
+    }
+
+    override fun didCollide(brick: Brick, hitPt: Point3f, hitNormal: Point3f) {
+        if (hitNormal.z > 0.0f && body.nextSpeed.z < 0.0f) {
+            playerBehaviour.apply {
+                didCollideWithFloor = true
+                touchDownSpeed = body.nextSpeed.z
+                timeOfGroundContact = App.time.sessionTime
+            }
+        }
     }
 
     override val renderer = App.factory.createPaperRenderer(renderProps)
