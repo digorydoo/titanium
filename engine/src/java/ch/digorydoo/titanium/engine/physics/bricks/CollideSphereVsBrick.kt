@@ -4,8 +4,8 @@ import ch.digorydoo.kutils.math.clamp
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.brick.Brick
-import ch.digorydoo.titanium.engine.brick.Brick.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.brick.BrickVolume
+import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.physics.FixedSphereBody
 import ch.digorydoo.titanium.engine.utils.Direction
 import ch.digorydoo.titanium.engine.utils.EPSILON

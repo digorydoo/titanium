@@ -2,7 +2,7 @@ package ch.digorydoo.titanium.engine.camera
 
 import ch.digorydoo.kutils.math.clamp
 import ch.digorydoo.kutils.point.Point3f
-import ch.digorydoo.titanium.engine.brick.Brick.Companion.WORLD_BRICK_SIZE
+import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.camera.CameraProps.Mode
 import ch.digorydoo.titanium.engine.camera.CameraProps.Mode.FIXED_SOURCE
 import ch.digorydoo.titanium.engine.core.App

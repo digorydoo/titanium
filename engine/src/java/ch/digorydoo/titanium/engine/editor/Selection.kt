@@ -6,8 +6,8 @@ import ch.digorydoo.kutils.math.clamp
 import ch.digorydoo.kutils.math.sign
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.MutablePoint3i
-import ch.digorydoo.titanium.engine.brick.Brick
-import ch.digorydoo.titanium.engine.brick.Brick.Companion.brickToWorld
+import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
+import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.brickToWorld
 import ch.digorydoo.titanium.engine.core.App
 
 class Selection(private val onChange: () -> Unit) {
@@ -50,9 +50,9 @@ class Selection(private val onChange: () -> Unit) {
                 pos.z.toInt() + (if (sel.z0 < sel.z1) 0 else 1),
                 it
             )
-            it.x += 0.5f * Brick.WORLD_BRICK_SIZE
-            it.y += 0.5f * Brick.WORLD_BRICK_SIZE
-            it.z += 0.5f * Brick.WORLD_BRICK_SIZE
+            it.x += 0.5f * WORLD_BRICK_SIZE
+            it.y += 0.5f * WORLD_BRICK_SIZE
+            it.z += 0.5f * WORLD_BRICK_SIZE
         }
 
     fun collapseSelection() {

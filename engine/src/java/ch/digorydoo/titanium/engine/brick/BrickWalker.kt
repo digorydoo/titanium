@@ -5,6 +5,7 @@ import ch.digorydoo.kutils.geometry.checkRayIntersectsTriangle
 import ch.digorydoo.kutils.math.lerp
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
 import kotlin.math.floor
 
 /**
@@ -20,15 +21,15 @@ class BrickWalker(private val volume: BrickVolume) {
         lambda: (brick: Brick, worldPtOfBrickEntry: Point3f, rayVector: Point3f) -> Boolean,
     ) {
         val brickOrigin = MutablePoint3f(
-            floor(worldStartPt.x / Brick.WORLD_BRICK_SIZE) * Brick.WORLD_BRICK_SIZE,
-            floor(worldStartPt.y / Brick.WORLD_BRICK_SIZE) * Brick.WORLD_BRICK_SIZE,
-            floor(worldStartPt.z / Brick.WORLD_BRICK_SIZE) * Brick.WORLD_BRICK_SIZE,
+            floor(worldStartPt.x / WORLD_BRICK_SIZE) * WORLD_BRICK_SIZE,
+            floor(worldStartPt.y / WORLD_BRICK_SIZE) * WORLD_BRICK_SIZE,
+            floor(worldStartPt.z / WORLD_BRICK_SIZE) * WORLD_BRICK_SIZE,
         )
 
         val worldPtInsideBrick = MutablePoint3f(brickOrigin).add(
-            Brick.WORLD_BRICK_SIZE * 0.5f,
-            Brick.WORLD_BRICK_SIZE * 0.5f,
-            Brick.WORLD_BRICK_SIZE * 0.5f,
+            WORLD_BRICK_SIZE * 0.5f,
+            WORLD_BRICK_SIZE * 0.5f,
+            WORLD_BRICK_SIZE * 0.5f,
         )
 
         // When worldStartPt is on the side of a brick, we may fail to find an intersection of the ray with the start
@@ -49,9 +50,9 @@ class BrickWalker(private val volume: BrickVolume) {
             // The intersection pt is expected to be on a side of the brick. Again, move it slightly into the brick
             // centre to avoid problems due to floating point inaccuracy.
 
-            intersection.x = lerp(intersection.x, brickOrigin.x + Brick.WORLD_BRICK_SIZE * 0.5f, 0.001f)
-            intersection.y = lerp(intersection.y, brickOrigin.y + Brick.WORLD_BRICK_SIZE * 0.5f, 0.001f)
-            intersection.z = lerp(intersection.z, brickOrigin.z + Brick.WORLD_BRICK_SIZE * 0.5f, 0.001f)
+            intersection.x = lerp(intersection.x, brickOrigin.x + WORLD_BRICK_SIZE * 0.5f, 0.001f)
+            intersection.y = lerp(intersection.y, brickOrigin.y + WORLD_BRICK_SIZE * 0.5f, 0.001f)
+            intersection.z = lerp(intersection.z, brickOrigin.z + WORLD_BRICK_SIZE * 0.5f, 0.001f)
 
             // Find the next brick by moving along the ray. Move a short distance only, otherwise we might pass through
             // a brick's corner!
@@ -64,16 +65,16 @@ class BrickWalker(private val volume: BrickVolume) {
             while (true) {
                 worldPtInsideBrick.set(intersection).addScaled(rayDir, move)
 
-                ox = floor(worldPtInsideBrick.x / Brick.WORLD_BRICK_SIZE) * Brick.WORLD_BRICK_SIZE
-                oy = floor(worldPtInsideBrick.y / Brick.WORLD_BRICK_SIZE) * Brick.WORLD_BRICK_SIZE
-                oz = floor(worldPtInsideBrick.z / Brick.WORLD_BRICK_SIZE) * Brick.WORLD_BRICK_SIZE
+                ox = floor(worldPtInsideBrick.x / WORLD_BRICK_SIZE) * WORLD_BRICK_SIZE
+                oy = floor(worldPtInsideBrick.y / WORLD_BRICK_SIZE) * WORLD_BRICK_SIZE
+                oz = floor(worldPtInsideBrick.z / WORLD_BRICK_SIZE) * WORLD_BRICK_SIZE
 
                 if (ox != brickOrigin.x || oy != brickOrigin.y || oz != brickOrigin.z) {
                     break
                 } else {
                     // Oops, we ended up in the same brick! Try again with a larger move distance!
 
-                    if (move < Brick.WORLD_BRICK_SIZE) {
+                    if (move < WORLD_BRICK_SIZE) {
                         move *= 2.0f
                     } else {
                         throw Exception("forEachBrickOnWorldLine ran into an endless loop")
@@ -126,9 +127,9 @@ class BrickWalker(private val volume: BrickVolume) {
         val px = brickOrigin.x
         val py = brickOrigin.y
         val pz = brickOrigin.z
-        val qx = px + Brick.WORLD_BRICK_SIZE
-        val qy = py + Brick.WORLD_BRICK_SIZE
-        val qz = pz + Brick.WORLD_BRICK_SIZE
+        val qx = px + WORLD_BRICK_SIZE
+        val qy = py + WORLD_BRICK_SIZE
+        val qz = pz + WORLD_BRICK_SIZE
 
         // Downside (XY)
 

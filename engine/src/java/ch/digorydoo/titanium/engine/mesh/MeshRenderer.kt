@@ -1,7 +1,7 @@
 package ch.digorydoo.titanium.engine.mesh
 
 import ch.digorydoo.kutils.point.Point3f
-import ch.digorydoo.titanium.engine.brick.Brick.Companion.WORLD_BRICK_SIZE
+import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.shader.Renderer
 
 abstract class MeshRenderer: Renderer {

@@ -3,7 +3,7 @@ package ch.digorydoo.titanium.engine.editor
 import ch.digorydoo.kutils.math.normAngle
 import ch.digorydoo.kutils.point.MutablePoint2i
 import ch.digorydoo.kutils.point.MutablePoint3i
-import ch.digorydoo.titanium.engine.brick.Brick.Companion.worldToBrick
+import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.worldToBrick
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.editor.action.EditorActions
 import ch.digorydoo.titanium.engine.editor.cursor.CursorGelHolder
@@ -124,18 +124,10 @@ class Editor {
         cursor.createGels()
 
         val player = App.player
-
-        if (player != null) {
-            val brickCoords = MutablePoint3i()
-            worldToBrick(player.pos, brickCoords)
-            selection.set(brickCoords.x, brickCoords.y, brickCoords.z + 1)
-        } else {
-            // When there is no player, we set the cursor to the camera target.
-            val brickPos = MutablePoint3i()
-            worldToBrick(App.camera.targetPos, brickPos)
-            App.bricks.clampToSize(brickPos)
-            selection.set(brickPos.x, brickPos.y, brickPos.z + 1)
-        }
+        val brickCoords = MutablePoint3i()
+        worldToBrick(player?.pos ?: App.camera.targetPos, brickCoords)
+        App.bricks.clampToSize(brickCoords)
+        selection.set(brickCoords.x, brickCoords.y, brickCoords.z + 1)
 
         status.show()
         isShown = true

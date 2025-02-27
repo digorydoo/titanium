@@ -3,6 +3,7 @@ package ch.digorydoo.titanium.engine.brick
 import ch.digorydoo.kutils.box.Boxi
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.point.Point3i
+import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.texture.Texture
 
@@ -14,9 +15,9 @@ class BrickSubvolume(private val volume: BrickVolume, models: BrickModelHolder, 
     private val buffer = BrickBuffer(box.xsize, box.ysize, box.zsize)
 
     private val worldOrigin = Point3f(
-        box.x0.toFloat() * Brick.WORLD_BRICK_SIZE,
-        box.y0.toFloat() * Brick.WORLD_BRICK_SIZE,
-        box.z0.toFloat() * Brick.WORLD_BRICK_SIZE,
+        box.x0.toFloat() * WORLD_BRICK_SIZE,
+        box.y0.toFloat() * WORLD_BRICK_SIZE,
+        box.z0.toFloat() * WORLD_BRICK_SIZE,
     )
 
     private val modelData = BrickModelData(this, models)
