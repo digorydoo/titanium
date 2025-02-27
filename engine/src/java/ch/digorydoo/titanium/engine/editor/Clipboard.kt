@@ -1,6 +1,7 @@
 package ch.digorydoo.titanium.engine.editor
 
 import ch.digorydoo.titanium.engine.brick.Brick
+import ch.digorydoo.titanium.engine.brick.BrickFaceAssigner
 import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.editor.statusbar.EditorStatusBar
@@ -74,7 +75,8 @@ class Clipboard(
         } else {
             val undoList = mutableListOf<Brick>()
             var i = 0
-            val tmp = Brick()
+            val brick = Brick()
+            val bfa = BrickFaceAssigner()
 
             for (iz in 0 ..< copiedZsize) {
                 for (iy in 0 ..< copiedYsize) {
@@ -86,10 +88,9 @@ class Clipboard(
                         if (x < App.bricks.xsize && y < App.bricks.ysize && z < App.bricks.zsize) {
                             undoList.add(Brick().also { App.bricks.getAtBrickCoord(x, y, z, it) })
 
-                            tmp.set(copiedBricks[i])
-                            tmp.brickCoords.set(x, y, z)
-                            tmp.setFacesFromMaterialAndBrickCoords()
-                            App.bricks.setAtBrickCoord(x, y, z, tmp)
+                            brick.set(copiedBricks[i])
+                            bfa.setFacesFromMaterialAndBrickCoords(brick, x, y, z)
+                            App.bricks.setAtBrickCoord(x, y, z, brick)
                         }
 
                         i++

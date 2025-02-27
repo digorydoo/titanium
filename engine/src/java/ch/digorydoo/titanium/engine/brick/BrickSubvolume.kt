@@ -46,43 +46,49 @@ class BrickSubvolume(private val volume: BrickVolume, models: BrickModelHolder, 
         }
     }
 
-    fun getBrick(pt: Point3i, brick: Brick, acrossBounds: Boolean = false) =
-        getBrick(pt.x, pt.y, pt.z, brick, acrossBounds)
+    fun getBrick(subRelativeCoords: Point3i, brick: Brick, acrossBounds: Boolean = false) {
+        getBrick(subRelativeCoords.x, subRelativeCoords.y, subRelativeCoords.z, brick, acrossBounds)
+    }
 
-    fun getBrick(x: Int, y: Int, z: Int, brick: Brick, acrossBounds: Boolean = false): Boolean =
-        if (isInBounds(x, y, z)) {
-            buffer.get(x, y, z, brick)
-            true
+    fun getBrick(subRelX: Int, subRelY: Int, subRelZ: Int, brick: Brick, acrossBounds: Boolean = false) {
+        if (isInBounds(subRelX, subRelY, subRelZ)) {
+            buffer.get(subRelX, subRelY, subRelZ, brick)
         } else if (acrossBounds) {
-            volume.getAtBrickCoord(box.x0 + x, box.y0 + y, box.z0 + z, brick)
+            volume.getAtBrickCoord(box.x0 + subRelX, box.y0 + subRelY, box.z0 + subRelZ, brick)
         } else {
             brick.setInvalid()
-            false
         }
+    }
 
-    fun getShape(pt: Point3i, acrossBounds: Boolean = false) =
-        getShape(pt.x, pt.y, pt.z, acrossBounds)
+    fun getShape(subRelativeCoords: Point3i, acrossBounds: Boolean = false) =
+        getShape(subRelativeCoords.x, subRelativeCoords.y, subRelativeCoords.z, acrossBounds)
 
-    fun getShape(x: Int, y: Int, z: Int, acrossBounds: Boolean = false): BrickShape? =
-        if (isInBounds(x, y, z)) {
-            buffer.getShape(x, y, z)
+    fun getShape(subRelX: Int, subRelY: Int, subRelZ: Int, acrossBounds: Boolean = false): BrickShape? =
+        if (isInBounds(subRelX, subRelY, subRelZ)) {
+            buffer.getShape(subRelX, subRelY, subRelZ)
         } else if (!acrossBounds) {
             null
-        } else if (volume.getAtBrickCoord(box.x0 + x, box.y0 + y, box.z0 + z, tempBrick)) {
-            tempBrick.shape
         } else {
-            null
+            volume.getAtBrickCoord(box.x0 + subRelX, box.y0 + subRelY, box.z0 + subRelZ, tempBrick)
+            if (tempBrick.isValid()) {
+                tempBrick.shape
+            } else {
+                null
+            }
         }
 
-    fun getMaterial(x: Int, y: Int, z: Int, acrossBounds: Boolean = false): BrickMaterial? =
-        if (isInBounds(x, y, z)) {
-            buffer.getMaterial(x, y, z)
+    fun getMaterial(subRelX: Int, subRelY: Int, subRelZ: Int, acrossBounds: Boolean = false): BrickMaterial? =
+        if (isInBounds(subRelX, subRelY, subRelZ)) {
+            buffer.getMaterial(subRelX, subRelY, subRelZ)
         } else if (!acrossBounds) {
             null
-        } else if (volume.getAtBrickCoord(box.x0 + x, box.y0 + y, box.z0 + z, tempBrick)) {
-            tempBrick.material
         } else {
-            null
+            volume.getAtBrickCoord(box.x0 + subRelX, box.y0 + subRelY, box.z0 + subRelZ, tempBrick)
+            if (tempBrick.isValid()) {
+                tempBrick.material
+            } else {
+                null
+            }
         }
 
     fun forEachBrick(lambda: (brick: Brick, ix: Int, iy: Int, iz: Int) -> Unit) {

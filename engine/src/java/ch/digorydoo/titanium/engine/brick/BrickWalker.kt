@@ -81,9 +81,11 @@ class BrickWalker(private val volume: BrickVolume) {
                 }
             }
 
-            if (!volume.getAtWorldCoord(worldPtInsideBrick, tempBrick)) {
+            if (!volume.isWorldPtInBounds(worldPtInsideBrick)) {
                 break // we've crossed the volume boundary
             }
+
+            volume.getAtWorldCoord(worldPtInsideBrick, tempBrick)
 
             if (!lambda(tempBrick, intersection, rayDir)) {
                 break // the lambda told us to stop

@@ -1,5 +1,6 @@
 package ch.digorydoo.titanium.game.s999_town
 
+import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import ch.digorydoo.titanium.engine.scene.Lighting
@@ -21,7 +22,7 @@ class TownScene: Scene(
 ) {
     override fun enter(restore: RestoredState?) {
         val restoredState = restore as? RestoredStateImpl?
-        val playerPos = restoredState?.playerPos ?: App.bricks.getPtWithTopFloorZ(175.0f, 156.0f)
+        val playerPos = restoredState?.playerPos ?: Point3f(175.0f, 156.0f, 7.0f)
         val player = PlayerGel(initialPos = playerPos, initialRotationPhi = 0.0f)
         App.content.add(player, LayerKind.MAIN_COLLIDABLE)
 

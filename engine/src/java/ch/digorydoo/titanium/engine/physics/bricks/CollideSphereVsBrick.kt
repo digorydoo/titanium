@@ -3,7 +3,6 @@ package ch.digorydoo.titanium.engine.physics.bricks
 import ch.digorydoo.kutils.math.clamp
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point3f
-import ch.digorydoo.kutils.point.Point3i
 import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.brick.Brick.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.brick.BrickVolume
@@ -18,6 +17,7 @@ internal class CollideSphereVsBrick: BrickCollisionStrategy<FixedSphereBody>() {
     private val hitPt = MutablePoint3f()
     private val hitNormal = MutablePoint3f()
     private val brick = Brick()
+    private val brickWorldCoords = MutablePoint3f()
     private val cuboidCentre = MutablePoint3f()
     private val cuboidSize = MutablePoint3f()
     private val faceCentreToSphereCentre = MutablePoint3f()
@@ -44,14 +44,14 @@ internal class CollideSphereVsBrick: BrickCollisionStrategy<FixedSphereBody>() {
         for (brickX in minBrickX .. maxBrickX) {
             for (brickY in minBrickY .. maxBrickY) {
                 for (brickZ in minBrickZ .. maxBrickZ) {
-                    if (brickVolume.getAtBrickCoord(brickX, brickY, brickZ, brick)) {
-                        if (brick.isValid()) {
-                            findCuboid(brick.worldCoords)
+                    brickVolume.getAtBrickCoord(brickX, brickY, brickZ, brick, outWorldCoords = brickWorldCoords)
 
-                            if (checkAgainstCuboid(cx, cy, cz, r, brickVolume, brick.brickCoords)) {
-                                val bounce = { bounce(body) }
-                                onHit(brick, hitPt, bounce)
-                            }
+                    if (brick.isValid()) {
+                        findCuboid(brickWorldCoords)
+
+                        if (checkAgainstCuboid(cx, cy, cz, r, brickVolume, brickX, brickY, brickZ)) {
+                            val bounce = { bounce(body) }
+                            onHit(brick, hitPt, bounce)
                         }
                     }
                 }
@@ -75,7 +75,9 @@ internal class CollideSphereVsBrick: BrickCollisionStrategy<FixedSphereBody>() {
         cz: Float,
         r: Float,
         brickVolume: BrickVolume,
-        brickCoords: Point3i,
+        brickX: Int,
+        brickY: Int,
+        brickZ: Int,
     ): Boolean {
         var result = ResultState.NO_HIT
         val rsqr = r * r
@@ -117,11 +119,11 @@ internal class CollideSphereVsBrick: BrickCollisionStrategy<FixedSphereBody>() {
                     // If closestPtOnPlane is outside the cuboid, check if there is a brick in the dir of the normal.
 
                     fun hasValidNeighbour(): Boolean {
-                        val neighbourX = (brickCoords.x + normal.x).toInt()
-                        val neighbourY = (brickCoords.y + normal.y).toInt()
-                        val neighbourZ = (brickCoords.z + normal.z).toInt()
+                        val neighbourX = (brickX + normal.x).toInt()
+                        val neighbourY = (brickY + normal.y).toInt()
+                        val neighbourZ = (brickZ + normal.z).toInt()
 
-                        if (brickCoords.x == neighbourX && brickCoords.y == neighbourY && brickCoords.z == neighbourZ) {
+                        if (brickX == neighbourX && brickY == neighbourY && brickZ == neighbourZ) {
                             // This shouldn't happen, since normal should always point in the direction of an axis
                             return false
                         } else {

@@ -3,7 +3,6 @@ package ch.digorydoo.titanium.engine.editor
 import ch.digorydoo.kutils.math.normAngle
 import ch.digorydoo.kutils.point.MutablePoint2i
 import ch.digorydoo.kutils.point.MutablePoint3i
-import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.brick.Brick.Companion.worldToBrick
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.editor.action.EditorActions
@@ -127,8 +126,9 @@ class Editor {
         val player = App.player
 
         if (player != null) {
-            val brickPos = Brick().also { App.bricks.getAtWorldCoord(player.pos, it) }.brickCoords
-            selection.set(brickPos.x, brickPos.y, brickPos.z + 1)
+            val brickCoords = MutablePoint3i()
+            worldToBrick(player.pos, brickCoords)
+            selection.set(brickCoords.x, brickCoords.y, brickCoords.z + 1)
         } else {
             // When there is no player, we set the cursor to the camera target.
             val brickPos = MutablePoint3i()

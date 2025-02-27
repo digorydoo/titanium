@@ -8,7 +8,7 @@ import ch.digorydoo.titanium.engine.brick.BrickMaterial.*
  * divided by TEX_BRICK_WIDTH and TEX_BRICK_WIDTH into brick faces. Indexes are counted from left to right and down.
  * Each material can have one or more up faces, one or more side faces, and one or more down faces.
  */
-class BrickFaceAssigner(private val brick: Brick) {
+class BrickFaceAssigner {
     private interface FaceArray {
         fun pickFaceIdx(u: Int, v: Int): Int
     }
@@ -56,22 +56,18 @@ class BrickFaceAssigner(private val brick: Brick) {
         val side: FaceArray = up,
         val down: FaceArray = side,
     ) {
-        fun pickFaces(brick: Brick) {
-            val brickCoords = brick.brickCoords
-            val bx = brickCoords.x
-            val by = brickCoords.y
-            val bz = brickCoords.z
-            brick.upFaceIdx = up.pickFaceIdx(by, bx)
-            brick.downFaceIdx = down.pickFaceIdx(-by, bx)
-            brick.northFaceIdx = side.pickFaceIdx(-by, -bz)
-            brick.eastFaceIdx = side.pickFaceIdx(-bx, -bz)
-            brick.southFaceIdx = side.pickFaceIdx(by, -bz)
-            brick.westFaceIdx = side.pickFaceIdx(bx, -bz)
+        fun pickFaces(brick: Brick, brickX: Int, brickY: Int, brickZ: Int) {
+            brick.upFaceIdx = up.pickFaceIdx(brickY, brickX)
+            brick.downFaceIdx = down.pickFaceIdx(-brickY, brickX)
+            brick.northFaceIdx = side.pickFaceIdx(-brickY, -brickZ)
+            brick.eastFaceIdx = side.pickFaceIdx(-brickX, -brickZ)
+            brick.southFaceIdx = side.pickFaceIdx(brickY, -brickZ)
+            brick.westFaceIdx = side.pickFaceIdx(brickX, -brickZ)
         }
     }
 
-    fun setFacesFromMaterialAndBrickCoords() {
-        getBrickFaceArrays(brick.material).pickFaces(brick)
+    fun setFacesFromMaterialAndBrickCoords(brick: Brick, brickX: Int, brickY: Int, brickZ: Int) {
+        getBrickFaceArrays(brick.material).pickFaces(brick, brickX, brickY, brickZ)
     }
 
     companion object {
