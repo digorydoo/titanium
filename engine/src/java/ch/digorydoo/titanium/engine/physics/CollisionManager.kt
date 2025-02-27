@@ -3,6 +3,7 @@ package ch.digorydoo.titanium.engine.physics
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.titanium.engine.brick.BrickVolume
 import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.physics.bricks.CollideCylinderVsBrick
 import ch.digorydoo.titanium.engine.physics.bricks.CollideSphereVsBrick
 import ch.digorydoo.titanium.engine.physics.regular.CollideCylinderVsCylinder
 import ch.digorydoo.titanium.engine.physics.regular.CollideSphereVsCylinder
@@ -18,6 +19,7 @@ class CollisionManager {
     private val cylinderVsCylinder = CollideCylinderVsCylinder()
 
     private val sphereVsBrick = CollideSphereVsBrick()
+    private val cylinderVsBrick = CollideCylinderVsBrick()
 
     /**
      * Called by GelLayer for all pairs of GraphicElement whose canCollide returned true. The same pair with the gels
@@ -97,13 +99,18 @@ class CollisionManager {
 
         when (body) {
             is FixedSphereBody -> {
-                sphereVsBrick.checkNextPos(body, brickVolume) { brick, hitPt, bounce ->
-                    gel.didCollide(brick, hitPt)
+                sphereVsBrick.checkNextPos(body, brickVolume) { brick, hitPt, hitNormal, bounce ->
+                    gel.didCollide(brick, hitPt, hitNormal)
                     bounce()
                 }
             }
-            is FixedCylinderBody -> return // TODO
-            is FixedPlaneBody -> return // TODO
+            is FixedCylinderBody -> {
+                cylinderVsBrick.checkNextPos(body, brickVolume) { brick, hitPt, hitNormal, bounce ->
+                    gel.didCollide(brick, hitPt, hitNormal)
+                    bounce()
+                }
+            }
+            is FixedPlaneBody -> throw NotImplementedError()
         }
     }
 }

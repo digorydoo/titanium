@@ -68,11 +68,11 @@ class PickupGel private constructor(
     }
 
     override fun didCollide(other: GraphicElement, hitPt: Point3f): Boolean {
-        println("PickupGel collided with $other")
+        // println("PickupGel collided with $other")
         return true // true = bounce
     }
 
-    override fun didCollide(brick: Brick, hitPt: Point3f) {
+    override fun didCollide(brick: Brick, hitPt: Point3f, hitNormal: Point3f) {
     }
 
     override fun onRemoveZombie() {

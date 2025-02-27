@@ -18,15 +18,14 @@ internal class CollideSphereVsBrick: BrickCollisionStrategy<FixedSphereBody>() {
     private val hitNormal = MutablePoint3f()
     private val brick = Brick()
     private val brickWorldCoords = MutablePoint3f()
-    private val cuboidCentre = MutablePoint3f()
-    private val cuboidSize = MutablePoint3f()
+    private val geometry = BrickGeometry()
     private val faceCentreToSphereCentre = MutablePoint3f()
     private val closestPtOnPlane = MutablePoint3f()
 
     override fun checkNextPos(
         body: FixedSphereBody,
         brickVolume: BrickVolume,
-        onHit: (brick: Brick, hitPt: Point3f, bounce: () -> Unit) -> Unit,
+        onHit: (brick: Brick, hitPt: Point3f, hitNormal: Point3f, bounce: () -> Unit) -> Unit,
     ) {
         val cx = body.nextPos.x
         val cy = body.nextPos.y
@@ -45,31 +44,18 @@ internal class CollideSphereVsBrick: BrickCollisionStrategy<FixedSphereBody>() {
             for (brickY in minBrickY .. maxBrickY) {
                 for (brickZ in minBrickZ .. maxBrickZ) {
                     brickVolume.getAtBrickCoord(brickX, brickY, brickZ, brick, outWorldCoords = brickWorldCoords)
+                    geometry.determine(brick.shape, brickWorldCoords)
 
-                    if (brick.isValid()) {
-                        findCuboid(brickWorldCoords)
-
-                        if (checkAgainstCuboid(cx, cy, cz, r, brickVolume, brickX, brickY, brickZ)) {
-                            val bounce = { bounce(body) }
-                            onHit(brick, hitPt, bounce)
-                        }
+                    if (check(cx, cy, cz, r, brickVolume, brickX, brickY, brickZ)) {
+                        val bounce = { bounce(body) }
+                        onHit(brick, hitPt, hitNormal, bounce)
                     }
                 }
             }
         }
     }
 
-    // TODO: change according to brick.shape
-    private fun findCuboid(origin: Point3f) {
-        cuboidCentre.set(
-            origin.x + WORLD_BRICK_SIZE / 2,
-            origin.y + WORLD_BRICK_SIZE / 2,
-            origin.z + WORLD_BRICK_SIZE / 2,
-        )
-        cuboidSize.set(WORLD_BRICK_SIZE, WORLD_BRICK_SIZE, WORLD_BRICK_SIZE)
-    }
-
-    private fun checkAgainstCuboid(
+    private fun check(
         cx: Float,
         cy: Float,
         cz: Float,
@@ -78,19 +64,57 @@ internal class CollideSphereVsBrick: BrickCollisionStrategy<FixedSphereBody>() {
         brickX: Int,
         brickY: Int,
         brickZ: Int,
+    ): Boolean = when (geometry.type) {
+        BrickGeometryType.NONE -> false
+        BrickGeometryType.CUBOID -> checkCuboid(
+            cx,
+            cy,
+            cz,
+            r,
+            geometry.cuboidCentre.x,
+            geometry.cuboidCentre.y,
+            geometry.cuboidCentre.z,
+            geometry.cuboidSize.x,
+            geometry.cuboidSize.y,
+            geometry.cuboidSize.z,
+            brickVolume,
+            brickX,
+            brickY,
+            brickZ,
+        )
+    }
+
+    private fun checkCuboid(
+        // Sphere
+        cx: Float,
+        cy: Float,
+        cz: Float,
+        r: Float,
+        // Cuboid
+        cuboidCentreX: Float,
+        cuboidCentreY: Float,
+        cuboidCentreZ: Float,
+        cuboidSizeX: Float,
+        cuboidSizeY: Float,
+        cuboidSizeZ: Float,
+        // Brick
+        brickVolume: BrickVolume,
+        brickX: Int,
+        brickY: Int,
+        brickZ: Int,
     ): Boolean {
         var result = ResultState.NO_HIT
         val rsqr = r * r
-        val halfSizeX = cuboidSize.x / 2.0f
-        val halfSizeY = cuboidSize.y / 2.0f
-        val halfSizeZ = cuboidSize.z / 2.0f
+        val halfSizeX = cuboidSizeX / 2.0f
+        val halfSizeY = cuboidSizeY / 2.0f
+        val halfSizeZ = cuboidSizeZ / 2.0f
 
         fun check(normal: Point3f): Boolean {
             // Find the centre on the face described by the normal, and subtract it from the sphere's centre.
             faceCentreToSphereCentre.set(
-                cx - (cuboidCentre.x + normal.x * halfSizeX),
-                cy - (cuboidCentre.y + normal.y * halfSizeY),
-                cz - (cuboidCentre.z + normal.z * halfSizeZ),
+                cx - (cuboidCentreX + normal.x * halfSizeX),
+                cy - (cuboidCentreY + normal.y * halfSizeY),
+                cz - (cuboidCentreZ + normal.z * halfSizeZ),
             )
 
             // Compute the projected distance between the sphere's centre and the face.
@@ -102,7 +126,7 @@ internal class CollideSphereVsBrick: BrickCollisionStrategy<FixedSphereBody>() {
 
             // If d >= -r, the sphere collides with our face.
             if (d >= -r) {
-                // Compute the closest point on the plane of the cuboid face, and clamp it to the extent of the cuboid.
+                // Compute the closest point on the plane of the cuboid face.
                 closestPtOnPlane.set(
                     cx - d * normal.x,
                     cy - d * normal.y,
@@ -131,17 +155,17 @@ internal class CollideSphereVsBrick: BrickCollisionStrategy<FixedSphereBody>() {
                         }
                     }
 
-                    if (closestPtOnPlane.x < cuboidCentre.x - halfSizeX) {
+                    if (closestPtOnPlane.x < cuboidCentreX - halfSizeX) {
                         tentative = hasValidNeighbour()
-                    } else if (closestPtOnPlane.x > cuboidCentre.x + halfSizeX) {
+                    } else if (closestPtOnPlane.x > cuboidCentreX + halfSizeX) {
                         tentative = hasValidNeighbour()
-                    } else if (closestPtOnPlane.y < cuboidCentre.y - halfSizeY) {
+                    } else if (closestPtOnPlane.y < cuboidCentreY - halfSizeY) {
                         tentative = hasValidNeighbour()
-                    } else if (closestPtOnPlane.y > cuboidCentre.y + halfSizeY) {
+                    } else if (closestPtOnPlane.y > cuboidCentreY + halfSizeY) {
                         tentative = hasValidNeighbour()
-                    } else if (closestPtOnPlane.z < cuboidCentre.z - halfSizeZ) {
+                    } else if (closestPtOnPlane.z < cuboidCentreZ - halfSizeZ) {
                         tentative = hasValidNeighbour()
-                    } else if (closestPtOnPlane.z > cuboidCentre.z + halfSizeZ) {
+                    } else if (closestPtOnPlane.z > cuboidCentreZ + halfSizeZ) {
                         tentative = hasValidNeighbour()
                     } else {
                         tentative = false
@@ -150,9 +174,9 @@ internal class CollideSphereVsBrick: BrickCollisionStrategy<FixedSphereBody>() {
 
                 // Clamp the point to the extent of the cuboid.
                 closestPtOnPlane.set(
-                    clamp(closestPtOnPlane.x, cuboidCentre.x - halfSizeX, cuboidCentre.x + halfSizeX),
-                    clamp(closestPtOnPlane.y, cuboidCentre.y - halfSizeY, cuboidCentre.y + halfSizeY),
-                    clamp(closestPtOnPlane.z, cuboidCentre.z - halfSizeZ, cuboidCentre.z + halfSizeZ),
+                    clamp(closestPtOnPlane.x, cuboidCentreX - halfSizeX, cuboidCentreX + halfSizeX),
+                    clamp(closestPtOnPlane.y, cuboidCentreY - halfSizeY, cuboidCentreY + halfSizeY),
+                    clamp(closestPtOnPlane.z, cuboidCentreZ - halfSizeZ, cuboidCentreZ + halfSizeZ),
                 )
 
                 // Check if the clamped point actually collides with the sphere.

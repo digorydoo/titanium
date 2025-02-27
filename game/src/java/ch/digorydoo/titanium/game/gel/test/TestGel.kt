@@ -2,18 +2,18 @@ package ch.digorydoo.titanium.game.gel.test
 
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.Point3f
-import ch.digorydoo.titanium.engine.behaviours.Rotate
 import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.texture.FrameCollection
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 
-class TestGel(initialPos: Point3f, initialRotation: Float, initialRotSpeed: Float): GraphicElement(initialPos) {
+class TestGel(initialPos: Point3f, initialRotation: Float): GraphicElement(initialPos) {
     override val inDialog = Visibility.ACTIVE
     override val inMenu = Visibility.INVISIBLE
     override val inEditor = Visibility.ACTIVE
@@ -32,12 +32,7 @@ class TestGel(initialPos: Point3f, initialRotation: Float, initialRotSpeed: Floa
     private val frames = FrameCollection()
     private val frameOrigin = MutablePoint2f()
     private val movingForce = MutablePoint2f()
-
-    private val rotateProps = object: Rotate.Delegate {
-        override var rotation = initialRotation
-    }
-
-    private val rotate = Rotate(rotateProps, phase = Math.random().toFloat(), speed = initialRotSpeed)
+    private var rotationSpeed = 0.0f
 
     private val renderProps = object: PaperRenderer.Delegate() {
         override val renderPos get() = this@TestGel.pos
@@ -45,7 +40,7 @@ class TestGel(initialPos: Point3f, initialRotation: Float, initialRotSpeed: Floa
         override val tex get() = frames.tex
         override val texOffset get() = frames.texOffset
         override val origin get() = frameOrigin
-        override val rotationPhi get() = rotateProps.rotation
+        override var rotationPhi = initialRotation
         override val rotationRho = 0.0f
         override val scaleFactor = MutablePoint2f(1.0f / 36, 1.0f / 36)
     }
@@ -53,22 +48,26 @@ class TestGel(initialPos: Point3f, initialRotation: Float, initialRotSpeed: Floa
     override val renderer = App.factory.createPaperRenderer(renderProps)
 
     override fun didCollide(other: GraphicElement, hitPt: Point3f): Boolean {
-        println("TestGel collided with $other")
+        // println("TestGel collided with $other")
         return true // true = bounce
     }
 
-    override fun didCollide(brick: Brick, hitPt: Point3f) {
-        changeDirection()
+    override fun didCollide(brick: Brick, hitPt: Point3f, hitNormal: Point3f) {
+        if (abs(hitNormal.x) + abs(hitNormal.y) > abs(hitNormal.z)) {
+            // println("TestGel collided sideways, hitPt=$hitPt")
+            changeDirection()
+        }
     }
 
     private fun changeDirection() {
         val a = Random.nextFloat() * Math.PI * 2.0f
-        movingForce.x = 4.0f * body.mass * cos(a).toFloat()
-        movingForce.y = 4.0f * body.mass * sin(a).toFloat()
+        movingForce.x = 1.0f * body.mass * cos(a).toFloat()
+        movingForce.y = 1.0f * body.mass * sin(a).toFloat()
+        rotationSpeed = 0.1f * (1.0f - 2.0f * Random.nextFloat())
     }
 
     override fun onAnimateActive() {
-        rotate.animate()
+        renderProps.rotationPhi += rotationSpeed
         body.force.x += movingForce.x
         body.force.y += movingForce.y
     }
