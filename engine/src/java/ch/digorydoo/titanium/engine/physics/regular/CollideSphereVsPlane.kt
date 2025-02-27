@@ -13,7 +13,7 @@ internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPla
     /**
      * See docs/physics.txt
      */
-    override fun check(body1: FixedSphereBody, body2: FixedPlaneBody, outHitPt: MutablePoint3f): Boolean {
+    override fun checkNextPos(body1: FixedSphereBody, body2: FixedPlaneBody, outHitPt: MutablePoint3f): Boolean {
         tmp1.set(
             body1.nextPos.x - body2.nextPos.x,
             body1.nextPos.y - body2.nextPos.y,

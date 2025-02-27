@@ -18,7 +18,7 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
     private val tmp4 = MutablePoint2f()
     private val tmp5 = MutablePoint2f()
 
-    override fun check(body1: FixedCylinderBody, body2: FixedCylinderBody, outHitPt: MutablePoint3f) =
+    override fun checkNextPos(body1: FixedCylinderBody, body2: FixedCylinderBody, outHitPt: MutablePoint3f) =
         check(
             cx1 = body1.nextPos.x,
             cy1 = body1.nextPos.y,

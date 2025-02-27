@@ -11,9 +11,6 @@ import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.texture.FrameCollection
 import ch.digorydoo.titanium.game.gel.pickup.PickupSpawnPt.Kind
 import ch.digorydoo.titanium.game.gel.pickup.PickupSpawnPt.Kind.VASE
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.random.Random
 
 class PickupGel private constructor(
     override val spawnPt: PickupSpawnPt?,
@@ -76,9 +73,6 @@ class PickupGel private constructor(
     }
 
     override fun didCollide(brick: Brick, hitPt: Point3f) {
-        val a = Random.nextFloat() * Math.PI * 2.0f
-        body.nextSpeed.x = cos(a).toFloat()
-        body.nextSpeed.y = sin(a).toFloat()
     }
 
     override fun onRemoveZombie() {

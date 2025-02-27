@@ -120,6 +120,11 @@ class BrickVolume(
         return false
     }
 
+    fun hasValidBrickAt(brickX: Int, brickY: Int, brickZ: Int): Boolean {
+        getAtBrickCoord(brickX, brickY, brickZ, tempBrick)
+        return tempBrick.isValid()
+    }
+
     fun getAtWorldCoord(worldPt: Point3f, brick: Brick) =
         getAtWorldCoord(worldPt.x, worldPt.y, worldPt.z, brick)
 

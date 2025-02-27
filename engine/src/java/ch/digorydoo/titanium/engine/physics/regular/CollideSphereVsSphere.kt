@@ -10,7 +10,7 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
     private val tmp1 = MutablePoint3f()
     private val tmp2 = MutablePoint3f()
 
-    override fun check(body1: FixedSphereBody, body2: FixedSphereBody, outHitPt: MutablePoint3f) =
+    override fun checkNextPos(body1: FixedSphereBody, body2: FixedSphereBody, outHitPt: MutablePoint3f) =
         check(
             cx1 = body1.nextPos.x,
             cy1 = body1.nextPos.y,
