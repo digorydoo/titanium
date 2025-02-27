@@ -4,6 +4,7 @@ import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.string.initCap
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.utils.Direction
+import ch.digorydoo.titanium.engine.utils.EPSILON
 import ch.digorydoo.titanium.engine.utils.SmoothFloat
 import ch.digorydoo.titanium.engine.utils.SmoothPoint3f
 import kotlin.math.PI
@@ -112,6 +113,5 @@ class CameraProps {
         const val DEFAULT_PHI = -2.1f // rotation around z
         const val DEFAULT_RHO = -0.82f // inclination
         const val DEFAULT_DISTANCE = 5.0f
-        private const val EPSILON = 0.0001f
     }
 }

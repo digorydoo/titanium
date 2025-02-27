@@ -5,6 +5,7 @@ import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.physics.FixedPlaneBody
 import ch.digorydoo.titanium.engine.physics.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.STATIC_MASS
+import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.abs
 
 internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPlaneBody>() {

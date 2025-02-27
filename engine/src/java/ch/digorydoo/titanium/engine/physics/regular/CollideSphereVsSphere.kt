@@ -4,6 +4,7 @@ import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.physics.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.STATIC_MASS
+import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.sqrt
 
 internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSphereBody>() {

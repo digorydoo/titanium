@@ -9,6 +9,7 @@ import ch.digorydoo.titanium.engine.brick.Brick.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.brick.BrickVolume
 import ch.digorydoo.titanium.engine.physics.FixedSphereBody
 import ch.digorydoo.titanium.engine.utils.Direction
+import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.sqrt
 
 internal class CollideSphereVsBrick: BrickCollisionStrategy<FixedSphereBody>() {

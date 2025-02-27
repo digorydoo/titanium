@@ -6,6 +6,7 @@ import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.STATIC_MASS
+import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.sign
 import kotlin.math.sqrt
 

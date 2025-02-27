@@ -11,9 +11,4 @@ internal abstract class BrickCollisionStrategy<B: RigidBody> {
         brickVolume: BrickVolume,
         onHit: (brick: Brick, hitPt: Point3f, bounce: () -> Unit) -> Unit,
     )
-
-    companion object {
-        @JvmStatic
-        protected val EPSILON = 0.000001f // small number to avoid division by almost zero
-    }
 }
