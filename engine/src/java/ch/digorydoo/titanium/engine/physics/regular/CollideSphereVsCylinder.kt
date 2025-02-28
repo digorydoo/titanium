@@ -7,6 +7,8 @@ import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.utils.EPSILON
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sign
 import kotlin.math.sqrt
 
@@ -177,10 +179,10 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
         val p1 = tmp1.set(sphere.nextPos.x, sphere.nextPos.y, sphere.nextPos.z + sphere.zOffset)
         val p2 = tmp2.set(cylinder.nextPos.x, cylinder.nextPos.y, cylinder.nextPos.z + cylinder.zOffset)
 
-        val dx = p2.x - p1.x
-        val dy = p2.y - p1.y
-        val dsqr = (dx * dx) + (dy * dy) // squared distance in the XY plane
-        val vertical = dsqr <= cylinder.radius * cylinder.radius
+        val minTop = min(p1.z + sphere.radius, p2.z + cylinder.height / 2)
+        val maxBottom = max(p1.z - sphere.radius, p2.z - cylinder.height / 2)
+        val overlapHeight = minTop - maxBottom
+        val vertical = overlapHeight < VERTICAL_HIT_OVERLAP_HEIGHT_THRESHOLD
 
         if (vertical) {
             // Separate the bodies along the z-axis
@@ -193,6 +195,9 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
             }
         } else {
             // Separate the bodies in the XY plane
+            val dx = p2.x - p1.x
+            val dy = p2.y - p1.y
+            val dsqr = (dx * dx) + (dy * dy) // squared distance in the XY plane
             val dlen = sqrt(dsqr)
             val n = tmp5.set(dx / dlen, dy / dlen)
             val moveBy = sphere.radius + cylinder.radius + 2 * EPSILON
@@ -235,5 +240,9 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
         }
 
         return vertical
+    }
+
+    companion object {
+        private const val VERTICAL_HIT_OVERLAP_HEIGHT_THRESHOLD = 0.05f
     }
 }

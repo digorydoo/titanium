@@ -195,23 +195,10 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
         val p1 = tmp1.set(body1.nextPos.x, body1.nextPos.y, body1.nextPos.z + body1.zOffset)
         val p2 = tmp2.set(body2.nextPos.x, body2.nextPos.y, body2.nextPos.z + body2.zOffset)
 
-        val dx = p2.x - p1.x
-        val dy = p2.y - p1.y
-        val dsqr = (dx * dx) + (dy * dy) // squared distance in the XY plane
-
-        val smallr = min(body1.radius, body2.radius)
-        val vertical: Boolean
-
-        if (dsqr <= smallr * smallr) {
-            // The XY distance between the centres is smaller than the smaller of the two radii.
-            // We can reasonably assume the hit was vertical.
-            vertical = true
-        } else {
-            // We treat the hit as vertical if the z component of the difference is the largest component.
-            val v1 = body1.nextSpeed
-            val v2 = body2.nextSpeed
-            vertical = abs(v1.z - v2.z) >= max(abs(v1.x - v2.x), abs(v1.y - v2.y))
-        }
+        val minTop = min(p1.z + body1.height / 2, p2.z + body2.height / 2)
+        val maxBottom = max(p1.z - body1.height / 2, p2.z - body2.height / 2)
+        val overlapHeight = minTop - maxBottom
+        val vertical = overlapHeight < VERTICAL_HIT_OVERLAP_HEIGHT_THRESHOLD
 
         if (vertical) {
             // Separate the bodies along the z-axis
@@ -224,6 +211,9 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
             }
         } else {
             // Separate the bodies in the XY plane
+            val dx = p2.x - p1.x
+            val dy = p2.y - p1.y
+            val dsqr = (dx * dx) + (dy * dy) // squared distance in the XY plane
             val dlen = sqrt(dsqr)
             val n = tmp5.set(dx / dlen, dy / dlen)
             val moveBy = body1.radius + body2.radius + 2 * EPSILON
@@ -232,5 +222,9 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
         }
 
         return vertical
+    }
+
+    companion object {
+        private const val VERTICAL_HIT_OVERLAP_HEIGHT_THRESHOLD = 0.05f
     }
 }
