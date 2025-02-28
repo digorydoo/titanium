@@ -23,6 +23,11 @@ enum class Direction {
         val upVector = Point3f(0.0f, 0.0f, 1.0f)
         val downVector = Point3f(0.0f, 0.0f, -1.0f)
 
+        val northVector2D = Point2f(-1.0f, 0.0f)
+        val eastVector2D = Point2f(0.0f, 1.0f)
+        val southVector2D = Point2f(1.0f, 0.0f)
+        val westVector2D = Point2f(0.0f, -1.0f)
+
         fun fromVector(pt: Point2f, offset: Float) =
             fromVector(pt.x, pt.y, offset)
 

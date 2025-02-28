@@ -1,7 +1,7 @@
 package ch.digorydoo.titanium.engine.camera
 
-import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.brick.BrickShape
+import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.camera.CameraProps.Mode
 import ch.digorydoo.titanium.engine.core.App
 import kotlin.math.max
@@ -69,7 +69,7 @@ class CameraDirector(private val props: CameraProps) {
         App.bricks.forEachBrickOnWorldLine(targetPos.current, sourcePos.desired) { brick, worldPt, _ ->
             if (!isSolid(brick.shape)) {
                 true // continue
-            } else if (App.editor.isShown && worldPt.distanceTo(targetPos.current) <= Brick.WORLD_BRICK_SIZE) {
+            } else if (App.editor.isShown && worldPt.distanceTo(targetPos.current) <= WORLD_BRICK_SIZE) {
                 // This wall is too close. Maybe the target is stuck in a brick. Ignore this wall.
                 true // continue
             } else {
@@ -80,10 +80,10 @@ class CameraDirector(private val props: CameraProps) {
                 if (App.editor.isShown) {
                     // In the editor, it's sometimes ok if we can see through a wall, but we should never be very close
                     // to the target.
-                    distance.desired = max(EDITOR_MIN_DISTANCE, distanceToWall - 0.1f * Brick.WORLD_BRICK_SIZE)
+                    distance.desired = max(EDITOR_MIN_DISTANCE, distanceToWall - 0.1f * WORLD_BRICK_SIZE)
                 } else {
                     // In the game, we can get very close to the target, but we must stay in front of blocking walls.
-                    distance.desired = max(MIN_DISTANCE, distanceToWall - 0.2f * Brick.WORLD_BRICK_SIZE)
+                    distance.desired = max(MIN_DISTANCE, distanceToWall - 0.2f * WORLD_BRICK_SIZE)
 
                     if (distance.desired < distance.current) {
                         distance.jump()

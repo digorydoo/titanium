@@ -2,7 +2,7 @@ package ch.digorydoo.titanium.engine.editor.cursor
 
 import ch.digorydoo.kutils.box.Boxi
 import ch.digorydoo.kutils.point.MutablePoint3f
-import ch.digorydoo.titanium.engine.brick.Brick.Companion.brickToWorld
+import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.brickToWorld
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.editor.cursor.CursorGel.Kind.*
 import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind

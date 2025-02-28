@@ -41,7 +41,7 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
         return true
     }
 
-    open fun didCollide(brick: Brick, hitPt: Point3f) {}
+    open fun didCollide(brick: Brick, hitPt: Point3f, hitNormal: Point3f) {}
 
     fun canCollide(): Boolean = when {
         zombie || hidden || body == null -> false

@@ -2,7 +2,7 @@ package ch.digorydoo.titanium.engine.gel
 
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.STATIC_MASS
+import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.LARGE_MASS
 
 class GelLayer(private val detectCollisions: Boolean = false) {
     enum class LayerKind {
@@ -63,7 +63,7 @@ class GelLayer(private val detectCollisions: Boolean = false) {
 
                     val body = gel1.body
 
-                    if (body != null && body.mass < STATIC_MASS) {
+                    if (body != null && body.mass < LARGE_MASS) {
                         c.handleCollisions(gel1, App.bricks)
                     }
                 }

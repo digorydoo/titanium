@@ -1,6 +1,6 @@
 package ch.digorydoo.titanium.engine.brick
 
-import ch.digorydoo.titanium.engine.brick.Brick.Companion.WORLD_BRICK_SIZE
+import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
 
 /**
  * This is the abstract base class for all brick models.

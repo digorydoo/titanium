@@ -3,7 +3,6 @@ package ch.digorydoo.titanium.engine.physics
 import ch.digorydoo.kutils.math.clamp
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.core.GameTime.Companion.DELTA_TIME
 import kotlin.math.sqrt
 
@@ -19,11 +18,6 @@ sealed class RigidBody protected constructor(
 
     val nextPos = MutablePoint3f()
     val nextSpeed = MutablePoint3f()
-
-    var hasGroundContact = true
-    var touchDownSpeed = 0.0f
-    var timeOfGroundContact = 0.0f
-    val floor = Brick()
 
     /**
      * Adds a force that brings the body to a certain target speed at a certain acceleration.
@@ -59,7 +53,7 @@ sealed class RigidBody protected constructor(
             force.z -= GRAVITY * mass
         }
 
-        if (mass < STATIC_MASS) {
+        if (mass < LARGE_MASS) {
             val ax = force.x / mass
             val ay = force.y / mass
             val az = force.z / mass
@@ -90,7 +84,7 @@ sealed class RigidBody protected constructor(
     }
 
     companion object {
-        const val STATIC_MASS = 10000.0f // bodies with a mass >= this will be considered immovable
+        const val LARGE_MASS = 10000.0f // bodies with a mass >= this will be considered immovable
 
         private const val MAX_SPEED = 100.0f
         private const val GRAVITY = 9.81f

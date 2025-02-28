@@ -3,8 +3,8 @@ package ch.digorydoo.titanium.engine.brick.zz_various
 import ch.digorydoo.kutils.math.lerp
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.titanium.engine.brick.AbstrBrickModel
-import ch.digorydoo.titanium.engine.brick.Brick.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.brick.BrickSubvolume
+import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.brick.Tesselator
 import ch.digorydoo.titanium.engine.utils.Direction
 import kotlin.math.abs

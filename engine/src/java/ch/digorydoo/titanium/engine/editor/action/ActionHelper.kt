@@ -1,6 +1,7 @@
 package ch.digorydoo.titanium.engine.editor.action
 
 import ch.digorydoo.titanium.engine.brick.Brick
+import ch.digorydoo.titanium.engine.brick.BrickFaceAssigner
 import ch.digorydoo.titanium.engine.brick.BrickMaterial
 import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.core.App
@@ -14,7 +15,9 @@ class ActionHelper(
     private val undoStack: UndoStack,
 ) {
     fun applyToAllSelectedBricks(newShape: BrickShape?, newMaterial: BrickMaterial?) {
-        applyToAllSelectedBricks { _, _, _, brick ->
+        val bfa = BrickFaceAssigner()
+
+        applyToAllSelectedBricks { x, y, z, brick ->
             if (brick.shape != BrickShape.NONE || newShape != null) {
                 if (newShape == BrickShape.NONE) {
                     brick.setInvalid()
@@ -25,7 +28,7 @@ class ActionHelper(
 
                     if (newMaterial != null) {
                         brick.material = newMaterial
-                        brick.setFacesFromMaterialAndBrickCoords()
+                        bfa.setFacesFromMaterialAndBrickCoords(brick, x, y, z)
                     }
                 }
             }

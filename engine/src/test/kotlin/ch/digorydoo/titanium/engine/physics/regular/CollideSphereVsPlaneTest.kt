@@ -1,6 +1,8 @@
-package ch.digorydoo.titanium.engine.physics
+package ch.digorydoo.titanium.engine.physics.regular
 
 import ch.digorydoo.kutils.point.MutablePoint3f
+import ch.digorydoo.titanium.engine.physics.FixedPlaneBody
+import ch.digorydoo.titanium.engine.physics.FixedSphereBody
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -28,7 +30,7 @@ internal class CollideSphereVsPlaneTest {
 
         val ck = CollideSphereVsPlane()
         val hitPt = MutablePoint3f()
-        assertFalse(ck.check(b1, b2, hitPt))
+        assertFalse(ck.checkNextPos(b1, b2, hitPt))
     }
 
     @Test
@@ -52,7 +54,7 @@ internal class CollideSphereVsPlaneTest {
 
         val ck = CollideSphereVsPlane()
         val hitPt = MutablePoint3f()
-        assertFalse(ck.check(b1, b2, hitPt))
+        assertFalse(ck.checkNextPos(b1, b2, hitPt))
     }
 
     @Test
@@ -76,7 +78,7 @@ internal class CollideSphereVsPlaneTest {
 
         val ck = CollideSphereVsPlane()
         val hitPt = MutablePoint3f()
-        assertFalse(ck.check(b1, b2, hitPt))
+        assertFalse(ck.checkNextPos(b1, b2, hitPt))
     }
 
     @Test
@@ -100,7 +102,7 @@ internal class CollideSphereVsPlaneTest {
 
         val ck = CollideSphereVsPlane()
         val hitPt = MutablePoint3f()
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
         assertEquals(10.294118f, hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(10.029411f, hitPt.y, TOLERANCE, "hitPt.y")
         assertEquals(10.3294115f, hitPt.z, TOLERANCE, "hitPt.z")
@@ -127,7 +129,7 @@ internal class CollideSphereVsPlaneTest {
 
         val ck = CollideSphereVsPlane()
         val hitPt = MutablePoint3f()
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
         assertEquals(10.294118f, hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(10.029411f, hitPt.y, TOLERANCE, "hitPt.y")
         assertEquals(10.3294115f, hitPt.z, TOLERANCE, "hitPt.z")
@@ -154,7 +156,7 @@ internal class CollideSphereVsPlaneTest {
 
         val ck = CollideSphereVsPlane()
         val hitPt = MutablePoint3f()
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
         assertEquals(10.029411f, hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(10.294118f, hitPt.y, TOLERANCE, "hitPt.y")
         assertEquals(10.3294115f, hitPt.z, TOLERANCE, "hitPt.z")
@@ -181,7 +183,7 @@ internal class CollideSphereVsPlaneTest {
 
         val ck = CollideSphereVsPlane()
         val hitPt = MutablePoint3f()
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
         assertEquals(10.029411f, hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(10.294118f, hitPt.y, TOLERANCE, "hitPt.y")
         assertEquals(10.3294115f, hitPt.z, TOLERANCE, "hitPt.z")
@@ -209,7 +211,7 @@ internal class CollideSphereVsPlaneTest {
         val ck = CollideSphereVsPlane()
         val hitPt = MutablePoint3f()
 
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
         assertEquals(10.029411f, hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(10.029411f, hitPt.y, TOLERANCE, "hitPt.y")
         assertEquals(10.594118f, hitPt.z, TOLERANCE, "hitPt.z")
@@ -237,7 +239,7 @@ internal class CollideSphereVsPlaneTest {
         val ck = CollideSphereVsPlane()
         val hitPt = MutablePoint3f()
 
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
         assertEquals(10.029411f, hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(10.029411f, hitPt.y, TOLERANCE, "hitPt.y")
         assertEquals(10.594118f, hitPt.z, TOLERANCE, "hitPt.z")
@@ -265,7 +267,7 @@ internal class CollideSphereVsPlaneTest {
 
         val ck = CollideSphereVsPlane()
         val hitPt = MutablePoint3f()
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
 
         ck.bounce(b1, b2)
 
@@ -332,7 +334,7 @@ internal class CollideSphereVsPlaneTest {
 
         val ck = CollideSphereVsPlane()
         val hitPt = MutablePoint3f()
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
 
         ck.bounce(b1, b2)
 
@@ -399,7 +401,7 @@ internal class CollideSphereVsPlaneTest {
 
         val ck = CollideSphereVsPlane()
         val hitPt = MutablePoint3f()
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
 
         ck.bounce(b1, b2)
 
@@ -466,7 +468,7 @@ internal class CollideSphereVsPlaneTest {
 
         val ck = CollideSphereVsPlane()
         val hitPt = MutablePoint3f()
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
 
         ck.bounce(b1, b2)
 

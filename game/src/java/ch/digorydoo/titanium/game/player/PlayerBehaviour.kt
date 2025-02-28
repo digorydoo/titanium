@@ -13,21 +13,27 @@ class PlayerBehaviour(
     private val frameMgr: PlayerFrameManager,
 ): GraphicElement.Behaviour {
     private val targetSpeed = MutablePoint2f()
-    private var didHaveGroundContact = true
+
+    var didCollideWithFloor = true
+    var touchDownSpeed = 0.0f
+    var timeOfGroundContact = 0.0f
+    private var hasGroundContact = true
 
     private val leftJoyWithCameraCorrection = MutablePoint2f()
 
     override fun animate() {
-        val body = gel.body ?: return
         val pos = gel.pos
 
-        if (body.hasGroundContact && !didHaveGroundContact && body.touchDownSpeed < TOUCHDOWN_MIN_SPEED) {
-            val volume =
-                clamp((body.touchDownSpeed - TOUCHDOWN_MIN_SPEED) / (TOUCHDOWN_MAX_SPEED - TOUCHDOWN_MIN_SPEED))
-            App.sound.play(GameSampleId.TOUCHDOWN, pos, volume)
+        if (didCollideWithFloor) {
+            if (!hasGroundContact && touchDownSpeed < TOUCHDOWN_MIN_SPEED) {
+                val volume = clamp((touchDownSpeed - TOUCHDOWN_MIN_SPEED) / (TOUCHDOWN_MAX_SPEED - TOUCHDOWN_MIN_SPEED))
+                App.sound.play(GameSampleId.TOUCHDOWN, pos, volume)
+            }
+            hasGroundContact = true
+            didCollideWithFloor = false
+        } else {
+            hasGroundContact = false
         }
-
-        didHaveGroundContact = body.hasGroundContact
 
         if (App.dlg.hasActiveDlg || App.editor.isShown) {
             return
@@ -39,23 +45,22 @@ class PlayerBehaviour(
 
         if (shouldJump()) {
             jump()
-        } else if (body.hasGroundContact) {
+        } else if (hasGroundContact) {
             handleWalkKeys()
         }
     }
 
     private fun shouldJump(): Boolean {
-        val body = gel.body ?: return false
         var shouldJump = false
 
         if (!frameMgr.isJumping) {
             val input = App.input.values
 
             if (input.actionY.pressedOnce) {
-                if (body.hasGroundContact) {
+                if (hasGroundContact) {
                     shouldJump = true
                 } else {
-                    if (App.time.sessionTime - body.timeOfGroundContact < 0.2f) {
+                    if (App.time.sessionTime - timeOfGroundContact < 0.2f) {
                         // The gel has lost ground contact very recently ago.
                         // We still allow to start a jump to make controls a little easier.
                         shouldJump = true

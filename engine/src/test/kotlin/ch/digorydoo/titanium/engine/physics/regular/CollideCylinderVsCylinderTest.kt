@@ -1,6 +1,7 @@
-package ch.digorydoo.titanium.engine.physics
+package ch.digorydoo.titanium.engine.physics.regular
 
 import ch.digorydoo.kutils.point.MutablePoint3f
+import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -37,7 +38,7 @@ internal class CollideCylinderVsCylinderTest {
 
         val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
-        assertFalse(ck.check(b1, b2, hitPt))
+        assertFalse(ck.checkNextPos(b1, b2, hitPt))
     }
 
     @Test
@@ -70,7 +71,7 @@ internal class CollideCylinderVsCylinderTest {
 
         val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
-        assertFalse(ck.check(b1, b2, hitPt))
+        assertFalse(ck.checkNextPos(b1, b2, hitPt))
     }
 
     @Test
@@ -103,7 +104,7 @@ internal class CollideCylinderVsCylinderTest {
 
         val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
-        assertFalse(ck.check(b1, b2, hitPt))
+        assertFalse(ck.checkNextPos(b1, b2, hitPt))
     }
 
     @Test
@@ -136,7 +137,7 @@ internal class CollideCylinderVsCylinderTest {
 
         val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
         assertEquals(10.25f, hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(10.0f, hitPt.y, TOLERANCE, "hitPt.y")
         assertEquals(10.5f, hitPt.z, TOLERANCE, "hitPt.z")
@@ -172,7 +173,7 @@ internal class CollideCylinderVsCylinderTest {
 
         val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
         assertEquals(10.0f, hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(10.25f, hitPt.y, TOLERANCE, "hitPt.y")
         assertEquals(10.5f, hitPt.z, TOLERANCE, "hitPt.z")
@@ -209,7 +210,7 @@ internal class CollideCylinderVsCylinderTest {
         val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
 
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
         assertEquals(10.0f, hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(10.0f, hitPt.y, TOLERANCE, "hitPt.y")
         assertEquals(11.0f, hitPt.z, TOLERANCE, "hitPt.z")
@@ -246,7 +247,7 @@ internal class CollideCylinderVsCylinderTest {
 
         val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
 
         ck.bounce(b1, b2)
 
@@ -322,7 +323,7 @@ internal class CollideCylinderVsCylinderTest {
 
         val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
 
         ck.bounce(b1, b2)
 
@@ -398,7 +399,7 @@ internal class CollideCylinderVsCylinderTest {
 
         val ck = CollideCylinderVsCylinder()
         val hitPt = MutablePoint3f()
-        assertTrue(ck.check(b1, b2, hitPt))
+        assertTrue(ck.checkNextPos(b1, b2, hitPt))
 
         ck.bounce(b1, b2)
 

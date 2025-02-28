@@ -94,7 +94,17 @@ class EditorActions(
                 """.trimIndent()
             )
         } else {
-            val br = Brick().also { App.bricks.getAtBrickCoord(sel.x0, sel.y0, sel.z0, it) }
+            val br = Brick()
+            val subRelCoords = MutablePoint3i()
+
+            App.bricks.getAtBrickCoord(
+                sel.x0,
+                sel.y0,
+                sel.z0,
+                br,
+                outWorldCoords = null,
+                outSubRelativeCoords = subRelCoords
+            )
 
             val faces = arrayOf(
                 "up=${br.upFaceIdx}",
@@ -109,9 +119,8 @@ class EditorActions(
                 """
                    Shape: ${br.shape.displayText}
                    Material: ${br.material.displayText}
-                   World coords ${br.worldCoords}
-                   Brick coords: ${br.brickCoords}
-                   Subvolume brick coords: ${br.relBrickCoords}
+                   Brick coords: (${sel.x0}, ${sel.y0}, ${sel.z0})
+                   Subvolume-relative brick coords: $subRelCoords
                    Face indices: $faces
                 """.trimIndent()
             )
@@ -144,8 +153,6 @@ class EditorActions(
     fun movePlayerToCursorPos() {
         selection.collapseSelection()
         val pt = selection.getPosCentreInWorldCoords()
-        val floorZ = App.bricks.getFloorZ(pt)
-        pt.z = if (pt.z > floorZ) pt.z else floorZ
         App.player?.pos?.set(pt)
     }
 

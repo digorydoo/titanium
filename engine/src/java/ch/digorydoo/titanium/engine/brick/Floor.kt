@@ -1,7 +1,7 @@
 package ch.digorydoo.titanium.engine.brick
 
 import ch.digorydoo.kutils.point.MutablePoint3f
-import ch.digorydoo.titanium.engine.brick.Brick.Companion.WORLD_BRICK_SIZE
+import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
 
 /**
  * A Floor is basically the combination of the properties of a Brick together with the four corners of its floor plane.

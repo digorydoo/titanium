@@ -25,7 +25,7 @@ class StaticPaperGel(override val spawnPt: StaticPaperSpawnPt): GraphicElement(s
         pos, // shared mutable object
         elasticity = 0.3f,
         gravity = false,
-        mass = RigidBody.STATIC_MASS,
+        mass = RigidBody.LARGE_MASS,
         radius = 0.25f,
         height = 1.5f,
         zOffset = 0.75f,

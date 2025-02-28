@@ -23,20 +23,20 @@ class BrickRun {
         bricks.clear()
         var fromX = x
 
-        while (subvolume.getBrick(fromX - 1, y, z, from.brick, acrossBounds = true)) {
-            if (from.brick.shape != shapeOfRun) {
-                break
-            }
+        while (true) {
+            subvolume.getBrick(fromX - 1, y, z, from.brick, acrossBounds = true)
+            if (!from.brick.isValid()) break
+            if (from.brick.shape != shapeOfRun) break
             fromX--
         }
 
         var toX = fromX
         bricks.add(Brick().also { subvolume.getBrick(fromX, y, z, it, acrossBounds = true) })
 
-        while (subvolume.getBrick(toX + 1, y, z, to.brick, acrossBounds = true)) {
-            if (to.brick.shape != shapeOfRun) {
-                break
-            }
+        while (true) {
+            subvolume.getBrick(toX + 1, y, z, to.brick, acrossBounds = true)
+            if (!to.brick.isValid()) break
+            if (to.brick.shape != shapeOfRun) break
             bricks.add(Brick(to.brick))
             toX++
         }
@@ -61,20 +61,20 @@ class BrickRun {
         bricks.clear()
         var fromY = y
 
-        while (subvolume.getBrick(x, fromY - 1, z, from.brick, acrossBounds = true)) {
-            if (from.brick.shape != shapeOfRun) {
-                break
-            }
+        while (true) {
+            subvolume.getBrick(x, fromY - 1, z, from.brick, acrossBounds = true)
+            if (!from.brick.isValid()) break
+            if (from.brick.shape != shapeOfRun) break
             fromY--
         }
 
         var toY = fromY
         bricks.add(Brick().also { subvolume.getBrick(x, fromY, z, it, acrossBounds = true) })
 
-        while (subvolume.getBrick(x, toY + 1, z, to.brick, acrossBounds = true)) {
-            if (to.brick.shape != shapeOfRun) {
-                break
-            }
+        while (true) {
+            subvolume.getBrick(x, toY + 1, z, to.brick, acrossBounds = true)
+            if (!to.brick.isValid()) break
+            if (to.brick.shape != shapeOfRun) break
             bricks.add(Brick(to.brick))
             toY++
         }

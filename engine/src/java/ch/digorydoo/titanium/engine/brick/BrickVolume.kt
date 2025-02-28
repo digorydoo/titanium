@@ -7,7 +7,6 @@ import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.MutablePoint3i
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.point.Point3i
-import ch.digorydoo.titanium.engine.brick.Brick.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.texture.Texture
 import kotlin.math.ceil
@@ -67,19 +66,42 @@ class BrickVolume(
 
     private val walker = BrickWalker(this)
     private val tempBrick = Brick()
+    private val tempRelCoords = MutablePoint3i()
 
-    private fun subAt(brickCoords: Point3i) =
-        subAt(brickCoords.x, brickCoords.y, brickCoords.z)
-
-    private fun subAt(brickX: Int, brickY: Int, brickZ: Int): BrickSubvolume? {
+    private fun subAt(
+        brickX: Int,
+        brickY: Int,
+        brickZ: Int,
+        outSubRelativeCoords: MutablePoint3i? = null,
+    ): BrickSubvolume? {
         if (brickX !in 0 ..< xsize) return null
         if (brickY !in 0 ..< ysize) return null
         if (brickZ !in 0 ..< zsize) return null
+
         val bx: Int = brickX / MAX_SUB_DIMENSION
         val by: Int = brickY / MAX_SUB_DIMENSION
         val bz: Int = brickZ / MAX_SUB_DIMENSION
+
         val idx = bx + by * numSubsX + bz * numSubsX * numSubsY
-        return subs.getOrNull(idx)
+        val sub = subs.getOrNull(idx) ?: return null
+
+        if (outSubRelativeCoords != null) {
+            outSubRelativeCoords.x = brickX % MAX_SUB_DIMENSION
+            outSubRelativeCoords.y = brickY % MAX_SUB_DIMENSION
+            outSubRelativeCoords.z = brickZ % MAX_SUB_DIMENSION
+        }
+
+        return sub
+    }
+
+    private fun isBrickPtInBounds(brickX: Int, brickY: Int, brickZ: Int) =
+        brickX in 0 ..< xsize && brickY in 0 ..< ysize && brickZ in 0 ..< zsize
+
+    fun isWorldPtInBounds(worldPt: Point3f): Boolean {
+        val brickX = (worldPt.x / WORLD_BRICK_SIZE).toInt()
+        val brickY = (worldPt.y / WORLD_BRICK_SIZE).toInt()
+        val brickZ = (worldPt.z / WORLD_BRICK_SIZE).toInt()
+        return isBrickPtInBounds(brickX, brickY, brickZ)
     }
 
     fun clampToSize(brickPos: MutablePoint3i) {
@@ -95,97 +117,71 @@ class BrickVolume(
         subAt(brickX, brickY, brickZ)?.setBrick(bx, by, bz, brick, acrossBounds = false)
     }
 
-    fun getAtBrickCoord(brickCoord: Point3i, brick: Brick) =
-        getAtBrickCoord(brickCoord.x, brickCoord.y, brickCoord.z, brick)
+    fun getAtBrickCoord(
+        brickCoord: Point3i,
+        brick: Brick,
+        outWorldCoords: MutablePoint3f? = null,
+        outSubRelativeCoords: MutablePoint3i? = null,
+    ) {
+        getAtBrickCoord(brickCoord.x, brickCoord.y, brickCoord.z, brick, outWorldCoords, outSubRelativeCoords)
+    }
 
-    fun getAtBrickCoord(brickX: Int, brickY: Int, brickZ: Int, brick: Brick): Boolean {
-        brick.brickCoords.set(brickX, brickY, brickZ)
+    fun getAtBrickCoord(
+        brickX: Int,
+        brickY: Int,
+        brickZ: Int,
+        brick: Brick,
+        outWorldCoords: MutablePoint3f? = null,
+        outSubRelativeCoords: MutablePoint3i? = null,
+    ) {
+        val subRelCoords = outSubRelativeCoords ?: tempRelCoords
+        val sub = subAt(brickX, brickY, brickZ, subRelCoords)
 
-        brick.relBrickCoords.set(
-            brickX % MAX_SUB_DIMENSION,
-            brickY % MAX_SUB_DIMENSION,
-            brickZ % MAX_SUB_DIMENSION,
-        )
-
-        val sub = subAt(brickX, brickY, brickZ)
-
-        if (sub != null) {
-            if (sub.getBrick(brick.relBrickCoords, brick, acrossBounds = false)) {
-                brick.worldCoords.set(brickX * WORLD_BRICK_SIZE, brickY * WORLD_BRICK_SIZE, brickZ * WORLD_BRICK_SIZE)
-                return true
-            }
+        if (sub == null) {
+            brick.setInvalid()
+            return
         }
 
-        brick.setInvalid()
-        return false
+        sub.getBrick(subRelCoords, brick, acrossBounds = false)
+
+        if (outWorldCoords != null && brick.isValid()) {
+            outWorldCoords.set(brickX * WORLD_BRICK_SIZE, brickY * WORLD_BRICK_SIZE, brickZ * WORLD_BRICK_SIZE)
+        }
     }
 
-    fun getAtWorldCoord(worldPt: Point3f, brick: Brick) =
-        getAtWorldCoord(worldPt.x, worldPt.y, worldPt.z, brick)
+    fun getAtWorldCoord(worldPt: Point3f, brick: Brick, outBrickCoords: MutablePoint3i? = null) {
+        getAtWorldCoord(worldPt.x, worldPt.y, worldPt.z, brick, outBrickCoords)
+    }
 
-    fun getAtWorldCoord(worldX: Float, worldY: Float, worldZ: Float, brick: Brick): Boolean {
-        brick.brickCoords.set(
-            (worldX / WORLD_BRICK_SIZE).toInt(),
-            (worldY / WORLD_BRICK_SIZE).toInt(),
-            (worldZ / WORLD_BRICK_SIZE).toInt(),
-        )
+    fun getAtWorldCoord(
+        worldX: Float,
+        worldY: Float,
+        worldZ: Float,
+        brick: Brick,
+        outBrickCoords: MutablePoint3i? = null,
+    ) {
+        val brickX = (worldX / WORLD_BRICK_SIZE).toInt()
+        val brickY = (worldY / WORLD_BRICK_SIZE).toInt()
+        val brickZ = (worldZ / WORLD_BRICK_SIZE).toInt()
 
-        brick.relBrickCoords.set(
-            brick.brickCoords.x % MAX_SUB_DIMENSION,
-            brick.brickCoords.y % MAX_SUB_DIMENSION,
-            brick.brickCoords.z % MAX_SUB_DIMENSION,
-        )
+        val sub = subAt(brickX, brickY, brickZ, tempRelCoords)
 
-        val sub = subAt(brick.brickCoords)
-
-        if (sub != null) {
-            if (sub.getBrick(brick.relBrickCoords, brick, acrossBounds = false)) {
-                brick.worldCoords.set(worldX, worldY, worldZ)
-                return true
-            }
+        if (sub == null) {
+            brick.setInvalid()
+            return
         }
 
-        brick.setInvalid()
-        return false
-    }
+        sub.getBrick(tempRelCoords, brick, acrossBounds = false)
 
-    fun getFloor(worldX: Float, worldY: Float, worldZ: Float, brick: Brick) {
-        val checkPt = MutablePoint3f(worldX, worldY, worldZ + WORLD_BRICK_SIZE)
-        getAtWorldCoord(checkPt.x, checkPt.y, checkPt.z, brick)
-
-        while (checkPt.z > 0) {
-            if (brick.isValid()) {
-                val h = subAt(brick.brickCoords)?.heightAt(
-                    brick.worldCoords.x,
-                    brick.worldCoords.y,
-                    brick.relBrickCoords,
-                )
-
-                if (h != null && h <= worldZ) {
-                    brick.worldCoords.z = h
-                    return
-                }
-            }
-
-            checkPt.z -= WORLD_BRICK_SIZE
-            getAtWorldCoord(checkPt.x, checkPt.y, checkPt.z, brick)
+        if (outBrickCoords != null && brick.isValid()) {
+            outBrickCoords.set(brickX, brickY, brickZ)
         }
-
-        brick.worldCoords.z = 0.0f
     }
 
-    fun getFloorZ(worldPt: Point3f): Float {
-        getFloor(worldPt.x, worldPt.y, worldPt.z, tempBrick)
-        return tempBrick.worldCoords.z
+    fun hasValidBrickAt(brickX: Int, brickY: Int, brickZ: Int): Boolean {
+        getAtBrickCoord(brickX, brickY, brickZ, tempBrick)
+        return tempBrick.isValid()
     }
-
-    private fun getTopFloorZ(worldX: Float, worldY: Float): Float {
-        getFloor(worldX, worldY, zsize * WORLD_BRICK_SIZE, tempBrick)
-        return tempBrick.worldCoords.z
-    }
-
-    fun getPtWithTopFloorZ(x: Float, y: Float) =
-        Point3f(x, y, getTopFloorZ(x, y))
 
     fun forEachBrickOnWorldLine(
         worldStartPt: Point3f,
@@ -246,6 +242,31 @@ class BrickVolume(
     }
 
     companion object {
+        const val WORLD_BRICK_SIZE = 1.0f // bricks are cubes of 1 metre side length
         private const val MAX_SUB_DIMENSION = 30
+
+        fun brickToWorld(brickX: Int, brickY: Int, brickZ: Int, result: MutablePoint3f) {
+            result.set(
+                brickX.toFloat() * WORLD_BRICK_SIZE,
+                brickY.toFloat() * WORLD_BRICK_SIZE,
+                brickZ.toFloat() * WORLD_BRICK_SIZE,
+            )
+        }
+
+        fun brickToWorld(brickX: Float, brickY: Float, brickZ: Float, result: MutablePoint3f) {
+            result.set(
+                brickX * WORLD_BRICK_SIZE,
+                brickY * WORLD_BRICK_SIZE,
+                brickZ * WORLD_BRICK_SIZE,
+            )
+        }
+
+        fun worldToBrick(worldPt: Point3f, brickPos: MutablePoint3i) {
+            brickPos.set(
+                (worldPt.x / WORLD_BRICK_SIZE).toInt(),
+                (worldPt.y / WORLD_BRICK_SIZE).toInt(),
+                (worldPt.z / WORLD_BRICK_SIZE).toInt(),
+            )
+        }
     }
 }
