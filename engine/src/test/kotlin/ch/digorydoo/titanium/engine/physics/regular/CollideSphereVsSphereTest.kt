@@ -18,7 +18,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
@@ -30,7 +31,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.2f,
             zOffset = 0.2f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.nextPos.set(p2)
 
@@ -49,7 +51,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
@@ -61,7 +64,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.2f,
             zOffset = 0.2f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.nextPos.set(p2)
 
@@ -80,7 +84,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
@@ -92,7 +97,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.2f,
             zOffset = 0.2f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.nextPos.set(p2)
 
@@ -111,7 +117,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
@@ -123,7 +130,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.2f,
             zOffset = 0.2f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.nextPos.set(p2)
 
@@ -145,7 +153,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
@@ -157,7 +166,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.2f,
             zOffset = 0.2f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.nextPos.set(p2)
 
@@ -179,7 +189,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
@@ -191,7 +202,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.2f,
             zOffset = 0.2f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.nextPos.set(p2)
 
@@ -214,7 +226,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.speed.set(1.0f, 0.0f, 0.0f)
         b1.applyForces() // updates nextPos and nextSpeed
@@ -227,7 +240,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.2f,
             zOffset = 0.2f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.applyForces() // updates nextPos and nextSpeed
 
@@ -288,7 +302,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.speed.set(0.0f, 1.0f, 0.0f)
         b1.applyForces() // updates nextPos and nextSpeed
@@ -301,7 +316,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.2f,
             zOffset = 0.2f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.applyForces() // updates nextPos and nextSpeed
 
@@ -362,7 +378,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.speed.set(0.0f, 0.0f, 1.0f)
         b1.applyForces() // updates nextPos and nextSpeed
@@ -375,7 +392,8 @@ internal class CollideSphereVsSphereTest {
             gravity = false,
             radius = 0.2f,
             zOffset = 0.2f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.applyForces() // updates nextPos and nextSpeed
 

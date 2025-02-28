@@ -22,6 +22,7 @@ class TestGel(initialPos: Point3f, initialRotation: Float): GraphicElement(initi
         "Test",
         pos, // shared mutable object
         elasticity = 0.42f,
+        friction = 0.2f,
         mass = 4.2f,
         gravity = true,
         radius = 0.5f,

@@ -19,13 +19,22 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
         val p2 = MutablePoint3f(10.34f, 10.0f, 10.0f)
         val n = MutablePoint3f(1.0f, 0.1f, 0.1f).apply { normalize() }
-        val b2 = FixedPlaneBody("b2", p2, mass = 10.0f, gravity = false, normal = n, elasticity = 0.5f)
+        val b2 = FixedPlaneBody(
+            "b2",
+            p2,
+            mass = 10.0f,
+            gravity = false,
+            normal = n,
+            elasticity = 0.5f,
+            friction = 0.0f,
+        )
         b2.nextPos.set(p2)
 
         val ck = CollideSphereVsPlane()
@@ -43,13 +52,22 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
         val p2 = MutablePoint3f(10.0f, 10.34f, 10.0f)
         val n = MutablePoint3f(0.1f, 1.0f, 0.1f).apply { normalize() }
-        val b2 = FixedPlaneBody("b2", p2, mass = 10.0f, gravity = false, normal = n, elasticity = 0.5f)
+        val b2 = FixedPlaneBody(
+            "b2",
+            p2,
+            mass = 10.0f,
+            gravity = false,
+            normal = n,
+            elasticity = 0.5f,
+            friction = 0.0f,
+        )
         b2.nextPos.set(p2)
 
         val ck = CollideSphereVsPlane()
@@ -67,13 +85,22 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
         val p2 = MutablePoint3f(10.0f, 10.0f, 10.61f)
         val n = MutablePoint3f(0.1f, 0.1f, 1.0f).apply { normalize() }
-        val b2 = FixedPlaneBody("b2", p2, mass = 10.0f, gravity = false, normal = n, elasticity = 0.5f)
+        val b2 = FixedPlaneBody(
+            "b2",
+            p2,
+            mass = 10.0f,
+            gravity = false,
+            normal = n,
+            elasticity = 0.5f,
+            friction = 0.0f,
+        )
         b2.nextPos.set(p2)
 
         val ck = CollideSphereVsPlane()
@@ -91,13 +118,22 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
         val p2 = MutablePoint3f(10.33f, 10.0f, 10.0f)
         val n = MutablePoint3f(1.0f, 0.1f, 0.1f).apply { normalize() }
-        val b2 = FixedPlaneBody("b2", p2, mass = 10.0f, gravity = false, normal = n, elasticity = 0.5f)
+        val b2 = FixedPlaneBody(
+            "b2",
+            p2,
+            mass = 10.0f,
+            gravity = false,
+            normal = n,
+            elasticity = 0.5f,
+            friction = 0.0f,
+        )
         b2.nextPos.set(p2)
 
         val ck = CollideSphereVsPlane()
@@ -118,13 +154,22 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
         val p2 = MutablePoint3f(10.33f, 10.0f, 10.0f)
         val n = MutablePoint3f(-1.0f, -0.1f, -0.1f).apply { normalize() }
-        val b2 = FixedPlaneBody("b2", p2, mass = 10.0f, gravity = false, normal = n, elasticity = 0.5f)
+        val b2 = FixedPlaneBody(
+            "b2",
+            p2,
+            mass = 10.0f,
+            gravity = false,
+            normal = n,
+            elasticity = 0.5f,
+            friction = 0.0f,
+        )
         b2.nextPos.set(p2)
 
         val ck = CollideSphereVsPlane()
@@ -145,13 +190,22 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
         val p2 = MutablePoint3f(10.0f, 10.33f, 10.0f)
         val n = MutablePoint3f(0.1f, 1.0f, 0.1f).apply { normalize() }
-        val b2 = FixedPlaneBody("b2", p2, mass = 10.0f, gravity = false, normal = n, elasticity = 0.5f)
+        val b2 = FixedPlaneBody(
+            "b2",
+            p2,
+            mass = 10.0f,
+            gravity = false,
+            normal = n,
+            elasticity = 0.5f,
+            friction = 0.0f,
+        )
         b2.nextPos.set(p2)
 
         val ck = CollideSphereVsPlane()
@@ -172,13 +226,22 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
         val p2 = MutablePoint3f(10.0f, 10.33f, 10.0f)
         val n = MutablePoint3f(-0.1f, -1.0f, -0.1f).apply { normalize() }
-        val b2 = FixedPlaneBody("b2", p2, mass = 10.0f, gravity = false, normal = n, elasticity = 0.5f)
+        val b2 = FixedPlaneBody(
+            "b2",
+            p2,
+            mass = 10.0f,
+            gravity = false,
+            normal = n,
+            elasticity = 0.5f,
+            friction = 0.0f,
+        )
         b2.nextPos.set(p2)
 
         val ck = CollideSphereVsPlane()
@@ -199,13 +262,22 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
         val p2 = MutablePoint3f(10.0f, 10.0f, 10.6f)
         val n = MutablePoint3f(0.1f, 0.1f, 1.0f).apply { normalize() }
-        val b2 = FixedPlaneBody("b2", p2, mass = 10.0f, gravity = false, normal = n, elasticity = 0.5f)
+        val b2 = FixedPlaneBody(
+            "b2",
+            p2,
+            mass = 10.0f,
+            gravity = false,
+            normal = n,
+            elasticity = 0.5f,
+            friction = 0.0f,
+        )
         b2.nextPos.set(p2)
 
         val ck = CollideSphereVsPlane()
@@ -227,13 +299,22 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
         val p2 = MutablePoint3f(10.0f, 10.0f, 10.6f)
         val n = MutablePoint3f(-0.1f, -0.1f, -1.0f).apply { normalize() }
-        val b2 = FixedPlaneBody("b2", p2, mass = 10.0f, gravity = false, normal = n, elasticity = 0.5f)
+        val b2 = FixedPlaneBody(
+            "b2",
+            p2,
+            mass = 10.0f,
+            gravity = false,
+            normal = n,
+            elasticity = 0.5f,
+            friction = 0.0f,
+        )
         b2.nextPos.set(p2)
 
         val ck = CollideSphereVsPlane()
@@ -255,14 +336,23 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.speed.set(1.0f, 0.0f, 0.0f)
         b1.applyForces() // updates nextPos and nextSpeed
 
         val p2 = MutablePoint3f(10.34f, 10.0f, 10.0f)
         val n = MutablePoint3f(1.0f, 0.1f, 0.1f).apply { normalize() }
-        val b2 = FixedPlaneBody("b2", p2, mass = 10.0f, gravity = false, normal = n, elasticity = 0.5f)
+        val b2 = FixedPlaneBody(
+            "b2",
+            p2,
+            mass = 10.0f,
+            gravity = false,
+            normal = n,
+            elasticity = 0.5f,
+            friction = 0.0f,
+        )
         b2.applyForces() // updates nextPos and nextSpeed
 
         val ck = CollideSphereVsPlane()
@@ -322,14 +412,23 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.speed.set(1.0f, 0.0f, 0.0f)
         b1.applyForces() // updates nextPos and nextSpeed
 
         val p2 = MutablePoint3f(10.34f, 10.0f, 10.0f)
         val n = MutablePoint3f(-1.0f, -0.1f, -0.1f).apply { normalize() }
-        val b2 = FixedPlaneBody("b2", p2, mass = 10.0f, gravity = false, normal = n, elasticity = 0.5f)
+        val b2 = FixedPlaneBody(
+            "b2",
+            p2,
+            mass = 10.0f,
+            gravity = false,
+            normal = n,
+            elasticity = 0.5f,
+            friction = 0.0f,
+        )
         b2.applyForces() // updates nextPos and nextSpeed
 
         val ck = CollideSphereVsPlane()
@@ -389,14 +488,23 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.speed.set(0.0f, 1.0f, 0.0f)
         b1.applyForces() // updates nextPos and nextSpeed
 
         val p2 = MutablePoint3f(10.0f, 10.34f, 10.0f)
         val n = MutablePoint3f(0.1f, 1.0f, 0.1f).apply { normalize() }
-        val b2 = FixedPlaneBody("b2", p2, mass = 10.0f, gravity = false, normal = n, elasticity = 0.5f)
+        val b2 = FixedPlaneBody(
+            "b2",
+            p2,
+            mass = 10.0f,
+            gravity = false,
+            normal = n,
+            elasticity = 0.5f,
+            friction = 0.0f,
+        )
         b2.applyForces() // updates nextPos and nextSpeed
 
         val ck = CollideSphereVsPlane()
@@ -456,14 +564,23 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             radius = 0.3f,
             zOffset = 0.3f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.speed.set(0.0f, 0.0f, 1.0f)
         b1.applyForces() // updates nextPos and nextSpeed
 
         val p2 = MutablePoint3f(10.0f, 10.0f, 10.61f)
         val n = MutablePoint3f(0.1f, 0.1f, 1.0f).apply { normalize() }
-        val b2 = FixedPlaneBody("b2", p2, mass = 10.0f, gravity = false, normal = n, elasticity = 0.5f)
+        val b2 = FixedPlaneBody(
+            "b2",
+            p2,
+            mass = 10.0f,
+            gravity = false,
+            normal = n,
+            elasticity = 0.5f,
+            friction = 0.0f,
+        )
         b2.applyForces() // updates nextPos and nextSpeed
 
         val ck = CollideSphereVsPlane()

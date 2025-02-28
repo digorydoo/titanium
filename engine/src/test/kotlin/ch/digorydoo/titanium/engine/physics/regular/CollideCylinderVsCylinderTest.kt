@@ -19,7 +19,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 1.0f,
             zOffset = 0.5f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
@@ -32,7 +33,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 0.5f,
             zOffset = 0.25f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.nextPos.set(p2)
 
@@ -52,7 +54,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 1.0f,
             zOffset = 0.5f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
@@ -65,7 +68,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 0.5f,
             zOffset = 0.25f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.nextPos.set(p2)
 
@@ -85,7 +89,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 1.0f,
             zOffset = 0.5f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
@@ -98,7 +103,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 0.5f,
             zOffset = 0.25f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.nextPos.set(p2)
 
@@ -118,7 +124,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 1.0f,
             zOffset = 0.5f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
@@ -131,7 +138,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 0.5f,
             zOffset = 0.25f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.nextPos.set(p2)
 
@@ -154,7 +162,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 1.0f,
             zOffset = 0.5f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
@@ -167,7 +176,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 0.5f,
             zOffset = 0.25f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.nextPos.set(p2)
 
@@ -190,7 +200,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 1.0f,
             zOffset = 0.5f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.nextPos.set(p1)
 
@@ -203,7 +214,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 0.5f,
             zOffset = 0.25f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.nextPos.set(p2)
 
@@ -227,7 +239,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 1.0f,
             zOffset = 0.5f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.speed.set(1.0f, 0.0f, 0.0f)
         b1.applyForces() // updates nextPos and nextSpeed
@@ -241,7 +254,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 0.5f,
             zOffset = 0.25f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.applyForces() // updates nextPos and nextSpeed
 
@@ -303,7 +317,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 1.0f,
             zOffset = 0.5f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.speed.set(0.0f, 1.0f, 0.0f)
         b1.applyForces() // updates nextPos and nextSpeed
@@ -317,7 +332,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 0.5f,
             zOffset = 0.25f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.applyForces() // updates nextPos and nextSpeed
 
@@ -379,7 +395,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 1.0f,
             zOffset = 0.5f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b1.speed.set(0.0f, 0.0f, 1.0f)
         b1.applyForces() // updates nextPos and nextSpeed
@@ -393,7 +410,8 @@ internal class CollideCylinderVsCylinderTest {
             radius = 0.25f,
             height = 0.5f,
             zOffset = 0.25f,
-            elasticity = 0.5f
+            elasticity = 0.5f,
+            friction = 0.0f,
         )
         b2.applyForces() // updates nextPos and nextSpeed
 

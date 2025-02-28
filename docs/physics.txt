@@ -182,3 +182,12 @@ and since |n| = 1:
 If d > 0, then C is on the side of the plane pointed to by n.
 If d < 0, then C is on the opposite side.
 The sphere collides if |d| <= r.
+
+Friction between two bodies
+---------------------------
+
+Friction is generally F_{friction} = µ * F_{normal}, where F_{normal} is the force orthogonal to the surface.
+The mass involved is the same on both sides, so a_{friction} = µ * a_{normal}.
+And if velocities are roughly linear during ∆t, we have ∆v_{friction} ≈ µ * v_{normal}.
+The direction of ∆v_{friction} is opposite to the velocity along the surface v_{along}.
+If |v_{along}| <= |∆v_{friction}|, then v_{along}' = 0

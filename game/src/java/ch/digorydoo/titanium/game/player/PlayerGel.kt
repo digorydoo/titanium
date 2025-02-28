@@ -21,6 +21,7 @@ class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): GraphicElement(
         "Player",
         pos, // shared mutable object
         elasticity = 0.3f,
+        friction = 0.2f,
         mass = 64.0f,
         gravity = true,
         radius = 0.25f,

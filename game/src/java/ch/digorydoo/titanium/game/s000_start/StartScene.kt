@@ -41,15 +41,15 @@ class StartScene: Scene(
         }
 
         PickupGel(Kind.VASE, 22.0f, 6.0f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 24.0f, 6.0f, 2.2f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 26.0f, 6.0f, 2.3f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 23.0f, 7.5f, 2.4f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 25.0f, 7.5f, 2.5f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 24.0f, 9.0f, 2.6f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
+        PickupGel(Kind.VASE, 24.0f, 6.0f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
+        PickupGel(Kind.VASE, 26.0f, 6.0f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
+        PickupGel(Kind.VASE, 23.0f, 7.5f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
+        PickupGel(Kind.VASE, 25.0f, 7.5f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
+        PickupGel(Kind.VASE, 24.0f, 9.0f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
 
-        PickupGel(Kind.VASE, 25.0f, 11.0f, 2.9f).also {
+        PickupGel(Kind.VASE, 25.0f, 11.0f, 2.1f).also {
             App.content.add(it, LayerKind.MAIN_COLLIDABLE)
-            it.body.speed.x = -3.2f
+            it.body.speed.x = -2.5f
             it.body.speed.y = -9.6f
         }
 

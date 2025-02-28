@@ -73,7 +73,8 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
             Log.warn("Cannot separate $body1 from $body2")
         }
 
-        val e = body1.elasticity * body2.elasticity
+        val elasticity = body1.elasticity * body2.elasticity
+        val friction = 1.0f - (1.0f - body1.friction) * (1.0f - body2.friction)
 
         val p1 = tmp1.set(body1.nextPos.x, body1.nextPos.y, body1.nextPos.z + body1.zOffset)
         val p2 = tmp2.set(body2.nextPos.x, body2.nextPos.y, body2.nextPos.z + body2.zOffset)
@@ -84,28 +85,131 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
         val m1 = if (body1.mass <= EPSILON) EPSILON else body1.mass
         val m2 = if (body2.mass <= EPSILON) EPSILON else body2.mass
 
-        val pdiff = p2 - p1
-        val n = pdiff / pdiff.length()
+        val pdx = p2.x - p1.x
+        val pdy = p2.y - p1.y
+        val pdz = p2.z - p1.z
+        val pLen = sqrt(pdx * pdx + pdy * pdy + pdz * pdz)
 
-        val v1parallel = n * v1.dotProduct(n)
-        val v2parallel = n * v2.dotProduct(n)
-        val vdiff = v1parallel - v2parallel
+        val nx = pdx / pLen
+        val ny = pdy / pLen
+        val nz = pdz / pLen
+
+        val v1dotn = v1.x * nx + v1.y * ny + v1.z * nz
+        val v1parallelX = nx * v1dotn
+        val v1parallelY = ny * v1dotn
+        val v1parallelZ = nz * v1dotn
+
+        val v2dotn = v2.x * nx + v2.y * ny + v2.z * nz
+        val v2parallelX = nx * v2dotn
+        val v2parallelY = ny * v2dotn
+        val v2parallelZ = nz * v2dotn
+
+        val vdiffX = v1parallelX - v2parallelX
+        val vdiffY = v1parallelY - v2parallelY
+        val vdiffZ = v1parallelZ - v2parallelZ
 
         if (m1 >= LARGE_MASS) {
-            val v2perpendicular = v2 - v2parallel
-            v2.set(v2perpendicular + v1parallel + vdiff * e)
+            val v2perpendX = v2.x - v2parallelX
+            val v2perpendY = v2.y - v2parallelY
+            val v2perpendZ = v2.z - v2parallelZ
+            v2.x = v2perpendX + v1parallelX + vdiffX * elasticity
+            v2.y = v2perpendY + v1parallelY + vdiffY * elasticity
+            v2.z = v2perpendZ + v1parallelZ + vdiffZ * elasticity
+
+            if (friction > 0.0f) {
+                val vfricX = vdiffX * friction
+                val vfricY = vdiffY * friction
+                val vfricZ = vdiffZ * friction
+                val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY + vfricZ * vfricZ)
+                val v2pLen = sqrt(v2perpendX * v2perpendX + v2perpendY * v2perpendY + v2perpendZ * v2perpendZ)
+
+                if (vfricLen >= v2pLen) {
+                    v2.x -= v2perpendX
+                    v2.y -= v2perpendY
+                    v2.z -= v2perpendZ
+                } else {
+                    v2.x -= vfricLen * v2perpendX / v2pLen
+                    v2.y -= vfricLen * v2perpendY / v2pLen
+                    v2.z -= vfricLen * v2perpendZ / v2pLen
+                }
+            }
         } else if (m2 >= LARGE_MASS) {
-            val v1perpendicular = v1 - v1parallel
-            v1.set(v1perpendicular + v2parallel - vdiff * e)
+            val v1perpendX = v1.x - v1parallelX
+            val v1perpendY = v1.y - v1parallelY
+            val v1perpendZ = v1.z - v1parallelZ
+            v1.x = v1perpendX + v2parallelX - vdiffX * elasticity
+            v1.y = v1perpendY + v2parallelY - vdiffY * elasticity
+            v1.z = v1perpendZ + v2parallelZ - vdiffZ * elasticity
+
+            if (friction > 0.0f) {
+                val vfricX = vdiffX * friction
+                val vfricY = vdiffY * friction
+                val vfricZ = vdiffZ * friction
+                val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY + vfricZ * vfricZ)
+                val v1pLen = sqrt(v1perpendX * v1perpendX + v1perpendY * v1perpendY + v1perpendZ * v1perpendZ)
+
+                if (vfricLen >= v1pLen) {
+                    v1.x -= v1perpendX
+                    v1.y -= v1perpendY
+                    v1.z -= v1perpendZ
+                } else {
+                    v1.x -= vfricLen * v1perpendX / v1pLen
+                    v1.y -= vfricLen * v1perpendY / v1pLen
+                    v1.z -= vfricLen * v1perpendZ / v1pLen
+                }
+            }
         } else {
-            val v1perpendicular = v1 - v1parallel
-            val v2perpendicular = v2 - v2parallel
+            val v1perpendX = v1.x - v1parallelX
+            val v1perpendY = v1.y - v1parallelY
+            val v1perpendZ = v1.z - v1parallelZ
+
+            val v2perpendX = v2.x - v2parallelX
+            val v2perpendY = v2.y - v2parallelY
+            val v2perpendZ = v2.z - v2parallelZ
 
             val totalMass = m1 + m2
-            val p = v1parallel * m1 + v2parallel * m2
 
-            v1.set(v1perpendicular + (p - vdiff * e * m2) / totalMass)
-            v2.set(v2perpendicular + (p + vdiff * e * m1) / totalMass)
+            val sx = v1parallelX * m1 + v2parallelX * m2
+            val sy = v1parallelY * m1 + v2parallelY * m2
+            val sz = v1parallelZ * m1 + v2parallelZ * m2
+
+            v1.x = v1perpendX + (sx - vdiffX * elasticity * m2) / totalMass
+            v1.y = v1perpendY + (sy - vdiffY * elasticity * m2) / totalMass
+            v1.z = v1perpendZ + (sz - vdiffZ * elasticity * m2) / totalMass
+
+            v2.x = v2perpendX + (sx + vdiffX * elasticity * m1) / totalMass
+            v2.y = v2perpendY + (sy + vdiffY * elasticity * m1) / totalMass
+            v2.z = v2perpendZ + (sz + vdiffZ * elasticity * m1) / totalMass
+
+            if (friction > 0.0f) {
+                val vfricX = vdiffX * friction
+                val vfricY = vdiffY * friction
+                val vfricZ = vdiffZ * friction
+                val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY + vfricZ * vfricZ)
+
+                val v1pLen = sqrt(v1perpendX * v1perpendX + v1perpendY * v1perpendY + v1perpendZ * v1perpendZ)
+                val v2pLen = sqrt(v2perpendX * v2perpendX + v2perpendY * v2perpendY + v2perpendZ * v2perpendZ)
+
+                if (vfricLen >= v1pLen) {
+                    v1.x -= v1perpendX
+                    v1.y -= v1perpendY
+                    v1.z -= v1perpendZ
+                } else {
+                    v1.x -= vfricLen * v1perpendX / v1pLen
+                    v1.y -= vfricLen * v1perpendY / v1pLen
+                    v1.z -= vfricLen * v1perpendZ / v1pLen
+                }
+
+                if (vfricLen >= v2pLen) {
+                    v2.x -= v2perpendX
+                    v2.y -= v2perpendY
+                    v2.z -= v2perpendZ
+                } else {
+                    v2.x -= vfricLen * v2perpendX / v2pLen
+                    v2.y -= vfricLen * v2perpendY / v2pLen
+                    v2.z -= vfricLen * v2perpendZ / v2pLen
+                }
+            }
         }
     }
 

@@ -11,6 +11,7 @@ class FixedSphereBody(
     name: String,
     pos: MutablePoint3f,
     elasticity: Float,
+    friction: Float,
     mass: Float,
     gravity: Boolean,
     val radius: Float,
@@ -19,6 +20,7 @@ class FixedSphereBody(
     name = name,
     pos = pos,
     elasticity = elasticity,
+    friction = friction,
     mass = mass,
     gravity = gravity,
 ) {
@@ -35,6 +37,7 @@ class FixedCylinderBody(
     name: String,
     pos: MutablePoint3f,
     elasticity: Float,
+    friction: Float,
     mass: Float,
     gravity: Boolean,
     val radius: Float,
@@ -44,6 +47,7 @@ class FixedCylinderBody(
     name = name,
     pos = pos,
     elasticity = elasticity,
+    friction = friction,
     mass = mass,
     gravity = gravity,
 ) {
@@ -59,6 +63,7 @@ class FixedPlaneBody(
     name: String,
     pos: MutablePoint3f,
     elasticity: Float,
+    friction: Float,
     mass: Float,
     gravity: Boolean,
     val normal: Point3f,
@@ -66,6 +71,7 @@ class FixedPlaneBody(
     name = name,
     pos = pos,
     elasticity = elasticity,
+    friction = friction,
     mass = mass,
     gravity = gravity,
 ) {
