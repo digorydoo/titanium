@@ -53,7 +53,7 @@ sealed class RigidBody protected constructor(
             force.z -= GRAVITY * mass
         }
 
-        if (mass < STATIC_MASS) {
+        if (mass < LARGE_MASS) {
             val ax = force.x / mass
             val ay = force.y / mass
             val az = force.z / mass
@@ -84,7 +84,7 @@ sealed class RigidBody protected constructor(
     }
 
     companion object {
-        const val STATIC_MASS = 10000.0f // bodies with a mass >= this will be considered immovable
+        const val LARGE_MASS = 10000.0f // bodies with a mass >= this will be considered immovable
 
         private const val MAX_SPEED = 100.0f
         private const val GRAVITY = 9.81f

@@ -5,7 +5,7 @@ import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.FixedSphereBody
-import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.STATIC_MASS
+import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.sign
 import kotlin.math.sqrt
@@ -85,9 +85,9 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
     override fun bounce(body1: FixedSphereBody, body2: FixedCylinderBody) {
         val vertical: Boolean
 
-        if (body1.mass < STATIC_MASS && body1.mass <= body2.mass) {
+        if (body1.mass < LARGE_MASS && body1.mass <= body2.mass) {
             vertical = separate(body1, body2) // updates body1.nextPos
-        } else if (body2.mass < STATIC_MASS) {
+        } else if (body2.mass < LARGE_MASS) {
             vertical = separate(body2, body1) // updates body2.nextPos
         } else {
             Log.warn("Cannot separate $body1 from $body2")
@@ -114,11 +114,17 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
                 return
             }
 
-            val totalMass = m1 + m2
-            val p = v1z * m1 + v2z * m2
+            if (m1 >= LARGE_MASS) {
+                body2.nextSpeed.z = v1z + vdiffz * e
+            } else if (m2 >= LARGE_MASS) {
+                body1.nextSpeed.z = v2z - vdiffz * e
+            } else {
+                val totalMass = m1 + m2
+                val p = v1z * m1 + v2z * m2
 
-            body1.nextSpeed.z = (p - vdiffz * e * m2) / totalMass
-            body2.nextSpeed.z = (p + vdiffz * e * m1) / totalMass
+                body1.nextSpeed.z = (p - vdiffz * e * m2) / totalMass
+                body2.nextSpeed.z = (p + vdiffz * e * m1) / totalMass
+            }
         } else {
             // We treat this like bouncing a circle off another circle in the XY plane.
 
@@ -130,22 +136,36 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
 
             val v1parallel = n * v1.dotProduct(n)
             val v2parallel = n * v2.dotProduct(n)
-
-            val v1perpendicular = v1 - v1parallel
-            val v2perpendicular = v2 - v2parallel
-
-            val totalMass = m1 + m2
             val vdiff = v1parallel - v2parallel
-            val p = v1parallel * m1 + v2parallel * m2
 
-            v1.set(v1perpendicular + (p - vdiff * e * m2) / totalMass)
-            v2.set(v2perpendicular + (p + vdiff * e * m1) / totalMass)
+            if (m1 >= LARGE_MASS) {
+                val v2perpendicular = v2 - v2parallel
+                v2.set(v2perpendicular + v1parallel + vdiff * e)
 
-            body1.nextSpeed.x = v1.x
-            body1.nextSpeed.y = v1.y
+                body2.nextSpeed.x = v2.x
+                body2.nextSpeed.y = v2.y
+            } else if (m2 >= LARGE_MASS) {
+                val v1perpendicular = v1 - v1parallel
+                v1.set(v1perpendicular + v2parallel - vdiff * e)
 
-            body2.nextSpeed.x = v2.x
-            body2.nextSpeed.y = v2.y
+                body1.nextSpeed.x = v1.x
+                body1.nextSpeed.y = v1.y
+            } else {
+                val v1perpendicular = v1 - v1parallel
+                val v2perpendicular = v2 - v2parallel
+
+                val totalMass = m1 + m2
+                val p = v1parallel * m1 + v2parallel * m2
+
+                v1.set(v1perpendicular + (p - vdiff * e * m2) / totalMass)
+                v2.set(v2perpendicular + (p + vdiff * e * m1) / totalMass)
+
+                body1.nextSpeed.x = v1.x
+                body1.nextSpeed.y = v1.y
+
+                body2.nextSpeed.x = v2.x
+                body2.nextSpeed.y = v2.y
+            }
         }
     }
 

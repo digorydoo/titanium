@@ -49,6 +49,7 @@ class TestGel(initialPos: Point3f, initialRotation: Float): GraphicElement(initi
 
     override fun didCollide(other: GraphicElement, hitPt: Point3f): Boolean {
         // println("TestGel collided with $other")
+        changeDirection()
         return true // true = bounce
     }
 

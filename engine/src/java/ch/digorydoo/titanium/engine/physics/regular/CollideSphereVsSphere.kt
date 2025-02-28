@@ -3,7 +3,7 @@ package ch.digorydoo.titanium.engine.physics.regular
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.physics.FixedSphereBody
-import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.STATIC_MASS
+import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.sqrt
 
@@ -65,13 +65,15 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
      * See docs/physics.txt
      */
     override fun bounce(body1: FixedSphereBody, body2: FixedSphereBody) {
-        if (body1.mass < STATIC_MASS && body1.mass <= body2.mass) {
+        if (body1.mass < LARGE_MASS && body1.mass <= body2.mass) {
             separate(body1, body2) // updates body1.nextPos
-        } else if (body2.mass < STATIC_MASS) {
+        } else if (body2.mass < LARGE_MASS) {
             separate(body2, body1) // updates body2.nextPos
         } else {
             Log.warn("Cannot separate $body1 from $body2")
         }
+
+        val e = body1.elasticity * body2.elasticity
 
         val p1 = tmp1.set(body1.nextPos.x, body1.nextPos.y, body1.nextPos.z + body1.zOffset)
         val p2 = tmp2.set(body2.nextPos.x, body2.nextPos.y, body2.nextPos.z + body2.zOffset)
@@ -87,17 +89,24 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
 
         val v1parallel = n * v1.dotProduct(n)
         val v2parallel = n * v2.dotProduct(n)
-
-        val v1perpendicular = v1 - v1parallel
-        val v2perpendicular = v2 - v2parallel
-
-        val totalMass = m1 + m2
         val vdiff = v1parallel - v2parallel
-        val e = body1.elasticity * body2.elasticity
-        val p = v1parallel * m1 + v2parallel * m2
 
-        v1.set(v1perpendicular + (p - vdiff * e * m2) / totalMass)
-        v2.set(v2perpendicular + (p + vdiff * e * m1) / totalMass)
+        if (m1 >= LARGE_MASS) {
+            val v2perpendicular = v2 - v2parallel
+            v2.set(v2perpendicular + v1parallel + vdiff * e)
+        } else if (m2 >= LARGE_MASS) {
+            val v1perpendicular = v1 - v1parallel
+            v1.set(v1perpendicular + v2parallel - vdiff * e)
+        } else {
+            val v1perpendicular = v1 - v1parallel
+            val v2perpendicular = v2 - v2parallel
+
+            val totalMass = m1 + m2
+            val p = v1parallel * m1 + v2parallel * m2
+
+            v1.set(v1perpendicular + (p - vdiff * e * m2) / totalMass)
+            v2.set(v2perpendicular + (p + vdiff * e * m1) / totalMass)
+        }
     }
 
     /**
@@ -131,7 +140,7 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
             }
         }
 
-        require(body1.mass < STATIC_MASS)
+        require(body1.mass < LARGE_MASS)
         val moveBy = body1.radius + body2.radius + 2 * EPSILON
         p1.x = p2.x - moveBy * dx / dist
         p1.y = p2.y - moveBy * dy / dist

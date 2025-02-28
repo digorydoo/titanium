@@ -4,7 +4,7 @@ import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.physics.FixedPlaneBody
 import ch.digorydoo.titanium.engine.physics.FixedSphereBody
-import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.STATIC_MASS
+import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.abs
 
@@ -40,7 +40,7 @@ internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPla
         val d = tmp1.dotProduct(body2.normal)
         val n = body2.normal
 
-        if (body1.mass < STATIC_MASS && body1.mass <= body2.mass) {
+        if (body1.mass < LARGE_MASS && body1.mass <= body2.mass) {
             // Move the sphere
             val q = if (d < 0.0f) -d - body1.radius else -d + body1.radius
             body1.nextPos.set(
@@ -48,7 +48,7 @@ internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPla
                 body1.nextPos.y + q * n.y,
                 body1.nextPos.z + q * n.z,
             )
-        } else if (body2.mass < STATIC_MASS) {
+        } else if (body2.mass < LARGE_MASS) {
             // Move the plane
             val q = if (d < 0.0f) d + body1.radius else d - body1.radius
             body2.nextPos.set(
@@ -61,24 +61,33 @@ internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPla
             return
         }
 
+        val e = body1.elasticity * body2.elasticity
+
         val m1 = if (body1.mass <= EPSILON) EPSILON else body1.mass
         val m2 = if (body2.mass <= EPSILON) EPSILON else body2.mass
-        val e = body1.elasticity * body2.elasticity
 
         val v1 = body1.nextSpeed
         val v2 = body2.nextSpeed
 
         val v1parallel = n * v1.dotProduct(n)
         val v2parallel = n * v2.dotProduct(n)
-
-        val v1perpendicular = v1 - v1parallel
-        val v2perpendicular = v2 - v2parallel
-
-        val totalMass = m1 + m2
         val vdiff = v1parallel - v2parallel
-        val p = v1parallel * m1 + v2parallel * m2
 
-        v1.set(v1perpendicular + (p - vdiff * e * m2) / totalMass)
-        v2.set(v2perpendicular + (p + vdiff * e * m1) / totalMass)
+        if (m1 >= LARGE_MASS) {
+            val v2perpendicular = v2 - v2parallel
+            v2.set(v2perpendicular + v1parallel + vdiff * e)
+        } else if (m2 >= LARGE_MASS) {
+            val v1perpendicular = v1 - v1parallel
+            v1.set(v1perpendicular + v2parallel - vdiff * e)
+        } else {
+            val v1perpendicular = v1 - v1parallel
+            val v2perpendicular = v2 - v2parallel
+
+            val totalMass = m1 + m2
+            val p = v1parallel * m1 + v2parallel * m2
+
+            v1.set(v1perpendicular + (p - vdiff * e * m2) / totalMass)
+            v2.set(v2perpendicular + (p + vdiff * e * m1) / totalMass)
+        }
     }
 }
