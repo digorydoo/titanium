@@ -109,19 +109,19 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
         if (vertical) {
             // We treat this like bouncing the sphere off the XY plane.
 
-            val vdiffZ = v1.z - v2.z
+            val vparallelDz = v1.z - v2.z
             val expectedSign = if (p1z < p2z) 1.0f else -1.0f
 
-            if (sign(vdiffZ) != expectedSign) {
+            if (sign(vparallelDz) != expectedSign) {
                 // The two objects are separating
                 return
             }
 
             if (m1 >= LARGE_MASS) {
-                v2.z = v1.z + vdiffZ * elasticity
+                v2.z = v1.z + vparallelDz * elasticity
 
                 if (friction > 0.0f) {
-                    val vfricZ = vdiffZ * friction
+                    val vfricZ = vparallelDz * friction
                     val v2pLen = sqrt(v2.x * v2.x + v2.y * v2.y)
 
                     if (vfricZ >= v2pLen) {
@@ -133,10 +133,10 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
                     }
                 }
             } else if (m2 >= LARGE_MASS) {
-                v1.z = v2.z - vdiffZ * elasticity
+                v1.z = v2.z - vparallelDz * elasticity
 
                 if (friction > 0.0f) {
-                    val vfricZ = vdiffZ * friction
+                    val vfricZ = vparallelDz * friction
                     val v1pLen = sqrt(v1.x * v1.x + v1.y * v1.y)
 
                     if (vfricZ >= v1pLen) {
@@ -151,11 +151,11 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
                 val totalMass = m1 + m2
                 val sz = v1.z * m1 + v2.z * m2
 
-                v1.z = (sz - vdiffZ * elasticity * m2) / totalMass
-                v2.z = (sz + vdiffZ * elasticity * m1) / totalMass
+                v1.z = (sz - vparallelDz * elasticity * m2) / totalMass
+                v2.z = (sz + vparallelDz * elasticity * m1) / totalMass
 
                 if (friction > 0.0f) {
-                    val vfricZ = vdiffZ * friction
+                    val vfricZ = vparallelDz * friction
 
                     val v1pLen = sqrt(v1.x * v1.x + v1.y * v1.y)
                     val v2pLen = sqrt(v2.x * v2.x + v2.y * v2.y)
@@ -195,18 +195,18 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
             val v2parallelX = nx * v2dotn
             val v2parallelY = ny * v2dotn
 
-            val vdiffX = v1parallelX - v2parallelX
-            val vdiffY = v1parallelY - v2parallelY
+            val vparallelDx = v1parallelX - v2parallelX
+            val vparallelDy = v1parallelY - v2parallelY
 
             if (m1 >= LARGE_MASS) {
                 val v2perpendX = v2.x - v2parallelX
                 val v2perpendY = v2.y - v2parallelY
-                v2.x = v2perpendX + v1parallelX + vdiffX * elasticity
-                v2.y = v2perpendY + v1parallelY + vdiffY * elasticity
+                v2.x = v2perpendX + v1parallelX + vparallelDx * elasticity
+                v2.y = v2perpendY + v1parallelY + vparallelDy * elasticity
 
                 if (friction > 0.0f) {
-                    val vfricX = vdiffX * friction
-                    val vfricY = vdiffY * friction
+                    val vfricX = vparallelDx * friction
+                    val vfricY = vparallelDy * friction
                     val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY)
                     val v2pLen = sqrt(v2perpendX * v2perpendX + v2perpendY * v2perpendY)
 
@@ -221,12 +221,12 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
             } else if (m2 >= LARGE_MASS) {
                 val v1perpendX = v1.x - v1parallelX
                 val v1perpendY = v1.y - v1parallelY
-                v1.x = v1perpendX + v2parallelX - vdiffX * elasticity
-                v1.y = v1perpendY + v2parallelY - vdiffY * elasticity
+                v1.x = v1perpendX + v2parallelX - vparallelDx * elasticity
+                v1.y = v1perpendY + v2parallelY - vparallelDy * elasticity
 
                 if (friction > 0.0f) {
-                    val vfricX = vdiffX * friction
-                    val vfricY = vdiffY * friction
+                    val vfricX = vparallelDx * friction
+                    val vfricY = vparallelDy * friction
                     val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY)
                     val v1pLen = sqrt(v1perpendX * v1perpendX + v1perpendY * v1perpendY)
 
@@ -250,15 +250,15 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
                 val sx = v1parallelX * m1 + v2parallelX * m2
                 val sy = v1parallelY * m1 + v2parallelY * m2
 
-                v1.x = v1perpendX + (sx - vdiffX * elasticity * m2) / totalMass
-                v1.y = v1perpendY + (sy - vdiffY * elasticity * m2) / totalMass
+                v1.x = v1perpendX + (sx - vparallelDx * elasticity * m2) / totalMass
+                v1.y = v1perpendY + (sy - vparallelDy * elasticity * m2) / totalMass
 
-                v2.x = v2perpendX + (sx + vdiffX * elasticity * m1) / totalMass
-                v2.y = v2perpendY + (sy + vdiffY * elasticity * m1) / totalMass
+                v2.x = v2perpendX + (sx + vparallelDx * elasticity * m1) / totalMass
+                v2.y = v2perpendY + (sy + vparallelDy * elasticity * m1) / totalMass
 
                 if (friction > 0.0f) {
-                    val vfricX = vdiffX * friction
-                    val vfricY = vdiffY * friction
+                    val vfricX = vparallelDx * friction
+                    val vfricY = vparallelDy * friction
                     val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY)
 
                     val v1pLen = sqrt(v1perpendX * v1perpendX + v1perpendY * v1perpendY)

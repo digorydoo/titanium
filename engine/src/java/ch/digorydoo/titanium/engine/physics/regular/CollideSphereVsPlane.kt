@@ -97,22 +97,22 @@ internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPla
         val v2parallelY = ny * v2dotn
         val v2parallelZ = ny * v2dotn
 
-        val vdiffX = v1parallelX - v2parallelX
-        val vdiffY = v1parallelY - v2parallelY
-        val vdiffZ = v1parallelZ - v2parallelZ
+        val vparallelDx = v1parallelX - v2parallelX
+        val vparallelDy = v1parallelY - v2parallelY
+        val vparallelDz = v1parallelZ - v2parallelZ
 
         if (m1 >= LARGE_MASS) {
             val v2perpendX = v2.x - v2parallelX
             val v2perpendY = v2.y - v2parallelY
             val v2perpendZ = v2.z - v2parallelZ
-            v2.x = v2perpendX + v1parallelX + vdiffX * elasticity
-            v2.y = v2perpendY + v1parallelY + vdiffY * elasticity
-            v2.z = v2perpendZ + v1parallelZ + vdiffZ * elasticity
+            v2.x = v2perpendX + v1parallelX + vparallelDx * elasticity
+            v2.y = v2perpendY + v1parallelY + vparallelDy * elasticity
+            v2.z = v2perpendZ + v1parallelZ + vparallelDz * elasticity
 
             if (friction > 0.0f) {
-                val vfricX = vdiffX * friction
-                val vfricY = vdiffY * friction
-                val vfricZ = vdiffZ * friction
+                val vfricX = vparallelDx * friction
+                val vfricY = vparallelDy * friction
+                val vfricZ = vparallelDz * friction
                 val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY + vfricZ * vfricZ)
                 val v2pLen = sqrt(v2perpendX * v2perpendX + v2perpendY * v2perpendY + v2perpendZ * v2perpendZ)
 
@@ -130,14 +130,14 @@ internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPla
             val v1perpendX = v1.x - v1parallelX
             val v1perpendY = v1.y - v1parallelY
             val v1perpendZ = v1.z - v1parallelZ
-            v1.x = v1perpendX + v2parallelX - vdiffX * elasticity
-            v1.y = v1perpendY + v2parallelY - vdiffY * elasticity
-            v1.z = v1perpendZ + v2parallelZ - vdiffZ * elasticity
+            v1.x = v1perpendX + v2parallelX - vparallelDx * elasticity
+            v1.y = v1perpendY + v2parallelY - vparallelDy * elasticity
+            v1.z = v1perpendZ + v2parallelZ - vparallelDz * elasticity
 
             if (friction > 0.0f) {
-                val vfricX = vdiffX * friction
-                val vfricY = vdiffY * friction
-                val vfricZ = vdiffZ * friction
+                val vfricX = vparallelDx * friction
+                val vfricY = vparallelDy * friction
+                val vfricZ = vparallelDz * friction
                 val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY + vfricZ * vfricZ)
                 val v1pLen = sqrt(v1perpendX * v1perpendX + v1perpendY * v1perpendY + v1perpendZ * v1perpendZ)
 
@@ -166,18 +166,18 @@ internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPla
             val sy = v1parallelY * m1 + v2parallelY * m2
             val sz = v1parallelZ * m1 + v2parallelZ * m2
 
-            v1.x = v1perpendX + (sx - vdiffX * elasticity * m2) / totalMass
-            v1.y = v1perpendY + (sy - vdiffY * elasticity * m2) / totalMass
-            v1.z = v1perpendZ + (sz - vdiffZ * elasticity * m2) / totalMass
+            v1.x = v1perpendX + (sx - vparallelDx * elasticity * m2) / totalMass
+            v1.y = v1perpendY + (sy - vparallelDy * elasticity * m2) / totalMass
+            v1.z = v1perpendZ + (sz - vparallelDz * elasticity * m2) / totalMass
 
-            v2.x = v2perpendX + (sx + vdiffX * elasticity * m1) / totalMass
-            v2.y = v2perpendY + (sy + vdiffY * elasticity * m1) / totalMass
-            v2.z = v2perpendZ + (sz + vdiffZ * elasticity * m1) / totalMass
+            v2.x = v2perpendX + (sx + vparallelDx * elasticity * m1) / totalMass
+            v2.y = v2perpendY + (sy + vparallelDy * elasticity * m1) / totalMass
+            v2.z = v2perpendZ + (sz + vparallelDz * elasticity * m1) / totalMass
 
             if (friction > 0.0f) {
-                val vfricX = vdiffX * friction
-                val vfricY = vdiffY * friction
-                val vfricZ = vdiffZ * friction
+                val vfricX = vparallelDx * friction
+                val vfricY = vparallelDy * friction
+                val vfricZ = vparallelDz * friction
                 val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY + vfricZ * vfricZ)
 
                 val v1pLen = sqrt(v1perpendX * v1perpendX + v1perpendY * v1perpendY + v1perpendZ * v1perpendZ)
