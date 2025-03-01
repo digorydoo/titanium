@@ -257,6 +257,8 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
                 v2.y = v2perpendY + (sy + vparallelDy * elasticity * m1) / totalMass
 
                 if (friction > 0.0f) {
+                    // FIXME this is not correct; friction should depend on vperpendDiff
+
                     val vfricX = vparallelDx * friction
                     val vfricY = vparallelDy * friction
                     val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY)

@@ -175,6 +175,8 @@ internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPla
             v2.z = v2perpendZ + (sz + vparallelDz * elasticity * m1) / totalMass
 
             if (friction > 0.0f) {
+                // FIXME this is not correct; friction should depend on vperpendDiff
+
                 val vfricX = vparallelDx * friction
                 val vfricY = vparallelDy * friction
                 val vfricZ = vparallelDz * friction
