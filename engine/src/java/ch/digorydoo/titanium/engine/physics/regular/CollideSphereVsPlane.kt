@@ -7,6 +7,7 @@ import ch.digorydoo.titanium.engine.physics.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.abs
+import kotlin.math.sqrt
 
 internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPlaneBody>() {
     /**
@@ -78,6 +79,7 @@ internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPla
         }
 
         val elasticity = body1.elasticity * body2.elasticity
+        val friction = 1.0f - (1.0f - body1.friction) * (1.0f - body2.friction)
 
         val m1 = if (body1.mass <= EPSILON) EPSILON else body1.mass
         val m2 = if (body2.mass <= EPSILON) EPSILON else body2.mass
@@ -106,6 +108,24 @@ internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPla
             v2.x = v2perpendX + v1parallelX + vdiffX * elasticity
             v2.y = v2perpendY + v1parallelY + vdiffY * elasticity
             v2.z = v2perpendZ + v1parallelZ + vdiffZ * elasticity
+
+            if (friction > 0.0f) {
+                val vfricX = vdiffX * friction
+                val vfricY = vdiffY * friction
+                val vfricZ = vdiffZ * friction
+                val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY + vfricZ * vfricZ)
+                val v2pLen = sqrt(v2perpendX * v2perpendX + v2perpendY * v2perpendY + v2perpendZ * v2perpendZ)
+
+                if (vfricLen >= v2pLen) {
+                    v2.x -= v2perpendX
+                    v2.y -= v2perpendY
+                    v2.z -= v2perpendZ
+                } else {
+                    v2.x -= vfricLen * v2perpendX / v2pLen
+                    v2.y -= vfricLen * v2perpendY / v2pLen
+                    v2.z -= vfricLen * v2perpendZ / v2pLen
+                }
+            }
         } else if (m2 >= LARGE_MASS) {
             val v1perpendX = v1.x - v1parallelX
             val v1perpendY = v1.y - v1parallelY
@@ -113,6 +133,24 @@ internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPla
             v1.x = v1perpendX + v2parallelX - vdiffX * elasticity
             v1.y = v1perpendY + v2parallelY - vdiffY * elasticity
             v1.z = v1perpendZ + v2parallelZ - vdiffZ * elasticity
+
+            if (friction > 0.0f) {
+                val vfricX = vdiffX * friction
+                val vfricY = vdiffY * friction
+                val vfricZ = vdiffZ * friction
+                val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY + vfricZ * vfricZ)
+                val v1pLen = sqrt(v1perpendX * v1perpendX + v1perpendY * v1perpendY + v1perpendZ * v1perpendZ)
+
+                if (vfricLen >= v1pLen) {
+                    v1.x -= v1perpendX
+                    v1.y -= v1perpendY
+                    v1.z -= v1perpendZ
+                } else {
+                    v1.x -= vfricLen * v1perpendX / v1pLen
+                    v1.y -= vfricLen * v1perpendY / v1pLen
+                    v1.z -= vfricLen * v1perpendZ / v1pLen
+                }
+            }
         } else {
             val v1perpendX = v1.x - v1parallelX
             val v1perpendY = v1.y - v1parallelY
@@ -135,6 +173,36 @@ internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPla
             v2.x = v2perpendX + (sx + vdiffX * elasticity * m1) / totalMass
             v2.y = v2perpendY + (sy + vdiffY * elasticity * m1) / totalMass
             v2.z = v2perpendZ + (sz + vdiffZ * elasticity * m1) / totalMass
+
+            if (friction > 0.0f) {
+                val vfricX = vdiffX * friction
+                val vfricY = vdiffY * friction
+                val vfricZ = vdiffZ * friction
+                val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY + vfricZ * vfricZ)
+
+                val v1pLen = sqrt(v1perpendX * v1perpendX + v1perpendY * v1perpendY + v1perpendZ * v1perpendZ)
+                val v2pLen = sqrt(v2perpendX * v2perpendX + v2perpendY * v2perpendY + v2perpendZ * v2perpendZ)
+
+                if (vfricLen >= v1pLen) {
+                    v1.x -= v1perpendX
+                    v1.y -= v1perpendY
+                    v1.z -= v1perpendZ
+                } else {
+                    v1.x -= vfricLen * v1perpendX / v1pLen
+                    v1.y -= vfricLen * v1perpendY / v1pLen
+                    v1.z -= vfricLen * v1perpendZ / v1pLen
+                }
+
+                if (vfricLen >= v2pLen) {
+                    v2.x -= v2perpendX
+                    v2.y -= v2perpendY
+                    v2.z -= v2perpendZ
+                } else {
+                    v2.x -= vfricLen * v2perpendX / v2pLen
+                    v2.y -= vfricLen * v2perpendY / v2pLen
+                    v2.z -= vfricLen * v2perpendZ / v2pLen
+                }
+            }
         }
     }
 }
