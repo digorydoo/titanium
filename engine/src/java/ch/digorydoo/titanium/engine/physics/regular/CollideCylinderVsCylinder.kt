@@ -165,10 +165,10 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
                 }
             } else {
                 val totalMass = m1 + m2
-                val p = v1z * m1 + v2z * m2
+                val sz = v1z * m1 + v2z * m2
 
-                v1.z = (p - vdiffZ * elasticity * m2) / totalMass
-                v2.z = (p + vdiffZ * elasticity * m1) / totalMass
+                v1.z = (sz - vdiffZ * elasticity * m2) / totalMass
+                v2.z = (sz + vdiffZ * elasticity * m1) / totalMass
 
                 if (friction > 0.0f) {
                     val vfricZ = vdiffZ * friction

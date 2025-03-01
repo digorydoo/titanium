@@ -1,6 +1,5 @@
 package ch.digorydoo.titanium.engine.physics.regular
 
-import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
@@ -13,12 +12,6 @@ import kotlin.math.sign
 import kotlin.math.sqrt
 
 internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, FixedCylinderBody>() {
-    private val tmp1 = MutablePoint3f()
-    private val tmp2 = MutablePoint3f()
-    private val tmp3 = MutablePoint2f()
-    private val tmp4 = MutablePoint2f()
-    private val tmp5 = MutablePoint2f()
-
     override fun checkNextPos(body1: FixedSphereBody, body2: FixedCylinderBody, outHitPt: MutablePoint3f) =
         check(
             cx1 = body1.nextPos.x,
@@ -96,77 +89,197 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
             return
         }
 
+        val elasticity = body1.elasticity * body2.elasticity
+        val friction = 1.0f - (1.0f - body1.friction) * (1.0f - body2.friction)
+
         val m1 = if (body1.mass <= EPSILON) EPSILON else body1.mass
         val m2 = if (body2.mass <= EPSILON) EPSILON else body2.mass
-        val e = body1.elasticity * body2.elasticity
 
-        val p1 = tmp1.set(body1.nextPos.x, body1.nextPos.y, body1.nextPos.z + body1.zOffset)
-        val p2 = tmp2.set(body2.nextPos.x, body2.nextPos.y, body2.nextPos.z + body2.zOffset)
+        val p1x = body1.nextPos.x
+        val p1y = body1.nextPos.y
+        val p1z = body1.nextPos.z + body1.zOffset
+
+        val p2x = body2.nextPos.x
+        val p2y = body2.nextPos.y
+        val p2z = body2.nextPos.z + body2.zOffset
+
+        val v1 = body1.nextSpeed
+        val v2 = body2.nextSpeed
 
         if (vertical) {
             // We treat this like bouncing the sphere off the XY plane.
 
-            val v1z = body1.nextSpeed.z
-            val v2z = body2.nextSpeed.z
-            val vdiffz = v1z - v2z
-            val expectedSign = if (p1.z < p2.z) 1.0f else -1.0f
+            val vdiffZ = v1.z - v2.z
+            val expectedSign = if (p1z < p2z) 1.0f else -1.0f
 
-            if (sign(vdiffz) != expectedSign) {
+            if (sign(vdiffZ) != expectedSign) {
                 // The two objects are separating
                 return
             }
 
             if (m1 >= LARGE_MASS) {
-                body2.nextSpeed.z = v1z + vdiffz * e
+                v2.z = v1.z + vdiffZ * elasticity
+
+                if (friction > 0.0f) {
+                    val vfricZ = vdiffZ * friction
+                    val v2pLen = sqrt(v2.x * v2.x + v2.y * v2.y)
+
+                    if (vfricZ >= v2pLen) {
+                        v2.x = 0.0f
+                        v2.y = 0.0f
+                    } else {
+                        v2.x -= vfricZ * v2.x / v2pLen
+                        v2.y -= vfricZ * v2.y / v2pLen
+                    }
+                }
             } else if (m2 >= LARGE_MASS) {
-                body1.nextSpeed.z = v2z - vdiffz * e
+                v1.z = v2.z - vdiffZ * elasticity
+
+                if (friction > 0.0f) {
+                    val vfricZ = vdiffZ * friction
+                    val v1pLen = sqrt(v1.x * v1.x + v1.y * v1.y)
+
+                    if (vfricZ >= v1pLen) {
+                        v1.x = 0.0f
+                        v1.y = 0.0f
+                    } else {
+                        v1.x -= vfricZ * v1.x / v1pLen
+                        v1.y -= vfricZ * v1.y / v1pLen
+                    }
+                }
             } else {
                 val totalMass = m1 + m2
-                val p = v1z * m1 + v2z * m2
+                val sz = v1.z * m1 + v2.z * m2
 
-                body1.nextSpeed.z = (p - vdiffz * e * m2) / totalMass
-                body2.nextSpeed.z = (p + vdiffz * e * m1) / totalMass
+                v1.z = (sz - vdiffZ * elasticity * m2) / totalMass
+                v2.z = (sz + vdiffZ * elasticity * m1) / totalMass
+
+                if (friction > 0.0f) {
+                    val vfricZ = vdiffZ * friction
+
+                    val v1pLen = sqrt(v1.x * v1.x + v1.y * v1.y)
+                    val v2pLen = sqrt(v2.x * v2.x + v2.y * v2.y)
+
+                    if (vfricZ >= v1pLen) {
+                        v1.x = 0.0f
+                        v1.y = 0.0f
+                    } else {
+                        v1.x -= vfricZ * v1.x / v1pLen
+                        v1.y -= vfricZ * v1.y / v1pLen
+                    }
+
+                    if (vfricZ >= v2pLen) {
+                        v2.x = 0.0f
+                        v2.y = 0.0f
+                    } else {
+                        v2.x -= vfricZ * v2.x / v2pLen
+                        v2.y -= vfricZ * v2.y / v2pLen
+                    }
+                }
             }
         } else {
             // We treat this like bouncing a circle off another circle in the XY plane.
 
-            val v1 = tmp3.set(body1.nextSpeed.x, body1.nextSpeed.y)
-            val v2 = tmp4.set(body2.nextSpeed.x, body2.nextSpeed.y)
+            val pdx = p2x - p1x
+            val pdy = p2y - p1y
+            val pLen = sqrt(pdx * pdx + pdy * pdy)
 
-            val pdiff = tmp5.set(p2.x - p1.x, p2.y - p1.y)
-            val n = pdiff / pdiff.length()
+            val nx = pdx / pLen
+            val ny = pdy / pLen
 
-            val v1parallel = n * v1.dotProduct(n)
-            val v2parallel = n * v2.dotProduct(n)
-            val vdiff = v1parallel - v2parallel
+            val v1dotn = v1.x * nx + v1.y * ny
+            val v1parallelX = nx * v1dotn
+            val v1parallelY = ny * v1dotn
+
+            val v2dotn = v2.x * nx + v2.y * ny
+            val v2parallelX = nx * v2dotn
+            val v2parallelY = ny * v2dotn
+
+            val vdiffX = v1parallelX - v2parallelX
+            val vdiffY = v1parallelY - v2parallelY
 
             if (m1 >= LARGE_MASS) {
-                val v2perpendicular = v2 - v2parallel
-                v2.set(v2perpendicular + v1parallel + vdiff * e)
+                val v2perpendX = v2.x - v2parallelX
+                val v2perpendY = v2.y - v2parallelY
+                v2.x = v2perpendX + v1parallelX + vdiffX * elasticity
+                v2.y = v2perpendY + v1parallelY + vdiffY * elasticity
 
-                body2.nextSpeed.x = v2.x
-                body2.nextSpeed.y = v2.y
+                if (friction > 0.0f) {
+                    val vfricX = vdiffX * friction
+                    val vfricY = vdiffY * friction
+                    val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY)
+                    val v2pLen = sqrt(v2perpendX * v2perpendX + v2perpendY * v2perpendY)
+
+                    if (vfricLen >= v2pLen) {
+                        v2.x -= v2perpendX
+                        v2.y -= v2perpendY
+                    } else {
+                        v2.x -= vfricLen * v2perpendX / v2pLen
+                        v2.y -= vfricLen * v2perpendY / v2pLen
+                    }
+                }
             } else if (m2 >= LARGE_MASS) {
-                val v1perpendicular = v1 - v1parallel
-                v1.set(v1perpendicular + v2parallel - vdiff * e)
+                val v1perpendX = v1.x - v1parallelX
+                val v1perpendY = v1.y - v1parallelY
+                v1.x = v1perpendX + v2parallelX - vdiffX * elasticity
+                v1.y = v1perpendY + v2parallelY - vdiffY * elasticity
 
-                body1.nextSpeed.x = v1.x
-                body1.nextSpeed.y = v1.y
+                if (friction > 0.0f) {
+                    val vfricX = vdiffX * friction
+                    val vfricY = vdiffY * friction
+                    val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY)
+                    val v1pLen = sqrt(v1perpendX * v1perpendX + v1perpendY * v1perpendY)
+
+                    if (vfricLen >= v1pLen) {
+                        v1.x -= v1perpendX
+                        v1.y -= v1perpendY
+                    } else {
+                        v1.x -= vfricLen * v1perpendX / v1pLen
+                        v1.y -= vfricLen * v1perpendY / v1pLen
+                    }
+                }
             } else {
-                val v1perpendicular = v1 - v1parallel
-                val v2perpendicular = v2 - v2parallel
+                val v1perpendX = v1.x - v1parallelX
+                val v1perpendY = v1.y - v1parallelY
+
+                val v2perpendX = v2.x - v2parallelX
+                val v2perpendY = v2.y - v2parallelY
 
                 val totalMass = m1 + m2
-                val p = v1parallel * m1 + v2parallel * m2
 
-                v1.set(v1perpendicular + (p - vdiff * e * m2) / totalMass)
-                v2.set(v2perpendicular + (p + vdiff * e * m1) / totalMass)
+                val sx = v1parallelX * m1 + v2parallelX * m2
+                val sy = v1parallelY * m1 + v2parallelY * m2
 
-                body1.nextSpeed.x = v1.x
-                body1.nextSpeed.y = v1.y
+                v1.x = v1perpendX + (sx - vdiffX * elasticity * m2) / totalMass
+                v1.y = v1perpendY + (sy - vdiffY * elasticity * m2) / totalMass
 
-                body2.nextSpeed.x = v2.x
-                body2.nextSpeed.y = v2.y
+                v2.x = v2perpendX + (sx + vdiffX * elasticity * m1) / totalMass
+                v2.y = v2perpendY + (sy + vdiffY * elasticity * m1) / totalMass
+
+                if (friction > 0.0f) {
+                    val vfricX = vdiffX * friction
+                    val vfricY = vdiffY * friction
+                    val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY)
+
+                    val v1pLen = sqrt(v1perpendX * v1perpendX + v1perpendY * v1perpendY)
+                    val v2pLen = sqrt(v2perpendX * v2perpendX + v2perpendY * v2perpendY)
+
+                    if (vfricLen >= v1pLen) {
+                        v1.x -= v1perpendX
+                        v1.y -= v1perpendY
+                    } else {
+                        v1.x -= vfricLen * v1perpendX / v1pLen
+                        v1.y -= vfricLen * v1perpendY / v1pLen
+                    }
+
+                    if (vfricLen >= v2pLen) {
+                        v2.x -= v2perpendX
+                        v2.y -= v2perpendY
+                    } else {
+                        v2.x -= vfricLen * v2perpendX / v2pLen
+                        v2.y -= vfricLen * v2perpendY / v2pLen
+                    }
+                }
             }
         }
     }
@@ -176,11 +289,16 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
      * @return whether or not the hit was vertical
      */
     private fun separate(sphere: FixedSphereBody, cylinder: FixedCylinderBody): Boolean {
-        val p1 = tmp1.set(sphere.nextPos.x, sphere.nextPos.y, sphere.nextPos.z + sphere.zOffset)
-        val p2 = tmp2.set(cylinder.nextPos.x, cylinder.nextPos.y, cylinder.nextPos.z + cylinder.zOffset)
+        val p1x = sphere.nextPos.x
+        val p1y = sphere.nextPos.y
+        val p1z = sphere.nextPos.z + sphere.zOffset
 
-        val minTop = min(p1.z + sphere.radius, p2.z + cylinder.height / 2)
-        val maxBottom = max(p1.z - sphere.radius, p2.z - cylinder.height / 2)
+        val p2x = cylinder.nextPos.x
+        val p2y = cylinder.nextPos.y
+        val p2z = cylinder.nextPos.z + cylinder.zOffset
+
+        val minTop = min(p1z + sphere.radius, p2z + cylinder.height / 2)
+        val maxBottom = max(p1z - sphere.radius, p2z - cylinder.height / 2)
         val overlapHeight = minTop - maxBottom
         val vertical = overlapHeight < VERTICAL_HIT_OVERLAP_HEIGHT_THRESHOLD
 
@@ -188,21 +306,22 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
             // Separate the bodies along the z-axis
             val moveBy = sphere.radius + cylinder.height * 0.5f + 2 * EPSILON
 
-            if (p1.z < p2.z) {
+            if (p1z < p2z) {
                 sphere.nextPos.z = cylinder.nextPos.z + cylinder.zOffset - moveBy - sphere.zOffset
             } else {
                 sphere.nextPos.z = cylinder.nextPos.z + cylinder.zOffset + moveBy - sphere.zOffset
             }
         } else {
             // Separate the bodies in the XY plane
-            val dx = p2.x - p1.x
-            val dy = p2.y - p1.y
+            val dx = p2x - p1x
+            val dy = p2y - p1y
             val dsqr = (dx * dx) + (dy * dy) // squared distance in the XY plane
             val dlen = sqrt(dsqr)
-            val n = tmp5.set(dx / dlen, dy / dlen)
+            val nx = dx / dlen
+            val ny = dy / dlen
             val moveBy = sphere.radius + cylinder.radius + 2 * EPSILON
-            sphere.nextPos.x = cylinder.nextPos.x - n.x * moveBy
-            sphere.nextPos.y = cylinder.nextPos.y - n.y * moveBy
+            sphere.nextPos.x = cylinder.nextPos.x - nx * moveBy
+            sphere.nextPos.y = cylinder.nextPos.y - ny * moveBy
         }
 
         return vertical
@@ -213,11 +332,16 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
      * @return whether or not the hit was vertical
      */
     private fun separate(cylinder: FixedCylinderBody, sphere: FixedSphereBody): Boolean {
-        val p1 = tmp1.set(cylinder.nextPos.x, cylinder.nextPos.y, cylinder.nextPos.z + cylinder.zOffset)
-        val p2 = tmp2.set(sphere.nextPos.x, sphere.nextPos.y, sphere.nextPos.z + sphere.zOffset)
+        val p1x = cylinder.nextPos.x
+        val p1y = cylinder.nextPos.y
+        val p1z = cylinder.nextPos.z + cylinder.zOffset
 
-        val dx = p2.x - p1.x
-        val dy = p2.y - p1.y
+        val p2x = sphere.nextPos.x
+        val p2y = sphere.nextPos.y
+        val p2z = sphere.nextPos.z + sphere.zOffset
+
+        val dx = p2x - p1x
+        val dy = p2y - p1y
         val dsqr = (dx * dx) + (dy * dy) // squared distance in the XY plane
         val vertical = dsqr <= cylinder.radius * cylinder.radius
 
@@ -225,7 +349,7 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
             // Separate the bodies along the z-axis
             val moveBy = sphere.radius + cylinder.height * 0.5f + 2 * EPSILON
 
-            if (p1.z < p2.z) {
+            if (p1z < p2z) {
                 cylinder.nextPos.z = sphere.nextPos.z + sphere.zOffset - moveBy - cylinder.zOffset
             } else {
                 cylinder.nextPos.z = sphere.nextPos.z + sphere.zOffset + moveBy - cylinder.zOffset
@@ -233,10 +357,11 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
         } else {
             // Separate the bodies in the XY plane
             val dlen = sqrt(dsqr)
-            val n = tmp5.set(dx / dlen, dy / dlen)
+            val nx = dx / dlen
+            val ny = dy / dlen
             val moveBy = sphere.radius + cylinder.radius + 2 * EPSILON
-            cylinder.nextPos.x = sphere.nextPos.x - n.x * moveBy
-            cylinder.nextPos.y = sphere.nextPos.y - n.y * moveBy
+            cylinder.nextPos.x = sphere.nextPos.x - nx * moveBy
+            cylinder.nextPos.y = sphere.nextPos.y - ny * moveBy
         }
 
         return vertical

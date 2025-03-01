@@ -28,7 +28,7 @@ class PickupGel private constructor(
         gravity = true,
         radius = 0.5f,
         zOffset = 0.5f,
-        friction = 0.2f,
+        friction = 0.5f,
     )
 
     private val frames = FrameCollection()
