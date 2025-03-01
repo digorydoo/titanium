@@ -9,19 +9,27 @@ import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.abs
 
 internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPlaneBody>() {
-    private val tmp1 = MutablePoint3f()
-
     /**
      * See docs/physics.txt
      */
     override fun checkNextPos(body1: FixedSphereBody, body2: FixedPlaneBody, outHitPt: MutablePoint3f): Boolean {
-        tmp1.set(
-            body1.nextPos.x - body2.nextPos.x,
-            body1.nextPos.y - body2.nextPos.y,
-            body1.nextPos.z + body1.zOffset - body2.nextPos.z,
-        )
-        val d = tmp1.dotProduct(body2.normal)
+        val p1x = body1.nextPos.x
+        val p1y = body1.nextPos.y
+        val p1z = body1.nextPos.z + body1.zOffset
+
+        val p2x = body2.nextPos.x
+        val p2y = body2.nextPos.y
+        val p2z = body2.nextPos.z
+
+        val n = body2.normal
+
+        val dx = p1x - p2x
+        val dy = p1y - p2y
+        val dz = p1z - p2z
+        val d = dx * n.x + dy * n.y + dz * n.z
+
         if (abs(d) > body1.radius) return false
+
         outHitPt.set(
             body1.nextPos.x - d * body2.normal.x,
             body1.nextPos.y - d * body2.normal.y,
@@ -31,37 +39,45 @@ internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPla
     }
 
     override fun bounce(body1: FixedSphereBody, body2: FixedPlaneBody) {
-        tmp1.set(
-            body1.nextPos.x - body2.nextPos.x,
-            body1.nextPos.y - body2.nextPos.y,
-            body1.nextPos.z + body1.zOffset - body2.nextPos.z,
-        )
+        val p1x = body1.nextPos.x
+        val p1y = body1.nextPos.y
+        val p1z = body1.nextPos.z + body1.zOffset
 
-        val d = tmp1.dotProduct(body2.normal)
-        val n = body2.normal
+        val p2x = body2.nextPos.x
+        val p2y = body2.nextPos.y
+        val p2z = body2.nextPos.z
+
+        val nx = body2.normal.x
+        val ny = body2.normal.y
+        val nz = body2.normal.z
+
+        val dx = p1x - p2x
+        val dy = p1y - p2y
+        val dz = p1z - p2z
+        val d = dx * nx + dy * ny + dz * nz
 
         if (body1.mass < LARGE_MASS && body1.mass <= body2.mass) {
             // Move the sphere
             val q = if (d < 0.0f) -d - body1.radius else -d + body1.radius
             body1.nextPos.set(
-                body1.nextPos.x + q * n.x,
-                body1.nextPos.y + q * n.y,
-                body1.nextPos.z + q * n.z,
+                p1x + q * nx,
+                p1y + q * ny,
+                p1z + q * nz - body1.zOffset,
             )
         } else if (body2.mass < LARGE_MASS) {
             // Move the plane
             val q = if (d < 0.0f) d + body1.radius else d - body1.radius
             body2.nextPos.set(
-                body2.nextPos.x + q * n.x,
-                body2.nextPos.y + q * n.y,
-                body2.nextPos.z + q * n.z,
+                p2x + q * nx,
+                p2y + q * ny,
+                p2z + q * nz,
             )
         } else {
             Log.warn("Cannot separate $body1 from $body2")
             return
         }
 
-        val e = body1.elasticity * body2.elasticity
+        val elasticity = body1.elasticity * body2.elasticity
 
         val m1 = if (body1.mass <= EPSILON) EPSILON else body1.mass
         val m2 = if (body2.mass <= EPSILON) EPSILON else body2.mass
@@ -69,25 +85,56 @@ internal class CollideSphereVsPlane: CollisionStrategy<FixedSphereBody, FixedPla
         val v1 = body1.nextSpeed
         val v2 = body2.nextSpeed
 
-        val v1parallel = n * v1.dotProduct(n)
-        val v2parallel = n * v2.dotProduct(n)
-        val vdiff = v1parallel - v2parallel
+        val v1dotn = v1.x * nx + v1.y * ny + v1.z * nz
+        val v1parallelX = nx * v1dotn
+        val v1parallelY = ny * v1dotn
+        val v1parallelZ = nz * v1dotn
+
+        val v2dotn = v2.x * nx + v2.y * ny + v2.z * nz
+        val v2parallelX = nx * v2dotn
+        val v2parallelY = ny * v2dotn
+        val v2parallelZ = ny * v2dotn
+
+        val vdiffX = v1parallelX - v2parallelX
+        val vdiffY = v1parallelY - v2parallelY
+        val vdiffZ = v1parallelZ - v2parallelZ
 
         if (m1 >= LARGE_MASS) {
-            val v2perpendicular = v2 - v2parallel
-            v2.set(v2perpendicular + v1parallel + vdiff * e)
+            val v2perpendX = v2.x - v2parallelX
+            val v2perpendY = v2.y - v2parallelY
+            val v2perpendZ = v2.z - v2parallelZ
+            v2.x = v2perpendX + v1parallelX + vdiffX * elasticity
+            v2.y = v2perpendY + v1parallelY + vdiffY * elasticity
+            v2.z = v2perpendZ + v1parallelZ + vdiffZ * elasticity
         } else if (m2 >= LARGE_MASS) {
-            val v1perpendicular = v1 - v1parallel
-            v1.set(v1perpendicular + v2parallel - vdiff * e)
+            val v1perpendX = v1.x - v1parallelX
+            val v1perpendY = v1.y - v1parallelY
+            val v1perpendZ = v1.z - v1parallelZ
+            v1.x = v1perpendX + v2parallelX - vdiffX * elasticity
+            v1.y = v1perpendY + v2parallelY - vdiffY * elasticity
+            v1.z = v1perpendZ + v2parallelZ - vdiffZ * elasticity
         } else {
-            val v1perpendicular = v1 - v1parallel
-            val v2perpendicular = v2 - v2parallel
+            val v1perpendX = v1.x - v1parallelX
+            val v1perpendY = v1.y - v1parallelY
+            val v1perpendZ = v1.z - v1parallelZ
+
+            val v2perpendX = v2.x - v2parallelX
+            val v2perpendY = v2.y - v2parallelY
+            val v2perpendZ = v2.z - v2parallelZ
 
             val totalMass = m1 + m2
-            val p = v1parallel * m1 + v2parallel * m2
 
-            v1.set(v1perpendicular + (p - vdiff * e * m2) / totalMass)
-            v2.set(v2perpendicular + (p + vdiff * e * m1) / totalMass)
+            val sx = v1parallelX * m1 + v2parallelX * m2
+            val sy = v1parallelY * m1 + v2parallelY * m2
+            val sz = v1parallelZ * m1 + v2parallelZ * m2
+
+            v1.x = v1perpendX + (sx - vdiffX * elasticity * m2) / totalMass
+            v1.y = v1perpendY + (sy - vdiffY * elasticity * m2) / totalMass
+            v1.z = v1perpendZ + (sz - vdiffZ * elasticity * m2) / totalMass
+
+            v2.x = v2perpendX + (sx + vdiffX * elasticity * m1) / totalMass
+            v2.y = v2perpendY + (sy + vdiffY * elasticity * m1) / totalMass
+            v2.z = v2perpendZ + (sz + vdiffZ * elasticity * m1) / totalMass
         }
     }
 }

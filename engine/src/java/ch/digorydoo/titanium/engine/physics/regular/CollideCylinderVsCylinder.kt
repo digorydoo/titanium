@@ -12,9 +12,6 @@ import kotlin.math.sign
 import kotlin.math.sqrt
 
 internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, FixedCylinderBody>() {
-    private val tmp1 = MutablePoint3f()
-    private val tmp2 = MutablePoint3f()
-
     override fun checkNextPos(body1: FixedCylinderBody, body2: FixedCylinderBody, outHitPt: MutablePoint3f) =
         check(
             cx1 = body1.nextPos.x,
@@ -117,8 +114,13 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
         val v1 = body1.nextSpeed
         val v2 = body2.nextSpeed
 
-        val p1 = tmp1.set(body1.nextPos.x, body1.nextPos.y, body1.nextPos.z + body1.zOffset)
-        val p2 = tmp2.set(body2.nextPos.x, body2.nextPos.y, body2.nextPos.z + body2.zOffset)
+        val p1x = body1.nextPos.x
+        val p1y = body1.nextPos.y
+        val p1z = body1.nextPos.z + body1.zOffset
+
+        val p2x = body2.nextPos.x
+        val p2y = body2.nextPos.y
+        val p2z = body2.nextPos.z + body2.zOffset
 
         if (vertical) {
             // We treat this like bouncing two planes against each-other.
@@ -126,7 +128,7 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
             val v1z = v1.z
             val v2z = v2.z
             val vdiffZ = v1z - v2z
-            val expectedSign = if (p1.z < p2.z) 1.0f else -1.0f
+            val expectedSign = if (p1z < p2z) 1.0f else -1.0f
 
             if (sign(vdiffZ) != expectedSign) {
                 // The two objects are separating
@@ -196,8 +198,8 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
         } else {
             // We treat this like bouncing a circle off another circle in the XY plane.
 
-            val pdx = p2.x - p1.x
-            val pdy = p2.y - p1.y
+            val pdx = p2x - p1x
+            val pdy = p2y - p1y
             val pLen = sqrt(pdx * pdx + pdy * pdy)
 
             val nx = pdx / pLen
@@ -305,11 +307,16 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
      * @return whether or not the hit was vertical
      */
     private fun separate(body1: FixedCylinderBody, body2: FixedCylinderBody): Boolean {
-        val p1 = tmp1.set(body1.nextPos.x, body1.nextPos.y, body1.nextPos.z + body1.zOffset)
-        val p2 = tmp2.set(body2.nextPos.x, body2.nextPos.y, body2.nextPos.z + body2.zOffset)
+        val p1x = body1.nextPos.x
+        val p1y = body1.nextPos.y
+        val p1z = body1.nextPos.z + body1.zOffset
 
-        val minTop = min(p1.z + body1.height / 2, p2.z + body2.height / 2)
-        val maxBottom = max(p1.z - body1.height / 2, p2.z - body2.height / 2)
+        val p2x = body2.nextPos.x
+        val p2y = body2.nextPos.y
+        val p2z = body2.nextPos.z + body2.zOffset
+
+        val minTop = min(p1z + body1.height / 2, p2z + body2.height / 2)
+        val maxBottom = max(p1z - body1.height / 2, p2z - body2.height / 2)
         val overlapHeight = minTop - maxBottom
         val vertical = overlapHeight < VERTICAL_HIT_OVERLAP_HEIGHT_THRESHOLD
 
@@ -317,15 +324,15 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
             // Separate the bodies along the z-axis
             val moveBy = (body1.height + body2.height) * 0.5f + 2 * EPSILON
 
-            if (p1.z < p2.z) {
+            if (p1z < p2z) {
                 body1.nextPos.z = body2.nextPos.z + body2.zOffset - moveBy - body1.zOffset
             } else {
                 body1.nextPos.z = body2.nextPos.z + body2.zOffset + moveBy - body1.zOffset
             }
         } else {
             // Separate the bodies in the XY plane
-            val dx = p2.x - p1.x
-            val dy = p2.y - p1.y
+            val dx = p2x - p1x
+            val dy = p2y - p1y
             val dsqr = (dx * dx) + (dy * dy) // squared distance in the XY plane
             val dlen = sqrt(dsqr)
             val nx = dx / dlen

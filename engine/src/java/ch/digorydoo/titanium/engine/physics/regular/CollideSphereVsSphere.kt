@@ -8,9 +8,6 @@ import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.sqrt
 
 internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSphereBody>() {
-    private val tmp1 = MutablePoint3f()
-    private val tmp2 = MutablePoint3f()
-
     override fun checkNextPos(body1: FixedSphereBody, body2: FixedSphereBody, outHitPt: MutablePoint3f) =
         check(
             cx1 = body1.nextPos.x,
@@ -76,8 +73,13 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
         val elasticity = body1.elasticity * body2.elasticity
         val friction = 1.0f - (1.0f - body1.friction) * (1.0f - body2.friction)
 
-        val p1 = tmp1.set(body1.nextPos.x, body1.nextPos.y, body1.nextPos.z + body1.zOffset)
-        val p2 = tmp2.set(body2.nextPos.x, body2.nextPos.y, body2.nextPos.z + body2.zOffset)
+        val p1x = body1.nextPos.x
+        val p1y = body1.nextPos.y
+        val p1z = body1.nextPos.z + body1.zOffset
+
+        val p2x = body2.nextPos.x
+        val p2y = body2.nextPos.y
+        val p2z = body2.nextPos.z + body2.zOffset
 
         val v1 = body1.nextSpeed
         val v2 = body2.nextSpeed
@@ -85,9 +87,9 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
         val m1 = if (body1.mass <= EPSILON) EPSILON else body1.mass
         val m2 = if (body2.mass <= EPSILON) EPSILON else body2.mass
 
-        val pdx = p2.x - p1.x
-        val pdy = p2.y - p1.y
-        val pdz = p2.z - p1.z
+        val pdx = p2x - p1x
+        val pdy = p2y - p1y
+        val pdz = p2z - p1z
         val pLen = sqrt(pdx * pdx + pdy * pdy + pdz * pdz)
 
         val nx = pdx / pLen
@@ -217,21 +219,26 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
      * Updates body1.nextPos such that it no longer collides with body2.
      */
     private fun separate(body1: FixedSphereBody, body2: FixedSphereBody) {
-        val p1 = body1.nextPos
-        val p2 = body2.nextPos
+        val p1x = body1.nextPos.x
+        val p1y = body1.nextPos.y
+        val p1z = body1.nextPos.z + body1.zOffset
 
-        var dx = p2.x - p1.x
-        var dy = p2.y - p1.y
-        var dz = (p2.z + body2.zOffset) - (p1.z + body1.zOffset)
+        val p2x = body2.nextPos.x
+        val p2y = body2.nextPos.y
+        val p2z = body2.nextPos.z + body2.zOffset
+
+        var dx = p2x - p1x
+        var dy = p2y - p1y
+        var dz = p2z - p1z
         var dist = sqrt((dx * dx) + (dy * dy) + (dz * dz))
 
         if (dist < EPSILON) {
             // The two bodies are too close. Try the original position before the collision!
             Log.warn("Bodies $body1 and $body2 are very close")
-            val oc1 = body1.pos
-            dx = p2.x - oc1.x
-            dy = p2.y - oc1.y
-            dz = (p2.z + body2.zOffset) - (oc1.z + body1.zOffset)
+            val oldPos1 = body1.pos
+            dx = p2x - oldPos1.x
+            dy = p2y - oldPos1.y
+            dz = p2z - (oldPos1.z + body1.zOffset)
             dist = sqrt((dx * dx) + (dy * dy) + (dz * dz))
 
             if (dist < EPSILON) {
@@ -246,8 +253,8 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
 
         require(body1.mass < LARGE_MASS)
         val moveBy = body1.radius + body2.radius + 2 * EPSILON
-        p1.x = p2.x - moveBy * dx / dist
-        p1.y = p2.y - moveBy * dy / dist
-        p1.z = (p2.z + body2.zOffset) - moveBy * dz / dist - body1.zOffset
+        body1.nextPos.x = p2x - moveBy * dx / dist
+        body1.nextPos.y = p2y - moveBy * dy / dist
+        body1.nextPos.z = p2z - moveBy * dz / dist - body1.zOffset
     }
 }
