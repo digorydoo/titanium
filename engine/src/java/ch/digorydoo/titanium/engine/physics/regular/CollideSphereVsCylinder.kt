@@ -205,17 +205,33 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
                 v2.y = v2perpendY + v1parallelY + vparallelDy * elasticity
 
                 if (friction > 0.0f) {
+                    val v1perpendX = v1.x - v1parallelX
+                    val v1perpendY = v1.y - v1parallelY
+
+                    val v1perpendZ = v1.z // v1parallelZ is 0, because nz is 0
+                    val v2perpendZ = v2.z
+
                     val vfricX = vparallelDx * friction
                     val vfricY = vparallelDy * friction
                     val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY)
-                    val v2pLen = sqrt(v2perpendX * v2perpendX + v2perpendY * v2perpendY)
 
-                    if (vfricLen >= v2pLen) {
-                        v2.x -= v2perpendX
-                        v2.y -= v2perpendY
+                    val vperpendDx = v1perpendX - v2perpendX
+                    val vperpendDy = v1perpendY - v2perpendY
+                    val vperpendDz = v1perpendZ - v2perpendZ
+                    val vperpendDiff = sqrt(vperpendDx * vperpendDx + vperpendDy * vperpendDy + vperpendDz * vperpendDz)
+
+                    if (vfricLen >= vperpendDiff) {
+                        v2.x += vperpendDx
+                        v2.y += vperpendDy
+                        v2.z += vperpendDz
                     } else {
-                        v2.x -= vfricLen * v2perpendX / v2pLen
-                        v2.y -= vfricLen * v2perpendY / v2pLen
+                        val vdfricX = vfricLen * vperpendDx / vperpendDiff
+                        val vdfricY = vfricLen * vperpendDy / vperpendDiff
+                        val vdfricZ = vfricLen * vperpendDz / vperpendDiff
+
+                        v2.x += vdfricX
+                        v2.y += vdfricY
+                        v2.z += vdfricZ
                     }
                 }
             } else if (m2 >= LARGE_MASS) {
@@ -225,17 +241,33 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
                 v1.y = v1perpendY + v2parallelY - vparallelDy * elasticity
 
                 if (friction > 0.0f) {
+                    val v2perpendX = v2.x - v2parallelX
+                    val v2perpendY = v2.y - v2parallelY
+
+                    val v1perpendZ = v1.z // v1parallelZ is 0, because nz is 0
+                    val v2perpendZ = v2.z
+
                     val vfricX = vparallelDx * friction
                     val vfricY = vparallelDy * friction
                     val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY)
-                    val v1pLen = sqrt(v1perpendX * v1perpendX + v1perpendY * v1perpendY)
 
-                    if (vfricLen >= v1pLen) {
-                        v1.x -= v1perpendX
-                        v1.y -= v1perpendY
+                    val vperpendDx = v1perpendX - v2perpendX
+                    val vperpendDy = v1perpendY - v2perpendY
+                    val vperpendDz = v1perpendZ - v2perpendZ
+                    val vperpendDiff = sqrt(vperpendDx * vperpendDx + vperpendDy * vperpendDy + vperpendDz * vperpendDz)
+
+                    if (vfricLen >= vperpendDiff) {
+                        v1.x -= vperpendDx
+                        v1.y -= vperpendDy
+                        v1.z -= vperpendDz
                     } else {
-                        v1.x -= vfricLen * v1perpendX / v1pLen
-                        v1.y -= vfricLen * v1perpendY / v1pLen
+                        val vdfricX = vfricLen * vperpendDx / vperpendDiff
+                        val vdfricY = vfricLen * vperpendDy / vperpendDiff
+                        val vdfricZ = vfricLen * vperpendDz / vperpendDiff
+
+                        v1.x -= vdfricX
+                        v1.y -= vdfricY
+                        v1.z -= vdfricZ
                     }
                 }
             } else {
@@ -257,29 +289,38 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
                 v2.y = v2perpendY + (sy + vparallelDy * elasticity * m1) / totalMass
 
                 if (friction > 0.0f) {
-                    // FIXME this is not correct; friction should depend on vperpendDiff
+                    val v1perpendZ = v1.z // v1parallelZ is 0, because nz is 0
+                    val v2perpendZ = v2.z
 
                     val vfricX = vparallelDx * friction
                     val vfricY = vparallelDy * friction
                     val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY)
 
-                    val v1pLen = sqrt(v1perpendX * v1perpendX + v1perpendY * v1perpendY)
-                    val v2pLen = sqrt(v2perpendX * v2perpendX + v2perpendY * v2perpendY)
+                    val vperpendDx = v1perpendX - v2perpendX
+                    val vperpendDy = v1perpendY - v2perpendY
+                    val vperpendDz = v1perpendZ - v2perpendZ
+                    val vperpendDiff = sqrt(vperpendDx * vperpendDx + vperpendDy * vperpendDy + vperpendDz * vperpendDz)
 
-                    if (vfricLen >= v1pLen) {
-                        v1.x -= v1perpendX
-                        v1.y -= v1perpendY
-                    } else {
-                        v1.x -= vfricLen * v1perpendX / v1pLen
-                        v1.y -= vfricLen * v1perpendY / v1pLen
-                    }
+                    if (vfricLen >= vperpendDiff) {
+                        v1.x -= m2 * vperpendDx / totalMass
+                        v1.y -= m2 * vperpendDy / totalMass
+                        v1.z -= m2 * vperpendDz / totalMass
 
-                    if (vfricLen >= v2pLen) {
-                        v2.x -= v2perpendX
-                        v2.y -= v2perpendY
+                        v2.x += m1 * vperpendDx / totalMass
+                        v2.y += m1 * vperpendDy / totalMass
+                        v2.z += m1 * vperpendDz / totalMass
                     } else {
-                        v2.x -= vfricLen * v2perpendX / v2pLen
-                        v2.y -= vfricLen * v2perpendY / v2pLen
+                        val vdfricX = vfricLen * vperpendDx / vperpendDiff
+                        val vdfricY = vfricLen * vperpendDy / vperpendDiff
+                        val vdfricZ = vfricLen * vperpendDz / vperpendDiff
+
+                        v1.x -= m2 * vdfricX / totalMass
+                        v1.y -= m2 * vdfricY / totalMass
+                        v1.z -= m2 * vdfricZ / totalMass
+
+                        v2.x += m1 * vdfricX / totalMass
+                        v2.y += m1 * vdfricY / totalMass
+                        v2.z += m1 * vdfricZ / totalMass
                     }
                 }
             }
