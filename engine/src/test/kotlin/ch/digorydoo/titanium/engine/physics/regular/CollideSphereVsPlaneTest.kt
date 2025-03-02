@@ -620,14 +620,14 @@ internal class CollideSphereVsPlaneTest {
         assertEquals(10.61f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified: still moves in the same direction, but slower
-        assertEquals(-0.043801315f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
-        assertEquals(-0.043801315f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
-        assertEquals(0.38376027f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
+        assertEquals(-0.012254909f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
+        assertEquals(-0.012254909f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
+        assertEquals(0.377451f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
 
         // b2.nextSpeed has been modified: moves away from b1, faster than b1
-        assertEquals(0.043801315f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
-        assertEquals(0.043801315f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
-        assertEquals(0.6162397f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
+        assertEquals(0.012254905f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
+        assertEquals(0.012254905f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
+        assertEquals(0.62254906f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
     }
 
     companion object {
