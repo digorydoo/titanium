@@ -111,12 +111,9 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
         val vparallelDz = v1parallelZ - v2parallelZ
 
         if (m1 >= LARGE_MASS) {
-            val v2perpendX = v2.x - v2parallelX
-            val v2perpendY = v2.y - v2parallelY
-            val v2perpendZ = v2.z - v2parallelZ
-            v2.x = v2perpendX + v1parallelX + vparallelDx * elasticity
-            v2.y = v2perpendY + v1parallelY + vparallelDy * elasticity
-            v2.z = v2perpendZ + v1parallelZ + vparallelDz * elasticity
+            var v2perpendX = v2.x - v2parallelX
+            var v2perpendY = v2.y - v2parallelY
+            var v2perpendZ = v2.z - v2parallelZ
 
             if (friction > 0.0f) {
                 val vfricX = vparallelDx * friction
@@ -133,26 +130,23 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
                 val vperpendDiff = sqrt(vperpendDx * vperpendDx + vperpendDy * vperpendDy + vperpendDz * vperpendDz)
 
                 if (vfricLen >= vperpendDiff) {
-                    v2.x += vperpendDx
-                    v2.y += vperpendDy
-                    v2.z += vperpendDz
+                    v2perpendX += vperpendDx
+                    v2perpendY += vperpendDy
+                    v2perpendZ += vperpendDz
                 } else {
-                    val vdfricX = vfricLen * vperpendDx / vperpendDiff
-                    val vdfricY = vfricLen * vperpendDy / vperpendDiff
-                    val vdfricZ = vfricLen * vperpendDz / vperpendDiff
-
-                    v2.x += vdfricX
-                    v2.y += vdfricY
-                    v2.z += vdfricZ
+                    v2perpendX += vfricLen * vperpendDx / vperpendDiff
+                    v2perpendY += vfricLen * vperpendDy / vperpendDiff
+                    v2perpendZ += vfricLen * vperpendDz / vperpendDiff
                 }
             }
+
+            v2.x = v2perpendX + v1parallelX + vparallelDx * elasticity
+            v2.y = v2perpendY + v1parallelY + vparallelDy * elasticity
+            v2.z = v2perpendZ + v1parallelZ + vparallelDz * elasticity
         } else if (m2 >= LARGE_MASS) {
-            val v1perpendX = v1.x - v1parallelX
-            val v1perpendY = v1.y - v1parallelY
-            val v1perpendZ = v1.z - v1parallelZ
-            v1.x = v1perpendX + v2parallelX - vparallelDx * elasticity
-            v1.y = v1perpendY + v2parallelY - vparallelDy * elasticity
-            v1.z = v1perpendZ + v2parallelZ - vparallelDz * elasticity
+            var v1perpendX = v1.x - v1parallelX
+            var v1perpendY = v1.y - v1parallelY
+            var v1perpendZ = v1.z - v1parallelZ
 
             if (friction > 0.0f) {
                 val vfricX = vparallelDx * friction
@@ -169,41 +163,29 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
                 val vperpendDiff = sqrt(vperpendDx * vperpendDx + vperpendDy * vperpendDy + vperpendDz * vperpendDz)
 
                 if (vfricLen >= vperpendDiff) {
-                    v1.x -= vperpendDx
-                    v1.y -= vperpendDy
-                    v1.z -= vperpendDz
+                    v1perpendX -= vperpendDx
+                    v1perpendY -= vperpendDy
+                    v1perpendZ -= vperpendDz
                 } else {
-                    val vdfricX = vfricLen * vperpendDx / vperpendDiff
-                    val vdfricY = vfricLen * vperpendDy / vperpendDiff
-                    val vdfricZ = vfricLen * vperpendDz / vperpendDiff
-
-                    v1.x -= vdfricX
-                    v1.y -= vdfricY
-                    v1.z -= vdfricZ
+                    v1perpendX -= vfricLen * vperpendDx / vperpendDiff
+                    v1perpendY -= vfricLen * vperpendDy / vperpendDiff
+                    v1perpendZ -= vfricLen * vperpendDz / vperpendDiff
                 }
             }
-        } else {
-            val v1perpendX = v1.x - v1parallelX
-            val v1perpendY = v1.y - v1parallelY
-            val v1perpendZ = v1.z - v1parallelZ
 
-            val v2perpendX = v2.x - v2parallelX
-            val v2perpendY = v2.y - v2parallelY
-            val v2perpendZ = v2.z - v2parallelZ
+            v1.x = v1perpendX + v2parallelX - vparallelDx * elasticity
+            v1.y = v1perpendY + v2parallelY - vparallelDy * elasticity
+            v1.z = v1perpendZ + v2parallelZ - vparallelDz * elasticity
+        } else {
+            var v1perpendX = v1.x - v1parallelX
+            var v1perpendY = v1.y - v1parallelY
+            var v1perpendZ = v1.z - v1parallelZ
+
+            var v2perpendX = v2.x - v2parallelX
+            var v2perpendY = v2.y - v2parallelY
+            var v2perpendZ = v2.z - v2parallelZ
 
             val totalMass = m1 + m2
-
-            val sx = v1parallelX * m1 + v2parallelX * m2
-            val sy = v1parallelY * m1 + v2parallelY * m2
-            val sz = v1parallelZ * m1 + v2parallelZ * m2
-
-            v1.x = v1perpendX + (sx - vparallelDx * elasticity * m2) / totalMass
-            v1.y = v1perpendY + (sy - vparallelDy * elasticity * m2) / totalMass
-            v1.z = v1perpendZ + (sz - vparallelDz * elasticity * m2) / totalMass
-
-            v2.x = v2perpendX + (sx + vparallelDx * elasticity * m1) / totalMass
-            v2.y = v2perpendY + (sy + vparallelDy * elasticity * m1) / totalMass
-            v2.z = v2perpendZ + (sz + vparallelDz * elasticity * m1) / totalMass
 
             if (friction > 0.0f) {
                 val vfricX = vparallelDx * friction
@@ -216,27 +198,39 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
                 val vperpendDiff = sqrt(vperpendDx * vperpendDx + vperpendDy * vperpendDy + vperpendDz * vperpendDz)
 
                 if (vfricLen >= vperpendDiff) {
-                    v1.x -= m2 * vperpendDx / totalMass
-                    v1.y -= m2 * vperpendDy / totalMass
-                    v1.z -= m2 * vperpendDz / totalMass
+                    v1perpendX -= m2 * vperpendDx / totalMass
+                    v1perpendY -= m2 * vperpendDy / totalMass
+                    v1perpendZ -= m2 * vperpendDz / totalMass
 
-                    v2.x += m1 * vperpendDx / totalMass
-                    v2.y += m1 * vperpendDy / totalMass
-                    v2.z += m1 * vperpendDz / totalMass
+                    v2perpendX += m1 * vperpendDx / totalMass
+                    v2perpendY += m1 * vperpendDy / totalMass
+                    v2perpendZ += m1 * vperpendDz / totalMass
                 } else {
                     val vdfricX = vfricLen * vperpendDx / vperpendDiff
                     val vdfricY = vfricLen * vperpendDy / vperpendDiff
                     val vdfricZ = vfricLen * vperpendDz / vperpendDiff
 
-                    v1.x -= m2 * vdfricX / totalMass
-                    v1.y -= m2 * vdfricY / totalMass
-                    v1.z -= m2 * vdfricZ / totalMass
+                    v1perpendX -= m2 * vdfricX / totalMass
+                    v1perpendY -= m2 * vdfricY / totalMass
+                    v1perpendZ -= m2 * vdfricZ / totalMass
 
-                    v2.x += m1 * vdfricX / totalMass
-                    v2.y += m1 * vdfricY / totalMass
-                    v2.z += m1 * vdfricZ / totalMass
+                    v2perpendX += m1 * vdfricX / totalMass
+                    v2perpendY += m1 * vdfricY / totalMass
+                    v2perpendZ += m1 * vdfricZ / totalMass
                 }
             }
+
+            val sx = v1parallelX * m1 + v2parallelX * m2
+            val sy = v1parallelY * m1 + v2parallelY * m2
+            val sz = v1parallelZ * m1 + v2parallelZ * m2
+
+            v1.x = v1perpendX + (sx - vparallelDx * elasticity * m2) / totalMass
+            v1.y = v1perpendY + (sy - vparallelDy * elasticity * m2) / totalMass
+            v1.z = v1perpendZ + (sz - vparallelDz * elasticity * m2) / totalMass
+
+            v2.x = v2perpendX + (sx + vparallelDx * elasticity * m1) / totalMass
+            v2.y = v2perpendY + (sy + vparallelDy * elasticity * m1) / totalMass
+            v2.z = v2perpendZ + (sz + vparallelDz * elasticity * m1) / totalMass
         }
     }
 
