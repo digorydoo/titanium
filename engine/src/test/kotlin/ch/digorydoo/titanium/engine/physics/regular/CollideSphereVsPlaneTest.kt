@@ -20,7 +20,7 @@ internal class CollideSphereVsPlaneTest {
             radius = 0.3f,
             zOffset = 0.3f,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b1.nextPos.set(p1)
 
@@ -33,7 +33,7 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             normal = n,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b2.nextPos.set(p2)
 
@@ -53,7 +53,7 @@ internal class CollideSphereVsPlaneTest {
             radius = 0.3f,
             zOffset = 0.3f,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b1.nextPos.set(p1)
 
@@ -66,7 +66,7 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             normal = n,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b2.nextPos.set(p2)
 
@@ -86,7 +86,7 @@ internal class CollideSphereVsPlaneTest {
             radius = 0.3f,
             zOffset = 0.3f,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b1.nextPos.set(p1)
 
@@ -99,7 +99,7 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             normal = n,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b2.nextPos.set(p2)
 
@@ -119,7 +119,7 @@ internal class CollideSphereVsPlaneTest {
             radius = 0.3f,
             zOffset = 0.3f,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b1.nextPos.set(p1)
 
@@ -132,7 +132,7 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             normal = n,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b2.nextPos.set(p2)
 
@@ -155,7 +155,7 @@ internal class CollideSphereVsPlaneTest {
             radius = 0.3f,
             zOffset = 0.3f,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b1.nextPos.set(p1)
 
@@ -168,7 +168,7 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             normal = n,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b2.nextPos.set(p2)
 
@@ -191,7 +191,7 @@ internal class CollideSphereVsPlaneTest {
             radius = 0.3f,
             zOffset = 0.3f,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b1.nextPos.set(p1)
 
@@ -204,7 +204,7 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             normal = n,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b2.nextPos.set(p2)
 
@@ -227,7 +227,7 @@ internal class CollideSphereVsPlaneTest {
             radius = 0.3f,
             zOffset = 0.3f,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b1.nextPos.set(p1)
 
@@ -240,7 +240,7 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             normal = n,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b2.nextPos.set(p2)
 
@@ -263,7 +263,7 @@ internal class CollideSphereVsPlaneTest {
             radius = 0.3f,
             zOffset = 0.3f,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b1.nextPos.set(p1)
 
@@ -276,7 +276,7 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             normal = n,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b2.nextPos.set(p2)
 
@@ -300,7 +300,7 @@ internal class CollideSphereVsPlaneTest {
             radius = 0.3f,
             zOffset = 0.3f,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b1.nextPos.set(p1)
 
@@ -313,7 +313,7 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             normal = n,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b2.nextPos.set(p2)
 
@@ -337,7 +337,7 @@ internal class CollideSphereVsPlaneTest {
             radius = 0.3f,
             zOffset = 0.3f,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b1.speed.set(1.0f, 0.0f, 0.0f)
         b1.applyForces() // updates nextPos and nextSpeed
@@ -351,7 +351,7 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             normal = n,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b2.applyForces() // updates nextPos and nextSpeed
 
@@ -392,14 +392,14 @@ internal class CollideSphereVsPlaneTest {
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified: still moves in the same direction, but slower
-        assertEquals(0.38725492f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
-        assertEquals(-0.061274506f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
-        assertEquals(-0.061274506f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
+        assertEquals(0.377451f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
+        assertEquals(-0.012254901f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
+        assertEquals(-0.012254901f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
 
         // b2.nextSpeed has been modified: moves away from b1, faster than b1
-        assertEquals(0.6127451f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
-        assertEquals(0.061274506f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
-        assertEquals(0.061274506f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
+        assertEquals(0.62254906f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
+        assertEquals(0.012254901f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
+        assertEquals(0.012254901f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
     }
 
     @Test
@@ -413,7 +413,7 @@ internal class CollideSphereVsPlaneTest {
             radius = 0.3f,
             zOffset = 0.3f,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b1.speed.set(1.0f, 0.0f, 0.0f)
         b1.applyForces() // updates nextPos and nextSpeed
@@ -427,7 +427,7 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             normal = n,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b2.applyForces() // updates nextPos and nextSpeed
 
@@ -468,14 +468,14 @@ internal class CollideSphereVsPlaneTest {
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified: still moves in the same direction, but slower
-        assertEquals(0.38725492f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
-        assertEquals(-0.061274506f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
-        assertEquals(-0.061274506f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
+        assertEquals(0.377451f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
+        assertEquals(-0.012254901f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
+        assertEquals(-0.012254901f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
 
         // b2.nextSpeed has been modified: moves away from b1, faster than b1
-        assertEquals(0.6127451f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
-        assertEquals(0.061274506f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
-        assertEquals(0.061274506f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
+        assertEquals(0.62254906f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
+        assertEquals(0.012254901f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
+        assertEquals(0.012254901f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
     }
 
     @Test
@@ -489,7 +489,7 @@ internal class CollideSphereVsPlaneTest {
             radius = 0.3f,
             zOffset = 0.3f,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b1.speed.set(0.0f, 1.0f, 0.0f)
         b1.applyForces() // updates nextPos and nextSpeed
@@ -503,7 +503,7 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             normal = n,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b2.applyForces() // updates nextPos and nextSpeed
 
@@ -544,14 +544,14 @@ internal class CollideSphereVsPlaneTest {
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified: still moves in the same direction, but slower
-        assertEquals(-0.061274506f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
-        assertEquals(0.38725492f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
-        assertEquals(-0.061274506f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
+        assertEquals(-0.012254901f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
+        assertEquals(0.377451f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
+        assertEquals(-0.012254901f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
 
         // b2.nextSpeed has been modified: moves away from b1, faster than b1
-        assertEquals(0.061274506f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
-        assertEquals(0.6127451f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
-        assertEquals(0.061274506f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
+        assertEquals(0.012254901f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
+        assertEquals(0.62254906f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
+        assertEquals(0.012254901f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
     }
 
     @Test
@@ -565,7 +565,7 @@ internal class CollideSphereVsPlaneTest {
             radius = 0.3f,
             zOffset = 0.3f,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b1.speed.set(0.0f, 0.0f, 1.0f)
         b1.applyForces() // updates nextPos and nextSpeed
@@ -579,7 +579,7 @@ internal class CollideSphereVsPlaneTest {
             gravity = false,
             normal = n,
             elasticity = 0.5f,
-            friction = 0.0f,
+            friction = 0.2f,
         )
         b2.applyForces() // updates nextPos and nextSpeed
 
@@ -620,14 +620,14 @@ internal class CollideSphereVsPlaneTest {
         assertEquals(10.61f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified: still moves in the same direction, but slower
-        assertEquals(-0.061274506f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
-        assertEquals(-0.061274506f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
-        assertEquals(0.38725492f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
+        assertEquals(-0.043801315f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
+        assertEquals(-0.043801315f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
+        assertEquals(0.38376027f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
 
         // b2.nextSpeed has been modified: moves away from b1, faster than b1
-        assertEquals(0.061274506f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
-        assertEquals(0.061274506f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
-        assertEquals(0.6127451f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
+        assertEquals(0.043801315f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
+        assertEquals(0.043801315f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
+        assertEquals(0.6162397f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
     }
 
     companion object {
