@@ -66,7 +66,7 @@ abstract class SpawnManager {
                     it.spawn()
                 }
             } catch (e: Exception) {
-                Log.error("SpawnManager: Failed to spawn $it: ${e.message}")
+                Log.error("SpawnManager: Failed to spawn $it: ${e.message}\n${e.stackTraceToString()}")
             }
         }
     }

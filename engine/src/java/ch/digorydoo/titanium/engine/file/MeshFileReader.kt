@@ -23,9 +23,13 @@ class MeshFileReader private constructor(private val input: MyDataInputStream) {
         var normals: IntArray? = null
         var texCoords: IntArray? = null
 
+        /**
+         * It's possible that positions and/or normals are still null. This indicates that the geometry is empty, which
+         * can happen when a dummy mesh serves as a parent for nested meshes.
+         */
         fun toGeometry() = Geometry(
-            positions = owner.lookUpPoint3f(positions!!),
-            normals = owner.lookUpPoint3f(normals!!),
+            positions = owner.lookUpPoint3f(positions ?: IntArray(0)),
+            normals = owner.lookUpPoint3f(normals ?: IntArray(0)),
             texCoords = texCoords?.let { owner.lookUpPoint2f(it) },
         )
     }

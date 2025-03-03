@@ -40,13 +40,6 @@ class StartScene: Scene(
             mode = FIXED_DISTANCE
         }
 
-        PickupGel(Kind.VASE, 22.0f, 6.0f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 24.0f, 6.0f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 26.0f, 6.0f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 23.0f, 7.5f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 25.0f, 7.5f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 24.0f, 9.0f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-
         PickupGel(Kind.VASE, 25.0f, 11.0f, 2.1f).also {
             App.content.add(it, LayerKind.MAIN_COLLIDABLE)
             it.body.speed.x = -2.5f
