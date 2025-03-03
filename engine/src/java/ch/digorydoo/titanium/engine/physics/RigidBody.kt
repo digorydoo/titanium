@@ -9,7 +9,8 @@ import kotlin.math.sqrt
 sealed class RigidBody protected constructor(
     val name: String, // for logging purposes only
     val pos: MutablePoint3f, // mutable object is shared with the caller!
-    val elasticity: Float, // 0=totally inelastic, 1=fully elastic; in a collision, elasticity values will be multiplied
+    val elasticity: Float, // 0=totally inelastic, 1=fully elastic
+    val friction: Float, // 0=no friction, 1=very high friction
     val mass: Float,
     val gravity: Boolean,
 ) {

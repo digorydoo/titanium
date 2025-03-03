@@ -9,6 +9,7 @@ import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.brick.BrickVolume
 import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
+import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.utils.Direction
 import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.max
@@ -295,17 +296,73 @@ internal class CollideCylinderVsBrick: BrickCollisionStrategy<FixedCylinderBody>
             }
         }
 
-        val e = body.elasticity * brick.material.elasticity
-        val n = hitNormal
         val v1 = body.nextSpeed
-        val v1n = v1.dotProduct(n)
 
-        if (v1n >= 0.0f) {
+        // This may change v1
+        applyFriction(
+            m1 = body.mass,
+            v1 = v1,
+            friction = 1.0f - (1.0f - body.friction) * (1.0f - brick.material.friction),
+        )
+
+        val elasticity = body.elasticity * brick.material.elasticity
+
+        val normalX = hitNormal.x
+        val normalY = hitNormal.y
+        val normalZ = hitNormal.z
+
+        val v1dotn = v1.x * normalX + v1.y * normalY + v1.z * normalZ
+
+        if (v1dotn >= 0.0f) {
             return // nextSpeed already looks away from the face of the cuboid
         }
 
-        val v1parallel = n * v1n
-        v1.set(v1 - v1parallel - v1parallel * e)
+        val v1parallelX = normalX * v1dotn
+        val v1parallelY = normalY * v1dotn
+        val v1parallelZ = normalZ * v1dotn
+
+        v1.x = v1.x - v1parallelX - v1parallelX * elasticity
+        v1.y = v1.y - v1parallelY - v1parallelY * elasticity
+        v1.z = v1.z - v1parallelZ - v1parallelZ * elasticity
+    }
+
+    private fun applyFriction(m1: Float, v1: MutablePoint3f, friction: Float) {
+        if (friction <= 0.0f || m1 >= LARGE_MASS) return
+
+        val normalX = hitNormal.x
+        val normalY = hitNormal.y
+        val normalZ = hitNormal.z
+
+        val v1dotn = v1.x * normalX + v1.y * normalY + v1.z * normalZ
+        val v1parallelX = normalX * v1dotn
+        val v1parallelY = normalY * v1dotn
+        val v1parallelZ = normalZ * v1dotn
+
+        var v1perpendX = v1.x - v1parallelX
+        var v1perpendY = v1.y - v1parallelY
+        var v1perpendZ = v1.z - v1parallelZ
+
+        // Since v2 is 0, vperpendDiff is just the length of v1perpend
+        val vperpendDiff = sqrt(v1perpendX * v1perpendX + v1perpendY * v1perpendY + v1perpendZ * v1perpendZ)
+
+        val vfricX = v1parallelX * friction
+        val vfricY = v1parallelY * friction
+        val vfricZ = v1parallelZ * friction
+        val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY + vfricZ * vfricZ)
+
+        if (vfricLen >= vperpendDiff) {
+            v1perpendX = 0.0f
+            v1perpendY = 0.0f
+            v1perpendZ = 0.0f
+        } else {
+            v1perpendX -= vfricLen * v1perpendX / vperpendDiff
+            v1perpendY -= vfricLen * v1perpendY / vperpendDiff
+            v1perpendZ -= vfricLen * v1perpendZ / vperpendDiff
+        }
+
+        v1.x = v1perpendX + v1parallelX
+        v1.y = v1perpendY + v1parallelY
+        v1.z = v1perpendZ + v1parallelZ
     }
 
     companion object {

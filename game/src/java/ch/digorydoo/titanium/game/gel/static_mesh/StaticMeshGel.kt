@@ -35,6 +35,7 @@ class StaticMeshGel(override val spawnPt: StaticMeshSpawnPt): GraphicElement(spa
         "StaticMesh(${spawnPt.kind})",
         pos, // shared mutable object
         elasticity = 0.3f,
+        friction = 0.2f,
         mass = RigidBody.LARGE_MASS,
         gravity = false,
         radius = 0.25f,

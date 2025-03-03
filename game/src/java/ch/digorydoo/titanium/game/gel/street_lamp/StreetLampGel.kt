@@ -140,6 +140,7 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
         "StreetLamp",
         pos, // shared mutable object
         elasticity = 0.3f,
+        friction = 0.2f,
         gravity = false,
         mass = RigidBody.LARGE_MASS,
         radius = 0.5f,

@@ -8,50 +8,94 @@
 
 set -e
 
+YELLOW=$'\e[33m'
+PLAIN=$'\e[0m'
+
 SELF_DIR="$(realpath .)"
-KUTILS_DIR="../kutils"
-ASSETS_DIR="assets"
 OS_TYPE="$(uname -o)"
+
+# --------------------------------------------------------------------------------------------------------------------
+
+echo "${YELLOW}Preparing assets repo$PLAIN"
+
+ASSETS_DIR="../titanium-assets"
 
 if [[ ! -d "$ASSETS_DIR" ]]; then
    echo 2>&1 "Cannot access assets dir: $ASSETS_DIR"
-   echo 2>&1 "The above path should be a symbolic link that points to the separate titanium-assets repository."
-   echo 2>&1 "The titanium-assets repository is NOT publicly available on Github at this time."
+   echo 2>&1 "assets is a separate repository that IS NOT CURRENTLY AVAILABLE ON GITHUB! Cannot continue."
    exit 1
 fi
 
 ASSETS_DIR="$(realpath "$ASSETS_DIR")"
-GIT_STATUS="$(git status --porcelain)"
+echo "Path: $ASSETS_DIR"
+cd "$ASSETS_DIR"
 
-if [[ "$GIT_STATUS" != "" ]]; then
-   echo 2>&1 "Working directory of titanium is not clean:"
-   echo 2>&1 "$GIT_STATUS"
+ASSETS_STATUS="$(git status --porcelain)"
+
+if [[ "$ASSETS_STATUS" != "" ]]; then
+   echo 2>&1 "Working directory of assets is not clean:"
+   echo 2>&1 "$ASSETS_STATUS"
    echo 2>&1 "Please commit uncommitted changes first."
    exit 1
 fi
 
+ASSETS_BRANCH="$(git rev-parse --abbrev-ref=strict HEAD)"
+echo "Assets repo is on branch ${YELLOW}${ASSETS_BRANCH}${PLAIN}, pulling..."
+
+git pull --ff-only || (
+   echo 2>&1 "Failed to pull latest changes of assets!"
+   exit 1
+)
+
+cd "$SELF_DIR"
+
+if [[ "$OS_TYPE" == "Darwin" ]]; then
+   # Under macOS, assets is symbolically linked into titanium's source tree.
+   echo "Creating symbolic link..."
+   if [[ -L "assets" ]]; then
+      rm assets || true
+   fi
+   ln -s ../titanium-assets assets
+else
+   # Under Windows, symbolic links are poorly supported, so we copy kutils into titanium's source tree instead.
+   echo "Copying assets here..."
+   if [[ -d "assets" ]]; then
+      rm -rf assets || true
+   fi
+   cp -r "$ASSETS_DIR" assets/
+fi
+
+# --------------------------------------------------------------------------------------------------------------------
+
+echo
+echo "${YELLOW}Preparing kutils repo$PLAIN"
+
+KUTILS_DIR="../kutils"
+
 if [[ ! -d "$KUTILS_DIR" ]]; then
-   echo 2>&1 "Cannot access directory of kutils: $KUTILS_DIR"
-   echo 2>&1 "kutils is a separate repository that is publicly available. Please consult README.md!"
+   echo 2>&1 "Cannot access kutils dir: $KUTILS_DIR"
+   echo 2>&1 "kutils is a separate repository that is available on github. Please clone kutils first!"
    exit 1
 fi
 
 KUTILS_DIR="$(realpath "$KUTILS_DIR")"
+echo "Path: $KUTILS_DIR"
 cd "$KUTILS_DIR"
-GIT_STATUS="$(git status --porcelain)"
 
-if [[ "$GIT_STATUS" != "" ]]; then
+KUTILS_STATUS="$(git status --porcelain)"
+
+if [[ "$KUTILS_STATUS" != "" ]]; then
    echo 2>&1 "Working directory of kutils is not clean:"
-   echo 2>&1 "$GIT_STATUS"
-   echo 2>&1 "Please commit uncommitted changes in kutils first."
+   echo 2>&1 "$KUTILS_STATUS"
+   echo 2>&1 "Please commit uncommitted changes first."
    exit 1
 fi
 
-echo "Pulling latest sources of kutils (branch develop)..."
-git checkout develop
+KUTILS_BRANCH="$(git rev-parse --abbrev-ref=strict HEAD)"
+echo "kutils repo is on branch ${YELLOW}${KUTILS_BRANCH}${PLAIN}, pulling..."
+
 git pull --ff-only || (
-   echo 2>&1 "Warning: Failed to pull latest sources of kutils:"
-   echo 2>&1 "$KUTILS_DIR"
+   echo 2>&1 "Failed to pull latest changes of kutils!"
    exit 1
 )
 
@@ -72,12 +116,34 @@ else
    cp -r "$KUTILS_DIR"/main/src kutils/
 fi
 
-cd ..
+cd "$SELF_DIR"
 
-echo "Pulling latest sources of titanium..."
+# --------------------------------------------------------------------------------------------------------------------
+
+echo
+echo "${YELLOW}Preparing titanium repo$PLAIN"
+
+SELF_STATUS="$(git status --porcelain)"
+
+if [[ "$SELF_STATUS" != "" ]]; then
+   echo 2>&1 "Working directory of titanium is not clean:"
+   echo 2>&1 "$SELF_STATUS"
+   echo 2>&1 "Please commit uncommitted changes first."
+   exit 1
+fi
+
+SELF_BRANCH="$(git rev-parse --abbrev-ref=strict HEAD)"
+echo "titanium repo is on branch ${YELLOW}${SELF_BRANCH}${PLAIN}, pulling..."
+
 git pull --ff-only || (
-   echo 2>&1 "Warning: Failed to pull latest sources of titanium!"
+   echo 2>&1 "Failed to pull latest changes of titanium!"
+   exit 1
 )
+
+# --------------------------------------------------------------------------------------------------------------------
+
+echo
+echo "${YELLOW}Importing assets$PLAIN"
 
 echo "Cleaning..."
 ./gradlew clean
@@ -106,7 +172,12 @@ echo "Importing brick textures..."
    --arrange-across=9 \
    "$ASSETS_DIR"/private/textures-tiles-town/*.png
 
+# --------------------------------------------------------------------------------------------------------------------
+
+echo
+echo "${YELLOW}Building the rest of titanium$PLAIN"
+
 echo "Building rest of sources..."
 ./gradlew build
 
-echo "Done."
+echo "Done. You should now be able to run the game with: ./gradlew main:run"
