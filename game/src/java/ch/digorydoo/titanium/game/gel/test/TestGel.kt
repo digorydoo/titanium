@@ -22,7 +22,7 @@ class TestGel(initialPos: Point3f, initialRotation: Float): GraphicElement(initi
         "Test",
         pos, // shared mutable object
         elasticity = 0.42f,
-        friction = 0.5f,
+        friction = 0.1f,
         mass = 4.2f,
         gravity = true,
         radius = 0.5f,
@@ -63,8 +63,8 @@ class TestGel(initialPos: Point3f, initialRotation: Float): GraphicElement(initi
 
     private fun changeDirection() {
         val a = Random.nextFloat() * Math.PI * 2.0f
-        movingForce.x = 1.0f * body.mass * cos(a).toFloat()
-        movingForce.y = 1.0f * body.mass * sin(a).toFloat()
+        movingForce.x = 6.0f * body.mass * cos(a).toFloat()
+        movingForce.y = 6.0f * body.mass * sin(a).toFloat()
         rotationSpeed = 0.05f * (1.0f - 2.0f * Random.nextFloat())
     }
 
