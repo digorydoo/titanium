@@ -5,15 +5,15 @@ import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.utils.Direction
+import ch.digorydoo.titanium.engine.utils.EPSILON
 import ch.digorydoo.titanium.game.core.GameSampleId
 import kotlin.math.PI
+import kotlin.math.sqrt
 
 class PlayerBehaviour(
     private val gel: GraphicElement,
     private val frameMgr: PlayerFrameManager,
 ): GraphicElement.Behaviour {
-    private val targetSpeed = MutablePoint2f()
-
     var didCollideWithFloor = true
     var touchDownSpeed = 0.0f
     var timeOfGroundContact = 0.0f
@@ -78,13 +78,16 @@ class PlayerBehaviour(
 
         frameMgr.jump()
         App.sound.play(GameSampleId.JUMP, pos)
-        body.force.z += JUMP_Z_ACCEL * body.mass
+        body.addForce(0.0f, 0.0f, JUMP_Z_FORCE)
 
         if (!leftJoyWithCameraCorrection.isZero()) {
             body.speed.x *= 0.3f
             body.speed.y *= 0.3f
-            body.force.x += leftJoyWithCameraCorrection.y * JUMP_XY_ACCEL * body.mass
-            body.force.y += leftJoyWithCameraCorrection.x * JUMP_XY_ACCEL * body.mass
+            body.addForce(
+                leftJoyWithCameraCorrection.y * JUMP_XY_FORCE,
+                leftJoyWithCameraCorrection.x * JUMP_XY_FORCE,
+                0.0f
+            )
         }
     }
 
@@ -100,22 +103,38 @@ class PlayerBehaviour(
         } else {
             // Walk or run!
 
-            val speedFactor =
-                if (App.input.values.shift.pressed) 2.0f
-                else clamp(leftJoyWithCameraCorrection.length(), -1.0f, 1.0f)
+            var dx = leftJoyWithCameraCorrection.y // sic!
+            var dy = leftJoyWithCameraCorrection.x
+            val joyLen = sqrt(dx * dx + dy * dy)
+            val joyNormX = dx / joyLen
+            val joyNormY = dy / joyLen
 
-            targetSpeed.set(leftJoyWithCameraCorrection.y, leftJoyWithCameraCorrection.x).normalize()
-            targetSpeed *= WALK_SPEED * speedFactor
-            body.addSpeedRelativeForce(targetSpeed.x, targetSpeed.y, 0.0f, WALK_ACCEL)
+            val speedFactor = if (App.input.values.shift.pressed) 2.0f else clamp(joyLen, 0.0f, 1.0f)
+            val targetSpeed = WALK_SPEED * speedFactor
+
+            dx = body.speed.x
+            dy = body.speed.y
+            val speedLen = sqrt(dx * dx + dy * dy)
+
+            // speedInDesiredDir = speedLen * (`normalised speed` dot joyNorm)
+            val speedInDesiredDir = when {
+                speedLen <= EPSILON -> 0.0f
+                else -> speedLen * (dx / speedLen * joyNormX + dy / speedLen * joyNormY)
+            }
+
+            if (speedInDesiredDir < targetSpeed) {
+                body.addForce(joyNormX * WALK_FORCE, joyNormY * WALK_FORCE, 0.0f)
+            }
+
             frameMgr.walk(dir, clamp(speedFactor, 0.42f, 1.8f))
         }
     }
 
     companion object {
-        private const val WALK_SPEED = 4.2f
-        private const val JUMP_Z_ACCEL = 244.0f
-        private const val JUMP_XY_ACCEL = 144.0f
-        private const val WALK_ACCEL = 30.0f
+        private const val WALK_SPEED = 5.0f
+        private const val JUMP_Z_FORCE = 42.0f
+        private const val JUMP_XY_FORCE = 42.0f
+        private const val WALK_FORCE = 1300.0f
         private const val TOUCHDOWN_MIN_SPEED = -2.77f // speed where touchdown sound has volume 0
         private const val TOUCHDOWN_MAX_SPEED = -6.66f // speed where touchdown sound has full volume
     }

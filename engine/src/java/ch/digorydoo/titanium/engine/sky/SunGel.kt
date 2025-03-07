@@ -59,6 +59,7 @@ class SunGel: GraphicElement() {
     override val inDialog = Visibility.ACTIVE
     override val inMenu = Visibility.INVISIBLE
     override val inEditor = Visibility.ACTIVE
+    override val allowNegativeZ = true
 
     override fun onRemoveZombie() {
         renderer.free()

@@ -137,13 +137,13 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
     }
 
     override val body = FixedCylinderBody(
-        "StreetLamp",
+        "StreetLamp@${spawnPt.id}",
         pos, // shared mutable object
         elasticity = 0.3f,
         friction = 0.2f,
         gravity = false,
         mass = RigidBody.LARGE_MASS,
-        radius = 0.5f,
+        radius = 0.25f,
         height = 2.0f,
         zOffset = 1.0f,
     )
@@ -166,6 +166,8 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
         App.lamps.remove(lamp)
         renderer.free()
     }
+
+    override fun toString() = "StreetLampGel(${spawnPt.id})"
 
     companion object {
         private const val HALO_SCALING = 0.025f

@@ -14,7 +14,7 @@ abstract class UISpriteRenderer: Renderer {
         open val opacity = 1.0f // 0=invisible, 1=opaque
         open val rotation = 0.0f // rotation, in Radians
         open val scaleFactor = Point2f(1.0f, 1.0f)
-        open val texOffset = Point2f() // offset in texture pixels
+        open val texOffset = Point2f.zero // offset in texture pixels
         open val texScaleFactor = Point2f(1.0f, 1.0f)
     }
 }

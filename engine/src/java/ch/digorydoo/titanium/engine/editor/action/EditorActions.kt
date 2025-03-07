@@ -3,9 +3,7 @@ package ch.digorydoo.titanium.engine.editor.action
 import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.point.MutablePoint3i
 import ch.digorydoo.kutils.point.Point3f
-import ch.digorydoo.kutils.utils.IdHash
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.kutils.utils.Moment
 import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.brick.BrickMaterial
 import ch.digorydoo.titanium.engine.brick.BrickShape
@@ -239,14 +237,8 @@ class EditorActions(
     }
 
     fun addNewSpawnPt(spawnObjType: String, rotation: Float = 0.0f) {
+        val id = App.spawnMgr.generateUniqueId(spawnObjType)
         val pt = selection.getPosCentreInWorldCoords().apply { z -= 0.5f }
-        val id = IdHash().encode(Moment().toLong().toULong())
-
-        if (App.spawnMgr.findSpawnPt(id) != null) {
-            // Since all ids are created from Moment, this should not happen unless you manually assign ids.
-            Log.error("Id not unique ($id), did you manually assign spawn pt ids?")
-            return
-        }
 
         val raw = mutableMapOf<String, String>()
         raw["id"] = id

@@ -1,13 +1,13 @@
 package ch.digorydoo.titanium.engine.physics.regular
 
 import ch.digorydoo.kutils.point.MutablePoint3f
-import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.physics.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.utils.EPSILON
+import kotlin.math.abs
 import kotlin.math.sqrt
 
-internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSphereBody>() {
+internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSphereBody, Unit>() {
     override fun checkNextPos(body1: FixedSphereBody, body2: FixedSphereBody, outHitPt: MutablePoint3f) =
         check(
             cx1 = body1.nextPos.x,
@@ -62,13 +62,7 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
      * See docs/physics.txt
      */
     override fun bounce(body1: FixedSphereBody, body2: FixedSphereBody) {
-        if (body1.mass < LARGE_MASS && body1.mass <= body2.mass) {
-            separate(body1, body2) // updates body1.nextPos
-        } else if (body2.mass < LARGE_MASS) {
-            separate(body2, body1) // updates body2.nextPos
-        } else {
-            Log.warn("Cannot separate $body1 from $body2")
-        }
+        separate(body1, body1.zOffset, body2, body2.zOffset, Unit)
 
         val m1 = if (body1.mass <= EPSILON) EPSILON else body1.mass
         val m2 = if (body2.mass <= EPSILON) EPSILON else body2.mass
@@ -160,6 +154,70 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
             v2.y = v2perpendY + (sy + vparallelDy * elasticity * m1) / totalMass
             v2.z = v2perpendZ + (sz + vparallelDz * elasticity * m1) / totalMass
         }
+    }
+
+    override fun separate(
+        body1: FixedSphereBody,
+        weight1: Float,
+        normDir1X: Float,
+        normDir1Y: Float,
+        normDir1Z: Float,
+        body2: FixedSphereBody,
+        normDir2X: Float,
+        normDir2Y: Float,
+        normDir2Z: Float,
+        params: Unit, // unused
+    ) {
+        if (weight1 > 0.0f) {
+            separate(body1, body2, weight1, normDir1X, normDir1Y, normDir1Z)
+        }
+
+        if (weight1 < 1.0f) {
+            // Since body1.nextPos may now be a bit further away from the point of collision, we pass a weight of 1.0f
+            // in order that body2 moves the full remaining distance.
+            separate(body2, body1, 1.0f, normDir2X, normDir2Y, normDir2Z)
+        }
+    }
+
+    private fun separate(
+        bodyToMove: FixedSphereBody,
+        otherBody: FixedSphereBody,
+        weight: Float,
+        nx: Float,
+        ny: Float,
+        nz: Float,
+    ) {
+        require(bodyToMove.mass < LARGE_MASS)
+
+        val x1 = bodyToMove.nextPos.x
+        val y1 = bodyToMove.nextPos.y
+        val z1 = bodyToMove.nextPos.z + bodyToMove.zOffset
+
+        val x2 = otherBody.nextPos.x
+        val y2 = otherBody.nextPos.y
+        val z2 = otherBody.nextPos.z + otherBody.zOffset
+
+        val dx = x1 - x2
+        val dy = y1 - y2
+        val dz = z1 - z2
+
+        val moveBy = bodyToMove.radius + otherBody.radius + EPSILON
+
+        // See physics.txt: "Finding the position of (almost) touch of two colliding spheres"
+
+        val a = nx * nx + ny * ny + nz * nz
+        val b = 2.0f * ((x1 - x2) * nx + (y1 - y2) * ny + (z1 - z2) * nz)
+        val c = dx * dx + dy * dy + dz * dz - moveBy * moveBy
+        val d = sqrt(b * b - 4 * a * c)
+
+        val t1 = abs((-b + d) / 2.0f * a)
+        val t2 = abs((-b - d) / 2.0f * a)
+        val t = if (t1 > 0.0f) t1 else t2
+
+        val tw = t * weight // we don't go all the way as the other body may be moved, too
+        bodyToMove.nextPos.x = x1 + tw * nx
+        bodyToMove.nextPos.y = y1 + tw * ny
+        bodyToMove.nextPos.z = z1 + tw * nz - bodyToMove.zOffset
     }
 
     private fun applyFriction(
@@ -259,48 +317,5 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
         v2.x = v2perpendX + v2parallelX
         v2.y = v2perpendY + v2parallelY
         v2.z = v2perpendZ + v2parallelZ
-    }
-
-    /**
-     * Updates body1.nextPos such that it no longer collides with body2.
-     */
-    private fun separate(body1: FixedSphereBody, body2: FixedSphereBody) {
-        val p1x = body1.nextPos.x
-        val p1y = body1.nextPos.y
-        val p1z = body1.nextPos.z + body1.zOffset
-
-        val p2x = body2.nextPos.x
-        val p2y = body2.nextPos.y
-        val p2z = body2.nextPos.z + body2.zOffset
-
-        var dx = p2x - p1x
-        var dy = p2y - p1y
-        var dz = p2z - p1z
-        var dist = sqrt((dx * dx) + (dy * dy) + (dz * dz))
-
-        if (dist < EPSILON) {
-            // The two bodies are too close. Try the original position before the collision!
-            Log.warn("Bodies $body1 and $body2 are very close")
-            val oldPos1 = body1.pos
-            dx = p2x - oldPos1.x
-            dy = p2y - oldPos1.y
-            dz = p2z - (oldPos1.z + body1.zOffset)
-            dist = sqrt((dx * dx) + (dy * dy) + (dz * dz))
-
-            if (dist < EPSILON) {
-                // We still can't tell a proper direction!
-                Log.warn("Bodies $body1 and $body2 are too close! Forcing a separation along the x-axis!")
-                dx = 1.0f
-                dy = 0.0f
-                dz = 0.0f
-                dist = 1.0f
-            }
-        }
-
-        require(body1.mass < LARGE_MASS)
-        val moveBy = body1.radius + body2.radius + 2 * EPSILON
-        body1.nextPos.x = p2x - moveBy * dx / dist
-        body1.nextPos.y = p2y - moveBy * dy / dist
-        body1.nextPos.z = p2z - moveBy * dz / dist - body1.zOffset
     }
 }

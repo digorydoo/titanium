@@ -11,11 +11,11 @@ abstract class PaperRenderer: Renderer {
         abstract val renderPos: Point3f
         abstract val tex: Texture?
         open val opacity = 1.0f // 1=opaque; currently only implemented for BlendMode.ADD
-        open val origin = Point2f() // origin of hotspot in tex coordinates
+        open val origin = Point2f.zero // origin of hotspot in tex coordinates
         open val rotationPhi = 0.0f // rotation around Z-axis, in Radians
         open val rotationRho = 0.0f // rotation around Y-axis (2nd rotation), in Radians
         open val scaleFactor = Point2f(1.0f, 1.0f)
-        open val texOffset = Point2f() // offset in texture pixels
+        open val texOffset = Point2f.zero // offset in texture pixels
         open val multColour = Colour.white // will be multiplied to texture
     }
 }

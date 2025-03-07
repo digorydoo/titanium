@@ -76,4 +76,6 @@ class StaticPaperGel(override val spawnPt: StaticPaperSpawnPt): GraphicElement(s
     override fun onRemoveZombie() {
         renderer.free()
     }
+
+    override fun toString() = "StaticPaperGel(${spawnPt.id})"
 }

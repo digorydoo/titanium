@@ -68,8 +68,8 @@ class WindingStairsModel(
         val texAtAxis = when (lowEdge) {
             Side.SOUTH -> if (ccw) Point2f.point01 else Point2f.point11
             Side.EAST -> if (ccw) Point2f.point11 else Point2f.point10
-            Side.NORTH -> if (ccw) Point2f.point10 else Point2f.point00
-            Side.WEST -> if (ccw) Point2f.point00 else Point2f.point01
+            Side.NORTH -> if (ccw) Point2f.point10 else Point2f.zero
+            Side.WEST -> if (ccw) Point2f.zero else Point2f.point01
         }
 
         upFaceTexInner.set(texAtAxis)

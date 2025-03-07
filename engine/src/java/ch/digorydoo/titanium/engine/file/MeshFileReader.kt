@@ -23,11 +23,17 @@ class MeshFileReader private constructor(private val input: MyDataInputStream) {
         var normals: IntArray? = null
         var texCoords: IntArray? = null
 
-        fun toGeometry() = Geometry(
-            positions = owner.lookUpPoint3f(positions!!),
-            normals = owner.lookUpPoint3f(normals!!),
-            texCoords = texCoords?.let { owner.lookUpPoint2f(it) },
-        )
+        fun toGeometry(): Geometry? {
+            // If positions and normals are still null at this point, this means that the geometry is empty.
+            // This usually happens when a dummy mesh serves as a parent for nested meshes.
+            val positions = positions ?: return null
+            val normals = normals ?: return null
+            return Geometry(
+                positions = owner.lookUpPoint3f(positions),
+                normals = owner.lookUpPoint3f(normals),
+                texCoords = texCoords?.let { owner.lookUpPoint2f(it) },
+            )
+        }
     }
 
     private class IncompleteNode {

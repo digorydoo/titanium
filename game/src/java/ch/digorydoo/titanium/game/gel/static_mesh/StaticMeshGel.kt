@@ -47,5 +47,5 @@ class StaticMeshGel(override val spawnPt: StaticMeshSpawnPt): GraphicElement(spa
         renderer.free()
     }
 
-    override fun toString() = "StaticMeshGel(${spawnPt.kind})"
+    override fun toString() = "StaticMeshGel(${spawnPt.id})"
 }

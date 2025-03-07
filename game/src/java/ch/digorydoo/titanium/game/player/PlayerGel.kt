@@ -21,7 +21,7 @@ class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): GraphicElement(
         "Player",
         pos, // shared mutable object
         elasticity = 0.3f,
-        friction = 0.2f,
+        friction = 0.9f,
         mass = 64.0f,
         gravity = true,
         radius = 0.25f,
@@ -76,4 +76,6 @@ class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): GraphicElement(
     override fun onRemoveZombie() {
         renderer.free()
     }
+
+    override fun toString() = "PlayerGel"
 }

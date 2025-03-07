@@ -10,8 +10,8 @@ import ch.digorydoo.titanium.engine.scene.Scene
 import ch.digorydoo.titanium.engine.state.StateManager.RestoredState
 import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 import ch.digorydoo.titanium.game.core.SceneId
-import ch.digorydoo.titanium.game.gel.pickup.PickupGel
-import ch.digorydoo.titanium.game.gel.pickup.PickupSpawnPt.Kind
+import ch.digorydoo.titanium.game.gel.ball.BallGel
+import ch.digorydoo.titanium.game.gel.ball.BallSpawnPt
 import ch.digorydoo.titanium.game.i18n.GameTextId.*
 import ch.digorydoo.titanium.game.s999_town.TownScene
 import ch.digorydoo.titanium.game.ui.options.LoadGameMenu
@@ -35,22 +35,15 @@ class StartScene: Scene(
         App.time.setStoryTime(21, 15)
 
         App.camera.apply {
-            setTarget(27.0f, 11.0f, 4.0f, jump = true)
-            setSourceRelativeToTarget(phi = -(0.75 * PI).toFloat(), rho = -1.42f, jump = true)
+            setTarget(28.0f, 11.5f, 5.0f, jump = true)
+            setSourceRelativeToTarget(phi = -(0.81 * PI).toFloat(), rho = -1.02f, jump = true)
             mode = FIXED_DISTANCE
         }
 
-        PickupGel(Kind.VASE, 22.0f, 6.0f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 24.0f, 6.0f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 26.0f, 6.0f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 23.0f, 7.5f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 25.0f, 7.5f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-        PickupGel(Kind.VASE, 24.0f, 9.0f, 2.1f).also { App.content.add(it, LayerKind.MAIN_COLLIDABLE) }
-
-        PickupGel(Kind.VASE, 25.0f, 11.0f, 2.1f).also {
+        BallGel(BallSpawnPt.Kind.BALL_R25CM, 24.0f, 12.0f, 2.2f).also {
             App.content.add(it, LayerKind.MAIN_COLLIDABLE)
-            it.body.speed.x = -2.5f
-            it.body.speed.y = -9.6f
+            it.body.speed.x = 0.0f
+            it.body.speed.y = -9.9f
         }
 
         // Show the menu later to give the gels time to animate once, e.g. StreetLampGel needs to move its halo.

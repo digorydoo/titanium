@@ -1,10 +1,13 @@
 package ch.digorydoo.titanium.engine.gel
 
 import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.kutils.string.generateId
+import ch.digorydoo.kutils.string.initCap
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.file.GelListFileReader
 import ch.digorydoo.titanium.engine.file.GelListFileWriter
+import kotlin.math.max
 
 abstract class SpawnManager {
     class SpawnPtAndDistance(val spawnPt: SpawnPt, val spawnPtIdx: Int, val distance: Double)
@@ -25,6 +28,27 @@ abstract class SpawnManager {
     fun findSpawnPt(id: String) = when {
         id.isEmpty() -> null // there may be ad-hoc spawn pts with empty id, and we disallow finding them like this
         else -> spawnPts.find { it.id == id }
+    }
+
+    fun generateUniqueId(spawnObjType: String): String {
+        // The random part should come first to improve performance when looking for a specific id.
+
+        val suffix = initCap(spawnObjType, forceRestLowercase = true)
+            .filter { it in 'a' .. 'z' || it in 'A' .. 'Z' || it in '0' .. '9' }
+            .take(10)
+
+        val prefixLen = max(0, 10 - suffix.length) + 3 // 3 <= prefixLen <= 13 since suffix.length <= 10
+        var attempt = 20
+
+        while (attempt > 0) {
+            attempt--
+            // generateId does not use numbers for the first character
+            val id = generateId(prefixLen) + suffix
+            if (findSpawnPt(id) == null) return id
+        }
+
+        // This is very unlikely, since generateId uses many characters
+        throw Exception("Failed to generate unique id for spawn pt within a reasonable number of attempts")
     }
 
     fun despawn(pt: SpawnPt) {
@@ -66,7 +90,7 @@ abstract class SpawnManager {
                     it.spawn()
                 }
             } catch (e: Exception) {
-                Log.error("SpawnManager: Failed to spawn $it: ${e.message}")
+                Log.error("SpawnManager: Failed to spawn $it: ${e.message}\n${e.stackTraceToString()}")
             }
         }
     }

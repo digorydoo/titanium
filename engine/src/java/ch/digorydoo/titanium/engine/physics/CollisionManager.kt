@@ -7,14 +7,12 @@ import ch.digorydoo.titanium.engine.physics.bricks.CollideCylinderVsBrick
 import ch.digorydoo.titanium.engine.physics.bricks.CollideSphereVsBrick
 import ch.digorydoo.titanium.engine.physics.regular.CollideCylinderVsCylinder
 import ch.digorydoo.titanium.engine.physics.regular.CollideSphereVsCylinder
-import ch.digorydoo.titanium.engine.physics.regular.CollideSphereVsPlane
 import ch.digorydoo.titanium.engine.physics.regular.CollideSphereVsSphere
 
 class CollisionManager {
     private val hitPt = MutablePoint3f()
 
     private val sphereVsSphere = CollideSphereVsSphere()
-    private val sphereVsPlane = CollideSphereVsPlane()
     private val sphereVsCylinder = CollideSphereVsCylinder()
     private val cylinderVsCylinder = CollideCylinderVsCylinder()
 
@@ -51,17 +49,10 @@ class CollisionManager {
             is FixedSphereBody -> when (body2) {
                 is FixedSphereBody -> sphereVsSphere.checkNextPos(body1, body2, hitPt)
                 is FixedCylinderBody -> sphereVsCylinder.checkNextPos(body1, body2, hitPt)
-                is FixedPlaneBody -> sphereVsPlane.checkNextPos(body1, body2, hitPt)
             }
             is FixedCylinderBody -> when (body2) {
                 is FixedSphereBody -> sphereVsCylinder.checkNextPos(body2, body1, hitPt)
                 is FixedCylinderBody -> cylinderVsCylinder.checkNextPos(body1, body2, hitPt)
-                is FixedPlaneBody -> throw NotImplementedError()
-            }
-            is FixedPlaneBody -> when (body2) {
-                is FixedSphereBody -> sphereVsPlane.checkNextPos(body2, body1, hitPt)
-                is FixedCylinderBody -> throw NotImplementedError()
-                is FixedPlaneBody -> throw NotImplementedError()
             }
         }
     }
@@ -75,17 +66,10 @@ class CollisionManager {
             is FixedSphereBody -> when (body2) {
                 is FixedSphereBody -> sphereVsSphere.bounce(body1, body2)
                 is FixedCylinderBody -> sphereVsCylinder.bounce(body1, body2)
-                is FixedPlaneBody -> sphereVsPlane.bounce(body1, body2)
             }
             is FixedCylinderBody -> when (body2) {
                 is FixedSphereBody -> sphereVsCylinder.bounce(body2, body1)
                 is FixedCylinderBody -> cylinderVsCylinder.bounce(body1, body2)
-                is FixedPlaneBody -> throw NotImplementedError()
-            }
-            is FixedPlaneBody -> when (body2) {
-                is FixedSphereBody -> sphereVsPlane.bounce(body2, body1)
-                is FixedCylinderBody -> throw NotImplementedError()
-                is FixedPlaneBody -> throw NotImplementedError()
             }
         }
     }
@@ -110,7 +94,6 @@ class CollisionManager {
                     bounce()
                 }
             }
-            is FixedPlaneBody -> throw NotImplementedError()
         }
     }
 }

@@ -8,12 +8,14 @@ import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.texture.FrameCollection
+import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.sqrt
 import kotlin.random.Random
 
-class TestGel(initialPos: Point3f, initialRotation: Float): GraphicElement(initialPos) {
+class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
     override val inDialog = Visibility.ACTIVE
     override val inMenu = Visibility.INVISIBLE
     override val inEditor = Visibility.ACTIVE
@@ -22,8 +24,8 @@ class TestGel(initialPos: Point3f, initialRotation: Float): GraphicElement(initi
         "Test",
         pos, // shared mutable object
         elasticity = 0.42f,
-        friction = 0.5f,
-        mass = 4.2f,
+        friction = 0.1f,
+        mass = 20.0f,
         gravity = true,
         radius = 0.5f,
         zOffset = 0.5f,
@@ -34,6 +36,10 @@ class TestGel(initialPos: Point3f, initialRotation: Float): GraphicElement(initi
     private val frameOrigin = MutablePoint2f()
     private val movingForce = MutablePoint2f()
     private var rotationSpeed = 0.0f
+    private var jumpInFrames: Int
+    private var didCollideWithFloor = true
+    private var speedOfTouchDown = 0.0f
+    private var hasGroundContact = true
 
     private val renderProps = object: PaperRenderer.Delegate() {
         override val renderPos get() = this@TestGel.pos
@@ -41,7 +47,7 @@ class TestGel(initialPos: Point3f, initialRotation: Float): GraphicElement(initi
         override val tex get() = frames.tex
         override val texOffset get() = frames.texOffset
         override val origin get() = frameOrigin
-        override var rotationPhi = initialRotation
+        override var rotationPhi = spawnPt.rotation
         override val rotationRho = 0.0f
         override val scaleFactor = MutablePoint2f(1.0f / 36, 1.0f / 36)
     }
@@ -49,29 +55,59 @@ class TestGel(initialPos: Point3f, initialRotation: Float): GraphicElement(initi
     override val renderer = App.factory.createPaperRenderer(renderProps)
 
     override fun didCollide(other: GraphicElement, hitPt: Point3f): Boolean {
-        // println("TestGel collided with $other")
+        println("$this collided with $other")
         changeDirection()
+        val ob = other.body
+
+        if (other !is TestGel && ob != null) {
+            // Give the other body a slight push in XY.
+            val dx = other.pos.x - pos.x
+            val dy = other.pos.y - pos.y
+            val dist2D = sqrt(dx * dx + dy * dy)
+
+            if (dist2D > EPSILON) {
+                ob.addForce(PUSHING_FORCE * dx / dist2D, PUSHING_FORCE * dy / dist2D, 0.0f)
+            }
+        }
+
         return true // true = bounce
     }
 
     override fun didCollide(brick: Brick, hitPt: Point3f, hitNormal: Point3f) {
         if (abs(hitNormal.x) + abs(hitNormal.y) > abs(hitNormal.z)) {
-            // println("TestGel collided sideways, hitPt=$hitPt")
             changeDirection()
         }
+
+        if (hitNormal.z > 0.0f && body.nextSpeed.z < 0.0f) {
+            didCollideWithFloor = true
+            speedOfTouchDown = body.nextSpeed.z
+        }
+    }
+
+    override fun onAnimateActive() {
+        if (didCollideWithFloor) {
+            hasGroundContact = true
+            didCollideWithFloor = false // must be set again by didCollide
+        } else {
+            hasGroundContact = false
+        }
+
+        if (hasGroundContact) {
+            renderProps.rotationPhi += rotationSpeed
+            body.addForce(movingForce.x, movingForce.y, 0.0f)
+        }
+
+        // if (--jumpInFrames <= 0) {
+        //     jumpInFrames = JUMP_IN_FRAMES_MIN + (Random.nextFloat() * JUMP_IN_FRAMES_RANGE).toInt()
+        //     body.force.z += JUMP_FORCE
+        // }
     }
 
     private fun changeDirection() {
         val a = Random.nextFloat() * Math.PI * 2.0f
-        movingForce.x = 1.0f * body.mass * cos(a).toFloat()
-        movingForce.y = 1.0f * body.mass * sin(a).toFloat()
+        movingForce.x = MOVING_FORCE * body.mass * cos(a).toFloat()
+        movingForce.y = MOVING_FORCE * body.mass * sin(a).toFloat()
         rotationSpeed = 0.05f * (1.0f - 2.0f * Random.nextFloat())
-    }
-
-    override fun onAnimateActive() {
-        renderProps.rotationPhi += rotationSpeed
-        body.force.x += movingForce.x
-        body.force.y += movingForce.y
     }
 
     init {
@@ -79,9 +115,20 @@ class TestGel(initialPos: Point3f, initialRotation: Float): GraphicElement(initi
         frameOrigin.set(renderProps.frameSize.x / 2, renderProps.frameSize.y)
 
         changeDirection()
+        jumpInFrames = JUMP_IN_FRAMES_MIN + (Random.nextFloat() * JUMP_IN_FRAMES_RANGE).toInt()
     }
 
     override fun onRemoveZombie() {
         renderer.free()
+    }
+
+    override fun toString() = "TestGel(${spawnPt.id})"
+
+    companion object {
+        private const val MOVING_FORCE = 7.0f
+        private const val PUSHING_FORCE = 42.0f
+        private const val JUMPING_FORCE = 1200.0f
+        private const val JUMP_IN_FRAMES_MIN = 120
+        private const val JUMP_IN_FRAMES_RANGE = 420
     }
 }

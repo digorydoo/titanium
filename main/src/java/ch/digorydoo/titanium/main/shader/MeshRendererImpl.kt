@@ -234,6 +234,7 @@ class MeshRendererImpl(
             MeshMaterial.GLOSSY_WHITE -> glossyWhiteProps
             MeshMaterial.MILITARY_DKGREEN_METAL -> militaryDkGreenMetalProps
             MeshMaterial.MILITARY_GREEN_METAL -> militaryGreenMetalProps
+            MeshMaterial.CLAY -> clayProps
         }
 
         private val blackClothProps = MaterialProps(
@@ -247,17 +248,15 @@ class MeshRendererImpl(
             tintAmount = 0.0f,
             tintColour = Colour.black,
         )
-        private val whiteClothProps = MaterialProps(
-            ambientLightAmount = 0.3f,
-            diffuseLightAmount = 0.2f,
-            emittingLight = Colour.grey900,
-            shininess = 0.0f,
-            contourIntensity = 0.0f,
+        private val clayProps = MaterialProps(
+            ambientLightAmount = 0.64f,
+            diffuseLightAmount = 0.42f,
+            contourIntensity = 0.05f,
             contourRamp = 6.0f,
             contourTopReflectsSky = 0.0f,
             contourWidth = 0.2f,
-            tintAmount = 0.0f,
-            tintColour = Colour.white,
+            tintAmount = 0.5f,
+            tintColour = Colour(1.0f, 0.5f, 0.2f),
         )
         private val goldProps = MaterialProps(
             ambientLightAmount = 0.42f,
@@ -309,6 +308,18 @@ class MeshRendererImpl(
             contourTopReflectsSky = 0.6f,
             contourWidth = 0.2f,
             shininess = 0.7f,
+        )
+        private val whiteClothProps = MaterialProps(
+            ambientLightAmount = 0.3f,
+            diffuseLightAmount = 0.2f,
+            emittingLight = Colour.grey900,
+            shininess = 0.0f,
+            contourIntensity = 0.0f,
+            contourRamp = 6.0f,
+            contourTopReflectsSky = 0.0f,
+            contourWidth = 0.2f,
+            tintAmount = 0.0f,
+            tintColour = Colour.white,
         )
         private val woodProps = MaterialProps(
             ambientLightAmount = 0.42f,

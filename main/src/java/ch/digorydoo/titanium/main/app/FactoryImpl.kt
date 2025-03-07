@@ -10,11 +10,12 @@ import ch.digorydoo.titanium.engine.sky.SkydomeRenderer
 import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 import ch.digorydoo.titanium.game.core.SpawnObjType
-import ch.digorydoo.titanium.game.gel.pickup.PickupSpawnPt
+import ch.digorydoo.titanium.game.gel.ball.BallSpawnPt
 import ch.digorydoo.titanium.game.gel.static_mesh.StaticMeshSpawnPt
 import ch.digorydoo.titanium.game.gel.static_paper.StaticPaperSpawnPt
 import ch.digorydoo.titanium.game.gel.street_lamp.StreetLampSpawnPt
 import ch.digorydoo.titanium.game.gel.test.TestSpawnPt
+import ch.digorydoo.titanium.game.gel.vase.VaseSpawnPt
 import ch.digorydoo.titanium.main.shader.MeshRendererImpl
 import ch.digorydoo.titanium.main.shader.PaperRendererImpl
 import ch.digorydoo.titanium.main.shader.SkydomeRendererImpl
@@ -74,8 +75,9 @@ class FactoryImpl: Factory {
             SpawnObjType.ROUND_TREE -> StaticPaperSpawnPt(raw, StaticPaperSpawnPt.Kind.ROUND_TREE)
 
             // other
+            SpawnObjType.BALL_R25CM -> BallSpawnPt(raw, BallSpawnPt.Kind.BALL_R25CM)
             SpawnObjType.STREET_LAMP_TRADITIONAL -> StreetLampSpawnPt(raw, StreetLampSpawnPt.Kind.TRADITIONAL)
-            SpawnObjType.VASE -> PickupSpawnPt(raw, PickupSpawnPt.Kind.VASE)
+            SpawnObjType.VASE_H1M -> VaseSpawnPt(raw, VaseSpawnPt.Kind.VASE_H1M)
             SpawnObjType.TEST_GEL -> TestSpawnPt(raw)
         }
 }

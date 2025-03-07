@@ -2,7 +2,7 @@ package ch.digorydoo.titanium.engine.physics
 
 import ch.digorydoo.kutils.math.clamp
 import ch.digorydoo.kutils.point.MutablePoint3f
-import ch.digorydoo.kutils.utils.Log
+import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.core.GameTime.Companion.DELTA_TIME
 import kotlin.math.sqrt
 
@@ -15,35 +15,42 @@ sealed class RigidBody protected constructor(
     val gravity: Boolean,
 ) {
     val speed = MutablePoint3f()
-    val force = MutablePoint3f()
+
+    private val resultingForce = MutablePoint3f()
 
     val nextPos = MutablePoint3f()
     val nextSpeed = MutablePoint3f()
 
-    /**
-     * Adds a force that brings the body to a certain target speed at a certain acceleration.
-     */
-    fun addSpeedRelativeForce(targetSpeedX: Float, targetSpeedY: Float, targetSpeedZ: Float, accel: Float) {
-        val dx = targetSpeedX - speed.x
-        val dy = targetSpeedY - speed.y
-        val dz = targetSpeedZ - speed.z
+    private val _speedBeforeCollisions = MutablePoint3f()
+    val speedBeforeCollisions: Point3f get() = _speedBeforeCollisions
 
-        // Let maxAccel be the acceleration that would directly lead to the target speed.
-        val maxAX = dx / DELTA_TIME
-        val maxAY = dy / DELTA_TIME
-        val maxAZ = dz / DELTA_TIME
-        val maxAccel = sqrt((maxAX * maxAX) + (maxAY * maxAY) + (maxAZ * maxAZ))
+    private val _normDirOfSpeedBeforeCollisions = MutablePoint3f()
+    private var isSpeedBeforeCollisionsSignificant = false
 
-        if (accel > maxAccel) {
-            force.x += maxAX * mass
-            force.y += maxAY * mass
-            force.z += maxAZ * mass
-        } else {
-            val dlen = sqrt((dx * dx) + (dy * dy) + (dz * dz))
-            force.x += accel * mass * dx / dlen
-            force.y += accel * mass * dy / dlen
-            force.z += accel * mass * dz / dlen
+    val normDirOfSpeedBeforeCollisions: Point3f?
+        get() = when (isSpeedBeforeCollisionsSignificant) {
+            true -> _normDirOfSpeedBeforeCollisions
+            false -> null
         }
+
+    fun addForce(x: Float, y: Float, z: Float) {
+        resultingForce.x += x
+        resultingForce.y += y
+        resultingForce.z += z
+    }
+
+    fun stopAllMotion() {
+        speed.x = 0.0f
+        speed.y = 0.0f
+        speed.z = 0.0f
+
+        nextSpeed.x = 0.0f
+        nextSpeed.y = 0.0f
+        nextSpeed.z = 0.0f
+
+        resultingForce.x = 0.0f
+        resultingForce.y = 0.0f
+        resultingForce.z = 0.0f
     }
 
     /**
@@ -51,24 +58,47 @@ sealed class RigidBody protected constructor(
      */
     fun applyForces() {
         if (gravity) {
-            force.z -= GRAVITY * mass
+            resultingForce.z -= GRAVITY * mass
         }
 
         if (mass < LARGE_MASS) {
-            val ax = force.x / mass
-            val ay = force.y / mass
-            val az = force.z / mass
+            val ax = resultingForce.x / mass
+            val ay = resultingForce.y / mass
+            val az = resultingForce.z / mass
 
             nextSpeed.x = clamp(speed.x + ax * DELTA_TIME, -MAX_SPEED, MAX_SPEED)
             nextSpeed.y = clamp(speed.y + ay * DELTA_TIME, -MAX_SPEED, MAX_SPEED)
             nextSpeed.z = clamp(speed.z + az * DELTA_TIME, -MAX_SPEED, MAX_SPEED)
         }
 
-        nextPos.x = pos.x + nextSpeed.x * DELTA_TIME
-        nextPos.y = pos.y + nextSpeed.y * DELTA_TIME
-        nextPos.z = pos.z + nextSpeed.z * DELTA_TIME
+        val vx = nextSpeed.x
+        val vy = nextSpeed.y
+        val vz = nextSpeed.z
 
-        force.set(0, 0, 0)
+        nextPos.x = pos.x + vx * DELTA_TIME
+        nextPos.y = pos.y + vy * DELTA_TIME
+        nextPos.z = pos.z + vz * DELTA_TIME
+
+        _speedBeforeCollisions.x = vx
+        _speedBeforeCollisions.y = vy
+        _speedBeforeCollisions.z = vz
+
+        val vlen = sqrt(vx * vx + vy * vy + vz * vz)
+
+        if (vlen < MIN_SPEED_FOR_SIGNIFICANT_DIRECTION) {
+            isSpeedBeforeCollisionsSignificant = false
+        } else {
+            _normDirOfSpeedBeforeCollisions.x = vx / vlen
+            _normDirOfSpeedBeforeCollisions.y = vy / vlen
+            _normDirOfSpeedBeforeCollisions.z = vz / vlen
+            isSpeedBeforeCollisionsSignificant = true
+        }
+
+        // We applied the force and reset it here. Collisions happen after animPhase1, so if gels add forces in their
+        // didCollide, those forces will be applied in the next frame.
+        resultingForce.x = 0.0f
+        resultingForce.y = 0.0f
+        resultingForce.z = 0.0f
     }
 
     /**
@@ -77,11 +107,6 @@ sealed class RigidBody protected constructor(
     fun move() {
         pos.set(nextPos)
         speed.set(nextSpeed)
-
-        if (force.x != 0.0f || force.y != 0.0f || force.z != 0.0f) {
-            Log.warn("RigidBody $this added a force during collision phase!")
-            force.set(0, 0, 0)
-        }
     }
 
     companion object {
@@ -89,5 +114,6 @@ sealed class RigidBody protected constructor(
 
         private const val MAX_SPEED = 100.0f
         private const val GRAVITY = 9.81f
+        private const val MIN_SPEED_FOR_SIGNIFICANT_DIRECTION = 0.0001f // 1 mm/100 per second
     }
 }

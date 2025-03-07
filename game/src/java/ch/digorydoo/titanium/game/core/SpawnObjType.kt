@@ -1,6 +1,7 @@
 package ch.digorydoo.titanium.game.core
 
 enum class SpawnObjType {
+    BALL_R25CM,
     BENCH_1,
     GNARLED_TREE_LARGE,
     GNARLED_TREE_MEDIUM,
@@ -13,7 +14,7 @@ enum class SpawnObjType {
     STONE_1,
     STREET_LAMP_TRADITIONAL,
     TEST_GEL,
-    VASE;
+    VASE_H1M;
 
     val id = toString().lowercase().replace("_", "-")
 

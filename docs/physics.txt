@@ -157,6 +157,94 @@ Solving for v1∥':
     v1∥' = (m1 v1∥ + m2 v2∥ + m1 e (v1∥ − v2∥) − m1 e (v1∥ − v2∥) - m2 e (v1∥ − v2∥)) / (m1 + m2)
     v1∥' = (m1 v1∥ + m2 v2∥ - m2 e (v1∥ − v2∥)) / (m1 + m2)
 
+Finding the position of (almost) touch of two colliding circles
+---------------------------------------------------------------
+
+Given
+    circle C_1 := (x_1; y_1), radius r_1
+    circle C_2 := (x_2; y_2), radius r_2
+    direction of separation n := (x_N; y_N), normalised
+
+Move C_1 along n such that it no longer touches C_2, but barely. With other words, find a value for λ such that:
+
+    |C_1 + λ n - C_2| = r1 + r2 + EPSILON
+
+Define R := r1 + r2 + EPSILON and rewrite with Euclidic distance:
+
+    (x_1 - x_2 + λ x_N)^2 + (y_1 - y_2 + λ y_N)^2 = R^2
+
+Expand the equation by grouping (x_1 - x_2), etc.:
+
+    (x_1 − x_2)^2 + 2 (x_1 − x_2) λ x_N + λ^2 x_N^2
+        + (y_1 − y_2)^2 + 2 (y_1 − y_2) λ y_N + λ^2 y_N^2
+        = R^2
+
+Rearrange:
+
+    λ^2 (x_N^2 + y_N^2)
+    + λ (2 (x_1 - x_2) x_N + 2 (y_1 - y_2) y_N)
+    + (x_1 − x_2)^2 + (y_1 − y_2)^2 - R^2
+    = 0
+
+Define:
+
+    A := x_N^2 + y_N^2
+    B := 2 ((x_1 - x_2) x_N + (y_1 - y_2) y_N)
+    C := (x_1 − x_2)^2 + (y_1 − y_2)^2 - R^2
+
+This gives a quadratic equation for λ:
+
+    A λ^2 + B λ + C = 0
+
+With solution:
+
+    λ = (-B (+-) sqrt(B^2 - 4 A C)) / 2A
+
+Finding the position of (almost) touch of two colliding spheres
+---------------------------------------------------------------
+
+Given
+    sphere S_1 := (x_1; y_1; z_1), radius r_1
+    sphere S_2 := (x_2; y_2; z_2), radius r_2
+    direction of separation n := (x_N; y_N; z_N), normalised
+
+Move S_1 along n such that it no longer touches S_2, but barely. With other words, find a value for λ such that:
+
+    |S_1 + λ n - S_2| = r1 + r2 + EPSILON
+
+Define R := r1 + r2 + EPSILON and rewrite with Euclidic distance:
+
+    (x_1 - x_2 + λ x_N)^2 + (y_1 - y_2 + λ y_N)^2 + (z_1 - z_2 + λ z_N)^2 = R^2
+
+Expand the equation by grouping (x_1 - x_2), etc.:
+
+    (x_1 − x_2)^2 + 2 (x_1 − x_2) λ x_N + λ^2 x_N^2
+        + (y_1 − y_2)^2 + 2 (y_1 − y_2) λ y_N + λ^2 y_N^2
+        + (z_1 − z_2)^2 + 2 (z_1 − z_2) λ z_N + λ^2 z_N^2
+        = R^2
+
+Rearrange:
+
+    λ^2 (x_N^2 + y_N^2 + z_N^2)
+    + λ (2 (x_1 - x_2) x_N + 2 (y_1 - y_2) y_N + 2 (z_1 - z_2) z_N)
+    + (x_1 − x_2)^2 + (y_1 − y_2)^2 + (z_1 − z_2)^2 - R^2
+    = 0
+
+Define:
+
+    A := x_N^2 + y_N^2 + z_N^2
+    B := 2 ((x_1 - x_2) x_N + (y_1 - y_2) y_N + (z_1 - z_2) z_N)
+    C := (x_1 − x_2)^2 + (y_1 − y_2)^2 + (z_1 − z_2)^2 - R^2
+
+This gives a quadratic equation for λ:
+
+    A λ^2 + B λ + C = 0
+
+With solution:
+
+    λ = (-B (+-) sqrt(B^2 - 4 A C)) / 2A
+
+
 Check if a sphere collides with a plane
 ---------------------------------------
 

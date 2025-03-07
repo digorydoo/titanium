@@ -61,6 +61,7 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
     protected open val inMenu = Visibility.INVISIBLE
     protected open val inEditor = Visibility.FROZEN_VISIBLE
     protected open val visibleOnScreenshots = true
+    protected open val allowNegativeZ = false
 
     private var active = true // false=disable animation except endless loops
     protected var visible = false; private set // FIXME why is `hidden` not enough
@@ -130,6 +131,14 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
     fun animatePhase2() {
         if (!zombie && !hidden && active) {
             body?.move()
+
+            if (pos.x.isNaN() || pos.y.isNaN() || pos.z.isNaN()) {
+                Log.error("Removing gel $this, because its position became NaN: $pos")
+                zombie = true
+            } else if (!allowNegativeZ && pos.z < 0.0f) {
+                Log.warn("Gel $this will be removed, because it fell through z=0")
+                zombie = true
+            }
         }
 
         visible = when {

@@ -24,5 +24,5 @@ class TestSpawnPt(raw: Map<String, String>): SpawnPt(raw) {
     }
 
     override fun createGel() =
-        TestGel(pos, rotation)
+        TestGel(this)
 }

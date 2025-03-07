@@ -2,6 +2,15 @@
 
 ## Backlog
 
+* Physics
+    * orig pos
+        * wenn xyOverlap, aber kein zOverlap, dann kann nur Fläche sein
+        * wenn zOverlap, aber kein xyOverlap, dan kann nur Seite sein
+        * Sonst Ecke;
+            * wenn |speedXY| > |speedZ|, dann Seite
+            * sonst Fläche
+    * Gels gemäss Anteil gewichtet schieben (d.h. der erste weight1, der zweite DEN REST)
+
 * Bugs
     * Railing 2 has strange lighting issue across instances (see level)
     * Sometimes keyboard strokes get lost (when frame takes too long, or stroke is hit too quickly)

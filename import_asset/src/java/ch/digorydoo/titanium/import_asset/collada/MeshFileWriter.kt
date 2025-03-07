@@ -120,7 +120,7 @@ class MeshFileWriter(private val stream: MyDataOutputStream, private val accesso
 
         if (geometry != null) {
             val gdata = accessor.getGeometryData(geometry)
-            myMaterial = gdata.material ?: materialOfParentNode
+            myMaterial = gdata?.material ?: materialOfParentNode
 
             if (myMaterial == requiredMaterial) {
                 return true
@@ -149,7 +149,7 @@ class MeshFileWriter(private val stream: MyDataOutputStream, private val accesso
 
         if (geometry != null) {
             val gdata = accessor.getGeometryData(geometry)
-            myMaterial = gdata.material ?: materialOfParentNode
+            myMaterial = gdata?.material ?: materialOfParentNode
 
             if (myMaterial == requiredMaterial) {
                 // This node has data for the required material.
@@ -201,9 +201,12 @@ class MeshFileWriter(private val stream: MyDataOutputStream, private val accesso
 
         geometriesActuallyUsed.add(geometry)
         val gdata = accessor.getGeometryData(geometry)
-        pt3fSet.addAll(gdata.positions)
-        pt3fSet.addAll(gdata.normals)
-        gdata.texCoords?.let { pt2fSet.addAll(it) }
+
+        if (gdata != null) {
+            pt3fSet.addAll(gdata.positions)
+            pt3fSet.addAll(gdata.normals)
+            gdata.texCoords?.let { pt2fSet.addAll(it) }
+        }
     }
 
     private fun writeGeometryRef(geometry: Geometry) {
@@ -217,18 +220,20 @@ class MeshFileWriter(private val stream: MyDataOutputStream, private val accesso
 
         val gdata = accessor.getGeometryData(geometry)
 
-        val positionIndices = pt3fSet.findIndices(gdata.positions).toIntArray()
-        stream.writeIntArrayAsUInt16(FileMarker.POSITIONS, positionIndices)
-        stats.numPositions += gdata.positions.size
+        if (gdata != null) {
+            val positionIndices = pt3fSet.findIndices(gdata.positions).toIntArray()
+            stream.writeIntArrayAsUInt16(FileMarker.POSITIONS, positionIndices)
+            stats.numPositions += gdata.positions.size
 
-        val normalIndices = pt3fSet.findIndices(gdata.normals).toIntArray()
-        stream.writeIntArrayAsInt32(FileMarker.NORMALS, normalIndices)
-        stats.numNormals += gdata.normals.size
+            val normalIndices = pt3fSet.findIndices(gdata.normals).toIntArray()
+            stream.writeIntArrayAsInt32(FileMarker.NORMALS, normalIndices)
+            stats.numNormals += gdata.normals.size
 
-        gdata.texCoords?.let { texCoords ->
-            val texCoordsIndices = pt2fSet.findIndices(texCoords).toIntArray()
-            stream.writeIntArrayAsUInt16(FileMarker.TEXCOORDS, texCoordsIndices)
-            stats.numTexCoords += texCoords.size
+            gdata.texCoords?.let { texCoords ->
+                val texCoordsIndices = pt2fSet.findIndices(texCoords).toIntArray()
+                stream.writeIntArrayAsUInt16(FileMarker.TEXCOORDS, texCoordsIndices)
+                stats.numTexCoords += texCoords.size
+            }
         }
 
         stream.write(FileMarker.END_GEOMETRY)

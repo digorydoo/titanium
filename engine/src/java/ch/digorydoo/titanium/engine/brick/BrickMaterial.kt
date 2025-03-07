@@ -109,6 +109,60 @@ enum class BrickMaterial(val value: Int) {
                 -> 0.1f
         }
 
+    val friction: Float
+        get() = when (this) {
+            GLASS,
+            METAL_RED,
+            ZZ_TEST,
+                -> 0.15f
+
+            ASPHALT_BLUE,
+            ASPHALT_RED,
+            BLUE_BRICK_WALL,
+            CONCRETE_CELLAR_WINDOW,
+            CONCRETE_FAKE_DOOR,
+            CONCRETE_GRAFITTI,
+            CONCRETE_LARGE_VENTILATION,
+            CONCRETE_SMALL_VENTILATION,
+            CONCRETE_SQUARE_WINDOW,
+            CONCRETE_TALL_WINDOW,
+            DARK_GREY_CONCRETE,
+            DARK_RED_BRICK_WALL,
+            GREEN_CONCRETE,
+            GREY_BRICK_WALL,
+            GREY_CONCRETE,
+            ORANGE_CONCRETE,
+            RED_BRICK_WALL,
+            ROAD_PAVED,
+            STONE_WALL_YELLOW,
+            TILED_STREET,
+            WHITE_CONCRETE,
+            WINDOW_DETAILS,
+            WINDOW_INTERIOR,
+                -> 0.6f
+
+            CARPET_BLUE,
+            CARPET_BROWN,
+            CARPET_RED,
+                -> 0.75f
+
+            WOODEN_PLANKS_H,
+            WOODEN_PLANKS_V_BRITE,
+            WOODEN_PLANKS_V_DARK,
+            WOOD_DARK,
+            WOOD_RED,
+                -> 0.65f
+
+            FOREST_GROUND,
+            GRASSY_GROUND,
+            GRASSY_PATH,
+            ROAD_PEBBLES,
+                -> 0.7f
+
+            STANDING_WATER,
+                -> 0.9f
+        }
+
     companion object {
         fun fromInt(value: Int) =
             entries.find { shape -> shape.value == value }

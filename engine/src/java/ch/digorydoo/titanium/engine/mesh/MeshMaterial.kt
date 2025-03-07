@@ -15,6 +15,7 @@ enum class MeshMaterial(val value: Int) {
     GLOSSY_WHITE(10), // e.g. eyes
     MILITARY_DKGREEN_METAL(11),
     MILITARY_GREEN_METAL(12),
+    CLAY(13),
     ;
 
     companion object {

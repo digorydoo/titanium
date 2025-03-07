@@ -102,10 +102,12 @@ class ColladaDataAccessor(private val data: ColladaData) {
             .requireExactlyOne("geometry with id=$geometryId")
     }
 
-    fun getGeometryData(geometry: Geometry): GeometryData {
+    fun getGeometryData(geometry: Geometry): GeometryData? {
         val ctx = "Geometry ${geometry.id}"
         val mesh = geometry.mesh.requireNotNull("$ctx: mesh")
-        val triangles = mesh.triangles.requireNotNull("$ctx: mesh: triangles")
+
+        // if triangles is null, it may be a parent with no mesh data of its own
+        val triangles = mesh.triangles ?: return null
 
         val material = triangles.material
             .takeIf { it.isNotEmpty() }
