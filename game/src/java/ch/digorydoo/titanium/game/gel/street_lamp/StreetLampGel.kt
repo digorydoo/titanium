@@ -11,8 +11,8 @@ import ch.digorydoo.titanium.engine.core.LampManager.Lamp
 import ch.digorydoo.titanium.engine.file.MeshFileReader
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.mesh.MeshRenderer
-import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
-import ch.digorydoo.titanium.engine.physics.RigidBody
+import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
+import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.shader.Renderer
 import ch.digorydoo.titanium.engine.shader.Renderer.BlendMode

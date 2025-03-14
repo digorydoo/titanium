@@ -8,6 +8,7 @@
 
 set -e
 
+RED=$'\e[31m'
 YELLOW=$'\e[33m'
 PLAIN=$'\e[0m'
 
@@ -33,19 +34,17 @@ cd "$ASSETS_DIR"
 ASSETS_STATUS="$(git status --porcelain)"
 
 if [[ "$ASSETS_STATUS" != "" ]]; then
-   echo 2>&1 "Working directory of assets is not clean:"
+   echo 2>&1 "${RED}Warning:${PLAIN}: Working directory is not clean:"
    echo 2>&1 "$ASSETS_STATUS"
-   echo 2>&1 "Please commit uncommitted changes first."
-   exit 1
+   echo 2>&1 "Continuing without pulling latest changes."
+else
+   ASSETS_BRANCH="$(git rev-parse --abbrev-ref=strict HEAD)"
+   echo "Assets repo is on branch ${YELLOW}${ASSETS_BRANCH}${PLAIN}, pulling..."
+
+   git pull --ff-only || (
+      echo 2>&1 "${RED}Warning:${PLAIN} Failed to pull latest changes!"
+   )
 fi
-
-ASSETS_BRANCH="$(git rev-parse --abbrev-ref=strict HEAD)"
-echo "Assets repo is on branch ${YELLOW}${ASSETS_BRANCH}${PLAIN}, pulling..."
-
-git pull --ff-only || (
-   echo 2>&1 "Failed to pull latest changes of assets!"
-   exit 1
-)
 
 cd "$SELF_DIR"
 
@@ -85,19 +84,17 @@ cd "$KUTILS_DIR"
 KUTILS_STATUS="$(git status --porcelain)"
 
 if [[ "$KUTILS_STATUS" != "" ]]; then
-   echo 2>&1 "Working directory of kutils is not clean:"
+   echo 2>&1 "${RED}Warning:${PLAIN} Working directory is not clean:"
    echo 2>&1 "$KUTILS_STATUS"
-   echo 2>&1 "Please commit uncommitted changes first."
-   exit 1
+   echo 2>&1 "Continuing without pulling latest changes."
+else
+   KUTILS_BRANCH="$(git rev-parse --abbrev-ref=strict HEAD)"
+   echo "kutils repo is on branch ${YELLOW}${KUTILS_BRANCH}${PLAIN}, pulling..."
+
+   git pull --ff-only || (
+      echo 2>&1 "${RED}Warning:${PLAIN} Failed to pull latest changes!"
+   )
 fi
-
-KUTILS_BRANCH="$(git rev-parse --abbrev-ref=strict HEAD)"
-echo "kutils repo is on branch ${YELLOW}${KUTILS_BRANCH}${PLAIN}, pulling..."
-
-git pull --ff-only || (
-   echo 2>&1 "Failed to pull latest changes of kutils!"
-   exit 1
-)
 
 cd "$SELF_DIR"/kutils
 
@@ -126,19 +123,17 @@ echo "${YELLOW}Preparing titanium repo$PLAIN"
 SELF_STATUS="$(git status --porcelain)"
 
 if [[ "$SELF_STATUS" != "" ]]; then
-   echo 2>&1 "Working directory of titanium is not clean:"
+   echo 2>&1 "${RED}Warning:${PLAIN} Working directory is not clean:"
    echo 2>&1 "$SELF_STATUS"
-   echo 2>&1 "Please commit uncommitted changes first."
-   exit 1
+   echo 2>&1 "Continuing without pulling latest changes."
+else
+   SELF_BRANCH="$(git rev-parse --abbrev-ref=strict HEAD)"
+   echo "titanium repo is on branch ${YELLOW}${SELF_BRANCH}${PLAIN}, pulling..."
+
+   git pull --ff-only || (
+      echo 2>&1 "${RED}Warning:${PLAIN} Failed to pull latest changes!"
+   )
 fi
-
-SELF_BRANCH="$(git rev-parse --abbrev-ref=strict HEAD)"
-echo "titanium repo is on branch ${YELLOW}${SELF_BRANCH}${PLAIN}, pulling..."
-
-git pull --ff-only || (
-   echo 2>&1 "Failed to pull latest changes of titanium!"
-   exit 1
-)
 
 # --------------------------------------------------------------------------------------------------------------------
 

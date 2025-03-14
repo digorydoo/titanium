@@ -59,7 +59,7 @@ class ImageData(val buf: ByteBuffer, val type: Type, val width: Int, val height:
         }
     }
 
-    fun clear(c: Colour = Colour.Companion.black) {
+    fun clear(c: Colour = Colour.black) {
         rectArtist.clear(c)
     }
 
@@ -112,7 +112,7 @@ class ImageData(val buf: ByteBuffer, val type: Type, val width: Int, val height:
 
     fun drawText(text: String, x: Int, y: Int, c: Colour, fontName: FontManager.FontName, otlColour: Colour? = null) {
         if (type != Type.RGBA8) throw NotImplForType()
-        App.Companion.fonts.drawText(text, buf, x, y, width, height, fontName, c, otlColour)
+        App.fonts.drawText(text, buf, x, y, width, height, fontName, c, otlColour)
     }
 
     fun drawTextCentred(
@@ -124,14 +124,14 @@ class ImageData(val buf: ByteBuffer, val type: Type, val width: Int, val height:
         otlColour: Colour? = null,
     ) {
         if (type != Type.RGBA8) throw NotImplForType()
-        val m = App.Companion.fonts.measureText(text, fontName)
+        val m = App.fonts.measureText(text, fontName)
         val x = (centreX - (m.x / 2.0f)).toInt()
-        App.Companion.fonts.drawText(text, buf, x, y, width, height, fontName, c, otlColour)
+        App.fonts.drawText(text, buf, x, y, width, height, fontName, c, otlColour)
     }
 
     fun drawText(text: FontManager.FormattedText, x: Int, y: Int, c: Colour, otlColour: Colour? = null) {
         if (type != Type.RGBA8) throw NotImplForType()
-        App.Companion.fonts.drawText(text, buf, x, y, width, height, c, otlColour)
+        App.fonts.drawText(text, buf, x, y, width, height, c, otlColour)
     }
 
     fun drawImage(src: ImageData, dstX: Int, dstY: Int) {

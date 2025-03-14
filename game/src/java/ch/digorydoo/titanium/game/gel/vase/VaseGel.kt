@@ -6,7 +6,8 @@ import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.file.MeshFileReader
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.mesh.MeshRenderer
-import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
+import ch.digorydoo.titanium.engine.physics.HitArea
+import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.game.gel.vase.VaseSpawnPt.Kind
 
 class VaseGel private constructor(
@@ -52,9 +53,8 @@ class VaseGel private constructor(
     override fun onAnimateActive() {
     }
 
-    override fun didCollide(other: GraphicElement, hitPt: Point3f): Boolean {
+    override fun didCollide(other: GraphicElement, myHit: HitArea, otherHit: HitArea, hitPt: Point3f) {
         // println("Vase collided with $other")
-        return true // true = bounce
     }
 
     override fun didCollide(brick: Brick, hitPt: Point3f, hitNormal: Point3f) {

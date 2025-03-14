@@ -2,9 +2,8 @@ package ch.digorydoo.titanium.engine.gel
 
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.LARGE_MASS
 
-class GelLayer(private val detectCollisions: Boolean = false) {
+class GelLayer {
     enum class LayerKind {
         MAIN_COLLIDABLE, MAIN_NON_COLLIDABLE, MENU_BACKDROP, UI_BELOW_DLG, UI_ABOVE_DLG, STELLAR_OBJECTS
     }
@@ -26,6 +25,14 @@ class GelLayer(private val detectCollisions: Boolean = false) {
         }
     }
 
+    fun forEachGelIndexed(lambda: (i: Int, gel: GraphicElement) -> Unit) {
+        gels.forEachIndexed(lambda)
+    }
+
+    fun forEachGelIndexed(startIdx: Int, lambda: (i: Int, gel: GraphicElement) -> Unit) {
+        (startIdx ..< gels.size).forEach { lambda(it, gels[it]) }
+    }
+
     fun animate() {
         if (newGels.isNotEmpty()) {
             gels.addAll(newGels)
@@ -41,35 +48,7 @@ class GelLayer(private val detectCollisions: Boolean = false) {
             }
         }
 
-        if (detectCollisions) {
-            val c = App.collisions
-
-            gels.forEachIndexed { i1, gel1 ->
-                if (gel1.canCollide()) {
-                    (i1 + 1 ..< gels.size).forEach { i2 ->
-                        val gel2 = gels[i2]
-                        try {
-                            if (gel2.canCollide()) {
-                                c.handleCollisions(gel1, gel2)
-                            }
-                        } catch (e: Exception) {
-                            Log.error(
-                                "Exception during collision detection: $gel1 vs. $gel2\n${e.stackTraceToString()}"
-                            )
-                            gel1.setZombie()
-                            gel2.setZombie()
-                        }
-                    }
-
-                    val body = gel1.body
-
-                    if (body != null && body.mass < LARGE_MASS) {
-                        c.handleCollisions(gel1, App.bricks)
-                    }
-                }
-            }
-        }
-
+        App.collisions.handleCollisions()
         var anyToRemove = false
 
         gels.forEach { gel ->

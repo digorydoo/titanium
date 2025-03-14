@@ -1,68 +1,55 @@
-package ch.digorydoo.titanium.engine.physics.regular
+package ch.digorydoo.titanium.engine.physics.collide_regular
 
 import ch.digorydoo.kutils.point.MutablePoint3f
-import ch.digorydoo.titanium.engine.physics.FixedSphereBody
-import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.LARGE_MASS
+import ch.digorydoo.kutils.utils.Log
+import ch.digorydoo.titanium.engine.physics.HitArea
+import ch.digorydoo.titanium.engine.physics.HitResult
+import ch.digorydoo.titanium.engine.physics.MutableHitResult
+import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
+import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.utils.EPSILON
-import kotlin.math.abs
 import kotlin.math.sqrt
 
-internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSphereBody, Unit>() {
-    override fun checkNextPos(body1: FixedSphereBody, body2: FixedSphereBody, outHitPt: MutablePoint3f) =
-        check(
-            cx1 = body1.nextPos.x,
-            cy1 = body1.nextPos.y,
-            cz1 = body1.nextPos.z + body1.zOffset,
-            r1 = body1.radius,
-            cx2 = body2.nextPos.x,
-            cy2 = body2.nextPos.y,
-            cz2 = body2.nextPos.z + body2.zOffset,
-            r2 = body2.radius,
-            outHitPt
-        )
-
-    private fun check(
-        // Sphere 1
-        cx1: Float,
-        cy1: Float,
-        cz1: Float,
-        r1: Float,
-        // Sphere 2
-        cx2: Float,
-        cy2: Float,
-        cz2: Float,
-        r2: Float,
-        // out
-        outHitPt: MutablePoint3f?,
+internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSphereBody>() {
+    override fun check(
+        body1: FixedSphereBody,
+        centreX1: Float,
+        centreY1: Float,
+        refPtZ1: Float,
+        body2: FixedSphereBody,
+        centreX2: Float,
+        centreY2: Float,
+        refPtZ2: Float,
+        outHit: MutableHitResult?,
     ): Boolean {
-        val dx = cx2 - cx1
-        val dy = cy2 - cy1
-        val dz = cz2 - cz1
-
+        val dx = centreX2 - centreX1
+        val dy = centreY2 - centreY1
+        val dz = (refPtZ2 + body2.zOffset) - (refPtZ1 + body1.zOffset)
         val dsqr = (dx * dx) + (dy * dy) + (dz * dz)
-        val rsum = r1 + r2
+        val rsum = body1.radius + body2.radius
         if (dsqr > rsum * rsum) return false
+        if (outHit == null) return true
 
         val d = sqrt(dsqr) // always >= 0
 
-        if (outHitPt != null) {
-            if (d <= EPSILON) {
-                outHitPt.set(cx1, cy1, cz1)
-            } else {
-                outHitPt.x = cx1 + r1 * (dx / d)
-                outHitPt.y = cy1 + r1 * (dy / d)
-                outHitPt.z = cz1 + r1 * (dz / d)
-            }
+        if (d <= EPSILON) {
+            outHit.hitPt.set(centreX1, centreY1, refPtZ1 + body1.zOffset)
+        } else {
+            outHit.hitPt.set(
+                centreX1 + body1.radius * (dx / d),
+                centreY1 + body1.radius * (dy / d),
+                refPtZ1 + body1.zOffset + body1.radius * (dz / d),
+            )
         }
 
+        // Spheres do not have specific areas
+        outHit.area1 = HitArea.UNSPECIFIED
+        outHit.area2 = HitArea.UNSPECIFIED
         return true
     }
 
-    /**
-     * See docs/physics.txt
-     */
-    override fun bounce(body1: FixedSphereBody, body2: FixedSphereBody) {
-        separate(body1, body1.zOffset, body2, body2.zOffset, Unit)
+    override fun bounce(body1: FixedSphereBody, body2: FixedSphereBody, hit: HitResult) {
+        separate(body1, body1.zOffset, body2, body2.zOffset)
 
         val m1 = if (body1.mass <= EPSILON) EPSILON else body1.mass
         val m2 = if (body2.mass <= EPSILON) EPSILON else body2.mass
@@ -82,6 +69,11 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
         val pdy = p2y - p1y
         val pdz = p2z - p1z
         val pLen = sqrt(pdx * pdx + pdy * pdy + pdz * pdz)
+
+        if (pLen < EPSILON) {
+            Log.warn("Failed to compute new speeds for $body1 and $body2, because they are too close")
+            return
+        }
 
         val normDir12X = pdx / pLen
         val normDir12Y = pdy / pLen
@@ -154,70 +146,6 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
             v2.y = v2perpendY + (sy + vparallelDy * elasticity * m1) / totalMass
             v2.z = v2perpendZ + (sz + vparallelDz * elasticity * m1) / totalMass
         }
-    }
-
-    override fun separate(
-        body1: FixedSphereBody,
-        weight1: Float,
-        normDir1X: Float,
-        normDir1Y: Float,
-        normDir1Z: Float,
-        body2: FixedSphereBody,
-        normDir2X: Float,
-        normDir2Y: Float,
-        normDir2Z: Float,
-        params: Unit, // unused
-    ) {
-        if (weight1 > 0.0f) {
-            separate(body1, body2, weight1, normDir1X, normDir1Y, normDir1Z)
-        }
-
-        if (weight1 < 1.0f) {
-            // Since body1.nextPos may now be a bit further away from the point of collision, we pass a weight of 1.0f
-            // in order that body2 moves the full remaining distance.
-            separate(body2, body1, 1.0f, normDir2X, normDir2Y, normDir2Z)
-        }
-    }
-
-    private fun separate(
-        bodyToMove: FixedSphereBody,
-        otherBody: FixedSphereBody,
-        weight: Float,
-        nx: Float,
-        ny: Float,
-        nz: Float,
-    ) {
-        require(bodyToMove.mass < LARGE_MASS)
-
-        val x1 = bodyToMove.nextPos.x
-        val y1 = bodyToMove.nextPos.y
-        val z1 = bodyToMove.nextPos.z + bodyToMove.zOffset
-
-        val x2 = otherBody.nextPos.x
-        val y2 = otherBody.nextPos.y
-        val z2 = otherBody.nextPos.z + otherBody.zOffset
-
-        val dx = x1 - x2
-        val dy = y1 - y2
-        val dz = z1 - z2
-
-        val moveBy = bodyToMove.radius + otherBody.radius + EPSILON
-
-        // See physics.txt: "Finding the position of (almost) touch of two colliding spheres"
-
-        val a = nx * nx + ny * ny + nz * nz
-        val b = 2.0f * ((x1 - x2) * nx + (y1 - y2) * ny + (z1 - z2) * nz)
-        val c = dx * dx + dy * dy + dz * dz - moveBy * moveBy
-        val d = sqrt(b * b - 4 * a * c)
-
-        val t1 = abs((-b + d) / 2.0f * a)
-        val t2 = abs((-b - d) / 2.0f * a)
-        val t = if (t1 > 0.0f) t1 else t2
-
-        val tw = t * weight // we don't go all the way as the other body may be moved, too
-        bodyToMove.nextPos.x = x1 + tw * nx
-        bodyToMove.nextPos.y = y1 + tw * ny
-        bodyToMove.nextPos.z = z1 + tw * nz - bodyToMove.zOffset
     }
 
     private fun applyFriction(
@@ -317,5 +245,30 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
         v2.x = v2perpendX + v2parallelX
         v2.y = v2perpendY + v2parallelY
         v2.z = v2perpendZ + v2parallelZ
+    }
+
+    override fun forceApart(
+        body1: FixedSphereBody,
+        body2: FixedSphereBody,
+        normDirX1: Float,
+        normDirY1: Float,
+        normDirZ1: Float,
+    ) {
+        val p1 = body1.nextPos
+        val p2 = body2.nextPos
+        val centreX = (p1.x + p2.x) / 2.0f
+        val centreY = (p1.y + p2.y) / 2.0f
+        val centreZ = (p1.z + body1.zOffset + p2.z + body2.zOffset) / 2.0f
+
+        // Adding more than just EPSILON here because of failing tests (floating point inaccuracies)
+        val moveBy = (body1.radius + body2.radius) / 2.0f + 4.0f * EPSILON
+
+        p1.x = centreX + normDirX1 * moveBy
+        p1.y = centreY + normDirY1 * moveBy
+        p1.z = centreZ + normDirZ1 * moveBy - body1.zOffset
+
+        p2.x = centreX - normDirX1 * moveBy
+        p2.y = centreY - normDirY1 * moveBy
+        p2.z = centreZ - normDirZ1 * moveBy - body2.zOffset
     }
 }

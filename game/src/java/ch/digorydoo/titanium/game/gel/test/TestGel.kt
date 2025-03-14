@@ -5,7 +5,8 @@ import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
-import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
+import ch.digorydoo.titanium.engine.physics.HitArea
+import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.texture.FrameCollection
 import ch.digorydoo.titanium.engine.utils.EPSILON
@@ -54,7 +55,7 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
 
     override val renderer = App.factory.createPaperRenderer(renderProps)
 
-    override fun didCollide(other: GraphicElement, hitPt: Point3f): Boolean {
+    override fun didCollide(other: GraphicElement, myHit: HitArea, otherHit: HitArea, hitPt: Point3f) {
         println("$this collided with $other")
         changeDirection()
         val ob = other.body
@@ -69,8 +70,6 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
                 ob.addForce(PUSHING_FORCE * dx / dist2D, PUSHING_FORCE * dy / dist2D, 0.0f)
             }
         }
-
-        return true // true = bounce
     }
 
     override fun didCollide(brick: Brick, hitPt: Point3f, hitNormal: Point3f) {

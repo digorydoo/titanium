@@ -7,7 +7,9 @@ import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.anim.AnimCycle
 import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.physics.RigidBody
+import ch.digorydoo.titanium.engine.physics.HitArea
+import ch.digorydoo.titanium.engine.physics.VicinityList
+import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.engine.shader.Renderer
 import kotlin.math.sqrt
 
@@ -24,6 +26,8 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
         fun animate()
     }
 
+    internal val vicinity = VicinityList() // used by CollisionManager
+
     val pos = MutablePoint3f(initialPos)
     protected abstract val renderer: Renderer
     open val body: RigidBody? = null
@@ -34,12 +38,24 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
     private var setHiddenOnNextFrameTo: Boolean? = null
 
     /**
-     * Called by CollisionDetector when the gel collides with another. The other gel will also get a callback.
-     * @return true if the two RigidBodies should bounce off each-other; false if separation of the bodies is not needed
+     * Called by CollisionDetector on both gels to check whether their bodies should be bounced. Their bodies are NOT be
+     * bounced if at least one of the two gels return false. (E.g. an NPC that should generally collide with stuff
+     * may return true for any gel, while a fire that only needs to inform the NPC of the heat returns false to indicate
+     * that its shape is not good for bouncing.) The implementation of this function must be efficient and must not
+     * have any side effects. This function may be called if gels are in close proximity even if they do not collide.
+     * On the other hand, this function may not be called even if gels do collide (which happens if the other gel
+     * returned false).
      */
-    open fun didCollide(other: GraphicElement, hitPt: Point3f): Boolean {
+    open fun shouldBounceOnCollision(other: GraphicElement): Boolean {
         return true
     }
+
+    /**
+     * Called by CollisionDetector when the gel collides with another. The other gel will also get a callback. If
+     * shouldBounceOnCollision returned true for one of the gels, this function will be called after the bodies have
+     * been bounced. This function is called even if the bodies were not bounced.
+     */
+    open fun didCollide(other: GraphicElement, myHit: HitArea, otherHit: HitArea, hitPt: Point3f) {}
 
     open fun didCollide(brick: Brick, hitPt: Point3f, hitNormal: Point3f) {}
 

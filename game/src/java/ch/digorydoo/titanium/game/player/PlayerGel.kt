@@ -6,7 +6,7 @@ import ch.digorydoo.titanium.engine.behaviours.TurnTowardsCamera
 import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
-import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
+import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.texture.FrameCollection
 import ch.digorydoo.titanium.engine.utils.Direction

@@ -15,12 +15,12 @@ class FrameCollection {
     private var numFramesY = 1
 
     fun setTexture(fname: String) {
-        tex = App.Companion.textures.getOrCreateTexture(fname)
+        tex = App.textures.getOrCreateTexture(fname)
         setSize(tex?.width ?: 0, tex?.height ?: 0)
     }
 
     fun setTexture(fname: String, theNumFramesX: Int, theNumFramesY: Int) {
-        tex = App.Companion.textures.getOrCreateTexture(fname)
+        tex = App.textures.getOrCreateTexture(fname)
         setFrameCountAndSize(theNumFramesX, theNumFramesY)
     }
 

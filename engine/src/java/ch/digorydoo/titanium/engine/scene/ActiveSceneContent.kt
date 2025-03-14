@@ -12,7 +12,7 @@ class ActiveSceneContent(startScene: Scene) {
     var player: GraphicElement? = null
     var scene: Scene = startScene
 
-    private val mainCollidableLayer = GelLayer(detectCollisions = true)
+    private val mainCollidableLayer = GelLayer()
     private val mainNonCollidableLayer = GelLayer()
     private val menuBackdropLayer = GelLayer()
     private val uiBelowDlgLayer = GelLayer()
@@ -106,6 +106,14 @@ class ActiveSceneContent(startScene: Scene) {
     fun forEachGelInMainLayerIncludingNew(lambda: (gel: GraphicElement) -> Unit) {
         mainCollidableLayer.forEachGel(includeNew = true, lambda)
         mainNonCollidableLayer.forEachGel(includeNew = true, lambda)
+    }
+
+    fun forEachIndexedGelInCollidableLayer(lambda: (i: Int, gel: GraphicElement) -> Unit) {
+        mainCollidableLayer.forEachGelIndexed(lambda)
+    }
+
+    fun forEachIndexedGelInCollidableLayer(startIdx: Int, lambda: (i: Int, gel: GraphicElement) -> Unit) {
+        mainCollidableLayer.forEachGelIndexed(startIdx, lambda)
     }
 
     companion object {

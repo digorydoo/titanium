@@ -1,4 +1,4 @@
-package ch.digorydoo.titanium.engine.physics.bricks
+package ch.digorydoo.titanium.engine.physics.collide_bricks
 
 import ch.digorydoo.kutils.math.clamp
 import ch.digorydoo.kutils.point.MutablePoint2f
@@ -8,8 +8,8 @@ import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.brick.BrickVolume
 import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
-import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
-import ch.digorydoo.titanium.engine.physics.RigidBody.Companion.LARGE_MASS
+import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
+import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.utils.Direction
 import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.max

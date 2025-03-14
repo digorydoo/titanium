@@ -4,8 +4,8 @@ import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.file.MeshFileReader
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.mesh.MeshRenderer
-import ch.digorydoo.titanium.engine.physics.FixedCylinderBody
-import ch.digorydoo.titanium.engine.physics.RigidBody
+import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
+import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.game.gel.static_mesh.StaticMeshSpawnPt.Kind.*
 
 class StaticMeshGel(override val spawnPt: StaticMeshSpawnPt): GraphicElement(spawnPt) {

@@ -1,4 +1,4 @@
-package ch.digorydoo.titanium.engine.physics.bricks
+package ch.digorydoo.titanium.engine.physics.collide_bricks
 
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point3f
@@ -6,7 +6,7 @@ import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.brick.BrickVolume
 import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
-import ch.digorydoo.titanium.engine.physics.RigidBody
+import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 
 internal abstract class BrickCollisionStrategy<B: RigidBody> {
     protected enum class BrickGeometryType { NONE, CUBOID }

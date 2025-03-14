@@ -3,29 +3,56 @@
 ## Backlog
 
 * Physics
-    * orig pos
-        * wenn xyOverlap, aber kein zOverlap, dann kann nur Fläche sein
-        * wenn zOverlap, aber kein xyOverlap, dan kann nur Seite sein
-        * Sonst Ecke;
-            * wenn |speedXY| > |speedZ|, dann Seite
-            * sonst Fläche
-    * Gels gemäss Anteil gewichtet schieben (d.h. der erste weight1, der zweite DEN REST)
+    * Get rid of zOffsets. Gel pos should be in the body's centre; and editor should take this into account.
+      BEFORE you do this, save gellists once, automatically adding zOffset to spawn pt z
+    * Continue testing and implementing CollideSphereVsCuboid
+    * Rewrite brick collision strategies
 
 * Bugs
     * Railing 2 has strange lighting issue across instances (see level)
     * Sometimes keyboard strokes get lost (when frame takes too long, or stroke is hit too quickly)
-    * Gels that are frozen in editor and/or dialogue must not fall through floor by gravity
 
-* Performance
-    * Don't use DYNAMIC_DRAW everywhere. Use STATIC_DRAW unless model changes often.
-    * Don't reconfigure textures every render. Configure them once when creating them. Problem: Textures are shared...
+* Materials
+    * Ideally, MeshMaterial and BrickMaterial should be merged, and both should use the same shaders
+    * Most materials should have a shader of their own, to optimise computation for that particular material
+    * Metallic material should shrink the range of diffuse light such that the point of 100% diffuse light
+      becomes an area, and the range where diffuse light is between 0% and 100% is pressed together. This
+      increases the overall contrast and reduces the range of soft transition.
+    * Shiny material (metal, wet stone) can be made look dirty by multiplying the shininess by a texel from
+      a greyscale texture. This technique may also be used overlay a grid of tiles on a shiny surface, giving
+      the illusion that the border where tiles are connected is a different material that is not shiny.
 
-* Editor menus should all have
-    * a Back item that opens parent; and this should appear at the top
-    * a Done item that closes menu without opening the parent; and this should be the ESC item
+* Editor
+    * Editor menus should all have
+        * a Back item that opens parent; and this should appear at the top
+        * a Done item that closes menu without opening the parent; and this should be the ESC item
+    * Make editor menu a page in game menu, because it's confusing to have two menus. Allow entering edit mode from that
+      menu.
+    * Implement undo for spawn pt actions (serialize spawn pt, restore)
+    * Editor should delete neighouring bricks that get enclosed while drawing... or shouldn't it?
 
-* Can I make all programs shared? Or should none be shared? All should be fine, because that's how bricks worked until
-  recently...
+* Height maps
+    * Implement height maps as gels
+    * Requires a new editor mode that allows for
+        * changing the height of each grid point
+        * smoothing the height map around a grid point
+        * smoothing the entire height map uniformly
+        * adding a wave function
+    * The editor should ensure that the height of the lowest grid point should always stay zero, and automatically
+      moving the spawn point accordingly if height values are moved accordingly. The reason for this is that the
+      height map could otherwise drift from its spawn point. Also, the height map's RigidBody will need a bounding
+      box, which can be computed slightly faster if it is known that the lowest point must have a height of 0.
+    * The spawn pt should have properties for rotating in all direction, scaling in x, y, z, and material
+    * The grid size (XY) of a height map must be specified when creating it; the editor may implement resizing later by
+      either cropping or resampling the height map data
+    * The renderer of a height map should ideally be the same as MeshRenderer, using the same shaders
+    * Height maps need their own kind of RigidBody; physics needs new CollisionStrategies
+    * The underside of a height map is always culled, therefore the position should stay fixed. To ensure this, the
+      mass of a height map should always be LARGE_MASS (mass not even available in constructor of HeightMapBody). This
+      also means that height maps can never collide with bricks.
+    * Height maps should skip vertices when viewed from a distance (implies that height maps should never be used to
+      cover a very large area, because skipping vertices only in a portion would make the algorithm complicated to get
+      a seam without any holes)
 
 * Shadows
     * Optimise shadow implementation
@@ -42,35 +69,53 @@
 
     * Improve shadows by blurring it; but not all materials (requires four shadow texel lookups)
 
-* Rendering bricks more efficiently
-    * BrickVolume should cover all tesselated data; subvolumes should only pick a part from it
-    * BrickModelHolder should keep only the tesselated model data of each BrickModel
-        * Tesselator would only called by BrickModelHolder (lazy)
-        * BrickModelHolder could automatically flip and rotate models, no need to reimplement them
-    * Use an alternative (simpler) tesselation when brick subvolume is far (e.g. thin walls become flat, etc.)
-    * Positions, texCoords and normals (!!) should be de-duplicated using indices
-    * NO sub-sub-volumes! Instead, BrickVolume should be a gel! No global brick volume! Can even rotate them...
+* Game/town
+    * Design a male NPC
+    * Design a female NPC
 
-* New brick shapes
-    * Arcs, e.g. under a bridge
-    * Double-bevel bricks (horiz bevel at 0.5m height, but no additional vertical division) for walls
+* Gel actions
+    * If a gel provides an action to the user (e.g. a treasure chest allowing for "OPEN"), the gel must register an
+      action point in a similar way how light sources are registered
+    * A GelActionManager decides which action is closest and within the player gel's field of view (the camera is
+      irrelevant)
+    * The symbols that appear when an action is available are managed by GameStatusBar (which should no longer be called
+      a bar)
+    * When the action is chosen by the user, the GelActionManager invokes a method on the action object that was
+      registered by the gel
 
-* Pause the story time while the gameMenu or a dialog is active
+* Dialogues and fonts
+    * The story time should be paused while the gameMenu or a dialog is active
+    * Dialogue text needs a way to emphasise certain words (bold, red) for highlighting important keywords
+    * Maybe also a way to make the text appear smaller and less bright (if an NPC is whispering)
+    * Umlaute are missing with certain fonts. Maybe use different fonts anyway...
+    * When an item is highlighted whose step != smallStep, should show a hint that ALT/ZR can be used
 
-* Fix incorrect normals in mesh.vsh: Normal = transpose(inverse(mat3(model))) * aNormal;
+* Conversations
+    * A conversation is a series of dialogues that are shown as an interaction with an NPC
+    * Conversations are started via a gel action or as part of a cutscene
+    * Conversations block certain interaction such as the game menu. Dialogues do that, too; the dialogues that are
+      opened within the conversation must not reset that
+    * Conversations can decide to wait for certain events such as:
+        * just a delay of a specified time
+        * a rigged gel finishes its transition to a certain pose
+        * a gel walking on a path reaches the end of that path
+        * background music reaches or is already past a certain cue
+    * Conversations can change the mode of the camera and must change it back when the conversation ends
 
-* Runs at 24fps on hp laptop... Is there anything to do about it?
-
-* Both 16:9 and 16:10 should be fullscreen without any margin. 16:9 should be our FIXED_ASPECT_RATIO. On a 16:10
-  monitor, the left and right side should be cropped. UI needs to get a margin.
-
-* Deferred gel initialisation
-    * Spawn pts do not return Gel; instead have a lambda onCreated
-    * Gels have a val initConcurrently: (() -> Unit)? = null
-    * If initConcurrently is null, spawn pt can call onCreated directly, otherwise call initConcurrently from coroutine
-    * Renderers should always be loaded concurrently, so maybe just make it a non-null fun?
-    * renderer should be lateinit; spawn pt should not add the gel to the layer until it has finished loading
-    * onCreated needs to be called from main thread! Similar to handleLoadingScene. Generalise?
+* Background music
+    * AGL may not be a good choice; maybe switch to SDL for all sound?
+    * BGM needs to be streamed from disk, not loaded into RAM in full
+    * BGM does not need to be music. It can also be a looped ambient sound that is too long to play without streaming.
+    * In order not to put too much load on the CPU, BGM probably needs to be in a raw format (WAV, AIFF)
+    * BGM can be pinned to a certain world point. Stereo panning and volume needs to change while the BGM is playing.
+    * If there are two or more world points that play a BGM, there are two modes:
+        * either the BGM ignores this, causing the music to arbitrarily mix (e.g. chaotic sounds of an amusement park)
+        * or the SoundManager decides which one is nearer, and smoothly and fully switch to the nearer one. If the two
+          BGMs have the same length and are started at the same time (!!), the two songs are always in sync even if
+          only one can actually be heard. This can be used for smoothly transforming the mood as the player moves from
+          one area to another.
+    * The smooth transition from one song to another should be available without world points, too, e.g. to change the
+      mood during a conversation or cutscene
 
 * Cutscenes
     * App.cutscene.start(MyCutscene())
@@ -81,6 +126,17 @@
     * proceed darf pro Step nur einmal aufgerufen werden
     * CutsceneManager wartet delay ab und ruft erst dann nextStep erneut auf
     * Solange proceed nicht aufgerufen wird, bleibt Cutscene hängen, z.B. in einer Conversation
+
+* Deferred gel initialisation
+    * Gels need to load textures, meshes and shaders when they are spawned. Doing this from the game loop creates a
+      frame drop, so this should always be done from a coroutine.
+    * Spawn pts should not immediately return the gel; instead, they should take a lambda onCreated(gel)
+    * Gels must override an abstract method initConcurrently(), which is called within a coroutine
+    * The spawn pt should not add the gel to the layer until it has finished loading
+    * Textures, meshes and renderer can be declared as lateinit, since the gel should not be known to anyone until it
+      finished loading and is added to the layer
+    * The lambda onCreated is always called from main thread, i.e. needs a place somewhere within the game loop
+    * This is similar to handleLoadingScene. Can this concept be generalised?
 
 * Apply bone transformations
     * Whole object is rendered at once; no matrix stack needed
@@ -105,33 +161,85 @@
             * Apply the weighted transformation
             * Weights should sum up to 1, so simply multiply weight * transform_matrix and add up
 
-* ZR should always be a synonym for ALT
-* Dialogue: When an item is highlighted whose step != smallStep, should show hint that ALT/ZR can be used
-* Mesh files should be kept in a pool. But when to free them?
-* Optimise Tesselator by implementing quads with GL triangle strips
-* Optimise Tesselator by implementing fans with GL fans
-* Fix problem that collision detection sets gel pos to NaN when two gels are set to the exact same spot
-* Implement undo for spawn pt actions (serialize spawn pt, restore)
-* Pull A corners further back when they're next to each other (to join ramps)
-* Make alt-ramp half its height when joining a ramp that has its downside on the alt-ramp's downside
-* Improve camera by moving away from a near wall (camera can sometimes look into a wall)
-* Place a height map object anywhere. Useful for natural slopes, hills. Needed for town?
-* Implement heightAt of ThinPillarFrame*Models
-* Implement heightAt of Ramp*AltModels
-* Implement heightAt of Stairs*Models
-* Implement heightAt of UprightTubeModel
-* Implement heightAt of Bevel*Models
-* Implement bump maps for textures/materials
-* Textures are freed, but only the GL structure. Texture itself stays loaded in TextureManager. Free on level load?
-* Crash when switching from full-screen back to window mode! Can't reproduce...
-* Optimise more of brick face culling, e.g. bevel checking against bevel
-* Editor should delete neighouring bricks that get enclosed while drawing
-* Improve collision handling, e.g. move sprite away from near wall
-* Make jump z accel lower, but implement climbing low walls (max 1.5m)
-* Persisting values
-    * App.flags.set(PersistedBool.DOOR42_OPEN, true)
-    * App.flags.get(PersistedBool.DOOR42_OPEN).value = true // can keep instance of get for efficiency
-    * App.flags.getList(PersistedList.DYNAMIC_ENEMIES, len = 42).get(index = 2).get(PersistedBool.MOUTH_OPEN).value
+* Performance
+    * Don't use DYNAMIC_DRAW everywhere. Use STATIC_DRAW unless model changes often.
+    * Don't reconfigure textures every render. Configure them once when creating them. Problem: Textures are shared...
+    * Rendering bricks more efficiently
+        * BrickVolume should cover all tesselated data; subvolumes should only pick a part from it
+        * BrickModelHolder should keep only the tesselated model data of each BrickModel
+            * Tesselator would only called by BrickModelHolder (lazy)
+            * BrickModelHolder could automatically flip and rotate models, no need to reimplement them
+        * Use an alternative (simpler) tesselation when brick subvolume is far (e.g. thin walls become flat, etc.)
+        * Positions, texCoords and normals (!!) should be de-duplicated using indices
+        * NO sub-sub-volumes! Instead, BrickVolume should be a gel! No global brick volume! Can even rotate them...
+    * Runs at 24fps on hp laptop... Is there anything to do about it?
+
+* Walk meshes
+    * Enemies that cover an area need to do pathfinding to find a way to the player while avoiding any obstacles
+    * Another example is an NPC idly walking around between points of interest inside a non-trivial area
+    * Pathfinding on the entire world including bricks and nearby gels is too costly and complicated. Instead, the
+      editor should allow defining WalkMeshes, which are an invisible mesh that define the area that is walkable.
+    * The editor should make it easy to lay the WalkMesh neatly on top of bricks and static gels
+    * The gel of the enemy or NPC that needs to do pathfinding must first find its WalkMesh by id and can then use
+      it for finding a path to an arbitrary point withing the area of the WalkMesh (the target does not need to be
+      on the vertex of the mesh).
+    * All pathfinding happens within the mesh only; non-static gels such as other NPCs or the player are not taken into
+      account
+    * When an enemy or NPC found a path, it does not need to use the path strictly. When pushed by another body, or
+      if it comes near a non-static gel, it should do local collision avoidance. If doing so leads too far away from
+      the point it was heading to, it should recompute its path.
+    * An enemy or NPC may occasionally walk outside its WalkMesh, e.g. when pushed by a large object. This is OK, but
+      for pathfinding the enemy needs to walk back to the closest point on the WalkMesh, and it must do so in a straight
+      line since pathfinding can only happen within the WalkMesh.
+    * Pathfinding is expensive, so all pathfinding must happen in a coroutine. The gel must wait until the path becomes
+      available. An NPC might scratch its head in the meantime; an enemy might look in the direction of the player and
+      scream.
+    * The A*/funnel algorithm I implemented for retro_adventure can probably be reused.
+
+* Keyboard and gamepad
+    * Keyboard layout should make more use of SHIFT, ALT, CMD and CTRL. This is important, because many keyboards fail
+      to produce proper key events for combinations with more than two keys that do not involve these modifier keys.
+    * Inside the game, mouse motion should control the camera. This is more intuitive than using the keyboard.
+    * Inside a dialogue or menu, the cursor should appear, and mouse motion should no longer control the camera.
+      Instead, the items of the dialogue or menu should be clickable. The cursor should disappear as soon as the
+      dialogue or menu is dismissed.
+
+* Monitors
+    * Both 16:9 and 16:10 should be fullscreen without any margin. 16:9 should be our FIXED_ASPECT_RATIO. On a 16:10
+      monitor, the left and right side should be cropped. UI needs to get a margin.
+
+* Shaders
+    * Can I make all programs shared? Or should none be shared? Making all shared should probably be fine, because
+      that's how bricks worked until recently...
+    * Implement bump maps for textures/materials
+
+* Textures
+    * Textures are freed, but only the GL structure. Texture itself stays loaded in TextureManager. Free on level load?
+    * Java ImageBuffer is bloated and complicated; my own routines are slow. Is there a good alternative? (Actually
+      do some performance measurement first to check what part is slow. Mostly noticable when opening a dialogue with
+      many items.)
+
+* Mesh gels
+    * Mesh files should be kept in a pool, because some meshes are reused by several gels, or several instances of a
+      gel. But is freeing them only at scene loading time enough?
+
+* Bricks
+    * Add new brick shapes
+        * Arcs, e.g. under a bridge
+        * Double-bevel bricks (horiz bevel at 0.5m height, but no additional vertical division) for walls
+    * Pull A corners further back when they're next to each other (to join ramps)
+    * Make alt-ramp half its height when joining a ramp that has its downside on the alt-ramp's downside
+    * Optimise Tesselator by implementing quads with GL triangle strips
+    * Optimise Tesselator by implementing fans with GL fans
+    * Optimise more of brick face culling, e.g. bevel checking against bevel
+
+* Camera
+    * Improve camera by moving away from a near wall (camera can sometimes look into a wall)
+
+* Player behaviour
+    * When jumping, the player gel should first check if there is nothing blocking the way. If there isn't, it should
+      directly move the position a bit upwards. The up speed then does not need to be very high. Zelda BoTW seems to do
+      this, and it improves the responsiveness of the action.
 
 ## Optimisation
 
