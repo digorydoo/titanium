@@ -8,6 +8,12 @@ import ch.digorydoo.titanium.engine.mesh.MeshRenderer
 class CursorGel(kind: Kind): GraphicElement() {
     enum class Kind { UPPER_NW, UPPER_NE, UPPER_SW, UPPER_SE, LOWER_NW, LOWER_NE, LOWER_SW, LOWER_SE }
 
+    init {
+        inDialog = Visibility.FROZEN_VISIBLE
+        inMenu = Visibility.INVISIBLE
+        inEditor = Visibility.ACTIVE
+    }
+
     private val mesh = CursorMeshBuilder(kind).build()
 
     private val renderProps = object: MeshRenderer.Delegate() {
@@ -21,10 +27,6 @@ class CursorGel(kind: Kind): GraphicElement() {
         cullFace = true,
         depthTest = true,
     )
-
-    override val inDialog = Visibility.FROZEN_VISIBLE
-    override val inMenu = Visibility.INVISIBLE
-    override val inEditor = Visibility.ACTIVE
 
     fun setHead(head: Boolean) {
         val division = mesh.divisions.firstOrNull() ?: return

@@ -12,6 +12,12 @@ import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 
 class NumberGel(alignment: Align.Alignment? = null): GraphicElement() {
+    init {
+        inDialog = Visibility.ACTIVE
+        inMenu = Visibility.ACTIVE
+        inEditor = Visibility.ACTIVE
+    }
+
     var numberValue = 0
 
     private val digitTextures = Array(10) { makeDigitTexture(it) }
@@ -80,10 +86,6 @@ class NumberGel(alignment: Align.Alignment? = null): GraphicElement() {
     override fun onAnimateActive() {
         align?.animate()
     }
-
-    override val inDialog = Visibility.ACTIVE
-    override val inMenu = Visibility.ACTIVE
-    override val inEditor = Visibility.ACTIVE
 
     override fun onRemoveZombie() {
         renderer.free()

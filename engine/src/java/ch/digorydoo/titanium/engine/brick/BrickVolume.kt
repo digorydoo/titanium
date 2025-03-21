@@ -22,6 +22,8 @@ class BrickVolume(
     val fileName: String,
     tex: Texture,
 ) {
+    enum class BrickFaceCovering { NOT_COVERED, FULLY_COVERED, PARTIALLY_COVERED }
+
     private val models = BrickModelHolder()
     private val subs: Array<BrickSubvolume>
     private val numSubsX: Int = (ceil(xsize.toFloat() / MAX_SUB_DIMENSION)).toInt()
@@ -178,10 +180,42 @@ class BrickVolume(
         }
     }
 
-    fun hasValidBrickAt(brickX: Int, brickY: Int, brickZ: Int): Boolean {
+    // Called during collision detection to see if a collision with a certain brick face is unlikely.
+    fun getBrickFaceCovering(
+        brickCoords: Point3i,
+        faceNormalX: Float,
+        faceNormalY: Float,
+        faceNormalZ: Float,
+    ): BrickFaceCovering {
+        val brickX = brickCoords.x
+        val brickY = brickCoords.y
+        val brickZ = brickCoords.z
+
+        val neighbourX = (brickX + faceNormalX).toInt()
+        val neighbourY = (brickY + faceNormalY).toInt()
+        val neighbourZ = (brickZ + faceNormalZ).toInt()
+
+        if (neighbourX == brickX && neighbourY == brickY && neighbourZ == brickZ) {
+            throw IllegalArgumentException("Invalid faceNormal")
+        }
+
         getAtBrickCoord(brickX, brickY, brickZ, tempBrick)
-        return tempBrick.isValid()
+        val shapeOfNeighbour = tempBrick.shape
+        return when {
+            !tempBrick.isValid() -> BrickFaceCovering.NOT_COVERED
+            shapeOfNeighbour.relVolume <= 0.1f -> BrickFaceCovering.NOT_COVERED // e.g. UPRIGHT_BAR_NW
+            neighbourX > brickX && shapeOfNeighbour.coversNorth -> BrickFaceCovering.FULLY_COVERED
+            neighbourX < brickX && shapeOfNeighbour.coversSouth -> BrickFaceCovering.FULLY_COVERED
+            neighbourY > brickY && shapeOfNeighbour.coversWest -> BrickFaceCovering.FULLY_COVERED
+            neighbourY < brickY && shapeOfNeighbour.coversEast -> BrickFaceCovering.FULLY_COVERED
+            neighbourZ > brickZ && shapeOfNeighbour.coversBrickBelow -> BrickFaceCovering.FULLY_COVERED
+            neighbourZ < brickZ && shapeOfNeighbour.coversBrickAbove -> BrickFaceCovering.FULLY_COVERED
+            else -> BrickFaceCovering.PARTIALLY_COVERED
+        }
     }
+
+    fun getBrickFaceCovering(brickCoords: Point3i, faceNormal: Point3f) =
+        getBrickFaceCovering(brickCoords, faceNormal.x, faceNormal.y, faceNormal.z)
 
     fun forEachBrickOnWorldLine(
         worldStartPt: Point3f,

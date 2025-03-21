@@ -19,23 +19,21 @@ internal class CollideCylinderVsCylinderTest {
     fun `should collide when the two cylinders get too close and the speed is parallel to the x-axis`() {
         val b1 = FixedCylinderBody(
             "b1",
-            pos = MutablePoint3f(10.0f, 7.2f, 10.6f),
+            initialPos = MutablePoint3f(10.0f, 7.2f, 11.1f),
             mass = 13.0f,
             gravity = false,
             radius = 0.3f,
             height = 1.0f,
-            zOffset = 0.5f,
             elasticity = 0.5f,
             friction = 0.2f,
         )
         val b2 = FixedCylinderBody(
             "b2",
-            pos = MutablePoint3f(10.5f, 7.1f, 10.2f),
+            initialPos = MutablePoint3f(10.5f, 7.1f, 10.45f),
             mass = 11.0f,
             gravity = false,
             radius = 0.2f,
             height = 0.5f,
-            zOffset = 0.25f,
             elasticity = 0.5f,
             friction = 0.2f,
         )
@@ -84,12 +82,12 @@ internal class CollideCylinderVsCylinderTest {
         // b1.nextPos has moved a little in the direction of its speed
         assertEquals(10.004701f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(7.2f, b1.nextPos.y, "b1.nextPos.y") // the same as before
-        assertEquals(10.6f, b1.nextPos.z, "b1.nextPos.z") // the same as before
+        assertEquals(11.1f, b1.nextPos.z, "b1.nextPos.z") // the same as before
 
         // b2.nextPos has moved a little in the direction of its speed
         assertEquals(10.494445f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(7.1f, b2.nextPos.y, "b2.nextPos.y") // the same as before
-        assertEquals(10.2f, b2.nextPos.z, "b2.nextPos.z") // the same as before
+        assertEquals(10.45f, b2.nextPos.z, "b2.nextPos.z") // the same as before
 
         // The two should no longer collide after bounce
         bounce()
@@ -98,12 +96,12 @@ internal class CollideCylinderVsCylinderTest {
         // b1.pos is unchanged
         assertEquals(10.0f, b1.pos.x, "b1.pos.x")
         assertEquals(7.2f, b1.pos.y, "b1.pos.y")
-        assertEquals(10.6f, b1.pos.z, "b1.pos.z")
+        assertEquals(11.1f, b1.pos.z, "b1.pos.z")
 
         // b2.pos is unchanged
         assertEquals(10.5f, b2.pos.x, "b2.pos.x")
         assertEquals(7.1f, b2.pos.y, "b2.pos.y")
-        assertEquals(10.2f, b2.pos.z, "b2.pos.z")
+        assertEquals(10.45f, b2.pos.z, "b2.pos.z")
 
         // b1 had no speed before we added a force
         assertEquals(0.0f, b1.speed.x, "b1.speed.x")
@@ -118,12 +116,12 @@ internal class CollideCylinderVsCylinderTest {
         // b1.nextPos has been moved a little towards its original pos
         assertEquals(10.004406f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(7.2f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(10.6f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(11.1f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has been moved a little towards its original pos
         assertEquals(10.494793f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(7.1f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(10.2f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(10.45f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified
         assertEquals(-0.067697614f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -140,23 +138,21 @@ internal class CollideCylinderVsCylinderTest {
     fun `should collide when the two cylinders get too close and the speed is parallel to the y-axis`() {
         val b1 = FixedCylinderBody(
             "b1",
-            pos = MutablePoint3f(8.2f, 7.5f, 10.6f),
+            initialPos = MutablePoint3f(8.2f, 7.5f, 11.1f),
             mass = 7.0f,
             gravity = false,
             radius = 0.3f,
             height = 1.0f,
-            zOffset = 0.5f,
             elasticity = 0.5f,
             friction = 0.2f,
         )
         val b2 = FixedCylinderBody(
             "b2",
-            pos = MutablePoint3f(8.1f, 7.0f, 10.2f),
+            initialPos = MutablePoint3f(8.1f, 7.0f, 10.45f),
             mass = 9.0f,
             gravity = false,
             radius = 0.2f,
             height = 0.5f,
-            zOffset = 0.25f,
             elasticity = 0.5f,
             friction = 0.2f,
         )
@@ -206,12 +202,12 @@ internal class CollideCylinderVsCylinderTest {
         // b1.nextPos has moved a little in the direction of its speed
         assertEquals(8.2f, b1.nextPos.x, "b1.nextPos.x") // the same as before
         assertEquals(7.494246f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(10.6f, b1.nextPos.z, "b1.nextPos.z") // the same as before
+        assertEquals(11.1f, b1.nextPos.z, "b1.nextPos.z") // the same as before
 
         // b2.nextPos has moved a little in the direction of its speed
         assertEquals(8.1f, b2.nextPos.x, "b2.nextPos.x") // the same as before
         assertEquals(7.004475f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(10.2f, b2.nextPos.z, "b2.nextPos.z") // the same as before
+        assertEquals(10.45f, b2.nextPos.z, "b2.nextPos.z") // the same as before
 
         // The two should no longer collide after bounce
         bounce()
@@ -220,12 +216,12 @@ internal class CollideCylinderVsCylinderTest {
         // b1.pos is unchanged
         assertEquals(8.2f, b1.pos.x, "b1.pos.x")
         assertEquals(7.5f, b1.pos.y, "b1.pos.y")
-        assertEquals(10.6f, b1.pos.z, "b1.pos.z")
+        assertEquals(11.1f, b1.pos.z, "b1.pos.z")
 
         // b2.pos is unchanged
         assertEquals(8.1f, b2.pos.x, "b2.pos.x")
         assertEquals(7.0f, b2.pos.y, "b2.pos.y")
-        assertEquals(10.2f, b2.pos.z, "b2.pos.z")
+        assertEquals(10.45f, b2.pos.z, "b2.pos.z")
 
         // b1 had no speed before we added a force
         assertEquals(0.0f, b1.speed.x, "b1.speed.x")
@@ -240,12 +236,12 @@ internal class CollideCylinderVsCylinderTest {
         // b1.nextPos has been moved a little towards its original pos
         assertEquals(8.2f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(7.494606f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(10.6f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(11.1f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has been moved a little towards its original pos
         assertEquals(8.1f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(7.004195f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(10.2f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(10.45f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified
         assertEquals(0.016896777f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -262,23 +258,21 @@ internal class CollideCylinderVsCylinderTest {
     fun `should collide when the two cylinders get too close and the speed is parallel to the z-axis`() {
         val b1 = FixedCylinderBody(
             "b1",
-            pos = MutablePoint3f(8.3f, 7.1f, 10.71f),
+            initialPos = MutablePoint3f(8.3f, 7.1f, 11.21f),
             mass = 7.0f,
             gravity = false,
             radius = 0.3f,
             height = 1.0f,
-            zOffset = 0.5f,
             elasticity = 0.5f,
             friction = 0.2f,
         )
         val b2 = FixedCylinderBody(
             "b2",
-            pos = MutablePoint3f(8.1f, 7.2f, 10.2f),
+            initialPos = MutablePoint3f(8.1f, 7.2f, 10.45f),
             mass = 9.0f,
             gravity = false,
             radius = 0.2f,
             height = 0.5f,
-            zOffset = 0.25f,
             elasticity = 0.5f,
             friction = 0.2f,
         )
@@ -329,12 +323,12 @@ internal class CollideCylinderVsCylinderTest {
         // b1.nextPos has moved a little in the direction of its speed
         assertEquals(8.3f, b1.nextPos.x, "b1.nextPos.x") // the same as before
         assertEquals(7.1f, b1.nextPos.y, "b1.nextPos.y") // the same as before
-        assertEquals(10.7042465f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(11.2042465f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has moved a little in the direction of its speed
         assertEquals(8.1f, b2.nextPos.x, "b2.nextPos.x") // the same as before
         assertEquals(7.2f, b2.nextPos.y, "b2.nextPos.y") // the same as before
-        assertEquals(10.204475f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(10.454475f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // The two should no longer collide after bounce
         bounce()
@@ -343,12 +337,12 @@ internal class CollideCylinderVsCylinderTest {
         // b1.pos is unchanged
         assertEquals(8.3f, b1.pos.x, "b1.pos.x")
         assertEquals(7.1f, b1.pos.y, "b1.pos.y")
-        assertEquals(10.71f, b1.pos.z, "b1.pos.z")
+        assertEquals(11.21f, b1.pos.z, "b1.pos.z")
 
         // b2.pos is unchanged
         assertEquals(8.1f, b2.pos.x, "b2.pos.x")
         assertEquals(7.2f, b2.pos.y, "b2.pos.y")
-        assertEquals(10.2f, b2.pos.z, "b2.pos.z")
+        assertEquals(10.45f, b2.pos.z, "b2.pos.z")
 
         // b1 had no speed before we added a force
         assertEquals(0.0f, b1.speed.x, "b1.speed.x")
@@ -363,12 +357,12 @@ internal class CollideCylinderVsCylinderTest {
         // b1.nextPos has been moved a little towards its original pos
         assertEquals(8.3f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(7.1f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(10.704606f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(11.204606f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has been moved a little towards its original pos
         assertEquals(8.1f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(7.2f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(10.204196f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(10.454196f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -385,23 +379,21 @@ internal class CollideCylinderVsCylinderTest {
     fun `should correctly bounce one cylinder off the other when moving in an arbitrary direction`() {
         val b1 = FixedCylinderBody(
             "b1",
-            pos = MutablePoint3f(10.0f, 10.0f, 10.0f),
+            initialPos = MutablePoint3f(10.0f, 10.0f, 10.5f),
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
             height = 1.0f,
-            zOffset = 0.5f,
             elasticity = 0.5f,
             friction = 0.2f,
         )
         val b2 = FixedCylinderBody(
             "b2",
-            pos = MutablePoint3f(10.0f, 10.51f, 10.51f),
+            initialPos = MutablePoint3f(10.0f, 10.51f, 10.76f),
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
             height = 0.5f,
-            zOffset = 0.25f,
             elasticity = 0.5f,
             friction = 0.2f,
         )
@@ -436,12 +428,12 @@ internal class CollideCylinderVsCylinderTest {
         // b1.pos is unchanged
         assertEquals(10.0f, b1.pos.x, TOLERANCE, "b1.pos.x")
         assertEquals(10.0f, b1.pos.y, TOLERANCE, "b1.pos.y")
-        assertEquals(10.0f, b1.pos.z, TOLERANCE, "b1.pos.z")
+        assertEquals(10.5f, b1.pos.z, TOLERANCE, "b1.pos.z")
 
         // b2.pos is unchanged
         assertEquals(10.0f, b2.pos.x, TOLERANCE, "b2.pos.x")
         assertEquals(10.51f, b2.pos.y, TOLERANCE, "b2.pos.y")
-        assertEquals(10.51f, b2.pos.z, TOLERANCE, "b2.pos.z")
+        assertEquals(10.76f, b2.pos.z, TOLERANCE, "b2.pos.z")
 
         // b1.speed is unchanged
         assertEquals(0.0f, b1.speed.x, TOLERANCE, "b1.speed.x")
@@ -456,12 +448,12 @@ internal class CollideCylinderVsCylinderTest {
         // b1.nextPos has been moved
         assertEquals(10.0f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(10.009375f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(10.009375f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(10.509375f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos is unchanged
         assertEquals(10.0f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(10.51f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(10.51f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(10.76f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified: still moves in the same direction, but slower
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -479,23 +471,21 @@ internal class CollideCylinderVsCylinderTest {
         val pos = MutablePoint3f(42.0f, 33.0f, 24.0f)
         val b1 = FixedCylinderBody(
             "b1",
-            pos = pos,
+            initialPos = pos,
             mass = 42.0f,
             gravity = false,
             radius = 0.25f,
             height = 0.5f,
-            zOffset = 0.25f,
             elasticity = 0.5f,
             friction = 0.5f,
         )
         val b2 = FixedCylinderBody(
             "b2",
-            pos = pos,
+            initialPos = pos,
             mass = 42.0f,
             gravity = false,
             radius = 0.25f,
             height = 0.5f,
-            zOffset = 0.25f,
             elasticity = 0.5f,
             friction = 0.5f,
         )
@@ -520,7 +510,7 @@ internal class CollideCylinderVsCylinderTest {
         // The hit point is set to the centre of the two cylinders
         assertEquals(42.0f, hit.hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(33.0f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-        assertEquals(24.25f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+        assertEquals(24.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
         // b1.nextSpeed is zero, since no forces were acting on the body
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -592,8 +582,8 @@ internal class CollideCylinderVsCylinderTest {
         val dy = b1.nextPos.y - b2.nextPos.y
         val dist = sqrt(dx * dx + dy * dy)
         val rsum = b1.radius + b2.radius
-        assertLessThan(dist, rsum + 0.01f, "new distance")
-        assertGreaterThan(dist, rsum - 0.01f, "new distance")
+        assertLessThan(dist, rsum + 0.0001f, "new distance") // 1 mm/10
+        assertGreaterThan(dist, rsum - 0.0001f, "new distance")
 
         // b1.nextSpeed is still zero
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")

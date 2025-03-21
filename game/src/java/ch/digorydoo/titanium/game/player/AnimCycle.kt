@@ -1,14 +1,8 @@
-package ch.digorydoo.titanium.engine.anim
+package ch.digorydoo.titanium.game.player
 
 import ch.digorydoo.titanium.engine.core.App
 import kotlin.math.max
 
-/**
- * This class is used to describe a cycle animation of a 2D (paper) gel.
- * This class is obsolete, because on the one hand, such code should be implemented with a Behaviour, while on the other
- * hand, we only need this, because our MeshRenderer cannot handle bones/rigged models yet.
- * FIXME remove this class once we support animations for bones/meshes
- */
 class AnimCycle(private val delegate: Delegate) {
     interface Delegate {
         val cycleDef: AnimCycleDef

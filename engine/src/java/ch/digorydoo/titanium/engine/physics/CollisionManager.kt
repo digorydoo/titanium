@@ -6,6 +6,7 @@ import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.physics.collide_bricks.CollideCylinderVsBrick
 import ch.digorydoo.titanium.engine.physics.collide_bricks.CollideSphereVsBrick
+import ch.digorydoo.titanium.engine.physics.collide_regular.CollideCylinderVsCuboid
 import ch.digorydoo.titanium.engine.physics.collide_regular.CollideCylinderVsCylinder
 import ch.digorydoo.titanium.engine.physics.collide_regular.CollideSphereVsCuboid
 import ch.digorydoo.titanium.engine.physics.collide_regular.CollideSphereVsCylinder
@@ -21,8 +22,9 @@ class CollisionManager {
 
     private val sphereVsSphere = CollideSphereVsSphere()
     private val sphereVsCylinder = CollideSphereVsCylinder()
-    private val cylinderVsCylinder = CollideCylinderVsCylinder()
     private val sphereVsCuboid = CollideSphereVsCuboid()
+    private val cylinderVsCylinder = CollideCylinderVsCylinder()
+    private val cylinderVsCuboid = CollideCylinderVsCuboid()
 
     private val sphereVsBrick = CollideSphereVsBrick()
     private val cylinderVsBrick = CollideCylinderVsBrick()
@@ -113,20 +115,9 @@ class CollisionManager {
         val b1 = gel1.body ?: return false
         val b2 = gel2.body ?: return false
 
-        val zOffset1 = when (b1) {
-            is FixedSphereBody -> b1.zOffset
-            is FixedCylinderBody -> b1.zOffset
-            is FixedCuboidBody -> 0.0f
-        }
-        val zOffset2 = when (b2) {
-            is FixedSphereBody -> b2.zOffset
-            is FixedCylinderBody -> b2.zOffset
-            is FixedCuboidBody -> 0.0f
-        }
-
         val dx = b1.nextPos.x - b2.nextPos.x
         val dy = b1.nextPos.y - b2.nextPos.y
-        val dz = (b1.nextPos.z + zOffset1) - (b2.nextPos.z + zOffset2)
+        val dz = b1.nextPos.z - b2.nextPos.z
         val dsqr = dx * dx + dy * dy + dz * dz
         val maxDist = b1.collisionRadius + b2.collisionRadius
         return dsqr <= maxDist * maxDist
@@ -150,11 +141,11 @@ class CollisionManager {
             is FixedCylinderBody -> when (body2) {
                 is FixedSphereBody -> sphereVsCylinder.checkAndBounceIfNeeded(body2, body1, bounce, hit)
                 is FixedCylinderBody -> cylinderVsCylinder.checkAndBounceIfNeeded(body1, body2, bounce, hit)
-                is FixedCuboidBody -> throw NotImplementedError() // FIXME
+                is FixedCuboidBody -> cylinderVsCuboid.checkAndBounceIfNeeded(body1, body2, bounce, hit)
             }
             is FixedCuboidBody -> when (body2) {
                 is FixedSphereBody -> sphereVsCuboid.checkAndBounceIfNeeded(body2, body1, bounce, hit)
-                is FixedCylinderBody -> throw NotImplementedError() // FIXME
+                is FixedCylinderBody -> cylinderVsCuboid.checkAndBounceIfNeeded(body2, body1, bounce, hit)
                 is FixedCuboidBody -> throw NotImplementedError() // FIXME
             }
         }

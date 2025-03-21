@@ -5,8 +5,10 @@ import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point2f
 import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.kutils.point.Point3i
 import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.brick.BrickVolume
+import ch.digorydoo.titanium.engine.brick.BrickVolume.BrickFaceCovering
 import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
@@ -35,7 +37,7 @@ internal class CollideCylinderVsBrick: BrickCollisionStrategy<FixedCylinderBody>
     ) {
         val cx = body.nextPos.x
         val cy = body.nextPos.y
-        val cz = body.nextPos.z + body.zOffset
+        val cz = body.nextPos.z
         val r = body.radius
         val h = body.height
 
@@ -74,7 +76,7 @@ internal class CollideCylinderVsBrick: BrickCollisionStrategy<FixedCylinderBody>
         BrickGeometryType.CUBOID -> checkCuboid(
             body.nextPos.x,
             body.nextPos.y,
-            body.nextPos.z + body.zOffset,
+            body.nextPos.z,
             body.radius,
             body.height,
             body.nextSpeed,
@@ -186,14 +188,18 @@ internal class CollideCylinderVsBrick: BrickCollisionStrategy<FixedCylinderBody>
                     // If closestPtOnPlane is outside the cuboid, check if there is a brick in the dir of the normal.
 
                     fun hasValidNeighbour(): Boolean {
-                        val neighbourX = (brickX + normal.x).toInt()
-                        val neighbourY = (brickY + normal.y).toInt()
-
-                        if (brickX == neighbourX && brickY == neighbourY) {
-                            // This shouldn't happen, since normal should always point in the direction of an axis
+                        try {
+                            val brickCoords = Point3i(brickX, brickY, brickZ)
+                            val normXY = Point3f(normal.x, normal.y, 0.0f)
+                            val covering = brickVolume.getBrickFaceCovering(brickCoords, normXY)
+                            return when (covering) {
+                                BrickFaceCovering.FULLY_COVERED -> true
+                                BrickFaceCovering.PARTIALLY_COVERED -> true
+                                BrickFaceCovering.NOT_COVERED -> false
+                            }
+                        } catch (_: Exception) {
+                            // We come here if normal.x and normal.y are both 0.
                             return false
-                        } else {
-                            return brickVolume.hasValidBrickAt(neighbourX, neighbourY, brickZ)
                         }
                     }
 
@@ -279,10 +285,10 @@ internal class CollideCylinderVsBrick: BrickCollisionStrategy<FixedCylinderBody>
         if (vertical) {
             if (hitNormal.z < 0.0f) {
                 // The hitPt.z is the brick's bottom
-                body.nextPos.z = hitPt.z - body.height / 2 - EPSILON - body.zOffset
+                body.nextPos.z = hitPt.z - body.height / 2 - EPSILON
             } else {
                 // The hitPt.z is the brick's top
-                body.nextPos.z = hitPt.z + body.height / 2 + EPSILON - body.zOffset
+                body.nextPos.z = hitPt.z + body.height / 2 + EPSILON
             }
         } else {
             // The hitPt.xy is somewhere on the XY boundary of the brick

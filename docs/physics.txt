@@ -244,7 +244,6 @@ With solution:
 
     λ = (-B (+-) sqrt(B^2 - 4 A C)) / 2A
 
-
 Check if a sphere collides with a plane
 ---------------------------------------
 
@@ -270,6 +269,53 @@ and since |n| = 1:
 If d > 0, then C is on the side of the plane pointed to by n.
 If d < 0, then C is on the opposite side.
 The sphere collides if |d| <= r.
+
+Forcing a sphere and a cuboid apart
+-----------------------------------
+
+Given:
+    r: radius of the sphere
+    M_c1: Centre of the sphere that collided with the cuboid
+    M_f: Centre of the face of the cuboid that collided with the sphere
+    n_f: normal of the face (plane)
+    n_d: normalised direction of separation pointing from sphere away from cuboid
+
+We want to find the new centre of the sphere M_c2 by moving along the direction of separation:
+
+    M_c2 = M_c1 + k n_d
+
+At the new centre, the sphere will touch the cuboid in a point H. We find it by moving down from M_c2 along the
+negative direction of the face normal:
+
+    H = M_c2 - n_f r
+
+H must be on the plane of the cuboid face:
+
+    n_f • (H - M_f) = 0
+
+Substitute and solve for k:
+
+    n_f • (M_c2 - n_f r - M_f) = 0
+    n_f • (M_c1 + k n_d - n_f r - M_f) = 0
+
+    x_nf (x_Mc1 + k x_nd - r x_nf - x_Mf) +
+        y_nf (y_Mc1 + k y_nd - r y_nf - y_Mf) +
+        z_nf (z_Mc1 + k z_nd - r z_nf - z_Mf) = 0
+
+    k x_nd x_nf + x_nf (x_Mc1 - r x_nf - x_Mf) +
+        k y_nd y_nf + y_nf (y_Mc1 - r y_nf - y_Mf) +
+        k z_nd z_nf + z_nf (z_Mc1 - r z_nf - z_Mf) = 0
+
+    k (x_nd x_nf + y_nd y_nf + z_nd z_nf) =
+        x_nf (r x_nf - x_Mc1 + x_Mf) + y_nf (r y_nf - y_Mc1 + y_Mf) + z_nf (r z_nf - z_Mc1 + z_Mf)
+
+    k = (
+        x_nf (r x_nf - x_Mc1 + x_Mf) + y_nf (r y_nf - y_Mc1 + y_Mf) + z_nf (r z_nf - z_Mc1 + z_Mf)
+    ) / (
+        x_nd x_nf + y_nd y_nf + z_nd z_nf
+    )
+
+Now that we have k, we also have M_c2.
 
 Friction between two bodies
 ---------------------------

@@ -9,6 +9,13 @@ import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 import kotlin.math.PI
 
 class CompassGel: GraphicElement() {
+    init {
+        inDialog = Visibility.INVISIBLE
+        inMenu = Visibility.INVISIBLE
+        inEditor = Visibility.ACTIVE
+        visibleOnScreenshots = false
+    }
+
     private val props = object: UISpriteRenderer.Delegate() {
         override val renderPos get() = this@CompassGel.pos
         override val frameSize = Point2f(TEX_WIDTH, TEX_HEIGHT)
@@ -17,10 +24,6 @@ class CompassGel: GraphicElement() {
         override var tex = App.textures.getOrCreateTexture("ui-compass.png")
     }
 
-    override val inDialog = Visibility.INVISIBLE
-    override val inMenu = Visibility.INVISIBLE
-    override val inEditor = Visibility.ACTIVE
-    override val visibleOnScreenshots = false
     override val renderer = App.factory.createUISpriteRenderer(props, antiAliasing = true)
 
     private val align = Align(

@@ -20,6 +20,34 @@ import ch.digorydoo.titanium.game.gel.street_lamp.StreetLampSpawnPt.Kind.TRADITI
 import kotlin.math.abs
 
 class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spawnPt) {
+    init {
+        bodyPosOffset.set(0.0f, 0.0f, BODY_HEIGHT / 2.0f)
+        inDialog = Visibility.ACTIVE // flickering should continue in dialogues
+        inEditor = Visibility.ACTIVE // in order that halo gets properly turned
+    }
+
+    override val body = FixedCylinderBody(
+        "StreetLamp@${spawnPt.id}",
+        initialPos = pos + bodyPosOffset,
+        elasticity = 0.3f,
+        friction = 0.2f,
+        gravity = false,
+        mass = RigidBody.LARGE_MASS,
+        radius = 0.25f,
+        height = BODY_HEIGHT,
+    )
+
+    private val haloCentre = MutablePoint3f()
+
+    override fun onAboutToRender() {
+        haloCentre.set(pos.x, pos.y, pos.z + HALO_Z_OFFSET)
+    }
+
+    override fun onAnimateActive() {
+        turnHalo.animate()
+        adaptLightIntensity.animate()
+    }
+
     private val mesh = MeshFileReader.readFile(
         when (spawnPt.kind) {
             TRADITIONAL -> "street-lamp-01.msh"
@@ -28,15 +56,8 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
 
     private val haloTex = App.textures.getOrCreateTexture("halo-lamp-yellow.png")
 
-    val haloCentre = MutablePoint3f(pos)
-
     private val turnHaloProps = object: TurnTowardsCamera.Delegate() {
-        override val centre
-            get() = haloCentre.set(
-                this@StreetLampGel.pos.x,
-                this@StreetLampGel.pos.y,
-                this@StreetLampGel.pos.z + HALO_Z_OFFSET,
-            )
+        override val centre = this@StreetLampGel.haloCentre
     }
 
     private val turnHalo = TurnTowardsCamera(turnHaloProps, keepBehind = 1.0f, usePosition = true)
@@ -83,18 +104,13 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
         }
     }
 
-    override fun onAnimateActive() {
-        turnHalo.animate()
-        adaptLightIntensity.animate()
-    }
-
     override val renderer = makeRenderer()
 
     private fun makeRenderer(): Renderer {
         val meshRenderer = App.factory.createMeshRenderer(
             object: MeshRenderer.Delegate() {
-                override val mesh get() = this@StreetLampGel.mesh
-                override val renderPos get() = this@StreetLampGel.pos
+                override val mesh = this@StreetLampGel.mesh
+                override val renderPos = this@StreetLampGel.pos
                 override val rotationPhi = spawnPt.rotation
                 override val emittingLight get() = lightIntensity * 0.1f
             },
@@ -109,7 +125,7 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
                 override val frameSize = Point2f(haloTex?.width ?: 0, haloTex?.height ?: 0)
                 override val scaleFactor = Point2f(HALO_SCALING, HALO_SCALING)
                 override val origin = Point2f(frameSize.x / 2, frameSize.y / 2)
-                override val renderPos get() = turnHaloProps.renderPos
+                override val renderPos = turnHaloProps.renderPos
                 override val rotationPhi get() = turnHaloProps.rotationPhi
                 override val rotationRho get() = turnHaloProps.rotationRho
                 override val opacity get() = lightIntensity
@@ -136,23 +152,8 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
         }
     }
 
-    override val body = FixedCylinderBody(
-        "StreetLamp@${spawnPt.id}",
-        pos, // shared mutable object
-        elasticity = 0.3f,
-        friction = 0.2f,
-        gravity = false,
-        mass = RigidBody.LARGE_MASS,
-        radius = 0.25f,
-        height = 2.0f,
-        zOffset = 1.0f,
-    )
-
-    override val inDialog = Visibility.ACTIVE // flickering should continue in dialogues
-    override val inEditor = Visibility.ACTIVE // in order that halo gets properly turned
-
     private val lamp = object: Lamp {
-        override val pos get() = haloCentre
+        override val pos = this@StreetLampGel.haloCentre
         override val colour = lampColour
         override val intensity get() = if (visible) this@StreetLampGel.lightIntensity else 0.0f
         override val radius = LAMP_RADIUS
@@ -170,6 +171,7 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
     override fun toString() = "StreetLampGel(${spawnPt.id})"
 
     companion object {
+        private const val BODY_HEIGHT = 4.0f
         private const val HALO_SCALING = 0.025f
         private const val HALO_Z_OFFSET = 4.36f
         private const val LAMP_RADIUS = 10.0f

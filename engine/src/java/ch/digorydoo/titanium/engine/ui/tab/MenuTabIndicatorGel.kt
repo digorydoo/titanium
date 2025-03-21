@@ -8,11 +8,14 @@ import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 
 class MenuTabIndicatorGel(private val tabs: List<MenuTabDescriptor>): GraphicElement() {
+    init {
+        inDialog = Visibility.ACTIVE
+        inMenu = Visibility.ACTIVE
+        inEditor = Visibility.ACTIVE
+    }
+
     private val texture = makeTexture()
     private val frameSize = MutablePoint2f(0, HEIGHT)
-    override val inDialog = Visibility.ACTIVE
-    override val inMenu = Visibility.ACTIVE
-    override val inEditor = Visibility.ACTIVE
 
     var selectedIdx = -1
         set(t) {

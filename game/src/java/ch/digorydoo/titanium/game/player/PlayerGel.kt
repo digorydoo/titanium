@@ -12,22 +12,25 @@ import ch.digorydoo.titanium.engine.texture.FrameCollection
 import ch.digorydoo.titanium.engine.utils.Direction
 
 class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): GraphicElement(initialPos) {
-    private val frames = FrameCollection()
-    private val frameOrigin = MutablePoint2f()
-    private val frameScaleFactor = MutablePoint2f()
-    private val frameMgr = PlayerFrameManager(this, frames)
+    init {
+        bodyPosOffset.set(0.0f, 0.0f, BODY_HEIGHT / 2.0f)
+    }
 
     override val body = FixedCylinderBody(
         "Player",
-        pos, // shared mutable object
+        initialPos = pos + bodyPosOffset,
         elasticity = 0.3f,
         friction = 0.9f,
         mass = 64.0f,
         gravity = true,
         radius = 0.25f,
-        height = 1.5f,
-        zOffset = 0.75f,
+        height = BODY_HEIGHT,
     )
+
+    private val frames = FrameCollection()
+    private val frameOrigin = MutablePoint2f()
+    private val frameScaleFactor = MutablePoint2f()
+    private val frameMgr = PlayerFrameManager(frames)
 
     private val playerBehaviour = PlayerBehaviour(this, frameMgr)
 
@@ -40,6 +43,7 @@ class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): GraphicElement(
     override fun onAnimateActive() {
         playerBehaviour.animate()
         turnTowardsCamera.animate()
+        frameMgr.cycle?.animate()
     }
 
     private val renderProps = object: PaperRenderer.Delegate() {
@@ -78,4 +82,8 @@ class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): GraphicElement(
     }
 
     override fun toString() = "PlayerGel"
+
+    companion object {
+        private const val BODY_HEIGHT = 1.6f
+    }
 }

@@ -4,7 +4,6 @@ import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.string.zapPackageName
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.titanium.engine.anim.AnimCycle
 import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.physics.HitArea
@@ -13,6 +12,9 @@ import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.engine.shader.Renderer
 import kotlin.math.sqrt
 
+/**
+ * A GraphicElement is the base class for all animated objects in the game as well as all UI elements.
+ */
 abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
     constructor(): this(null, MutablePoint3f())
     constructor(spawnPt: SpawnPt): this(spawnPt, spawnPt.pos)
@@ -26,16 +28,134 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
         fun animate()
     }
 
+    open val body: RigidBody? = null
+    val pos = MutablePoint3f(initialPos) // note that the pos will follow body.pos if body is set
+    protected val bodyPosOffset = MutablePoint3f() // relation is: pos = body.pos - bodyPosOffset
+
+    protected var inDialog = Visibility.FROZEN_VISIBLE
+    protected var inMenu = Visibility.INVISIBLE
+    protected var inEditor = Visibility.FROZEN_VISIBLE
+    private var hidden = false // explicitly hidden gels neither animate nor render
+    private var setHiddenOnNextFrameTo: Boolean? = null // directly controlled by show() and hide()
+    protected var visible = false; private set // will be set during animPhase2() whether this gel will actually render
+    protected var visibleOnScreenshots = true
+    private var active = true // whether to call onAnimateActive() or onAnimateInactive()
+
+    var zombie = false; private set // true=sprite will be removed in the next frame
+    var sqrDistanceToCamera = 0.0; private set
+    protected var allowNegativeZ = false
+
+    protected abstract val renderer: Renderer
     internal val vicinity = VicinityList() // used by CollisionManager
 
-    val pos = MutablePoint3f(initialPos)
-    protected abstract val renderer: Renderer
-    open val body: RigidBody? = null
-    var cycle: AnimCycle? = null
+    fun show() {
+        setHiddenOnNextFrameTo = false
+    }
 
-    var sqrDistanceToCamera = 0.0; private set
-    private var hidden = false // hidden gels are neither animated nor rendered
-    private var setHiddenOnNextFrameTo: Boolean? = null
+    fun hide() {
+        setHiddenOnNextFrameTo = true
+    }
+
+    protected open fun onAnimateActive() {}
+    protected open fun onAnimateInactive() {}
+    protected open fun onAboutToRender() {}
+
+    // All gels must at least dispose of their renderer. See also SpawnPt.didRemoveGel()
+    abstract fun onRemoveZombie()
+
+    fun setZombie() {
+        zombie = true
+    }
+
+    // Here we will do most of the animation and compute the forces, but not move the body yet.
+    fun animatePhase1() {
+        if (zombie) return
+
+        val spawnPt = spawnPt
+
+        if (spawnPt != null) {
+            sqrDistanceToCamera = App.camera.sourcePos.sqrDistanceTo(pos)
+
+            if (spawnPt.canAutoDespawn(sqrDistanceToCamera)) {
+                Log.info("Despawning $this, gel distance=${sqrt(sqrDistanceToCamera).toInt()}m")
+                zombie = true
+                return
+            }
+        }
+
+        setHiddenOnNextFrameTo?.let { hidden = it }
+        setHiddenOnNextFrameTo = null
+        if (hidden) return
+
+        active = when {
+            App.isAboutToTakeScreenshot -> false
+            App.dlg.hasActiveDlg && inDialog != Visibility.ACTIVE -> false
+            App.gameMenu.isShown && inMenu != Visibility.ACTIVE -> false
+            App.editor.isShown && inEditor != Visibility.ACTIVE -> false
+            else -> true
+        }
+
+        if (active) {
+            onAnimateActive()
+        } else {
+            onAnimateInactive()
+        }
+
+        body?.applyForces()
+    }
+
+    // Here we will move the body, and decide whether the gel will be rendered
+    fun animatePhase2() {
+        if (!zombie && !hidden && active) {
+            val body = body
+
+            if (body != null) {
+                body.move()
+                pos.set(body.pos.x - bodyPosOffset.x, body.pos.y - bodyPosOffset.y, body.pos.z - bodyPosOffset.z)
+            }
+
+            if (pos.x.isNaN() || pos.y.isNaN() || pos.z.isNaN()) {
+                Log.error("Removing gel $this, because its position became NaN: $pos")
+                zombie = true
+            } else if (!allowNegativeZ && pos.z < 0.0f) {
+                Log.warn("Gel $this will be removed, because it fell through z=0")
+                zombie = true
+            }
+        }
+
+        visible = when {
+            hidden -> false
+            zombie -> false
+            App.isAboutToTakeScreenshot && !visibleOnScreenshots -> false
+            App.dlg.hasActiveDlg && inDialog == Visibility.INVISIBLE -> false
+            App.gameMenu.isShown && inMenu == Visibility.INVISIBLE -> false
+            App.editor.isShown && inEditor == Visibility.INVISIBLE -> false
+            else -> true
+        }
+
+        if (visible) {
+            onAboutToRender()
+        }
+    }
+
+    fun renderShadows() {
+        if (visible && !zombie) {
+            renderer.renderShadows()
+        }
+    }
+
+    fun renderSolid() {
+        // We have to test zombie again, because it may have been set by some other instance in the meantime.
+        if (visible && !zombie) {
+            renderer.renderSolid()
+        }
+    }
+
+    fun renderTransparent() {
+        if (visible && !zombie) {
+            renderer.renderTransparent()
+        }
+    }
 
     /**
      * Called by CollisionDetector on both gels to check whether their bodies should be bounced. Their bodies are NOT be
@@ -63,128 +183,6 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
         zombie || hidden || body == null -> false
         spawnPt?.canCollide == false -> false
         else -> true
-    }
-
-    fun show() {
-        setHiddenOnNextFrameTo = false
-    }
-
-    fun hide() {
-        setHiddenOnNextFrameTo = true
-    }
-
-    protected open val inDialog = Visibility.FROZEN_VISIBLE
-    protected open val inMenu = Visibility.INVISIBLE
-    protected open val inEditor = Visibility.FROZEN_VISIBLE
-    protected open val visibleOnScreenshots = true
-    protected open val allowNegativeZ = false
-
-    private var active = true // false=disable animation except endless loops
-    protected var visible = false; private set // FIXME why is `hidden` not enough
-    var zombie = false; private set // true=sprite will be removed in the next frame
-
-    protected open fun onAnimateActive() {}
-    protected open fun onAnimateInactive() {}
-
-    // All gels must at least dispose of their renderer. See also SpawnPt.didRemoveGel()
-    abstract fun onRemoveZombie()
-
-    fun setZombie() {
-        zombie = true
-    }
-
-    // Here we will do most of the animation and compute the forces, but not move the body yet.
-    fun animatePhase1() {
-        if (zombie) return
-
-        setHiddenOnNextFrameTo?.let { hidden = it }
-        setHiddenOnNextFrameTo = null
-        if (hidden) return
-
-        checkDistanceToCamera()
-
-        active = when {
-            App.isAboutToTakeScreenshot -> false
-            App.dlg.hasActiveDlg && inDialog != Visibility.ACTIVE -> false
-            App.gameMenu.isShown && inMenu != Visibility.ACTIVE -> false
-            App.editor.isShown && inEditor != Visibility.ACTIVE -> false
-            else -> true
-        }
-
-        if (active) {
-            onAnimateActive()
-        } else {
-            onAnimateInactive()
-        }
-
-        cycle?.let { cycle ->
-            // Endless cycles continue even if the sprite isn't active.
-            // Cycles that are not endless can't continue, because they may cause
-            // side-effects by calling cycleEnded().
-            if (cycle.isEndless || active) {
-                cycle.animate()
-            }
-        }
-
-        body?.applyForces()
-    }
-
-    private fun checkDistanceToCamera() {
-        sqrDistanceToCamera = App.camera.sourcePos.sqrDistanceTo(pos)
-
-        if (shouldDespawn()) {
-            Log.info("Despawning $this, gel distance=${sqrt(sqrDistanceToCamera).toInt()}m")
-            setZombie()
-        }
-    }
-
-    private fun shouldDespawn(): Boolean {
-        val spawnPt = spawnPt ?: return false
-        return spawnPt.canAutoDespawn(sqrDistanceToCamera)
-    }
-
-    // Here we will move the body, and decide whether the gel will be rendered
-    fun animatePhase2() {
-        if (!zombie && !hidden && active) {
-            body?.move()
-
-            if (pos.x.isNaN() || pos.y.isNaN() || pos.z.isNaN()) {
-                Log.error("Removing gel $this, because its position became NaN: $pos")
-                zombie = true
-            } else if (!allowNegativeZ && pos.z < 0.0f) {
-                Log.warn("Gel $this will be removed, because it fell through z=0")
-                zombie = true
-            }
-        }
-
-        visible = when {
-            hidden -> false
-            zombie -> false
-            App.isAboutToTakeScreenshot && !visibleOnScreenshots -> false
-            App.dlg.hasActiveDlg && inDialog == Visibility.INVISIBLE -> false
-            App.gameMenu.isShown && inMenu == Visibility.INVISIBLE -> false
-            App.editor.isShown && inEditor == Visibility.INVISIBLE -> false
-            else -> true
-        }
-    }
-
-    fun renderShadows() {
-        if (visible && !zombie) {
-            renderer.renderShadows()
-        }
-    }
-
-    fun renderSolid() {
-        // We have to test zombie again, because it may have been set by some other instance in the meantime.
-        if (visible && !zombie) {
-            renderer.renderSolid()
-        }
-    }
-
-    fun renderTransparent() {
-        if (visible && !zombie) {
-            renderer.renderTransparent()
-        }
     }
 
     override fun toString() =

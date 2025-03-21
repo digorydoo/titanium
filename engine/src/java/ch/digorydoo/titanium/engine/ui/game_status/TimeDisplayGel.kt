@@ -10,6 +10,13 @@ import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 
 class TimeDisplayGel: GraphicElement() {
+    init {
+        inDialog = Visibility.INVISIBLE
+        inMenu = Visibility.INVISIBLE
+        inEditor = Visibility.ACTIVE
+        visibleOnScreenshots = false
+    }
+
     private val digitOrColonTextures = Array(11) { idx ->
         when (idx) {
             10 -> makeTexture(":")
@@ -93,11 +100,6 @@ class TimeDisplayGel: GraphicElement() {
     override fun onAnimateActive() {
         align.animate()
     }
-
-    override val inDialog = Visibility.INVISIBLE
-    override val inMenu = Visibility.INVISIBLE
-    override val inEditor = Visibility.ACTIVE
-    override val visibleOnScreenshots = false
 
     override fun onRemoveZombie() {
         renderer.free()

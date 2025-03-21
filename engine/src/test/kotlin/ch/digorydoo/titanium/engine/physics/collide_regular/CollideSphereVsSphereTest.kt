@@ -7,7 +7,6 @@ import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.MutableHitResult
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
-import ch.digorydoo.titanium.engine.utils.assertGreaterOrEqual
 import ch.digorydoo.titanium.engine.utils.assertGreaterThan
 import ch.digorydoo.titanium.engine.utils.assertLessThan
 import org.junit.jupiter.api.BeforeAll
@@ -22,21 +21,19 @@ internal class CollideSphereVsSphereTest {
     fun `should collide when the two spheres get too close and the speed is parallel to the x-axis`() {
         val b1 = FixedSphereBody(
             "b1",
-            pos = MutablePoint3f(42.1f, 64.1f, 96.2f),
+            initialPos = MutablePoint3f(42.1f, 64.1f, 96.5f),
             mass = 10.0f,
             gravity = false,
             radius = 0.3f,
-            zOffset = 0.3f,
             elasticity = 0.5f,
             friction = 0.2f,
         )
         val b2 = FixedSphereBody(
             "b2",
-            pos = MutablePoint3f(42.6f, 64.2f, 96.37f),
+            initialPos = MutablePoint3f(42.6f, 64.2f, 96.57f),
             mass = 9.0f,
             gravity = false,
             radius = 0.2f,
-            zOffset = 0.2f,
             elasticity = 0.5f,
             friction = 0.2f,
         )
@@ -85,12 +82,12 @@ internal class CollideSphereVsSphereTest {
         // b1.nextPos has moved a little in the direction of its speed
         assertEquals(42.1075f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(64.1f, b1.nextPos.y, "b1.nextPos.y") // the same as before
-        assertEquals(96.2f, b1.nextPos.z, "b1.nextPos.z") // the same as before
+        assertEquals(96.5f, b1.nextPos.z, "b1.nextPos.z") // the same as before
 
         // b2.nextPos has moved a little in the direction of its speed
         assertEquals(42.591663f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(64.2f, b2.nextPos.y, "b2.nextPos.y") // the same as before
-        assertEquals(96.37f, b2.nextPos.z, "b2.nextPos.z") // the same as before
+        assertEquals(96.57f, b2.nextPos.z, "b2.nextPos.z") // the same as before
 
         // The two should no longer collide after bounce
         bounce()
@@ -99,12 +96,12 @@ internal class CollideSphereVsSphereTest {
         // b1.pos is unchanged
         assertEquals(42.1f, b1.pos.x, "b1.pos.x")
         assertEquals(64.1f, b1.pos.y, "b1.pos.y")
-        assertEquals(96.2f, b1.pos.z, "b1.pos.z")
+        assertEquals(96.5f, b1.pos.z, "b1.pos.z")
 
         // b2.pos is unchanged
         assertEquals(42.6f, b2.pos.x, "b2.pos.x")
         assertEquals(64.2f, b2.pos.y, "b2.pos.y")
-        assertEquals(96.37f, b2.pos.z, "b2.pos.z")
+        assertEquals(96.57f, b2.pos.z, "b2.pos.z")
 
         // b1 had no speed before we added a force
         assertEquals(0.0f, b1.speed.x, "b1.speed.x")
@@ -119,12 +116,12 @@ internal class CollideSphereVsSphereTest {
         // b1.nextPos has been moved a little towards its original pos
         assertEquals(42.10703f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(64.1f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(96.2f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(96.5f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has been moved a little towards its original pos
         assertEquals(42.592186f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(64.2f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(96.37f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(96.57f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified
         assertEquals(-0.10580253f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -137,32 +134,29 @@ internal class CollideSphereVsSphereTest {
         assertEquals(0.016961621f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
 
         // Check the gap between the nextPos
-        val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z + b1.zOffset)
-        val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z + b2.zOffset)
+        val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
+        val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
         val gap = (centre1.distanceTo(centre2) - (b1.radius + b2.radius)).toFloat()
-        assertGreaterOrEqual(gap, 0.0f, "gap")
-        assertLessThan(gap, 0.0003f, "gap") // 3 mm/10
+        assertTrue(gap in 0.0002f ..< 0.0003f, "gap outside expected range: $gap") // 2.5 mm/10
     }
 
     @Test
     fun `should collide when the two spheres get too close and the speed is parallel to the y-axis`() {
         val b1 = FixedSphereBody(
             "b1",
-            pos = MutablePoint3f(64.2f, 42.1f, 96.2f),
+            initialPos = MutablePoint3f(64.2f, 42.1f, 96.5f),
             mass = 8.0f,
             gravity = false,
             radius = 0.3f,
-            zOffset = 0.3f,
             elasticity = 0.5f,
             friction = 0.2f,
         )
         val b2 = FixedSphereBody(
             "b2",
-            pos = MutablePoint3f(64.1f, 42.6f, 96.37f),
+            initialPos = MutablePoint3f(64.1f, 42.6f, 96.57f),
             mass = 9.0f,
             gravity = false,
             radius = 0.2f,
-            zOffset = 0.2f,
             elasticity = 0.5f,
             friction = 0.2f,
         )
@@ -211,12 +205,12 @@ internal class CollideSphereVsSphereTest {
         // b1.nextPos has moved a little in the direction of its speed
         assertEquals(64.2f, b1.nextPos.x, "b1.nextPos.x") // the same as before
         assertEquals(42.108055f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(96.2f, b1.nextPos.z, "b1.nextPos.z") // the same as before
+        assertEquals(96.5f, b1.nextPos.z, "b1.nextPos.z") // the same as before
 
         // b2.nextPos has moved a little in the direction of its speed
         assertEquals(64.1f, b2.nextPos.x, "b2.nextPos.x") // the same as before
         assertEquals(42.59284f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(96.37f, b2.nextPos.z, "b2.nextPos.z") // the same as before
+        assertEquals(96.57f, b2.nextPos.z, "b2.nextPos.z") // the same as before
 
         // The two should no longer collide after bounce
         bounce()
@@ -225,12 +219,12 @@ internal class CollideSphereVsSphereTest {
         // b1.pos is unchanged
         assertEquals(64.2f, b1.pos.x, "b1.pos.x")
         assertEquals(42.1f, b1.pos.y, "b1.pos.y")
-        assertEquals(96.2f, b1.pos.z, "b1.pos.z")
+        assertEquals(96.5f, b1.pos.z, "b1.pos.z")
 
         // b2.pos is unchanged
         assertEquals(64.1f, b2.pos.x, "b2.pos.x")
         assertEquals(42.6f, b2.pos.y, "b2.pos.y")
-        assertEquals(96.37f, b2.pos.z, "b2.pos.z")
+        assertEquals(96.57f, b2.pos.z, "b2.pos.z")
 
         // b1 had no speed before we added a force
         assertEquals(0.0f, b1.speed.x, "b1.speed.x")
@@ -245,12 +239,12 @@ internal class CollideSphereVsSphereTest {
         // b1.nextPos has been moved a little towards its original pos
         assertEquals(64.2f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(42.10755f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(96.2f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(96.5f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has been moved a little towards its original pos
         assertEquals(64.1f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(42.593285f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(96.37f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(96.57f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified
         assertEquals(0.023398468f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -263,32 +257,29 @@ internal class CollideSphereVsSphereTest {
         assertEquals(0.0145592075f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
 
         // Check the gap between the nextPos
-        val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z + b1.zOffset)
-        val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z + b2.zOffset)
+        val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
+        val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
         val gap = (centre1.distanceTo(centre2) - (b1.radius + b2.radius)).toFloat()
-        assertGreaterOrEqual(gap, 0.0f, "gap")
-        assertLessThan(gap, 0.0009f, "gap") // 9 mm/10
+        assertTrue(gap in 0.0008f ..< 0.0009f, "gap outside expected range: $gap") // 8.5 mm/10
     }
 
     @Test
     fun `should collide when the two spheres get too close and the speed is parallel to the z-axis`() {
         val b1 = FixedSphereBody(
             "b1",
-            pos = MutablePoint3f(64.2f, 42.1f, 96.58f),
+            initialPos = MutablePoint3f(64.2f, 42.1f, 96.88f),
             mass = 8.0f,
             gravity = false,
             radius = 0.3f,
-            zOffset = 0.3f,
             elasticity = 0.5f,
             friction = 0.2f,
         )
         val b2 = FixedSphereBody(
             "b2",
-            pos = MutablePoint3f(64.1f, 42.2f, 96.2f),
+            initialPos = MutablePoint3f(64.1f, 42.2f, 96.4f),
             mass = 9.0f,
             gravity = false,
             radius = 0.2f,
-            zOffset = 0.2f,
             elasticity = 0.5f,
             friction = 0.2f,
         )
@@ -321,8 +312,8 @@ internal class CollideSphereVsSphereTest {
         assertEquals(HitArea.UNSPECIFIED, hit.area2, "hit.area2")
 
         assertEquals(64.1377f, hit.hitPt.x, TOLERANCE, "hitPt.x")
-        assertEquals(42.162296f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-        assertEquals(96.58282f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+        assertEquals(42.1623f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(96.58281f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
         // b1.nextSpeed points in the positive direction of y
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -337,12 +328,12 @@ internal class CollideSphereVsSphereTest {
         // b1.nextPos has moved a little in the direction of its speed
         assertEquals(64.2f, b1.nextPos.x, "b1.nextPos.x") // the same as before
         assertEquals(42.1f, b1.nextPos.y, "b1.nextPos.y") // the same as before
-        assertEquals(96.56959f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(96.86958f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has moved a little in the direction of its speed
         assertEquals(64.1f, b2.nextPos.x, "b2.nextPos.x") // the same as before
         assertEquals(42.2f, b2.nextPos.y, "b2.nextPos.y") // the same as before
-        assertEquals(96.20926f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(96.40926f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // The two should no longer collide after bounce
         bounce()
@@ -351,12 +342,12 @@ internal class CollideSphereVsSphereTest {
         // b1.pos is unchanged
         assertEquals(64.2f, b1.pos.x, "b1.pos.x")
         assertEquals(42.1f, b1.pos.y, "b1.pos.y")
-        assertEquals(96.58f, b1.pos.z, "b1.pos.z")
+        assertEquals(96.88f, b1.pos.z, "b1.pos.z")
 
         // b2.pos is unchanged
         assertEquals(64.1f, b2.pos.x, "b2.pos.x")
         assertEquals(42.2f, b2.pos.y, "b2.pos.y")
-        assertEquals(96.2f, b2.pos.z, "b2.pos.z")
+        assertEquals(96.4f, b2.pos.z, "b2.pos.z")
 
         // b1 had no speed before we added a force
         assertEquals(0.0f, b1.speed.x, "b1.speed.x")
@@ -371,12 +362,12 @@ internal class CollideSphereVsSphereTest {
         // b1.nextPos has been moved a little towards its original pos
         assertEquals(64.2f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(42.1f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(96.58f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z") // actually back to pos
+        assertEquals(96.88f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z") // actually back to pos
 
         // b2.nextPos has been moved a little towards its original pos
         assertEquals(64.1f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(42.2f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(96.2f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z") // actually back to pos
+        assertEquals(96.4f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z") // actually back to pos
 
         // b1.nextSpeed has been modified
         assertEquals(0.029951015f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -389,32 +380,29 @@ internal class CollideSphereVsSphereTest {
         assertEquals(-0.12779589f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
 
         // Check the gap between the nextPos
-        val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z + b1.zOffset)
-        val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z + b2.zOffset)
+        val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
+        val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
         val gap = (centre1.distanceTo(centre2) - (b1.radius + b2.radius)).toFloat()
-        assertGreaterOrEqual(gap, 0.0f, "gap")
-        assertLessThan(gap, 0.0005f, "gap") // 5 mm/10
+        assertTrue(gap in 0.0003f ..< 0.0004f, "gap outside expected range: $gap") // 3.5 mm/10
     }
 
     @Test
     fun `should collide when the two spheres get to close and the speed is arbitrary`() {
         val b1 = FixedSphereBody(
             "b1",
-            pos = MutablePoint3f(5.0f, 7.2f, 0.0f),
+            initialPos = MutablePoint3f(5.0f, 7.2f, 3.0f),
             mass = 42.0f,
             gravity = false,
             radius = 3.0f,
-            zOffset = 3.0f,
             elasticity = 0.9f,
             friction = 0.1f,
         )
         val b2 = FixedSphereBody(
             "b2",
-            pos = MutablePoint3f(6.0f, 5.1f, 5.48f),
+            initialPos = MutablePoint3f(6.0f, 5.1f, 7.48f),
             mass = 3.0f, // lighter in weight
             gravity = false,
             radius = 2.0f, // smaller
-            zOffset = 2.0f,
             elasticity = 0.9f,
             friction = 0.1f,
         )
@@ -463,12 +451,12 @@ internal class CollideSphereVsSphereTest {
         // b1.nextPos has moved a little in the direction of its speed
         assertEquals(5.002467f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(7.1977973f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(0.0021904765f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(3.0021904765f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has moved a little in the direction of its speed
         assertEquals(5.965833f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(5.1334257f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(5.4530554f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(7.4530554f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // The two should no longer collide after bounce
         bounce()
@@ -477,12 +465,12 @@ internal class CollideSphereVsSphereTest {
         // b1.pos is unchanged
         assertEquals(5.0f, b1.pos.x, "b1.pos.x")
         assertEquals(7.2f, b1.pos.y, "b1.pos.y")
-        assertEquals(0.0f, b1.pos.z, "b1.pos.z")
+        assertEquals(3.0f, b1.pos.z, "b1.pos.z")
 
         // b2.pos is unchanged
         assertEquals(6.0f, b2.pos.x, "b2.pos.x")
         assertEquals(5.1f, b2.pos.y, "b2.pos.y")
-        assertEquals(5.48f, b2.pos.z, "b2.pos.z")
+        assertEquals(7.48f, b2.pos.z, "b2.pos.z")
 
         // b1 had no speed before we added a force
         assertEquals(0.0f, b1.speed.x, "b1.speed.x")
@@ -497,12 +485,12 @@ internal class CollideSphereVsSphereTest {
         // b1.nextPos has been moved a little towards its original pos
         assertEquals(5.0023127f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(7.197935f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(0.0020535719f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(3.0020535719f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has been moved a little towards its original pos
         assertEquals(5.967969f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(5.1313367f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(5.4547396f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(7.4547396f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified
         assertEquals(0.052419785f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -512,35 +500,32 @@ internal class CollideSphereVsSphereTest {
         // b2.nextSpeed has been modified
         assertEquals(-0.7116548f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
         assertEquals(-0.22731489f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
-        assertEquals(2.4912357f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
+        assertEquals(2.491237f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
 
         // Check the gap between the nextPos
-        val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z + b1.zOffset)
-        val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z + b2.zOffset)
+        val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
+        val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
         val gap = (centre1.distanceTo(centre2) - (b1.radius + b2.radius)).toFloat()
-        assertGreaterOrEqual(gap, 0.0f, "gap")
-        assertLessThan(gap, 0.003f, "gap") // 3 mm, not so good
+        assertTrue(gap in 0.0029f ..< 0.003f, "gap outside expected range: $gap") // 3 mm, not so good
     }
 
     @Test
     fun `should not push back a body on separation when its speed did not contribute to the collision`() {
         val b1 = FixedSphereBody(
             "b1",
-            pos = MutablePoint3f(1.37f, 1.37f, 0.0f),
+            initialPos = MutablePoint3f(1.37f, 1.37f, 0.3f),
             mass = 9.0f,
             gravity = false,
             radius = 0.3f,
-            zOffset = 0.3f,
             elasticity = 0.8f,
             friction = 0.2f,
         )
         val b2 = FixedSphereBody(
             "b2",
-            pos = MutablePoint3f(1.0f, 1.0f, 0.1f),
+            initialPos = MutablePoint3f(1.0f, 1.0f, 0.3f),
             mass = 7.0f,
             gravity = false,
             radius = 0.2f,
-            zOffset = 0.2f,
             elasticity = 0.8f,
             friction = 0.2f,
         )
@@ -589,12 +574,12 @@ internal class CollideSphereVsSphereTest {
         // b1.nextPos has moved a little in the direction of its speed
         assertEquals(1.3712963f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(1.3712963f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(0.0f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(0.3f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has moved a little in the direction of its speed
         assertEquals(1.031746f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(1.031746f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(0.1f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(0.3f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // The two should no longer collide after bounce
         bounce()
@@ -603,12 +588,12 @@ internal class CollideSphereVsSphereTest {
         // b1.pos is unchanged
         assertEquals(1.37f, b1.pos.x, "b1.pos.x")
         assertEquals(1.37f, b1.pos.y, "b1.pos.y")
-        assertEquals(0.0f, b1.pos.z, "b1.pos.z")
+        assertEquals(0.3f, b1.pos.z, "b1.pos.z")
 
         // b2.pos is unchanged
         assertEquals(1.0f, b2.pos.x, "b2.pos.x")
         assertEquals(1.0f, b2.pos.y, "b2.pos.y")
-        assertEquals(0.1f, b2.pos.z, "b2.pos.z")
+        assertEquals(0.3f, b2.pos.z, "b2.pos.z")
 
         // b1 had no speed before we added a force
         assertEquals(0.0f, b1.speed.x, "b1.speed.x")
@@ -623,12 +608,12 @@ internal class CollideSphereVsSphereTest {
         // b1.nextPos is exactly where we found it before bouncing
         assertEquals(1.3712963f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(1.3712963f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(0.0f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(0.3f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has been moved a little towards its original pos
         assertEquals(1.015873f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(1.015873f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(0.1f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(0.3f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified
         assertEquals(1.3886392f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -641,11 +626,10 @@ internal class CollideSphereVsSphereTest {
         assertEquals(0.0f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
 
         // Check the gap between the nextPos
-        val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z + b1.zOffset)
-        val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z + b2.zOffset)
+        val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
+        val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
         val gap = (centre1.distanceTo(centre2) - (b1.radius + b2.radius)).toFloat()
-        assertGreaterOrEqual(gap, 0.0f, "gap")
-        assertLessThan(gap, 0.003f, "gap") // 3 mm, not so good
+        assertTrue(gap in 0.002f ..< 0.003f, "gap outside expected range: $gap") // 2.5 mm, not so good
     }
 
     @Test
@@ -653,21 +637,19 @@ internal class CollideSphereVsSphereTest {
         val pos = MutablePoint3f(42.0f, 33.0f, 24.0f)
         val b1 = FixedSphereBody(
             "b1",
-            pos = pos,
+            initialPos = pos,
             mass = 42.0f,
             gravity = false,
             radius = 0.25f,
-            zOffset = 0.25f,
             elasticity = 0.5f,
             friction = 0.5f,
         )
         val b2 = FixedSphereBody(
             "b2",
-            pos = pos,
+            initialPos = pos,
             mass = 42.0f,
             gravity = false,
             radius = 0.25f,
-            zOffset = 0.25f,
             elasticity = 0.5f,
             friction = 0.5f,
         )
@@ -691,7 +673,7 @@ internal class CollideSphereVsSphereTest {
         // The hit point is set to the centre of the two spheres
         assertEquals(42.0f, hit.hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(33.0f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-        assertEquals(24.25f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+        assertEquals(24.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
         // b1.nextSpeed is zero, since no forces were acting on the body
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -778,34 +760,289 @@ internal class CollideSphereVsSphereTest {
     }
 
     @Test
+    fun `should force apart two spheres colliding at their initial position even though positions differ`() {
+        val b1 = FixedSphereBody(
+            "b1",
+            initialPos = MutablePoint3f(10.0f, 10.0f, 10.0f),
+            mass = 9.0f,
+            gravity = false,
+            radius = 0.5f,
+            elasticity = 0.8f,
+            friction = 0.2f,
+        )
+        val b2 = FixedSphereBody(
+            "b2",
+            initialPos = MutablePoint3f(10.2f, 9.8f, 10.1f),
+            mass = 7.0f,
+            gravity = false,
+            radius = 0.5f,
+            elasticity = 0.8f,
+            friction = 0.2f,
+        )
+
+        b1.applyForces()
+        b2.applyForces()
+
+        val ck = CollideSphereVsSphere()
+        val hit = MutableHitResult()
+
+        // They should collide at their original position
+        assertTrue(ck.checkAndBounceIfNeeded(b1, b2, canBounce = true, hit), "should collide")
+
+        // Since b1.pos and b2.pos are farther away than just EPSILON, forcing the bodies apart should not have taken
+        // a random direction, which means that the result should be stable.
+
+        // b1.pos is unchanged
+        assertEquals(10.0f, b1.pos.x, "b1.pos.x")
+        assertEquals(10.0f, b1.pos.y, "b1.pos.y")
+        assertEquals(10.0f, b1.pos.z, "b1.pos.z")
+
+        // b2.pos is unchanged
+        assertEquals(10.2f, b2.pos.x, "b2.pos.x")
+        assertEquals(9.8f, b2.pos.y, "b2.pos.y")
+        assertEquals(10.1f, b2.pos.z, "b2.pos.z")
+
+        // b1.speed is still zero
+        assertEquals(0.0f, b1.speed.x, "b1.speed.x")
+        assertEquals(0.0f, b1.speed.y, "b1.speed.y")
+        assertEquals(0.0f, b1.speed.z, "b1.speed.z")
+
+        // b2.speed is still zero
+        assertEquals(0.0f, b2.speed.x, "b2.speed.x")
+        assertEquals(0.0f, b2.speed.y, "b2.speed.y")
+        assertEquals(0.0f, b2.speed.z, "b2.speed.z")
+
+        // b1.nextSpeed is still zero
+        assertEquals(0.0f, b1.nextSpeed.x, "b1.nextSpeed.x")
+        assertEquals(0.0f, b1.nextSpeed.y, "b1.nextSpeed.y")
+        assertEquals(0.0f, b1.nextSpeed.z, "b1.nextSpeed.z")
+
+        // b2.nextSpeed is still zero
+        assertEquals(0.0f, b2.nextSpeed.x, "b2.nextSpeed.x")
+        assertEquals(0.0f, b2.nextSpeed.y, "b2.nextSpeed.y")
+        assertEquals(0.0f, b2.nextSpeed.z, "b2.nextSpeed.z")
+
+        // b1.nextPos has moved a little
+        assertEquals(9.766665f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
+        assertEquals(10.233335f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
+        assertEquals(9.883332f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+
+        // b2.nextPos has moved a little
+        assertEquals(10.433335f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
+        assertEquals(9.566665f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        assertEquals(10.216668f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+
+        // The new distance should be in the range we'd expect
+        val dx = b1.nextPos.x - b2.nextPos.x
+        val dy = b1.nextPos.y - b2.nextPos.y
+        val dz = b1.nextPos.z - b2.nextPos.z
+        val dist = sqrt(dx * dx + dy * dy + dz * dz)
+        val rsum = b1.radius + b2.radius
+        assertLessThan(dist, rsum + 0.0001f, "new distance") // 1 mm/10
+        assertGreaterThan(dist, rsum - 0.0001f, "new distance")
+
+        // They should no longer collide now
+        assertFalse(ck.checkAndBounceIfNeeded(b1, b2, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
+    fun `should force apart two spheres colliding at their initial pos when the first one is a LARGE_MASS`() {
+        val b1 = FixedSphereBody(
+            "b1",
+            initialPos = MutablePoint3f(10.0f, 10.0f, 10.0f),
+            mass = LARGE_MASS,
+            gravity = false,
+            radius = 0.5f,
+            elasticity = 0.8f,
+            friction = 0.2f,
+        )
+        val b2 = FixedSphereBody(
+            "b2",
+            initialPos = MutablePoint3f(10.2f, 9.8f, 10.1f),
+            mass = 7.0f,
+            gravity = false,
+            radius = 0.5f,
+            elasticity = 0.8f,
+            friction = 0.2f,
+        )
+
+        b1.applyForces()
+        b2.applyForces()
+
+        val ck = CollideSphereVsSphere()
+        val hit = MutableHitResult()
+
+        // They should collide at their original position
+        assertTrue(ck.checkAndBounceIfNeeded(b1, b2, canBounce = true, hit), "should collide")
+
+        // Since b1.pos and b2.pos are farther away than just EPSILON, forcing the bodies apart should not have taken
+        // a random direction, which means that the result should be stable.
+
+        // b1.pos is unchanged
+        assertEquals(10.0f, b1.pos.x, "b1.pos.x")
+        assertEquals(10.0f, b1.pos.y, "b1.pos.y")
+        assertEquals(10.0f, b1.pos.z, "b1.pos.z")
+
+        // b2.pos is unchanged
+        assertEquals(10.2f, b2.pos.x, "b2.pos.x")
+        assertEquals(9.8f, b2.pos.y, "b2.pos.y")
+        assertEquals(10.1f, b2.pos.z, "b2.pos.z")
+
+        // b1.speed is still zero
+        assertEquals(0.0f, b1.speed.x, "b1.speed.x")
+        assertEquals(0.0f, b1.speed.y, "b1.speed.y")
+        assertEquals(0.0f, b1.speed.z, "b1.speed.z")
+
+        // b2.speed is still zero
+        assertEquals(0.0f, b2.speed.x, "b2.speed.x")
+        assertEquals(0.0f, b2.speed.y, "b2.speed.y")
+        assertEquals(0.0f, b2.speed.z, "b2.speed.z")
+
+        // b1.nextSpeed is still zero
+        assertEquals(0.0f, b1.nextSpeed.x, "b1.nextSpeed.x")
+        assertEquals(0.0f, b1.nextSpeed.y, "b1.nextSpeed.y")
+        assertEquals(0.0f, b1.nextSpeed.z, "b1.nextSpeed.z")
+
+        // b2.nextSpeed is still zero
+        assertEquals(0.0f, b2.nextSpeed.x, "b2.nextSpeed.x")
+        assertEquals(0.0f, b2.nextSpeed.y, "b2.nextSpeed.y")
+        assertEquals(0.0f, b2.nextSpeed.z, "b2.nextSpeed.z")
+
+        // b1.nextPos is unchanged, because b1 is a LARGE_MASS
+        assertEquals(10.0f, b1.nextPos.x, "b1.nextPos.x")
+        assertEquals(10.0f, b1.nextPos.y, "b1.nextPos.y")
+        assertEquals(10.0f, b1.nextPos.z, "b1.nextPos.z")
+
+        // b2.pos has been moved
+        assertEquals(10.66667f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
+        assertEquals(9.33333f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        assertEquals(10.333337f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+
+        // The new distance should be in the range we'd expect
+        val dx = b1.nextPos.x - b2.nextPos.x
+        val dy = b1.nextPos.y - b2.nextPos.y
+        val dz = b1.nextPos.z - b2.nextPos.z
+        val dist = sqrt(dx * dx + dy * dy + dz * dz)
+        val rsum = b1.radius + b2.radius
+        assertLessThan(dist, rsum + 0.0001f, "new distance") // 1 mm/10
+        assertGreaterThan(dist, rsum - 0.0001f, "new distance")
+
+        // They should no longer collide now
+        assertFalse(ck.checkAndBounceIfNeeded(b1, b2, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
+    fun `should force apart two spheres colliding at their initial pos when the second one is a LARGE_MASS`() {
+        val b1 = FixedSphereBody(
+            "b1",
+            initialPos = MutablePoint3f(10.0f, 10.0f, 10.0f),
+            mass = 9.0f,
+            gravity = false,
+            radius = 0.5f,
+            elasticity = 0.8f,
+            friction = 0.2f,
+        )
+        val b2 = FixedSphereBody(
+            "b2",
+            initialPos = MutablePoint3f(10.2f, 9.8f, 10.1f),
+            mass = LARGE_MASS,
+            gravity = false,
+            radius = 0.5f,
+            elasticity = 0.8f,
+            friction = 0.2f,
+        )
+
+        b1.applyForces()
+        b2.applyForces()
+
+        val ck = CollideSphereVsSphere()
+        val hit = MutableHitResult()
+
+        // They should collide at their original position
+        assertTrue(ck.checkAndBounceIfNeeded(b1, b2, canBounce = true, hit), "should collide")
+
+        // Since b1.pos and b2.pos are farther away than just EPSILON, forcing the bodies apart should not have taken
+        // a random direction, which means that the result should be stable.
+
+        // b1.pos is unchanged
+        assertEquals(10.0f, b1.pos.x, "b1.pos.x")
+        assertEquals(10.0f, b1.pos.y, "b1.pos.y")
+        assertEquals(10.0f, b1.pos.z, "b1.pos.z")
+
+        // b2.pos is unchanged
+        assertEquals(10.2f, b2.pos.x, "b2.pos.x")
+        assertEquals(9.8f, b2.pos.y, "b2.pos.y")
+        assertEquals(10.1f, b2.pos.z, "b2.pos.z")
+
+        // b1.speed is still zero
+        assertEquals(0.0f, b1.speed.x, "b1.speed.x")
+        assertEquals(0.0f, b1.speed.y, "b1.speed.y")
+        assertEquals(0.0f, b1.speed.z, "b1.speed.z")
+
+        // b2.speed is still zero
+        assertEquals(0.0f, b2.speed.x, "b2.speed.x")
+        assertEquals(0.0f, b2.speed.y, "b2.speed.y")
+        assertEquals(0.0f, b2.speed.z, "b2.speed.z")
+
+        // b1.nextSpeed is still zero
+        assertEquals(0.0f, b1.nextSpeed.x, "b1.nextSpeed.x")
+        assertEquals(0.0f, b1.nextSpeed.y, "b1.nextSpeed.y")
+        assertEquals(0.0f, b1.nextSpeed.z, "b1.nextSpeed.z")
+
+        // b2.nextSpeed is still zero
+        assertEquals(0.0f, b2.nextSpeed.x, "b2.nextSpeed.x")
+        assertEquals(0.0f, b2.nextSpeed.y, "b2.nextSpeed.y")
+        assertEquals(0.0f, b2.nextSpeed.z, "b2.nextSpeed.z")
+
+        // b1.nextPos has been moved
+        assertEquals(9.53333f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
+        assertEquals(10.46667f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
+        assertEquals(9.766664f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+
+        // b2.pos is unchanged, because b2 is a LARGE_MASS
+        assertEquals(10.2f, b2.nextPos.x, "b2.nextPos.x")
+        assertEquals(9.8f, b2.nextPos.y, "b2.nextPos.y")
+        assertEquals(10.1f, b2.nextPos.z, "b2.nextPos.z")
+
+        // The new distance should be in the range we'd expect
+        val dx = b1.nextPos.x - b2.nextPos.x
+        val dy = b1.nextPos.y - b2.nextPos.y
+        val dz = b1.nextPos.z - b2.nextPos.z
+        val dist = sqrt(dx * dx + dy * dy + dz * dz)
+        val rsum = b1.radius + b2.radius
+        assertLessThan(dist, rsum + 0.0001f, "new distance") // 1 mm/10
+        assertGreaterThan(dist, rsum - 0.0001f, "new distance")
+
+        // They should no longer collide now
+        assertFalse(ck.checkAndBounceIfNeeded(b1, b2, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
     fun `should correctly handle a secondary collision appearing with three spheres in a row`() {
         val b1 = FixedSphereBody(
             "b1",
-            pos = MutablePoint3f(1.0f, 0.0f, 0.0f),
+            initialPos = MutablePoint3f(1.0f, 0.0f, 0.25f),
             mass = LARGE_MASS,
             gravity = false,
             radius = 0.25f,
-            zOffset = 0.25f,
             elasticity = 1.0f,
             friction = 0.0f,
         )
         val b2 = FixedSphereBody(
             "b2",
-            pos = MutablePoint3f(1.5000001f, 0.0f, 0.0f),
+            initialPos = MutablePoint3f(1.5000001f, 0.0f, 0.25f),
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
-            zOffset = 0.25f,
             elasticity = 1.0f,
             friction = 0.0f,
         )
         val b3 = FixedSphereBody(
             "b3",
-            pos = MutablePoint3f(2.0000002f, 0.0f, 0.0f),
+            initialPos = MutablePoint3f(2.0000002f, 0.0f, 0.25f),
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
-            zOffset = 0.25f,
             elasticity = 1.0f,
             friction = 0.0f,
         )

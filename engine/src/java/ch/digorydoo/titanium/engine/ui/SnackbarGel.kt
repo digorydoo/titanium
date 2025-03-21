@@ -12,10 +12,13 @@ import ch.digorydoo.titanium.engine.texture.Texture
 import kotlin.math.ceil
 
 class SnackbarGel private constructor(val textTex: Texture, val bgTex: Texture): GraphicElement() {
+    init {
+        inDialog = Visibility.ACTIVE
+        inMenu = Visibility.ACTIVE
+        inEditor = Visibility.ACTIVE
+    }
+
     override val renderer = makeRenderer()
-    override val inDialog = Visibility.ACTIVE
-    override val inMenu = Visibility.ACTIVE
-    override val inEditor = Visibility.ACTIVE
 
     private val creationTime = App.time.sessionTime
     private var opacity = 0.0f

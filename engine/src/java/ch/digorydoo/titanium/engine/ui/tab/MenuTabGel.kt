@@ -8,6 +8,12 @@ import ch.digorydoo.titanium.engine.i18n.ITextId
 import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 
 class MenuTabGel(private val textId: ITextId, posX: Int, posY: Int): GraphicElement(posX, posY, 0) {
+    init {
+        inDialog = Visibility.ACTIVE
+        inMenu = Visibility.ACTIVE
+        inEditor = Visibility.ACTIVE
+    }
+
     private val displayText get() = App.i18n.getString(textId)
     private val textTex = App.textures.createTexture(displayText, font = FontName.TOPIC_FONT)
 
@@ -22,10 +28,6 @@ class MenuTabGel(private val textId: ITextId, posX: Int, posY: Int): GraphicElem
             override val renderPos = this@MenuTabGel.pos
         }
     )
-
-    override val inDialog = Visibility.ACTIVE
-    override val inMenu = Visibility.ACTIVE
-    override val inEditor = Visibility.ACTIVE
 
     override fun onRemoveZombie() {
         renderer.free()

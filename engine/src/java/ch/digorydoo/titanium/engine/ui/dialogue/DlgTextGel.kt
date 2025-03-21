@@ -11,9 +11,12 @@ import ch.digorydoo.titanium.engine.ui.DLG_TEXT_MARGIN_Y
 import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 
 class DlgTextGel(private val textTex: Texture, private val bgTex: Texture): GraphicElement() {
-    override val inDialog = Visibility.ACTIVE
-    override val inMenu = Visibility.ACTIVE
-    override val inEditor = Visibility.ACTIVE
+    init {
+        inDialog = Visibility.ACTIVE
+        inMenu = Visibility.ACTIVE
+        inEditor = Visibility.ACTIVE
+    }
+
     override val renderer = makeRenderer()
 
     private fun makeRenderer(): Renderer {

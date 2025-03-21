@@ -6,9 +6,11 @@ import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 
 class MapGel: GraphicElement() {
-    override val inDialog = Visibility.FROZEN_VISIBLE
-    override val inMenu = Visibility.ACTIVE
-    override val inEditor = Visibility.ACTIVE
+    init {
+        inDialog = Visibility.FROZEN_VISIBLE
+        inMenu = Visibility.ACTIVE
+        inEditor = Visibility.ACTIVE
+    }
 
     private val tex = App.textures.getOrCreateTexture("map-town-01.png")
     private val frameSize = Point2f(tex?.width ?: 0, tex?.height ?: 0)

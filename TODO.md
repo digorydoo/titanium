@@ -3,14 +3,15 @@
 ## Backlog
 
 * Physics
-    * Get rid of zOffsets. Gel pos should be in the body's centre; and editor should take this into account.
-      BEFORE you do this, save gellists once, automatically adding zOffset to spawn pt z
     * Continue testing and implementing CollideSphereVsCuboid
     * Rewrite brick collision strategies
+    * Implement angular momentum for spheres
+    * Implement FixedCapsuleBody (similar to a cylinder, but with spheres at the top and bottom)
 
 * Bugs
     * Railing 2 has strange lighting issue across instances (see level)
     * Sometimes keyboard strokes get lost (when frame takes too long, or stroke is hit too quickly)
+    * Max spawn distance is either broken, or incorrectly set for gels in town scene (all are always rendered)
 
 * Materials
     * Ideally, MeshMaterial and BrickMaterial should be merged, and both should use the same shaders

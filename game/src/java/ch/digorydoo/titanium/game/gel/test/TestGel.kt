@@ -17,20 +17,22 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 
 class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
-    override val inDialog = Visibility.ACTIVE
-    override val inMenu = Visibility.INVISIBLE
-    override val inEditor = Visibility.ACTIVE
+    init {
+        bodyPosOffset.set(0.0f, 0.0f, BODY_HEIGHT / 2.0f)
+        inDialog = Visibility.ACTIVE
+        inMenu = Visibility.INVISIBLE
+        inEditor = Visibility.ACTIVE
+    }
 
     override val body = FixedCylinderBody(
         "Test",
-        pos, // shared mutable object
+        initialPos = pos + bodyPosOffset,
         elasticity = 0.42f,
         friction = 0.1f,
         mass = 20.0f,
         gravity = true,
         radius = 0.5f,
-        zOffset = 0.5f,
-        height = 1.0f,
+        height = BODY_HEIGHT,
     )
 
     private val frames = FrameCollection()
@@ -43,7 +45,7 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
     private var hasGroundContact = true
 
     private val renderProps = object: PaperRenderer.Delegate() {
-        override val renderPos get() = this@TestGel.pos
+        override val renderPos = this@TestGel.pos
         override val frameSize get() = frames.frameSize
         override val tex get() = frames.tex
         override val texOffset get() = frames.texOffset
@@ -124,6 +126,7 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
     override fun toString() = "TestGel(${spawnPt.id})"
 
     companion object {
+        private const val BODY_HEIGHT = 1.0f
         private const val MOVING_FORCE = 7.0f
         private const val PUSHING_FORCE = 42.0f
         private const val JUMPING_FORCE = 1200.0f

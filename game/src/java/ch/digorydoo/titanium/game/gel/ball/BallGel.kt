@@ -18,40 +18,39 @@ class BallGel private constructor(
     constructor(spawnPt: BallSpawnPt): this(spawnPt, spawnPt.pos, spawnPt.kind)
     constructor(kind: Kind, x: Float, y: Float, z: Float): this(null, Point3f(x, y, z), kind)
 
+    init {
+        bodyPosOffset.set(0.0f, 0.0f, BALL_RADIUS)
+        inDialog = Visibility.ACTIVE
+        inMenu = Visibility.INVISIBLE
+        inEditor = Visibility.ACTIVE
+    }
+
+    override val body = FixedSphereBody(
+        "$kind",
+        initialPos = pos + bodyPosOffset,
+        elasticity = 0.9f,
+        mass = 0.5f,
+        gravity = true,
+        radius = BALL_RADIUS,
+        friction = 0.1f,
+    )
+
     private val mesh = MeshFileReader.readFile(
         when (kind) {
             Kind.BALL_R25CM -> "ball-r25cm.msh"
         }
     )
 
-    override val body = FixedSphereBody(
-        "$kind",
-        pos, // shared mutable object
-        elasticity = 0.9f,
-        mass = 0.5f,
-        gravity = true,
-        radius = 0.25f,
-        zOffset = 0.25f,
-        friction = 0.1f,
-    )
-
     override val renderer = App.factory.createMeshRenderer(
         object: MeshRenderer.Delegate() {
             override val mesh get() = this@BallGel.mesh
-            override val renderPos get() = this@BallGel.pos
+            override val renderPos = this@BallGel.pos
             override val rotationPhi = spawnPt?.rotation ?: 0.0f
         },
         antiAliasing = false,
         cullFace = true,
         depthTest = true
     )
-
-    override val inDialog = Visibility.ACTIVE
-    override val inMenu = Visibility.INVISIBLE
-    override val inEditor = Visibility.ACTIVE
-
-    override fun onAnimateActive() {
-    }
 
     override fun didCollide(other: GraphicElement, myHit: HitArea, otherHit: HitArea, hitPt: Point3f) {
         // println("Ball collided with $other")
@@ -65,4 +64,8 @@ class BallGel private constructor(
     }
 
     override fun toString() = "BallGel(${spawnPt?.id})"
+
+    companion object {
+        private const val BALL_RADIUS = 0.25f
+    }
 }

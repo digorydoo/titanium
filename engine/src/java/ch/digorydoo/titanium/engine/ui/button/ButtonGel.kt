@@ -21,6 +21,12 @@ class ButtonGel(
     val incDec: ButtonIncDec?,
     val imageTex: Texture?,
 ): GraphicElement() {
+    init {
+        inDialog = Visibility.ACTIVE
+        inMenu = Visibility.ACTIVE
+        inEditor = Visibility.ACTIVE
+    }
+
     class ButtonValue(
         val tex: Texture,
         val frameSize: Point2f,
@@ -35,10 +41,6 @@ class ButtonGel(
         val incTexOffset: Point2f,
         val decTexOffset: Point2f,
     )
-
-    override val inDialog = Visibility.ACTIVE
-    override val inMenu = Visibility.ACTIVE
-    override val inEditor = Visibility.ACTIVE
 
     private var _hilited = false
 

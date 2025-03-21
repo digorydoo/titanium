@@ -34,6 +34,12 @@ class KeyBtnGel(
         DOWN_ARROW(15),
     }
 
+    init {
+        inDialog = Visibility.ACTIVE
+        inMenu = Visibility.ACTIVE
+        inEditor = Visibility.ACTIVE
+    }
+
     private inner class WatchInputMode: Behaviour {
         private var prevMode: InputMode? = null
 
@@ -76,10 +82,6 @@ class KeyBtnGel(
             override val brightness get() = glowProps.brightness
         }
     )
-
-    override val inDialog = Visibility.ACTIVE
-    override val inMenu = Visibility.ACTIVE
-    override val inEditor = Visibility.ACTIVE
 
     private val watchInputMode = WatchInputMode()
 

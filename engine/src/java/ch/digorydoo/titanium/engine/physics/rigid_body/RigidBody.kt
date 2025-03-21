@@ -32,13 +32,14 @@ import kotlin.math.sqrt
  */
 sealed class RigidBody protected constructor(
     val name: String, // for logging purposes only
-    val pos: MutablePoint3f, // mutable object is shared with the caller!
-    val mass: Float,
+    initialPos: Point3f,
+    val mass: Float, // must be > EPSILON
     val elasticity: Float, // 0=totally inelastic, 1=fully elastic
     val friction: Float, // 0=no friction, 1=very high friction
     val gravity: Boolean,
     val collisionRadius: Float, // must cover the entire body plus COLLISION_VICINITY
 ) {
+    val pos = MutablePoint3f(initialPos)
     val speed = MutablePoint3f()
 
     private val _resultingForce = MutablePoint3f()

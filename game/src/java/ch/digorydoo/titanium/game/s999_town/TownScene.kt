@@ -22,7 +22,7 @@ class TownScene: Scene(
 ) {
     override fun enter(restore: RestoredState?) {
         val restoredState = restore as? RestoredStateImpl?
-        val playerPos = restoredState?.playerPos ?: Point3f(175.0f, 156.0f, 7.0f)
+        val playerPos = restoredState?.playerPos ?: Point3f(175.0f, 156.0f, 7.75f)
         val player = PlayerGel(initialPos = playerPos, initialRotationPhi = 0.0f)
         App.content.add(player, LayerKind.MAIN_COLLIDABLE)
 

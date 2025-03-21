@@ -11,8 +11,20 @@ import ch.digorydoo.titanium.engine.texture.FrameCollection
 import ch.digorydoo.titanium.game.gel.static_paper.StaticPaperSpawnPt.Kind.*
 
 class StaticPaperGel(override val spawnPt: StaticPaperSpawnPt): GraphicElement(spawnPt) {
-    private val frames = FrameCollection()
-    private val frameOrigin = MutablePoint2f()
+    init {
+        bodyPosOffset.set(0.0f, 0.0f, BODY_HEIGHT / 2.0f)
+    }
+
+    override val body = FixedCylinderBody(
+        "StaticPaper",
+        initialPos = pos + bodyPosOffset,
+        elasticity = 0.3f,
+        friction = 0.2f,
+        gravity = false,
+        mass = RigidBody.LARGE_MASS,
+        radius = 0.25f,
+        height = BODY_HEIGHT,
+    )
 
     private val turnProps = object: TurnTowardsCamera.Delegate() {
         override var rotationPhi = spawnPt.rotation
@@ -20,21 +32,16 @@ class StaticPaperGel(override val spawnPt: StaticPaperSpawnPt): GraphicElement(s
 
     private val turn = TurnTowardsCamera(turnProps, keepUpright = true)
 
-    override val body = FixedCylinderBody(
-        "StaticPaper",
-        pos, // shared mutable object
-        elasticity = 0.3f,
-        friction = 0.2f,
-        gravity = false,
-        mass = RigidBody.LARGE_MASS,
-        radius = 0.25f,
-        height = 1.5f,
-        zOffset = 0.75f,
-    )
+    override fun onAnimateActive() {
+        turn.animate()
+    }
+
+    private val frames = FrameCollection()
+    private val frameOrigin = MutablePoint2f()
 
     private val renderProps = object: PaperRenderer.Delegate() {
-        override val renderPos get() = this@StaticPaperGel.pos
-        override val frameSize get() = frames.frameSize
+        override val renderPos = this@StaticPaperGel.pos
+        override val frameSize = frames.frameSize
         override val tex get() = frames.tex
         override val texOffset get() = frames.texOffset
         override val origin get() = this@StaticPaperGel.frameOrigin
@@ -44,10 +51,6 @@ class StaticPaperGel(override val spawnPt: StaticPaperSpawnPt): GraphicElement(s
     }
 
     override val renderer = App.factory.createPaperRenderer(renderProps)
-
-    override fun onAnimateActive() {
-        turn.animate()
-    }
 
     init {
         val off: Int
@@ -78,4 +81,8 @@ class StaticPaperGel(override val spawnPt: StaticPaperSpawnPt): GraphicElement(s
     }
 
     override fun toString() = "StaticPaperGel(${spawnPt.id})"
+
+    companion object {
+        private const val BODY_HEIGHT = 2.0f
+    }
 }

@@ -9,6 +9,13 @@ import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.shader.Renderer.BlendMode
 
 class SunGel: GraphicElement() {
+    init {
+        inDialog = Visibility.ACTIVE
+        inMenu = Visibility.INVISIBLE
+        inEditor = Visibility.ACTIVE
+        allowNegativeZ = true
+    }
+
     private val turnProps = object: TurnTowardsCamera.Delegate() {
         override var rotationPhi = 0.0f
         override var rotationRho = 0.0f
@@ -55,11 +62,6 @@ class SunGel: GraphicElement() {
         move.animate()
         turn.animate()
     }
-
-    override val inDialog = Visibility.ACTIVE
-    override val inMenu = Visibility.INVISIBLE
-    override val inEditor = Visibility.ACTIVE
-    override val allowNegativeZ = true
 
     override fun onRemoveZombie() {
         renderer.free()

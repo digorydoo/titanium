@@ -1,15 +1,12 @@
 package ch.digorydoo.titanium.game.player
 
-import ch.digorydoo.titanium.engine.anim.AnimCycle
-import ch.digorydoo.titanium.engine.anim.AnimCycleDef
-import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.texture.FrameCollection
 import ch.digorydoo.titanium.engine.utils.Direction
 import ch.digorydoo.titanium.game.core.GameSampleId.WALK1
 import ch.digorydoo.titanium.game.player.PlayerFrameManager.State.*
 
 // TODO Move non-specific stuff into a base-class
-class PlayerFrameManager(private val gel: GraphicElement, private val frames: FrameCollection) {
+class PlayerFrameManager(private val frames: FrameCollection) {
     enum class State {
         IDLE,
         WALKING,
@@ -26,6 +23,8 @@ class PlayerFrameManager(private val gel: GraphicElement, private val frames: Fr
 
     val isIdle get() = state == IDLE
     val isJumping get() = state == JUMPING
+
+    var cycle: AnimCycle? = null; private set
 
     private val idle = mapOf(
         Direction.NORTH to AnimCycleDef(0),
@@ -129,7 +128,7 @@ class PlayerFrameManager(private val gel: GraphicElement, private val frames: Fr
     private fun setDirStateCycle(d: Direction, s: State, cycleSpeedFactor: Float = 1.0f) {
         if (dir == d && state == s) {
             // Just update cycleSpeedFactor.
-            gel.cycle?.setSpeedFactor(cycleSpeedFactor)
+            cycle?.setSpeedFactor(cycleSpeedFactor)
         } else {
             dir = d
             state = s
@@ -141,13 +140,13 @@ class PlayerFrameManager(private val gel: GraphicElement, private val frames: Fr
             }
 
             if (f == null) {
-                gel.cycle = null
+                cycle = null
                 frames.setFrame(0)
             } else if (f.firstFrame == f.lastFrame || f.cycleDuration <= 0.0f) {
-                gel.cycle = null
+                cycle = null
                 frames.setFrame(f.firstFrame)
             } else {
-                gel.cycle = AnimCycle(
+                cycle = AnimCycle(
                     object: AnimCycle.Delegate {
                         override val cycleDef: AnimCycleDef = f
 
@@ -156,7 +155,7 @@ class PlayerFrameManager(private val gel: GraphicElement, private val frames: Fr
                         }
 
                         override fun cycleEnded() {
-                            gel.cycle = null
+                            cycle = null
                         }
                     }
                 ).apply { setSpeedFactor(cycleSpeedFactor) }

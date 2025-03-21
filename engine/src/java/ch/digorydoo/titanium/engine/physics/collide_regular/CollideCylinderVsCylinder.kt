@@ -1,6 +1,5 @@
 package ch.digorydoo.titanium.engine.physics.collide_regular
 
-import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.HitResult
@@ -19,16 +18,13 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
         body1: FixedCylinderBody,
         centreX1: Float,
         centreY1: Float,
-        refPtZ1: Float,
+        centreZ1: Float,
         body2: FixedCylinderBody,
         centreX2: Float,
         centreY2: Float,
-        refPtZ2: Float,
+        centreZ2: Float,
         outHit: MutableHitResult?,
     ): Boolean {
-        val centreZ1 = refPtZ1 + body1.zOffset
-        val centreZ2 = refPtZ2 + body2.zOffset
-
         val top1 = centreZ1 + body1.height / 2.0f
         val top2 = centreZ2 + body2.height / 2.0f
 
@@ -58,8 +54,8 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
 
         // Compute the overlap on the z-axis at the original position
 
-        val body1OrigCentreZ = body1.pos.z + body1.zOffset
-        val body2OrigCentreZ = body2.pos.z + body2.zOffset
+        val body1OrigCentreZ = body1.pos.z
+        val body2OrigCentreZ = body2.pos.z
 
         val body1OrigTop = body1OrigCentreZ + body1.height / 2.0f
         val body2OrigTop = body2OrigCentreZ + body2.height / 2.0f
@@ -164,26 +160,37 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
     }
 
     override fun bounce(body1: FixedCylinderBody, body2: FixedCylinderBody, hit: HitResult) {
-        separate(body1, body1.zOffset, body2, body2.zOffset)
+        separate(body1, body2, hit)
 
-        val m1 = if (body1.mass <= EPSILON) EPSILON else body1.mass
-        val m2 = if (body2.mass <= EPSILON) EPSILON else body2.mass
+        val m1 = body1.mass
+        val m2 = body2.mass
 
         val v1 = body1.nextSpeed
         val v2 = body2.nextSpeed
 
         val elasticity = body1.elasticity * body2.elasticity
-        val friction = 1.0f - (1.0f - body1.friction) * (1.0f - body2.friction)
 
         if (hit.area1 != HitArea.SIDE) {
-            applyFrictionTopBottom(m1 = m1, v1 = v1, m2 = m2, v2 = v2, friction = friction)
+            val normDir12Z = if (hit.area1 == HitArea.TOP) 1.0f else -1.0f
+
+            // This may change v1 and/or v2
+            applyFriction(
+                m1 = m1,
+                v1 = v1,
+                friction1 = body1.friction,
+                m2 = m2,
+                v2 = v2,
+                friction2 = body2.friction,
+                normDir12X = 0.0f,
+                normDir12Y = 0.0f,
+                normDir12Z = normDir12Z,
+            )
 
             val v1z = v1.z
             val v2z = v2.z
             val vparallelDz = v1z - v2z
-            val expectedSign = if (hit.area1 == HitArea.TOP) 1.0f else -1.0f
 
-            if (sign(vparallelDz) != expectedSign) {
+            if (sign(vparallelDz) != normDir12Z) {
                 // The two objects are separating
                 return
             }
@@ -219,14 +226,17 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
             val normDir12X = pdx / p2DDistance
             val normDir12Y = pdy / p2DDistance
 
-            applyFrictionSide(
+            // This may change v1 and/or v2
+            applyFriction(
                 m1 = m1,
                 v1 = v1,
+                friction1 = body1.friction,
                 m2 = m2,
                 v2 = v2,
+                friction2 = body2.friction,
                 normDir12X = normDir12X,
                 normDir12Y = normDir12Y,
-                friction = friction,
+                normDir12Z = 0.0f,
             )
 
             val v1dotn = v1.x * normDir12X + v1.y * normDir12Y
@@ -281,168 +291,16 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
         }
     }
 
-    private fun applyFrictionTopBottom(m1: Float, v1: MutablePoint3f, m2: Float, v2: MutablePoint3f, friction: Float) {
-        if (friction <= 0.0f) return
-
-        val v1z = v1.z
-        val v2z = v2.z
-        val vparallelDz = v1z - v2z
-
-        if (m1 >= LARGE_MASS) {
-            val vfricZ = vparallelDz * friction
-            val v2pLen = sqrt(v2.x * v2.x + v2.y * v2.y)
-
-            if (vfricZ >= v2pLen || v2pLen < EPSILON) {
-                v2.x = 0.0f
-                v2.y = 0.0f
-            } else {
-                v2.x -= vfricZ * v2.x / v2pLen
-                v2.y -= vfricZ * v2.y / v2pLen
-            }
-        } else if (m2 >= LARGE_MASS) {
-            val vfricZ = vparallelDz * friction
-            val v1pLen = sqrt(v1.x * v1.x + v1.y * v1.y)
-
-            if (vfricZ >= v1pLen || v1pLen < EPSILON) {
-                v1.x = 0.0f
-                v1.y = 0.0f
-            } else {
-                v1.x -= vfricZ * v1.x / v1pLen
-                v1.y -= vfricZ * v1.y / v1pLen
-            }
-        } else {
-            val vfricZ = vparallelDz * friction
-
-            val v1pLen = sqrt(v1.x * v1.x + v1.y * v1.y)
-            val v2pLen = sqrt(v2.x * v2.x + v2.y * v2.y)
-
-            if (vfricZ >= v1pLen || v1pLen < EPSILON) {
-                v1.x = 0.0f
-                v1.y = 0.0f
-            } else {
-                v1.x -= vfricZ * v1.x / v1pLen
-                v1.y -= vfricZ * v1.y / v1pLen
-            }
-
-            if (vfricZ >= v2pLen || v2pLen < EPSILON) {
-                v2.x = 0.0f
-                v2.y = 0.0f
-            } else {
-                v2.x -= vfricZ * v2.x / v2pLen
-                v2.y -= vfricZ * v2.y / v2pLen
-            }
-        }
-    }
-
-    private fun applyFrictionSide(
-        m1: Float,
-        v1: MutablePoint3f,
-        m2: Float,
-        v2: MutablePoint3f,
-        normDir12X: Float,
-        normDir12Y: Float,
-        friction: Float,
-    ) {
-        if (friction <= 0.0f) return
-
-        val v1dotn = v1.x * normDir12X + v1.y * normDir12Y
-        val v1parallelX = normDir12X * v1dotn
-        val v1parallelY = normDir12Y * v1dotn
-        // val v1parallelZ = 0.0f in the XY plane
-
-        var v1perpendX = v1.x - v1parallelX
-        var v1perpendY = v1.y - v1parallelY
-        var v1perpendZ = v1.z // v1parallelZ is 0
-
-        val v2dotn = v2.x * normDir12X + v2.y * normDir12Y
-        val v2parallelX = normDir12X * v2dotn
-        val v2parallelY = normDir12Y * v2dotn
-        // val v2parallelZ = 0.0f in the XY plane
-
-        var v2perpendX = v2.x - v2parallelX
-        var v2perpendY = v2.y - v2parallelY
-        var v2perpendZ = v2.z // v2parallelZ is 0
-
-        val vparallelDx = v1parallelX - v2parallelX
-        val vparallelDy = v1parallelY - v2parallelY
-        // val vparallelDz = 0.0f
-
-        val vfricX = vparallelDx * friction
-        val vfricY = vparallelDy * friction
-        val vfricLen = sqrt(vfricX * vfricX + vfricY * vfricY)
-
-        val vperpendDx = v1perpendX - v2perpendX
-        val vperpendDy = v1perpendY - v2perpendY
-        val vperpendDz = v1perpendZ - v2perpendZ
-        val vperpendDiff = sqrt(vperpendDx * vperpendDx + vperpendDy * vperpendDy + vperpendDz * vperpendDz)
-
-        if (m1 >= LARGE_MASS) {
-            if (vfricLen >= vperpendDiff) {
-                v2perpendX += vperpendDx
-                v2perpendY += vperpendDy
-                v2perpendZ += vperpendDz
-            } else {
-                v2perpendX += vfricLen * vperpendDx / vperpendDiff
-                v2perpendX += vfricLen * vperpendDy / vperpendDiff
-                v2perpendX += vfricLen * vperpendDz / vperpendDiff
-            }
-        } else if (m2 >= LARGE_MASS) {
-            if (vfricLen >= vperpendDiff) {
-                v1perpendX -= vperpendDx
-                v1perpendY -= vperpendDy
-                v1perpendZ -= vperpendDz
-            } else {
-                v1perpendX -= vfricLen * vperpendDx / vperpendDiff
-                v1perpendY -= vfricLen * vperpendDy / vperpendDiff
-                v1perpendZ -= vfricLen * vperpendDz / vperpendDiff
-            }
-        } else {
-            val totalMass = m1 + m2
-
-            if (vfricLen >= vperpendDiff) {
-                v1perpendX -= m2 * vperpendDx / totalMass
-                v1perpendY -= m2 * vperpendDy / totalMass
-                v1perpendZ -= m2 * vperpendDz / totalMass
-
-                v2perpendX += m1 * vperpendDx / totalMass
-                v2perpendY += m1 * vperpendDy / totalMass
-                v2perpendZ += m1 * vperpendDz / totalMass
-            } else {
-                val vdfricX = vfricLen * vperpendDx / vperpendDiff
-                val vdfricY = vfricLen * vperpendDy / vperpendDiff
-                val vdfricZ = vfricLen * vperpendDz / vperpendDiff
-
-                v1perpendX -= m2 * vdfricX / totalMass
-                v1perpendY -= m2 * vdfricY / totalMass
-                v1perpendZ -= m2 * vdfricZ / totalMass
-
-                v2perpendX += m1 * vdfricX / totalMass
-                v2perpendY += m1 * vdfricY / totalMass
-                v2perpendZ += m1 * vdfricZ / totalMass
-            }
-        }
-
-        v1.x = v1perpendX + v1parallelX
-        v1.y = v1perpendY + v1parallelY
-        v1.z = v1perpendZ // v1parallelZ is 0
-
-        v2.x = v2perpendX + v2parallelX
-        v2.y = v2perpendY + v2parallelY
-        v2.z = v2perpendZ // v2parallelZ is 0
-    }
-
     override fun forceApart(
         body1: FixedCylinderBody,
         body2: FixedCylinderBody,
         normDirX1: Float,
         normDirY1: Float,
         normDirZ1: Float,
+        hit: HitResult,
     ) {
         val p1 = body1.nextPos
         val p2 = body2.nextPos
-        val centreX = (p1.x + p2.x) / 2.0f
-        val centreY = (p1.y + p2.y) / 2.0f
-        val centreZ = (p1.z + body1.zOffset + p2.z + body2.zOffset) / 2.0f
 
         // Try moving the bodies until they are separated in Z
 
@@ -485,15 +343,34 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
 
         // Take the smaller of the two move distances
 
-        val moveBy = min(moveByWhenZ, moveByWhenXY) / 2.0f
+        val moveBy = min(moveByWhenZ, moveByWhenXY)
         require(moveBy < Float.POSITIVE_INFINITY) // this can only fail if normDir does not have length 1
 
-        p1.x = centreX + normDirX1 * moveBy
-        p1.y = centreY + normDirY1 * moveBy
-        p1.z = centreZ + normDirZ1 * moveBy - body1.zOffset
+        if (body1.mass >= LARGE_MASS) {
+            if (body2.mass >= LARGE_MASS) {
+                Log.warn("Cannot force $body1 and $body2 apart, because both are LARGE_MASS")
+            } else {
+                p2.x = p1.x - normDirX1 * moveBy
+                p2.y = p1.y - normDirY1 * moveBy
+                p2.z = p1.z - normDirZ1 * moveBy
+            }
+        } else if (body2.mass >= LARGE_MASS) {
+            p1.x = p2.x + normDirX1 * moveBy
+            p1.y = p2.y + normDirY1 * moveBy
+            p1.z = p2.z + normDirZ1 * moveBy
+        } else {
+            val centreX = (p1.x + p2.x) / 2.0f
+            val centreY = (p1.y + p2.y) / 2.0f
+            val centreZ = (p1.z + p2.z) / 2.0f
+            val half = moveBy / 2.0f
 
-        p2.x = centreX - normDirX1 * moveBy
-        p2.y = centreY - normDirY1 * moveBy
-        p2.z = centreZ - normDirZ1 * moveBy - body2.zOffset
+            p1.x = centreX + normDirX1 * half
+            p1.y = centreY + normDirY1 * half
+            p1.z = centreZ + normDirZ1 * half
+
+            p2.x = centreX - normDirX1 * half
+            p2.y = centreY - normDirY1 * half
+            p2.z = centreZ - normDirZ1 * half
+        }
     }
 }

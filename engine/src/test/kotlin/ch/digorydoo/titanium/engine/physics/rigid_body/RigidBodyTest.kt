@@ -19,13 +19,12 @@ internal class CollideSphereVsSphereTest {
         // FixedSphereBody and pass it back as RigidBody.
         return FixedSphereBody(
             name = "TestBody",
-            pos = pos,
+            initialPos = pos,
             elasticity = elasticity,
             friction = friction,
             mass = mass,
             gravity = gravity,
             radius = 1.0f,
-            zOffset = 0.0f,
         )
     }
 

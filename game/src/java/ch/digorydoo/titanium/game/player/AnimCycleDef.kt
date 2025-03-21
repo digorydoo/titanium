@@ -1,10 +1,7 @@
-package ch.digorydoo.titanium.engine.anim
+package ch.digorydoo.titanium.game.player
 
 import ch.digorydoo.titanium.engine.sound.SoundManager.SampleId
 
-/**
- * Definition of a 2D frame animation cycle
- */
 class AnimCycleDef(
     val firstFrame: Int,                    // index of first frame
     lastFrame: Int? = null,                 // index of last frame; null=same as firstFrame (don't cycle)

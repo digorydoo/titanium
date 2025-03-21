@@ -1,29 +1,26 @@
 package ch.digorydoo.titanium.engine.physics.rigid_body
 
-import ch.digorydoo.kutils.point.MutablePoint3f
+import ch.digorydoo.kutils.point.Point3f
 
 /**
- * A sphere has the centre point at (pos.x, pos.y, pos.z + zOffset). This body is "fixed", i.e. has no angular
- * momentum.
+ * This body is "fixed", i.e. has no angular momentum.
  */
 class FixedSphereBody(
     name: String,
-    pos: MutablePoint3f,
+    initialPos: Point3f,
     mass: Float,
     elasticity: Float,
     friction: Float,
     gravity: Boolean,
     val radius: Float,
-    val zOffset: Float,
 ): RigidBody(
     name = name,
-    pos = pos,
+    initialPos = initialPos,
     mass = mass,
     elasticity = elasticity,
     friction = friction,
     gravity = gravity,
     collisionRadius = radius + COLLISION_VICINITY
 ) {
-    override fun toString() =
-        "FixedSphereBody($name, m=$mass, r=$radius)"
+    override fun toString() = "FixedSphereBody($name, m=$mass, r=$radius)"
 }

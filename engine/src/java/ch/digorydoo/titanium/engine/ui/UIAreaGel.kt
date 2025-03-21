@@ -17,15 +17,18 @@ class UIAreaGel(
     private val height: Int? = null,
     private val scaleTexToFrameSize: Boolean = false,
 ): GraphicElement() {
+    init {
+        inDialog = Visibility.ACTIVE
+        inMenu = Visibility.ACTIVE
+        inEditor = Visibility.ACTIVE
+    }
+
     private val texture = when {
         bgTex != null -> bgTex // will be freed in aboutToRemove
         else -> makeTexture(bgColour)
     }
 
     private val frameSize = MutablePoint2f()
-    override val inDialog = Visibility.ACTIVE
-    override val inMenu = Visibility.ACTIVE
-    override val inEditor = Visibility.ACTIVE
     private val texScaleFactor = MutablePoint2f(1.0f, 1.0f)
 
     override val renderer = App.factory.createUISpriteRenderer(

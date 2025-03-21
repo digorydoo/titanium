@@ -12,6 +12,12 @@ import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 
 class TextGel(text: String, alignment: Align.Alignment? = null): GraphicElement() {
+    init {
+        inDialog = Visibility.ACTIVE
+        inMenu = Visibility.ACTIVE
+        inEditor = Visibility.ACTIVE
+    }
+
     var text = text
         set(newText) {
             if (field != newText) {
@@ -34,9 +40,6 @@ class TextGel(text: String, alignment: Align.Alignment? = null): GraphicElement(
     }
 
     override val renderer = App.factory.createUISpriteRenderer(renderProps)
-    override val inDialog = Visibility.ACTIVE
-    override val inMenu = Visibility.ACTIVE
-    override val inEditor = Visibility.ACTIVE
 
     private val rotateProps = object: Rotate.Delegate {
         override var rotation = 0.0f
