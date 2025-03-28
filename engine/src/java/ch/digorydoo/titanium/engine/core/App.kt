@@ -9,7 +9,7 @@ import ch.digorydoo.titanium.engine.editor.Editor
 import ch.digorydoo.titanium.engine.font.FontManager
 import ch.digorydoo.titanium.engine.gel.SpawnManager
 import ch.digorydoo.titanium.engine.i18n.I18nManager
-import ch.digorydoo.titanium.engine.input.Input
+import ch.digorydoo.titanium.engine.input.InputManager
 import ch.digorydoo.titanium.engine.physics.CollisionManager
 import ch.digorydoo.titanium.engine.prefs.PrefsManager
 import ch.digorydoo.titanium.engine.scene.ActiveSceneContent
@@ -36,7 +36,7 @@ abstract class App {
     abstract val fontMgr: FontManager
     abstract val gameMenu: GameMenu
     abstract val i18n: I18nManager
-    abstract val input: Input
+    abstract val inputMgr: InputManager
     abstract val resolutionMgr: ResolutionManager
     abstract val screenshot: ScreenshotManager
     abstract val shaderMgr: ShaderManager
@@ -142,7 +142,8 @@ abstract class App {
         val fonts get() = singleton!!.fontMgr
         val gameMenu get() = singleton!!.gameMenu
         val i18n get() = singleton!!.i18n
-        val input get() = singleton!!.input
+        val input get() = singleton!!.inputMgr.accessor
+        val inputMgr get() = singleton!!.inputMgr
         val lamps get() = singleton!!.lamps
         val player get() = singleton!!.content.player
         val prefs get() = singleton!!.prefs

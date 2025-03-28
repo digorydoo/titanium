@@ -18,9 +18,10 @@ class PrefsManager: Preferences {
     override var autoPickMonitorAndRes: Boolean by watch(initial = true)
     override var stretchViewport: Boolean by watch(initial = false)
     override var scaleUI: Boolean by watch(initial = true)
+    override var swapGamepadBtnsABXY: Boolean by watch(initial = false)
     override var swapCameraX: Boolean by watch(initial = false)
     override var swapCameraY: Boolean by watch(initial = true)
-    override var cameraSpeed: CameraSpeed by watch(initial = CameraSpeed.NORMAL)
+    override var speedOfCameraControls: CameraSpeed by watch(initial = CameraSpeed.NORMAL)
     override var textLanguage: TextLanguage by watch(initial = TextLanguage.ENGLISH)
 
     fun loadFromFile() {

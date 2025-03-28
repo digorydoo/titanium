@@ -12,8 +12,9 @@ interface Preferences {
     var autoPickMonitorAndRes: Boolean
     var stretchViewport: Boolean
     var scaleUI: Boolean
+    var swapGamepadBtnsABXY: Boolean
     var swapCameraX: Boolean
     var swapCameraY: Boolean
-    var cameraSpeed: CameraSpeed
+    var speedOfCameraControls: CameraSpeed
     var textLanguage: TextLanguage
 }

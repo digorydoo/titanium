@@ -21,7 +21,8 @@ class PrefsFileWriter private constructor(
         stream.write(SCALE_UI, prefs.scaleUI)
         stream.write(SWAP_CAMERA_X, prefs.swapCameraX)
         stream.write(SWAP_CAMERA_Y, prefs.swapCameraY)
-        stream.writeInt16(CAMERA_SPEED, prefs.cameraSpeed.id)
+        stream.write(SWAP_GAMEPAD_BTNS_ABXY, prefs.swapGamepadBtnsABXY)
+        stream.writeInt16(SPEED_OF_CAMERA_CONTROLS, prefs.speedOfCameraControls.id)
         stream.writeInt16(TEXT_LANGUAGE, prefs.textLanguage.id)
         stream.write(END_PREFS_FILE)
     }

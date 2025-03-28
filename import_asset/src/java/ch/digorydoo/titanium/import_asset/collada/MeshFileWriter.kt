@@ -138,7 +138,7 @@ class MeshFileWriter(private val stream: MyDataOutputStream, private val accesso
         requiredMaterial: MeshMaterial,
         materialOfParentNode: MeshMaterial,
     ) {
-        // We assume hasAnyDataForMaterial is true for this node when this method was called.
+        // We assume hasAnyDataForMaterial is true for this node when this function was called.
         // But this does not necessarily mean that our own geometry is meant for the material.
 
         stream.write(FileMarker.BEGIN_NODE, node.name)

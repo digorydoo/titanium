@@ -4,7 +4,7 @@ import ch.digorydoo.kutils.string.initCap
 
 /**
  * The constants of BrickShape define the shape of the brick. Each shape corresponds to a brick model that will be used
- * for generating the tesselated model data (see BrickModelHolder).
+ * for generating the tessellated model data (see BrickModelHolder).
  */
 enum class BrickShape(
     val id: Int,

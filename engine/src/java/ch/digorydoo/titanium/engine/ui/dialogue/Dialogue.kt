@@ -3,11 +3,13 @@ package ch.digorydoo.titanium.engine.ui.dialogue
 import ch.digorydoo.kutils.math.lerp
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
+import ch.digorydoo.titanium.engine.input.gamepad.GamepadBtn
 import ch.digorydoo.titanium.engine.sound.EngineSampleId
 import ch.digorydoo.titanium.engine.ui.ITEM_MARGIN_BOTTOM
 import ch.digorydoo.titanium.engine.ui.ITEM_MARGIN_TOP
 import ch.digorydoo.titanium.engine.ui.ITEM_SPACING
 import ch.digorydoo.titanium.engine.ui.KeyBtnGel
+import ch.digorydoo.titanium.engine.ui.choice.BoolChoice
 import ch.digorydoo.titanium.engine.ui.choice.Choice
 import kotlin.math.max
 
@@ -56,31 +58,28 @@ class Dialogue(
     }
 
     fun handle() {
-        val input = App.input.values
-
-        when {
-            input.actionA.pressedOnce -> onSelectKeyPressed()
-            input.enter.pressedOnce -> onSelectKeyPressed()
-            input.actionB.pressedOnce -> onDismissKeyPressed()
-            input.escape.pressedOnce -> onDismissKeyPressed()
-        }
-
-        if (choices != null) {
+        App.input.apply {
             when {
-                input.hatUp.pressedWithRepeat -> hilitePrevItem()
-                input.hatDown.pressedWithRepeat -> hiliteNextItem()
-                input.ljoyUp.pressedWithRepeat -> hilitePrevItem()
-                input.ljoyDown.pressedWithRepeat -> hiliteNextItem()
+                selectBtn.pressedOnce -> onSelectBtnPressed()
+                dismissBtn.pressedOnce -> onDismissBtnPressed()
+                choices != null -> when {
+                    hatOrArrowUp.pressedWithRepeat -> hilitePrevItem()
+                    hatOrArrowDown.pressedWithRepeat -> hiliteNextItem()
+                    ljoyUp.pressedWithRepeat -> hilitePrevItem()
+                    ljoyDown.pressedWithRepeat -> hiliteNextItem()
 
-                input.hatLeft.pressedWithRepeat -> onDecrementKeyPressed(input.alt.pressed)
-                input.hatRight.pressedWithRepeat -> onIncrementKeyPressed(input.alt.pressed)
-                input.ljoyLeft.pressedWithRepeat -> onDecrementKeyPressed(input.alt.pressed)
-                input.ljoyRight.pressedWithRepeat -> onIncrementKeyPressed(input.alt.pressed)
+                    hatOrArrowLeft.pressedWithRepeat -> onDecrementBtnPressed(
+                        smallStep = isPressed(GamepadBtn.REAR_UPPER_LEFT) || altPressed
+                    )
+                    hatOrArrowRight.pressedWithRepeat -> onIncrementBtnPressed(
+                        smallStep = isPressed(GamepadBtn.REAR_UPPER_LEFT) || altPressed
+                    )
+                }
             }
         }
     }
 
-    private fun onSelectKeyPressed() {
+    private fun onSelectBtnPressed() {
         if (choices == null) {
             playBtnSound(isDismiss = true)
             dismiss()
@@ -89,7 +88,16 @@ class Dialogue(
 
         val choice = hilitedChoice ?: return
         val gel = choice.gel ?: return
-        if (!choice.canSelect) return
+
+        if (!choice.canSelect) {
+            if (choice is BoolChoice) {
+                when {
+                    choice.canIncrement -> onIncrementBtnPressed()
+                    choice.canDecrement -> onDecrementBtnPressed()
+                }
+            }
+            return
+        }
 
         val isLastAndDismiss = choice == choices.lastOrNull() && lastItemIsDismiss
         playBtnSound(isLastAndDismiss)
@@ -111,7 +119,7 @@ class Dialogue(
         }
     }
 
-    private fun onIncrementKeyPressed(smallStep: Boolean) {
+    private fun onIncrementBtnPressed(smallStep: Boolean = false) {
         val choice = hilitedChoice ?: return
 
         if (choice.canIncrement) {
@@ -122,7 +130,7 @@ class Dialogue(
         }
     }
 
-    private fun onDecrementKeyPressed(smallStep: Boolean) {
+    private fun onDecrementBtnPressed(smallStep: Boolean = false) {
         val choice = hilitedChoice ?: return
 
         if (choice.canDecrement) {
@@ -133,7 +141,7 @@ class Dialogue(
         }
     }
 
-    private fun onDismissKeyPressed() {
+    private fun onDismissBtnPressed() {
         if (choices == null) {
             playBtnSound(isDismiss = true)
             dismiss()

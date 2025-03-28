@@ -1,0 +1,62 @@
+package ch.digorydoo.titanium.engine.input.keyboard
+
+enum class KeyboardKey {
+    ENTER,
+    ESCAPE,
+    LEFT_SHIFT,
+    RIGHT_SHIFT,
+    LEFT_ALT,
+    RIGHT_ALT,
+    LEFT_META,
+    RIGHT_META,
+    LEFT_CTRL,
+
+    @Deprecated("Not available on some laptops")
+    RIGHT_CTRL,
+
+    ARROW_LEFT,
+    ARROW_RIGHT,
+    ARROW_UP,
+    ARROW_DOWN,
+    TAB,
+    HOME,
+    END,
+    PAGE_DOWN,
+    PAGE_UP,
+    BACKSPACE,
+    FWDDEL,
+    KEYPAD_PLUS,
+    KEYPAD_MINUS,
+    LEFT_BRACKET, // ü in DE-CH layout
+    APOSTROPHE, // ä in DE-CH layout
+    RAW_COMMA,
+    RAW_PERIOD,
+    RAW_MINUS,
+
+    RAW_A,
+    RAW_B,
+    RAW_C,
+    RAW_D,
+    RAW_E,
+    RAW_F,
+    RAW_G,
+    RAW_H,
+    RAW_I,
+    RAW_J,
+    RAW_K,
+    RAW_L,
+    RAW_M,
+    RAW_N,
+    RAW_O,
+    RAW_P,
+    RAW_Q,
+    RAW_R,
+    RAW_S,
+    RAW_T,
+    RAW_U,
+    RAW_V,
+    RAW_W,
+    RAW_X,
+    RAW_Y,
+    RAW_Z, // Y in DE-CH layout
+}

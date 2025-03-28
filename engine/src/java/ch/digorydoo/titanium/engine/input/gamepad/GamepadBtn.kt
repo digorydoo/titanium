@@ -1,0 +1,26 @@
+package ch.digorydoo.titanium.engine.input.gamepad
+
+enum class GamepadBtn {
+    ACTION_A,
+    ACTION_B,
+    ACTION_X,
+    ACTION_Y,
+    OPEN_MENU_LEFT,
+    OPEN_MENU_RIGHT,
+    REAR_UPPER_LEFT,
+    REAR_UPPER_RIGHT,
+    REAR_LOWER_LEFT,
+    REAR_LOWER_RIGHT,
+    LJOY_LEFT,
+    LJOY_RIGHT,
+    LJOY_UP,
+    LJOY_DOWN,
+    RJOY_LEFT,
+    RJOY_RIGHT,
+    RJOY_UP,
+    RJOY_DOWN,
+    HAT_LEFT,
+    HAT_RIGHT,
+    HAT_UP,
+    HAT_DOWN,
+}

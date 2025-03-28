@@ -16,6 +16,8 @@ import ch.digorydoo.titanium.game.gel.static_paper.StaticPaperSpawnPt
 import ch.digorydoo.titanium.game.gel.street_lamp.StreetLampSpawnPt
 import ch.digorydoo.titanium.game.gel.test.TestSpawnPt
 import ch.digorydoo.titanium.game.gel.vase.VaseSpawnPt
+import ch.digorydoo.titanium.main.input.GamepadImpl
+import ch.digorydoo.titanium.main.input.KeyboardImpl
 import ch.digorydoo.titanium.main.shader.MeshRendererImpl
 import ch.digorydoo.titanium.main.shader.PaperRendererImpl
 import ch.digorydoo.titanium.main.shader.SkydomeRendererImpl
@@ -23,6 +25,9 @@ import ch.digorydoo.titanium.main.shader.UISpriteRendererImpl
 import ch.digorydoo.titanium.main.shader.bricks.BrickVolumeRendererImpl
 
 class FactoryImpl: Factory {
+    override fun createGamepad() = GamepadImpl()
+    override fun createKeyboard() = KeyboardImpl()
+
     override fun createBrickVolumeRenderer(translation: Point3f, tex: Texture, modelData: BrickModelData) =
         BrickVolumeRendererImpl(translation, tex, modelData)
 

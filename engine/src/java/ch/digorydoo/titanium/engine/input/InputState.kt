@@ -2,7 +2,7 @@ package ch.digorydoo.titanium.engine.input
 
 import ch.digorydoo.titanium.engine.core.App
 
-class KeyState {
+class InputState {
     var pressed = false
     var handleTime: Float? = null
 

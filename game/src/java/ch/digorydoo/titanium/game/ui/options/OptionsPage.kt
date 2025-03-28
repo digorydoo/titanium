@@ -2,6 +2,7 @@ package ch.digorydoo.titanium.game.ui.options
 
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
+import ch.digorydoo.titanium.engine.input.gamepad.GamepadBtn
 import ch.digorydoo.titanium.engine.prefs.PrefsMenu
 import ch.digorydoo.titanium.engine.ui.button.ButtonArea
 import ch.digorydoo.titanium.engine.ui.tab.MenuTabPage
@@ -73,15 +74,14 @@ class OptionsPage: MenuTabPage {
     override fun animate() {
         if (App.dlg.hasActiveDlg) return
 
-        val input = App.input.values
+        val input = App.input
 
         when {
-            input.hatUp.pressedOnce -> btnArea.hilitePrev()
-            input.hatDown.pressedOnce -> btnArea.hiliteNext()
-            input.ljoyUp.pressedOnce -> btnArea.hilitePrev()
-            input.ljoyDown.pressedOnce -> btnArea.hiliteNext()
-            input.enter.pressedOnce -> btnArea.selectHilited()
-            input.actionA.pressedOnce -> btnArea.selectHilited()
+            input.isPressedOnce(GamepadBtn.LJOY_UP) -> btnArea.hilitePrev()
+            input.isPressedOnce(GamepadBtn.LJOY_DOWN) -> btnArea.hiliteNext()
+            input.hatOrArrowUp.pressedWithRepeat -> btnArea.hilitePrev()
+            input.hatOrArrowDown.pressedWithRepeat -> btnArea.hiliteNext()
+            input.selectBtn.pressedOnce -> btnArea.selectHilited()
         }
     }
 

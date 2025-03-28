@@ -71,14 +71,15 @@ class Camera {
         projection.recompute(props)
     }
 
+    // FIXME move this to PlayerControl
     private fun handleInput() {
         if (mode == FIXED_SOURCE || App.gameMenu.isShown) return
 
         val sx = if (App.prefs.swapCameraX) -1.0f else 1.0f
         val sy = if (App.prefs.swapCameraY) -1.0f else 1.0f
 
-        val factor = App.prefs.cameraSpeed.speed * DELTA_TIME
-        val rightJoy = App.input.values.rightJoy
+        val factor = App.prefs.speedOfCameraControls.speed * DELTA_TIME
+        val rightJoy = App.input.rightJoy
         val dphi = rightJoy.x * CAMERA_PHI_SPEED * factor * sx
         val drho = rightJoy.y * CAMERA_RHO_SPEED * factor * sy
 

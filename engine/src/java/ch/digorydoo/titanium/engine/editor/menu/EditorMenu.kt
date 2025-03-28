@@ -11,7 +11,7 @@ import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 class EditorMenu(
     private val status: EditorStatusBar,
     private val selection: Selection,
-    private val actions: EditorActions,
+    actions: EditorActions,
 ) {
     private val cameraModeMenu = CameraModeMenu(actions)
     private val lightingMenu = LightingMenu(actions)

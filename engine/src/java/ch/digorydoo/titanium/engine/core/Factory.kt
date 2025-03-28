@@ -4,6 +4,8 @@ import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.brick.BrickModelData
 import ch.digorydoo.titanium.engine.brick.BrickVolumeRenderer
 import ch.digorydoo.titanium.engine.gel.SpawnPt
+import ch.digorydoo.titanium.engine.input.gamepad.Gamepad
+import ch.digorydoo.titanium.engine.input.keyboard.Keyboard
 import ch.digorydoo.titanium.engine.mesh.MeshRenderer
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.shader.Renderer.BlendMode
@@ -16,6 +18,9 @@ import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
  * not part of the engine.
  */
 interface Factory {
+    fun createGamepad(): Gamepad
+    fun createKeyboard(): Keyboard
+
     fun createBrickVolumeRenderer(translation: Point3f, tex: Texture, modelData: BrickModelData): BrickVolumeRenderer
     fun createSkydomeRenderer(props: SkydomeRenderer.Delegate): SkydomeRenderer
 

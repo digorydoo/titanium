@@ -30,7 +30,9 @@ class PrefsFileReader private constructor(
                 SCALE_UI -> prefs.scaleUI = stream.readBoolean()
                 SWAP_CAMERA_X -> prefs.swapCameraX = stream.readBoolean()
                 SWAP_CAMERA_Y -> prefs.swapCameraY = stream.readBoolean()
-                CAMERA_SPEED -> prefs.cameraSpeed = CameraSpeed.fromIntOrNull(stream.readInt16()) ?: CameraSpeed.NORMAL
+                SWAP_GAMEPAD_BTNS_ABXY -> prefs.swapGamepadBtnsABXY = stream.readBoolean()
+                SPEED_OF_CAMERA_CONTROLS -> prefs.speedOfCameraControls =
+                    CameraSpeed.fromIntOrNull(stream.readInt16()) ?: CameraSpeed.NORMAL
                 TEXT_LANGUAGE -> prefs.textLanguage = TextLanguage.fromId(stream.readInt16()) ?: TextLanguage.ENGLISH
                 END_PREFS_FILE -> finished = true
                 else -> throw Exception("Unexpected marker in prefs file: $marker")

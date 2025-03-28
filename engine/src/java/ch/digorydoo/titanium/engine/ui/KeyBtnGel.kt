@@ -4,7 +4,7 @@ import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.titanium.engine.behaviours.Glow
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
-import ch.digorydoo.titanium.engine.input.Input.InputMode
+import ch.digorydoo.titanium.engine.input.InputManager.InputMode
 import ch.digorydoo.titanium.engine.texture.FrameCollection
 
 class KeyBtnGel(
@@ -40,23 +40,8 @@ class KeyBtnGel(
         inEditor = Visibility.ACTIVE
     }
 
-    private inner class WatchInputMode: Behaviour {
-        private var prevMode: InputMode? = null
-
-        override fun animate() {
-            if (App.input.mode != prevMode) {
-                prevMode = App.input.mode
-
-                val kind = when (App.input.mode) {
-                    InputMode.GAMEPAD -> kindWhenGamepad
-                    InputMode.KEYBOARD -> kindWhenKeyboard
-                }
-
-                frames.setFrame(kind.frame)
-            }
-        }
-    }
-
+    private var prevMode: InputMode? = null
+    private var prevSwapGamepadBtnsABXY = false
     var scrollOffset = 0.0f
 
     private val frames = FrameCollection().apply {
@@ -68,7 +53,6 @@ class KeyBtnGel(
     }
 
     private val glow = Glow(glowProps, enabled = glowEnabled)
-
     private val renderPos = MutablePoint3f()
 
     override val renderer = App.factory.createUISpriteRenderer(
@@ -83,11 +67,31 @@ class KeyBtnGel(
         }
     )
 
-    private val watchInputMode = WatchInputMode()
-
     override fun onAnimateActive() {
         glow.animate()
-        watchInputMode.animate()
+
+        if (App.input.mode != prevMode || App.prefs.swapGamepadBtnsABXY != prevSwapGamepadBtnsABXY) {
+            prevMode = App.input.mode
+            prevSwapGamepadBtnsABXY = App.prefs.swapGamepadBtnsABXY
+
+            val kind = when (App.input.mode) {
+                InputMode.GAMEPAD -> kindWhenGamepad
+                InputMode.KEYBOARD -> kindWhenKeyboard
+            }
+
+            val frame = when {
+                App.prefs.swapGamepadBtnsABXY -> when (kind) {
+                    Kind.A -> Kind.B.frame
+                    Kind.B -> Kind.A.frame
+                    Kind.X -> Kind.Y.frame
+                    Kind.Y -> Kind.X.frame
+                    else -> kind.frame
+                }
+                else -> kind.frame
+            }
+
+            frames.setFrame(frame)
+        }
     }
 
     override fun onRemoveZombie() {

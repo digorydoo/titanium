@@ -3,12 +3,14 @@ package ch.digorydoo.titanium.engine.editor
 import ch.digorydoo.kutils.math.normAngle
 import ch.digorydoo.kutils.point.MutablePoint2i
 import ch.digorydoo.kutils.point.MutablePoint3i
+import ch.digorydoo.kutils.point.Point2i
 import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.worldToBrick
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.editor.action.EditorActions
 import ch.digorydoo.titanium.engine.editor.cursor.CursorGelHolder
 import ch.digorydoo.titanium.engine.editor.menu.EditorMenu
 import ch.digorydoo.titanium.engine.editor.statusbar.EditorStatusBar
+import ch.digorydoo.titanium.engine.input.keyboard.KeyboardKey
 import ch.digorydoo.titanium.engine.sound.EngineSampleId
 
 class Editor {
@@ -23,9 +25,9 @@ class Editor {
     var isShown = false; private set
 
     fun animate() {
-        val input = App.input.values
+        val input = App.input
 
-        if (input.editorToggle.pressedOnce) {
+        if (input.ctrlPressed && input.isPressedOnce('e')) {
             if (isShown) {
                 hide()
             } else {
@@ -39,80 +41,118 @@ class Editor {
             return
         }
 
-        var cursorDx = 0
-        var cursorDy = 0
-        var cursorDz = 0
-
-        when {
-            input.enter.pressedOnce -> actions.movePlayerToCursorPos()
-
-            input.hatLeft.pressedWithRepeat -> cursorDy = -1 // west
-            input.hatRight.pressedWithRepeat -> cursorDy = 1 // east
-            input.hatUp.pressedWithRepeat -> cursorDx = -1  // north
-            input.hatDown.pressedWithRepeat -> cursorDx = 1 // south
-
-            input.editorPosZDec.pressedWithRepeat -> cursorDz = -1 // down
-            input.editorPosZInc.pressedWithRepeat -> cursorDz = 1 // up
-
-            input.editorPageUp.pressedWithRepeat -> cursorDx = -10 // page north
-            input.editorPageDown.pressedWithRepeat -> cursorDx = 10 // page south
-            input.editorPageLeft.pressedWithRepeat -> cursorDy = -10 // page west
-            input.editorPageRight.pressedWithRepeat -> cursorDy = 10 // page east
-
-            input.editorUndo.pressedOnce -> if (input.shift.pressed) undoStack.redo() else undoStack.undo()
-            input.editorCut.pressedOnce -> clipboard.cut()
-            input.editorCopy.pressedOnce -> clipboard.copy()
-            input.editorPaste.pressedOnce -> clipboard.paste()
-            input.editorBackspace.pressedOnce -> actions.removeSelectedBricks()
-
-            input.editorDraw.pressedOnce -> {
-                if (input.shift.pressed) {
-                    actions.addAnotherSpawnPt()
-                } else {
-                    actions.setShapeAndMaterialOfSelectedBricks()
+        input.apply {
+            when {
+                altPressed -> when {
+                    ctrlPressed -> Unit
+                    shiftPressed -> Unit
+                    isPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> moveSelection(0, -1, 0)
+                    isPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> moveSelection(0, 1, 0)
+                    isPressedWithRepeat(KeyboardKey.ARROW_UP) -> moveSelection(-1, 0, 0)
+                    isPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> moveSelection(1, 0, 0)
+                    isPressedWithRepeat(KeyboardKey.KEYPAD_MINUS) -> moveSelection(0, 0, -1)
+                    isPressedWithRepeat(KeyboardKey.KEYPAD_PLUS) -> moveSelection(0, 0, 1)
+                    isPressedWithRepeat(KeyboardKey.PAGE_UP) -> moveSelection(-20, 0, 0)
+                    isPressedWithRepeat(KeyboardKey.PAGE_DOWN) -> moveSelection(20, 0, 0)
+                    isPressedWithRepeat(KeyboardKey.HOME) -> moveSelection(0, -20, 0)
+                    isPressedWithRepeat(KeyboardKey.END) -> moveSelection(0, 20, 0)
+                }
+                ctrlPressed -> when {
+                    shiftPressed -> when {
+                        // CTRL+SHIFT
+                        isPressedOnce('t') -> actions.jumpToPrevNextSpawnPt(false)
+                        isPressedOnce('z') -> undoStack.redo()
+                    }
+                    else -> when {
+                        // CTRL
+                        isPressedOnce('c') -> clipboard.copy()
+                        isPressedOnce('i') -> actions.printInfo()
+                        isPressedOnce('m') -> actions.applyMaterialToSelectedBricks()
+                        isPressedOnce('n') -> actions.applyShapeToSelectedBricks()
+                        isPressedOnce('r') -> actions.rotateSelection()
+                        isPressedOnce('s') -> actions.saveToFile()
+                        isPressedOnce('t') -> actions.jumpToPrevNextSpawnPt(true)
+                        isPressedOnce('v') -> clipboard.paste()
+                        isPressedOnce('x') -> clipboard.cut()
+                        isPressedOnce('z') -> undoStack.undo()
+                    }
+                }
+                else -> when {
+                    shiftPressed -> when {
+                        // SHIFT
+                        isPressedOnce('q') -> actions.addAnotherSpawnPt()
+                        isPressedOnce('y') -> actions.switchCameraTarget(true)
+                        isPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> extendSelection(0, -1, 0)
+                        isPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> extendSelection(0, 1, 0)
+                        isPressedWithRepeat(KeyboardKey.ARROW_UP) -> extendSelection(-1, 0, 0)
+                        isPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> extendSelection(1, 0, 0)
+                        isPressedWithRepeat(KeyboardKey.KEYPAD_MINUS) -> extendSelection(0, 0, -1)
+                        isPressedWithRepeat(KeyboardKey.KEYPAD_PLUS) -> extendSelection(0, 0, 1)
+                        isPressedWithRepeat(KeyboardKey.PAGE_UP) -> extendSelection(-20, 0, 0)
+                        isPressedWithRepeat(KeyboardKey.PAGE_DOWN) -> extendSelection(20, 0, 0)
+                        isPressedWithRepeat(KeyboardKey.HOME) -> extendSelection(0, -20, 0)
+                        isPressedWithRepeat(KeyboardKey.END) -> extendSelection(0, 20, 0)
+                    }
+                    else -> when {
+                        // all modifiers up
+                        isPressedOnce(KeyboardKey.BACKSPACE) -> actions.removeSelectedBricks()
+                        isPressedOnce(KeyboardKey.ENTER) -> actions.movePlayerToCursorPos()
+                        isPressedOnce(KeyboardKey.ESCAPE) -> menu.showMainMenu()
+                        isPressedOnce(KeyboardKey.FWDDEL) -> actions.removeSelectedBricks()
+                        isPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> collapseSelectionAndMove(0, -1, 0)
+                        isPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> collapseSelectionAndMove(0, 1, 0)
+                        isPressedWithRepeat(KeyboardKey.ARROW_UP) -> collapseSelectionAndMove(-1, 0, 0)
+                        isPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> collapseSelectionAndMove(1, 0, 0)
+                        isPressedWithRepeat(KeyboardKey.KEYPAD_MINUS) -> collapseSelectionAndMove(0, 0, -1)
+                        isPressedWithRepeat(KeyboardKey.KEYPAD_PLUS) -> collapseSelectionAndMove(0, 0, 1)
+                        isPressedWithRepeat(KeyboardKey.PAGE_UP) -> collapseSelectionAndMove(-20, 0, 0)
+                        isPressedWithRepeat(KeyboardKey.PAGE_DOWN) -> collapseSelectionAndMove(20, 0, 0)
+                        isPressedWithRepeat(KeyboardKey.HOME) -> collapseSelectionAndMove(0, -20, 0)
+                        isPressedWithRepeat(KeyboardKey.END) -> collapseSelectionAndMove(0, 20, 0)
+                        isPressedOnce('c') -> menu.showCameraModeMenu()
+                        isPressedOnce('m') -> menu.showMaterialMenu()
+                        isPressedOnce('n') -> menu.showShapeMenu()
+                        isPressedOnce('p') -> actions.pickShapeMaterial()
+                        isPressedOnce('q') -> actions.setShapeAndMaterialOfSelectedBricks()
+                        isPressedOnce('t') -> menu.showSpawnPtMenu()
+                        isPressedOnce('w') -> menu.showWizardMenu()
+                        isPressedOnce('y') -> actions.switchCameraTarget(false)
+                    }
                 }
             }
-
-            input.editorSave.pressedOnce -> actions.saveToFile()
-            input.editorSwitchCameraTarget.pressedOnce -> actions.switchCameraTarget(input.shift.pressed)
-            input.editorInfo.pressedOnce -> actions.printInfo()
-            input.editorRotate.pressedOnce -> actions.rotateSelection()
-
-            input.editorNextSpawnPt.pressedOnce -> actions.jumpToPrevNextSpawnPt(!input.shift.pressed)
-
-            input.escape.pressedOnce -> menu.showMainMenu()
-            input.editorCameraMode.pressedOnce -> menu.showCameraModeMenu()
-            input.editorShapeMenu.pressedOnce -> menu.showShapeMenu()
-            input.editorMaterialMenu.pressedOnce -> menu.showMaterialMenu()
-            input.editorSpawnPtMenu.pressedOnce -> menu.showSpawnPtMenu()
-            input.editorWizardMenu.pressedOnce -> menu.showWizardMenu()
-
-            input.editorApplyShape.pressedOnce -> actions.applyShapeToSelectedBricks()
-            input.editorApplyMaterial.pressedOnce -> actions.applyMaterialToSelectedBricks()
-            input.editorPickShapeMaterial.pressedOnce -> actions.pickShapeMaterial()
         }
+    }
 
-        if (cursorDx != 0 || cursorDy != 0 || cursorDz != 0) {
-            // Apply camera correction to direction (dx, dy)
+    private fun moveSelection(dx: Int, dy: Int, dz: Int) {
+        App.sound.play(EngineSampleId.HILITE1)
+        val dir = dirWithCameraCorrection(dx, dy)
+        selection.move(dir.x, dir.y, dz)
+    }
 
-            App.sound.play(EngineSampleId.HILITE1)
-            val dr = MutablePoint2i()
-            val phi = normAngle(App.camera.currentPhi) // -PI..+PI
+    private fun extendSelection(dx: Int, dy: Int, dz: Int) {
+        App.sound.play(EngineSampleId.HILITE1)
+        val dir = dirWithCameraCorrection(dx, dy)
+        selection.extend(dir.x, dir.y, dz)
+    }
 
-            when {
-                phi >= Math.PI * (3.0 / 4.0) -> dr.set(-cursorDy, cursorDx)
-                phi >= Math.PI * (1 / 4.0) -> dr.set(-cursorDx, -cursorDy)
-                phi >= -Math.PI * (1 / 4.0) -> dr.set(cursorDy, -cursorDx)
-                phi >= -Math.PI * (3.0 / 4.0) -> dr.set(cursorDx, cursorDy)
-                else -> dr.set(-cursorDy, cursorDx)
-            }
+    private fun collapseSelectionAndMove(dx: Int, dy: Int, dz: Int) {
+        App.sound.play(EngineSampleId.HILITE1)
+        val dir = dirWithCameraCorrection(dx, dy)
+        selection.collapseAndMove(dir.x, dir.y, dz)
+    }
 
-            when {
-                input.alt.pressed -> selection.move(dr.x, dr.y, cursorDz)
-                input.shift.pressed -> selection.extend(dr.x, dr.y, cursorDz)
-                else -> selection.collapseAndMove(dr.x, dr.y, cursorDz)
-            }
+    private fun dirWithCameraCorrection(dx: Int, dy: Int): Point2i {
+        val dir = MutablePoint2i()
+        val phi = normAngle(App.camera.currentPhi) // -PI..+PI
+
+        when {
+            phi >= Math.PI * (3.0 / 4.0) -> dir.set(-dy, dx)
+            phi >= Math.PI * (1 / 4.0) -> dir.set(-dx, -dy)
+            phi >= -Math.PI * (1 / 4.0) -> dir.set(dy, -dx)
+            phi >= -Math.PI * (3.0 / 4.0) -> dir.set(dx, dy)
+            else -> dir.set(-dy, dx)
         }
+        return dir
     }
 
     private fun show() {

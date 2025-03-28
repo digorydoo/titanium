@@ -4,6 +4,8 @@ import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.rect.Recti
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
+import ch.digorydoo.titanium.engine.input.gamepad.GamepadBtn
+import ch.digorydoo.titanium.engine.input.keyboard.KeyboardKey
 import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.engine.ui.UIAreaGel
 import ch.digorydoo.titanium.engine.ui.tab.MenuTabDescriptor
@@ -30,60 +32,47 @@ abstract class GameMenu {
     fun animate() {
         if (App.dlg.hasActiveDlg || App.editor.isShown || App.isAboutToTakeScreenshot) return
 
-        val input = App.input.values
+        val input = App.input
 
         when {
-            input.menuLeft.pressedOnce -> show(firstTopic)
-            input.menuRight.pressedOnce -> show(lastTopic)
-            input.actionB.pressedOnce -> if (isShown) dismiss()
-
-            input.escape.pressedOnce -> {
-                when {
-                    isShown -> dismiss()
-                    input.alt.pressed -> show(firstTopic)
-                    else -> show(lastTopic)
-                }
-            }
+            input.isPressedOnce(GamepadBtn.OPEN_MENU_LEFT) -> showOrSwitchOrDismiss(firstTopic)
+            input.isPressedOnce(GamepadBtn.OPEN_MENU_RIGHT) -> showOrSwitchOrDismiss(lastTopic)
+            input.isPressedOnce(KeyboardKey.ESCAPE) -> toggleShow()
         }
 
         if (!isShown) return
 
         when {
-            input.hatLeft.pressedWithRepeat -> show(topic.previous())
-            input.hatRight.pressedWithRepeat -> show(topic.next())
-            input.ljoyLeft.pressedWithRepeat -> show(topic.previous())
-            input.ljoyRight.pressedWithRepeat -> show(topic.next())
+            input.dismissBtn.pressedOnce -> dismiss()
+            input.isPressedOnce(GamepadBtn.REAR_UPPER_LEFT) -> switchTo(topic.previous())
+            input.isPressedOnce(GamepadBtn.REAR_UPPER_RIGHT) -> switchTo(topic.next())
+            input.isPressedOnce(KeyboardKey.HOME) -> switchTo(firstTopic)
+            input.isPressedOnce(KeyboardKey.END) -> switchTo(lastTopic)
+            input.isPressedOnce(KeyboardKey.TAB) -> cycleThroughTopics(reverse = input.shiftPressed)
+
+            // These may need to go away once we have horizontally arranged elements on the page
+            input.isPressedOnce(GamepadBtn.HAT_LEFT) -> switchTo(topic.previous())
+            input.isPressedOnce(GamepadBtn.HAT_RIGHT) -> switchTo(topic.next())
+            input.isPressedOnce(KeyboardKey.ARROW_LEFT) -> switchTo(topic.previous())
+            input.isPressedOnce(KeyboardKey.ARROW_RIGHT) -> switchTo(topic.next())
         }
 
         tabs.forEach { it.page.animate() }
     }
 
-    fun show(newTopic: IGameMenuTopic) {
-        if (isShown) {
-            // Menu is already shown. Just switch tabs.
+    private fun show(initialTopic: IGameMenuTopic) {
+        if (isShown) return
 
-            val prevTopic = topic
-            topic = newTopic
-            indicator?.selectedIdx = indexOf(newTopic)
+        // FIXME make sure show is not called again while waiting for the screenshot!
 
-            if (prevTopic != newTopic) {
-                val prevTab = tabs[indexOf(prevTopic)]
-                val newTab = tabs[indexOf(newTopic)]
-                prevTab.page.hide()
-                newTab.page.show()
-            }
-        } else {
-            // Menu is not yet shown. Take a screenshot, then create gels.
-
-            App.screenshot.take { screenshot ->
-                isShown = true
-                screenshotWhenOpened = screenshot
-                makeGels()
-                topic = newTopic
-                indicator?.selectedIdx = indexOf(newTopic)
-                val newTab = tabs[indexOf(newTopic)]
-                newTab.page.show()
-            }
+        App.screenshot.take { screenshot ->
+            isShown = true
+            screenshotWhenOpened = screenshot
+            makeGels()
+            topic = initialTopic
+            indicator?.selectedIdx = indexOf(initialTopic)
+            val newTab = tabs[indexOf(initialTopic)]
+            newTab.page.show()
         }
     }
 
@@ -93,6 +82,44 @@ abstract class GameMenu {
         System.gc() // now seems a good time
         isShown = false
         screenshotWhenOpened = null
+    }
+
+    private fun switchTo(newTopic: IGameMenuTopic) {
+        if (!isShown) return
+
+        val prevTopic = topic
+        topic = newTopic
+        indicator?.selectedIdx = indexOf(newTopic)
+
+        if (prevTopic != newTopic) {
+            val prevTab = tabs[indexOf(prevTopic)]
+            val newTab = tabs[indexOf(newTopic)]
+            prevTab.page.hide()
+            newTab.page.show()
+        }
+    }
+
+    private fun cycleThroughTopics(reverse: Boolean) {
+        if (reverse) {
+            switchTo(if (topic == firstTopic) lastTopic else topic.previous())
+        } else {
+            switchTo(if (topic == lastTopic) firstTopic else topic.next())
+        }
+    }
+
+    private fun toggleShow() {
+        when {
+            isShown -> dismiss()
+            else -> show(topic) // reopen the topic we had before
+        }
+    }
+
+    private fun showOrSwitchOrDismiss(newTopic: IGameMenuTopic) {
+        when {
+            !isShown -> show(newTopic)
+            topic != newTopic -> switchTo(newTopic)
+            else -> dismiss()
+        }
     }
 
     private fun makeGels() {

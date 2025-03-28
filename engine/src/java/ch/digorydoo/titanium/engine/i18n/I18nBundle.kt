@@ -16,7 +16,7 @@ class I18nBundle(private val name: String, private val locale: Locale) {
     }
 
     fun getStringOrNull(id: ITextId): String? {
-        // We must not access id.bundle here, because this method is called from unit tests, where App is unavailable.
+        // We must not access id.bundle here, because this function is called from unit tests, where App is unavailable.
         val res = res // outside try-block, so it can fail by its own
         try {
             return res.getString(id.resId)

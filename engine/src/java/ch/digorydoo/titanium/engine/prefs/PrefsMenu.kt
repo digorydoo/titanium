@@ -15,13 +15,11 @@ class PrefsMenu {
         val reopen = { show(onDone) }
 
         val choices = listOf(
+            TextChoice(PREFS_GAMEPAD_AND_KEYBOARD) {
+                showGamepadAndKeyboardMenu(reopen)
+            },
             TextChoice(PREFS_MONITOR_AND_RESOLUTION) {
                 showMonitorAndResolutionMenu(reopen)
-            },
-            BoolChoice(PREFS_SWAP_CAMERA_X, App.prefs.swapCameraX) { App.prefs.swapCameraX = it },
-            BoolChoice(PREFS_SWAP_CAMERA_Y, App.prefs.swapCameraY) { App.prefs.swapCameraY = it },
-            TextChoice(App.i18n.format(PREFS_CAMERA_SPEED, App.prefs.cameraSpeed.displayText)) {
-                showCameraSpeedMenu(reopen)
             },
             TextChoice(App.i18n.format(PREFS_TEXT_LANGUAGE, App.prefs.textLanguage.displayText)) {
                 showTextLanguageMenu(reopen)
@@ -30,6 +28,30 @@ class PrefsMenu {
                 App.prefs.saveIfNeeded()
                 onDone()
             }
+        )
+
+        App.dlg.showChoices(
+            choices,
+            0,
+            lastItemIsDismiss = true,
+            playSoundOnOpen = false,
+            playSoundOnDismiss = false,
+        )
+    }
+
+    private fun showGamepadAndKeyboardMenu(onDone: () -> Unit) {
+        val reopen = { show(onDone) }
+
+        val choices = listOf(
+            BoolChoice(PREFS_SWAP_GAMEPAD_BTNS_ABXY, App.prefs.swapGamepadBtnsABXY) {
+                App.prefs.swapGamepadBtnsABXY = it
+            },
+            BoolChoice(PREFS_SWAP_CAMERA_X, App.prefs.swapCameraX) { App.prefs.swapCameraX = it },
+            BoolChoice(PREFS_SWAP_CAMERA_Y, App.prefs.swapCameraY) { App.prefs.swapCameraY = it },
+            TextChoice(App.i18n.format(PREFS_CAMERA_SPEED, App.prefs.speedOfCameraControls.displayText)) {
+                showCameraSpeedMenu(reopen)
+            },
+            TextChoice(DONE, onDone),
         )
 
         App.dlg.showChoices(
@@ -120,7 +142,7 @@ class PrefsMenu {
     private fun showCameraSpeedMenu(onDone: () -> Unit) {
         val choices = CameraSpeed.entries.map {
             TextChoice(it.displayText) {
-                App.prefs.cameraSpeed = it
+                App.prefs.speedOfCameraControls = it
                 onDone()
             }
         }.toMutableList()
@@ -129,7 +151,7 @@ class PrefsMenu {
 
         App.dlg.showChoices(
             choices,
-            CameraSpeed.entries.indexOf(App.prefs.cameraSpeed),
+            CameraSpeed.entries.indexOf(App.prefs.speedOfCameraControls),
             lastItemIsDismiss = true,
             playSoundOnOpen = false,
             playSoundOnDismiss = false,

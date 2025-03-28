@@ -10,8 +10,8 @@ import ch.digorydoo.titanium.game.i18n.I18nManagerImpl
 import ch.digorydoo.titanium.game.s000_start.StartScene
 import ch.digorydoo.titanium.game.ui.GameMenuImpl
 import ch.digorydoo.titanium.main.font.FontManagerImpl
-import ch.digorydoo.titanium.main.input.InputImpl
-import ch.digorydoo.titanium.main.input.InputImpl.KeyAction
+import ch.digorydoo.titanium.main.input.InputManagerImpl
+import ch.digorydoo.titanium.main.input.InputManagerImpl.KeyAction
 import ch.digorydoo.titanium.main.opengl.checkGLError
 import ch.digorydoo.titanium.main.shader.ShaderManagerImpl
 import ch.digorydoo.titanium.main.sound.SoundManagerImpl
@@ -26,12 +26,17 @@ import org.lwjgl.opengl.GL30.*
 import kotlin.system.exitProcess
 
 class AppImpl: App() {
+    init {
+        require(singleton == null) { "_singleton already set" }
+        singleton = this
+    }
+
     override val assets = AssetsImpl()
     override lateinit var content: ActiveSceneContent; private set
     override val factory = FactoryImpl()
     override val fontMgr = FontManagerImpl()
     override val gameMenu = GameMenuImpl()
-    override val input = InputImpl()
+    override val inputMgr = InputManagerImpl()
     override val i18n = I18nManagerImpl()
     override val resolutionMgr = ResolutionManagerImpl()
     override val screenshot = ScreenshotManagerImpl()
@@ -50,9 +55,6 @@ class AppImpl: App() {
     private var needsClear = true
 
     fun run() {
-        require(singleton == null) { "_singleton already set" }
-        singleton = this
-
         try {
             initialize()
             startGame()
@@ -145,7 +147,13 @@ class AppImpl: App() {
         glfwSetKeyCallback(window, ::onKey)
         glfwSetCharCallback(window, ::onChar)
 
-        input.findJoyId() // find devices that were already attached at startup
+        val gamepadId = inputMgr.findAvailableGamepad()
+
+        if (gamepadId >= 0) {
+            inputMgr.bindGamepad(gamepadId)
+        } else {
+            Log.info("No game controller was found")
+        }
 
         glfwMakeContextCurrent(window)
         glfwSwapInterval(1) // enable v-sync
@@ -181,9 +189,14 @@ class AppImpl: App() {
 
     private fun onJoystick(joyId: Int, event: Int) {
         if (event == GLFW_CONNECTED) {
-            input.bindJoyId(joyId)
+            inputMgr.bindGamepad(joyId)
         } else {
-            input.findJoyId() // bind to any other device still attached
+            inputMgr.unbindGamepad()
+            val otherId = inputMgr.findAvailableGamepad() // maybe another one is still attached
+
+            if (otherId >= 0) {
+                inputMgr.bindGamepad(otherId)
+            }
         }
     }
 
@@ -199,15 +212,29 @@ class AppImpl: App() {
             val action = when (glfwAction) {
                 GLFW_PRESS -> KeyAction.PRESS
                 GLFW_RELEASE -> KeyAction.RELEASE
-                else -> null
+                else -> return
             }
-            action?.let { input.onGLFWKeyEvent(key, it) }
+            inputMgr.onGLFWKeyEvent(key, action)
+
+            if (glfwAction == GLFW_PRESS && (modifiers and GLFW_MOD_CONTROL) != 0) {
+                // GLFW does not call onChar() when the control key is down, so we simulate it. This is needed so we
+                // can base the editor shortcuts on the char code rather than the raw key codes.
+
+                val charCode = glfwGetKeyName(key, glfwGetKeyScancode(key))
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { it[0].code }
+                    ?: 0
+
+                if (charCode != 0) {
+                    inputMgr.onGLFWCharEvent(charCode)
+                }
+            }
         }
     }
 
     @Suppress("unused")
     private fun onChar(window: Long, charCode: Int) {
-        input.onGLFWCharEvent(charCode)
+        inputMgr.onGLFWCharEvent(charCode)
     }
 
     private fun tearDown(removeLock: Boolean) {
@@ -241,13 +268,13 @@ class AppImpl: App() {
         glfwSetWindowShouldClose(window, true)
     }
 
-    fun startGame() {
+    private fun startGame() {
         val scene = StartScene()
         content = ActiveSceneContent(scene)
         sceneLoader.load(scene, playSound = false)
     }
 
-    fun loop() {
+    private fun loop() {
         // Since the clear colour also affects the area outside the viewport, it should always be black.
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
 
@@ -286,7 +313,7 @@ class AppImpl: App() {
 
             glfwSwapBuffers(window)
             glfwPollEvents()
-            input.updateGamepad()
+            inputMgr.update()
         }
     }
 }
