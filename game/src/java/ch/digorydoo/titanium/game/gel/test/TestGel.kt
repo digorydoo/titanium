@@ -2,7 +2,8 @@ package ch.digorydoo.titanium.game.gel.test
 
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.Point3f
-import ch.digorydoo.titanium.engine.brick.Brick
+import ch.digorydoo.titanium.engine.brick.BrickMaterial
+import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.physics.HitArea
@@ -10,7 +11,6 @@ import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.texture.FrameCollection
 import ch.digorydoo.titanium.engine.utils.EPSILON
-import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -41,7 +41,6 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
     private var rotationSpeed = 0.0f
     private var jumpInFrames: Int
     private var didCollideWithFloor = true
-    private var speedOfTouchDown = 0.0f
     private var hasGroundContact = true
 
     private val renderProps = object: PaperRenderer.Delegate() {
@@ -57,7 +56,13 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
 
     override val renderer = App.factory.createPaperRenderer(renderProps)
 
-    override fun didCollide(other: GraphicElement, myHit: HitArea, otherHit: HitArea, hitPt: Point3f) {
+    override fun didCollide(
+        other: GraphicElement,
+        myHit: HitArea,
+        otherHit: HitArea,
+        hitPt: Point3f,
+        hitNormal: Point3f,
+    ) {
         println("$this collided with $other")
         changeDirection()
         val ob = other.body
@@ -74,14 +79,29 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
         }
     }
 
-    override fun didCollide(brick: Brick, hitPt: Point3f, hitNormal: Point3f) {
-        if (abs(hitNormal.x) + abs(hitNormal.y) > abs(hitNormal.z)) {
-            changeDirection()
-        }
-
-        if (hitNormal.z > 0.0f && body.nextSpeed.z < 0.0f) {
-            didCollideWithFloor = true
-            speedOfTouchDown = body.nextSpeed.z
+    override fun didCollide(
+        shape: BrickShape,
+        material: BrickMaterial,
+        myHit: HitArea,
+        otherHit: HitArea,
+        hitPt: Point3f,
+        hitNormal: Point3f,
+    ) {
+        when (otherHit) {
+            HitArea.NORTH_FACE,
+            HitArea.EAST_FACE,
+            HitArea.SOUTH_FACE,
+            HitArea.WEST_FACE,
+            -> {
+                println("hit with $otherHit, $shape, $material at $hitPt, n=$hitNormal")
+                changeDirection()
+            }
+            HitArea.TOP -> {
+                didCollideWithFloor = true
+            }
+            else -> {
+                println("hit with $otherHit, $shape, $material at $hitPt, n=$hitNormal")
+            }
         }
     }
 

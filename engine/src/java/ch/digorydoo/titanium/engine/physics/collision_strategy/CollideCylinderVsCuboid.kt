@@ -1,4 +1,4 @@
-package ch.digorydoo.titanium.engine.physics.collide_regular
+package ch.digorydoo.titanium.engine.physics.collision_strategy
 
 import ch.digorydoo.kutils.math.clamp
 import ch.digorydoo.kutils.point.MutablePoint3i
@@ -10,6 +10,7 @@ import ch.digorydoo.titanium.engine.brick.BrickVolume.BrickFaceCovering
 import ch.digorydoo.titanium.engine.physics.*
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCuboidBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
+import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.utils.Direction
 import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.abs
@@ -68,12 +69,12 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
         val cylinderRadiusSqr = cylinderRadius * cylinderRadius
         val cylinderHalfHeight = body1.height / 2.0f
 
-        val cuboidSizeX = body2.size.x
-        val cuboidSizeY = body2.size.y
-        val cuboidSizeZ = body2.size.y
-        val cuboidHalfSizeX = body2.halfSize.x
-        val cuboidHalfSizeY = body2.halfSize.y
-        val cuboidHalfSizeZ = body2.halfSize.z
+        val cuboidSizeX = body2.sizeX
+        val cuboidSizeY = body2.sizeY
+        val cuboidSizeZ = body2.sizeZ
+        val cuboidHalfSizeX = body2.halfSizeX
+        val cuboidHalfSizeY = body2.halfSizeY
+        val cuboidHalfSizeZ = body2.halfSizeZ
 
         val minTop = min(centreZ2 + cuboidHalfSizeZ, centreZ1 + cylinderHalfHeight)
         val maxBottom = max(centreZ2 - cuboidHalfSizeZ, centreZ1 - cylinderHalfHeight)
@@ -97,12 +98,14 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
                     hitPt.set(centreX1, centreY1, centreZ2 - cuboidHalfSizeZ)
                     area1 = HitArea.TOP // cylinder's top
                     area2 = HitArea.BOTTOM // cuboid's bottom
+                    hitNormal12.set(0.0f, 0.0f, 1.0f)
                 }
             } else {
                 outHit?.apply {
                     hitPt.set(centreX1, centreY1, centreZ2 + cuboidHalfSizeZ)
                     area1 = HitArea.BOTTOM // cylinder's bottom
                     area2 = HitArea.TOP // cuboid's top
+                    hitNormal12.set(0.0f, 0.0f, -1.0f)
                 }
             }
             return true
@@ -374,7 +377,7 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
             val origPosXYLen = sqrt(origPosDx * origPosDx + origPosDy * origPosDy)
 
             if (origPosXYLen <= EPSILON) {
-                // The original positions were very close in XY, which we interprete as being top or bottom.
+                // The original positions were very close in XY, which we interpret as being top or bottom.
                 return topBottomFace
             }
 
@@ -426,16 +429,26 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
 
         when (face.area) {
             HitArea.TOP -> {
-                outHit.area1 = HitArea.BOTTOM // the cylinder's bottom
-                outHit.area2 = HitArea.TOP // the cuboid's top
+                outHit.apply {
+                    area1 = HitArea.BOTTOM // the cylinder's bottom
+                    area2 = HitArea.TOP // the cuboid's top
+                    hitNormal12.set(0.0f, 0.0f, -1.0f)
+                }
             }
             HitArea.BOTTOM -> {
-                outHit.area1 = HitArea.TOP // the cylinder's top
-                outHit.area2 = HitArea.BOTTOM // the cuboid's bottom
+                outHit.apply {
+                    area1 = HitArea.TOP // the cylinder's top
+                    area2 = HitArea.BOTTOM // the cuboid's bottom
+                    hitNormal12.set(0.0f, 0.0f, 1.0f)
+                }
             }
             else -> {
-                outHit.area1 = HitArea.SIDE // the cylinder's side
-                outHit.area2 = face.area
+                outHit.apply {
+                    area1 = HitArea.SIDE // the cylinder's side
+                    area2 = face.area
+                    val n = (face as VerticalFaceWithResults).normal
+                    hitNormal12.set(-n.x, -n.y, 0.0f)
+                }
             }
         }
 
@@ -443,173 +456,92 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
     }
 
     override fun bounce(body1: FixedCylinderBody, body2: FixedCuboidBody, hit: HitResult) {
-        separate(body1, body2, hit)
+        when (hit.area2) {
+            HitArea.TOP -> {
+                val normDir12Z = -1.0f // points from body1 to body2
+                separateVertically(body1, body2, normDir12Z)
+                helper.applyFriction(body1, body2, 0.0f, 0.0f, normDir12Z)
 
-        val m1 = body1.mass
-        val m2 = body2.mass
+                val deltaSpeedZ = body2.speed.z - body1.speed.z // positive if cylinder falls down on cuboid
 
-        val v1 = body1.nextSpeed
-        val v2 = body2.nextSpeed
+                if (deltaSpeedZ in 0.0f .. HOPPING_PREVENTION_MAX_SPEED) {
+                    // Prevent cylinder standing on cuboid from constantly hopping due to gravity
+                    body1.nextSpeed.z = body2.nextSpeed.z
+                }
 
-        val normal = when (hit.area2) {
-            HitArea.NORTH_FACE -> Direction.northVector
-            HitArea.EAST_FACE -> Direction.eastVector
-            HitArea.SOUTH_FACE -> Direction.southVector
-            HitArea.WEST_FACE -> Direction.westVector
-            HitArea.TOP -> Direction.upVector
-            HitArea.BOTTOM -> Direction.downVector
-            else -> throw UnexpectedHitAreaError(hit.area2)
+                helper.bounceAtPlane(body1, body2, 0.0f, 0.0f, normDir12Z) // FIXME bounceAtHorizontalPlane
+            }
+            HitArea.BOTTOM -> {
+                val normDir12Z = 1.0f // points from body1 to body2
+                separateVertically(body1, body2, normDir12Z)
+                helper.applyFriction(body1, body2, 0.0f, 0.0f, normDir12Z) // z points from body1 to body2
+
+                val deltaSpeedZ = body1.speed.z - body2.speed.z // positive if cuboid falls down on cylinder
+
+                if (deltaSpeedZ in 0.0f .. HOPPING_PREVENTION_MAX_SPEED) {
+                    // Prevent cuboid standing on cylinder from constantly hopping due to gravity
+                    body2.nextSpeed.z = body1.nextSpeed.z
+                }
+
+                helper.bounceAtPlane(body1, body2, 0.0f, 0.0f, normDir12Z) // FIXME bounceAtHorizontalPlane
+            }
+            else -> {
+                // Separation for the sides of the cuboid is a bit trickier. For now, let's just use a binary search.
+                helper.separateByBinarySearch(body1, body2, hit.hitNormal12, this)
+
+                val normal = when (hit.area2) {
+                    HitArea.NORTH_FACE -> Direction.northVector
+                    HitArea.EAST_FACE -> Direction.eastVector
+                    HitArea.SOUTH_FACE -> Direction.southVector
+                    HitArea.WEST_FACE -> Direction.westVector
+                    else -> throw UnexpectedHitAreaError(hit.area2)
+                }
+
+                val normDir12X = -normal.x
+                val normDir12Y = -normal.y
+                val normDir12Z = -normal.z
+
+                helper.apply {
+                    applyFriction(body1, body2, normDir12X, normDir12Y, normDir12Z)
+                    bounceAtPlane(body1, body2, normDir12X, normDir12Y, normDir12Z)
+                }
+            }
         }
-
-        val normDir12X = -normal.x
-        val normDir12Y = -normal.y
-        val normDir12Z = -normal.z
-
-        // This may change v1 and/or v2
-        applyFriction(
-            m1 = m1,
-            v1 = v1,
-            friction1 = body1.friction,
-            m2 = m2,
-            v2 = v2,
-            friction2 = body2.friction,
-            normDir12X = normDir12X,
-            normDir12Y = normDir12Y,
-            normDir12Z = normDir12Z,
-        )
-        throw NotImplementedError()
-
-        // TODO
-        // val elasticity = body1.elasticity * body2.elasticity
-        //
-        // val v1dotn = v1.x * normDir12X + v1.y * normDir12Y + v1.z * normDir12Z
-        // val v1parallelX = normDir12X * v1dotn
-        // val v1parallelY = normDir12Y * v1dotn
-        // val v1parallelZ = normDir12Z * v1dotn
-        //
-        // val v2dotn = v2.x * normDir12X + v2.y * normDir12Y + v2.z * normDir12Z
-        // val v2parallelX = normDir12X * v2dotn
-        // val v2parallelY = normDir12Y * v2dotn
-        // val v2parallelZ = normDir12Z * v2dotn
-        //
-        // val vparallelDx = v1parallelX - v2parallelX
-        // val vparallelDy = v1parallelY - v2parallelY
-        // val vparallelDz = v1parallelZ - v2parallelZ
-        //
-        // if (m1 >= LARGE_MASS) {
-        //     val v2perpendX = v2.x - v2parallelX
-        //     val v2perpendY = v2.y - v2parallelY
-        //     val v2perpendZ = v2.z - v2parallelZ
-        //
-        //     v2.x = v2perpendX + v1parallelX + vparallelDx * elasticity
-        //     v2.y = v2perpendY + v1parallelY + vparallelDy * elasticity
-        //     v2.z = v2perpendZ + v1parallelZ + vparallelDz * elasticity
-        // } else if (m2 >= LARGE_MASS) {
-        //     val v1perpendX = v1.x - v1parallelX
-        //     val v1perpendY = v1.y - v1parallelY
-        //     val v1perpendZ = v1.z - v1parallelZ
-        //
-        //     v1.x = v1perpendX + v2parallelX - vparallelDx * elasticity
-        //     v1.y = v1perpendY + v2parallelY - vparallelDy * elasticity
-        //     v1.z = v1perpendZ + v2parallelZ - vparallelDz * elasticity
-        // } else {
-        //     val v1perpendX = v1.x - v1parallelX
-        //     val v1perpendY = v1.y - v1parallelY
-        //     val v1perpendZ = v1.z - v1parallelZ
-        //
-        //     val v2perpendX = v2.x - v2parallelX
-        //     val v2perpendY = v2.y - v2parallelY
-        //     val v2perpendZ = v2.z - v2parallelZ
-        //
-        //     val totalMass = m1 + m2
-        //
-        //     val sx = v1parallelX * m1 + v2parallelX * m2
-        //     val sy = v1parallelY * m1 + v2parallelY * m2
-        //     val sz = v1parallelZ * m1 + v2parallelZ * m2
-        //
-        //     v1.x = v1perpendX + (sx - vparallelDx * elasticity * m2) / totalMass
-        //     v1.y = v1perpendY + (sy - vparallelDy * elasticity * m2) / totalMass
-        //     v1.z = v1perpendZ + (sz - vparallelDz * elasticity * m2) / totalMass
-        //
-        //     v2.x = v2perpendX + (sx + vparallelDx * elasticity * m1) / totalMass
-        //     v2.y = v2perpendY + (sy + vparallelDy * elasticity * m1) / totalMass
-        //     v2.z = v2perpendZ + (sz + vparallelDz * elasticity * m1) / totalMass
-        // }
     }
 
-    override fun forceApart(
-        body1: FixedCylinderBody,
-        body2: FixedCuboidBody,
-        normDirX1: Float,
-        normDirY1: Float,
-        normDirZ1: Float,
-        hit: HitResult,
-    ) {
-        throw NotImplementedError()
-        // TODO
-        // val p1 = body1.nextPos
-        // val p2 = body2.nextPos
-        //
-        // val normal = when (hit.area2) {
-        //     HitArea.NORTH_FACE -> Direction.northVector
-        //     HitArea.EAST_FACE -> Direction.eastVector
-        //     HitArea.SOUTH_FACE -> Direction.southVector
-        //     HitArea.WEST_FACE -> Direction.westVector
-        //     HitArea.TOP -> Direction.upVector
-        //     HitArea.BOTTOM -> Direction.downVector
-        //     else -> throw UnexpectedHitAreaError(hit.area2)
-        // }
-        //
-        // val nx = normal.x
-        // val ny = normal.y
-        // val nz = normal.z
-        //
-        // val divisor = normDirX1 * nx + normDirY1 * ny + normDirZ1 * nz
-        //
-        // if (abs(divisor) < EPSILON) {
-        //     Log.warn("Cannot force $body1 and $body2 apart, because the divisor is too small")
-        //     return
-        // }
-        //
-        // val faceCentreX = p2.x + nx * body2.halfSize.x
-        // val faceCentreY = p2.y + ny * body2.halfSize.y
-        // val faceCentreZ = p2.z + nz * body2.halfSize.z
-        //
-        // val r = body1.radius
-        //
-        // val k = (nx * (r * nx - p1.x + faceCentreX) +
-        //     ny * (r * ny - p1.y + faceCentreY) +
-        //     nz * (r * nz - p1.z + faceCentreZ)) / divisor
-        //
-        // if (k < 0.0f) {
-        //     Log.warn("Cannot force $body1 and $body2 apart, because moveBy has an unexpected value: $k")
-        //     return
-        // }
-        //
-        // val moveBy = k + 2.0f * EPSILON
-        //
-        // if (body1.mass >= LARGE_MASS) {
-        //     if (body2.mass >= LARGE_MASS) {
-        //         Log.warn("Cannot force $body1 and $body2 apart, because both are LARGE_MASS")
-        //     } else {
-        //         p2.x = p1.x - normDirX1 * moveBy
-        //         p2.y = p1.y - normDirY1 * moveBy
-        //         p2.z = p1.z - normDirZ1 * moveBy
-        //     }
-        // } else if (body2.mass >= LARGE_MASS) {
-        //     p1.x = p2.x + normDirX1 * moveBy
-        //     p1.y = p2.y + normDirY1 * moveBy
-        //     p1.z = p2.z + normDirZ1 * moveBy
-        // } else {
-        //     val half = moveBy / 2.0f
-        //
-        //     p1.x += normDirX1 * half
-        //     p1.y += normDirY1 * half
-        //     p1.z += normDirZ1 * half
-        //
-        //     p2.x -= normDirX1 * half
-        //     p2.y -= normDirY1 * half
-        //     p2.z -= normDirZ1 * half
-        // }
+    private fun separateVertically(cylinder: FixedCylinderBody, cuboid: FixedCuboidBody, normDir12Z: Float) {
+        val p1 = cylinder.nextPos
+        val p2 = cuboid.nextPos
+
+        val currentDistance = (p2.z - p1.z) * normDir12Z
+        val requiredDistance = cylinder.height / 2.0f + cuboid.halfSizeZ + EPSILON
+        val moveBy = requiredDistance - currentDistance
+
+        if (moveBy <= 0.0f) {
+            Log.warn("separateVertically was called, but bodies seem to be vertically separated already")
+            return
+        }
+
+        when {
+            cylinder.mass < LARGE_MASS -> when {
+                cuboid.mass < LARGE_MASS -> {
+                    val move1By = moveBy * cuboid.mass / (cylinder.mass + cuboid.mass)
+                    val move2By = moveBy - move1By
+
+                    p1.z -= normDir12Z * move1By
+                    p2.z += normDir12Z * move2By
+                }
+                else -> {
+                    p1.z -= normDir12Z * moveBy
+                }
+            }
+            cuboid.mass < LARGE_MASS -> {
+                p2.z += normDir12Z * moveBy
+            }
+            else -> {
+                Log.warn("Separating $cylinder from $cuboid failed, because both bodies are LARGE_MASS")
+                return
+            }
+        }
     }
 }

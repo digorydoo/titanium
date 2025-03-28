@@ -3,9 +3,11 @@ package ch.digorydoo.titanium.game.player
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.behaviours.TurnTowardsCamera
-import ch.digorydoo.titanium.engine.brick.Brick
+import ch.digorydoo.titanium.engine.brick.BrickMaterial
+import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.texture.FrameCollection
@@ -57,7 +59,14 @@ class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): GraphicElement(
         override val rotationRho get() = turnProps.rotationRho
     }
 
-    override fun didCollide(brick: Brick, hitPt: Point3f, hitNormal: Point3f) {
+    override fun didCollide(
+        shape: BrickShape,
+        material: BrickMaterial,
+        myHit: HitArea,
+        otherHit: HitArea,
+        hitPt: Point3f,
+        hitNormal: Point3f,
+    ) {
         if (hitNormal.z > 0.0f && body.nextSpeed.z < 0.0f) {
             playerBehaviour.apply {
                 didCollideWithFloor = true

@@ -1,13 +1,15 @@
-package ch.digorydoo.titanium.engine.physics.collide_regular
+package ch.digorydoo.titanium.engine.physics.collision_strategy
 
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point3f
-import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.MutableHitResult
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCuboidBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
-import org.junit.jupiter.api.BeforeAll
+import ch.digorydoo.titanium.engine.utils.Direction
+import ch.digorydoo.titanium.engine.utils.assertGreaterThan
+import ch.digorydoo.titanium.engine.utils.assertLessThan
+import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -42,7 +44,7 @@ internal class CollideSphereVsCuboidTest {
 
         fun check() = ck.checkAndBounceIfNeeded(b1, b2, canBounce = false, hit)
 
-        fun shouldCollideAt(p1: Point3f, p2: Point3f, area: HitArea, expectedHitPt: Point3f) {
+        fun shouldCollideAt(p1: Point3f, p2: Point3f, area: HitArea, expectedHitPt: Point3f, expectedNormal: Point3f) {
             b1.nextPos.set(p1)
             b2.nextPos.set(p2)
 
@@ -53,6 +55,15 @@ internal class CollideSphereVsCuboidTest {
             assertEquals(expectedHitPt.x, hit.hitPt.x, TOLERANCE, "hitPt.x ($area)")
             assertEquals(expectedHitPt.y, hit.hitPt.y, TOLERANCE, "hitPt.y ($area)")
             assertEquals(expectedHitPt.z, hit.hitPt.z, TOLERANCE, "hitPt.z ($area)")
+
+            assertEquals(expectedNormal.x, hit.hitNormal12.x, TOLERANCE, "hitNormal12.x ($area)")
+            assertEquals(expectedNormal.y, hit.hitNormal12.y, TOLERANCE, "hitNormal12.y ($area)")
+            assertEquals(expectedNormal.z, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z ($area)")
+
+            val n = hit.hitNormal12
+            val len = sqrt(n.x * n.x + n.y * n.y + n.z * n.z)
+            assertLessThan(len, 1.01f, "hitNormal12")
+            assertGreaterThan(len, 0.99f, "hitNormal12")
         }
 
         fun shouldNotCollideAt(p1: Point3f, p2: Point3f) {
@@ -61,24 +72,25 @@ internal class CollideSphereVsCuboidTest {
             assertFalse(check(), "should not collide at $p1 vs $p2, but collided with area ${hit.area2}")
         }
 
-        // Check the sitation of complete overlap
+        // Check the situation of complete overlap
         shouldCollideAt(
             Point3f(10.0f, 10.0f, 10.0f),
             Point3f(10.0f, 10.0f, 10.0f),
             HitArea.NORTH_FACE, // this is arbitrary since we have a hit on all sides
             Point3f(9.8f, 10.0f, 10.0f), // seems odd, but correct since the hit point is always on the colliding face
+            Direction.southVector // points from sphere to cuboid, i.e. into the cuboid
         )
 
         val x = 10.0f
         val y = 10.0f
         val z = 10.0f
         val r = b1.radius
-        val xsouth = x + b2.size.x / 2
-        val xnorth = x - b2.size.x / 2
-        val yeast = y + b2.size.y / 2
-        val ywest = y - b2.size.y / 2
-        val ztop = z + b2.size.z / 2
-        val zbottom = z - b2.size.z / 2
+        val xsouth = x + b2.sizeX / 2
+        val xnorth = x - b2.sizeX / 2
+        val yeast = y + b2.sizeY / 2
+        val ywest = y - b2.sizeY / 2
+        val ztop = z + b2.sizeZ / 2
+        val zbottom = z - b2.sizeZ / 2
 
         // North face
         run {
@@ -88,6 +100,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.NORTH_FACE,
                 Point3f(9.8f, y, z),
+                Direction.southVector,
             )
             shouldNotCollideAt(Point3f(xnorth - r - 0.000001f, y, z), Point3f(x, y, z))
 
@@ -97,6 +110,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.NORTH_FACE,
                 Point3f(9.8f, y, 10.099f),
+                Direction.southVector,
             )
             shouldNotCollideAt(Point3f(xnorth - r + 0.000001f, y, ztop + 0.001f), Point3f(x, y, z))
 
@@ -106,6 +120,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.NORTH_FACE,
                 Point3f(9.8f, y, 9.901f),
+                Direction.southVector,
             )
             shouldNotCollideAt(Point3f(xnorth - r + 0.000001f, y, zbottom - 0.001f), Point3f(x, y, z))
         }
@@ -118,6 +133,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.EAST_FACE,
                 Point3f(x, 10.15f, z),
+                Direction.westVector,
             )
             shouldNotCollideAt(Point3f(x, yeast + r + 0.000001f, z), Point3f(x, y, z))
 
@@ -127,6 +143,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.EAST_FACE,
                 Point3f(x, 10.15f, 10.099f),
+                Direction.westVector,
             )
             shouldNotCollideAt(Point3f(x, yeast + r - 0.000001f, ztop + 0.001f), Point3f(x, y, z))
 
@@ -136,6 +153,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.EAST_FACE,
                 Point3f(x, 10.15f, 9.901f),
+                Direction.westVector,
             )
             shouldNotCollideAt(Point3f(x, yeast + r - 0.000001f, zbottom - 0.001f), Point3f(x, y, z))
         }
@@ -148,6 +166,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.SOUTH_FACE,
                 Point3f(10.2f, y, z),
+                Direction.northVector,
             )
             shouldNotCollideAt(Point3f(xsouth + r + 0.000001f, y, z), Point3f(x, y, z))
 
@@ -157,6 +176,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.SOUTH_FACE,
                 Point3f(10.2f, y, 10.099f),
+                Direction.northVector,
             )
             shouldNotCollideAt(Point3f(xsouth + r - 0.000001f, y, ztop + 0.001f), Point3f(x, y, z))
 
@@ -166,6 +186,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.SOUTH_FACE,
                 Point3f(10.2f, y, 9.901f),
+                Direction.northVector,
             )
             shouldNotCollideAt(Point3f(xsouth + r - 0.000001f, y, zbottom - 0.001f), Point3f(x, y, z))
         }
@@ -178,6 +199,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.WEST_FACE,
                 Point3f(x, 9.85f, z),
+                Direction.eastVector,
             )
             shouldNotCollideAt(Point3f(x, ywest - r - 0.000001f, z), Point3f(x, y, z))
 
@@ -187,6 +209,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.WEST_FACE,
                 Point3f(x, 9.85f, 10.099f),
+                Direction.eastVector,
             )
             shouldNotCollideAt(Point3f(x, ywest - r + 0.000001f, ztop + 0.001f), Point3f(x, y, z))
 
@@ -196,6 +219,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.WEST_FACE,
                 Point3f(x, 9.85f, 9.901f),
+                Direction.eastVector,
             )
             shouldNotCollideAt(Point3f(x, ywest - r + 0.000001f, zbottom - 0.001f), Point3f(x, y, z))
         }
@@ -208,6 +232,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.TOP,
                 Point3f(x, y, 10.1f),
+                Direction.downVector,
             )
             shouldNotCollideAt(Point3f(x, y, ztop + r + 0.000001f), Point3f(x, y, z))
 
@@ -217,6 +242,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.TOP,
                 Point3f(9.8f, y, 10.1f),
+                Direction.downVector,
             )
             shouldNotCollideAt(Point3f(xnorth, y, ztop + r + 0.000001f), Point3f(x, y, z))
 
@@ -226,6 +252,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.TOP,
                 Point3f(x, 10.15f, 10.1f),
+                Direction.downVector,
             )
             shouldNotCollideAt(Point3f(x, yeast, ztop + r + 0.000001f), Point3f(x, y, z))
 
@@ -235,6 +262,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.TOP,
                 Point3f(10.2f, y, 10.1f),
+                Direction.downVector,
             )
             shouldNotCollideAt(Point3f(xsouth, y, ztop + r + 0.000001f), Point3f(x, y, z))
 
@@ -244,6 +272,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.TOP,
                 Point3f(x, 9.85f, 10.1f),
+                Direction.downVector,
             )
             shouldNotCollideAt(Point3f(x, ywest, ztop + r + 0.000001f), Point3f(x, y, z))
         }
@@ -256,6 +285,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.BOTTOM,
                 Point3f(x, y, 9.9f),
+                Direction.upVector,
             )
             shouldNotCollideAt(Point3f(x, y, zbottom - r - 0.000001f), Point3f(x, y, z))
 
@@ -265,6 +295,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.BOTTOM,
                 Point3f(9.8f, y, 9.9f),
+                Direction.upVector,
             )
             shouldNotCollideAt(Point3f(xnorth, y, zbottom - r - 0.000001f), Point3f(x, y, z))
 
@@ -274,6 +305,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.BOTTOM,
                 Point3f(x, 10.15f, 9.9f),
+                Direction.upVector,
             )
             shouldNotCollideAt(Point3f(x, yeast, zbottom - r - 0.000001f), Point3f(x, y, z))
 
@@ -283,6 +315,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.BOTTOM,
                 Point3f(10.2f, y, 9.9f),
+                Direction.upVector,
             )
             shouldNotCollideAt(Point3f(xsouth, y, zbottom - r - 0.000001f), Point3f(x, y, z))
 
@@ -292,11 +325,12 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.BOTTOM,
                 Point3f(x, 9.85f, 9.9f),
+                Direction.upVector,
             )
             shouldNotCollideAt(Point3f(x, ywest, zbottom - r - 0.000001f), Point3f(x, y, z))
         }
 
-        // Top south east corner
+        // Top south-east corner
         run {
             // When the sphere's centre point is aligned to the corner in two axes
             shouldCollideAt(
@@ -304,6 +338,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.SOUTH_FACE,
                 Point3f(10.2f, 10.15f, 10.1f),
+                Direction.northVector,
             )
             shouldNotCollideAt(Point3f(xsouth + r + 0.000001f, yeast, ztop), Point3f(x, y, z))
             shouldCollideAt(
@@ -311,6 +346,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.EAST_FACE,
                 Point3f(10.2f, 10.15f, 10.1f),
+                Direction.westVector,
             )
             shouldNotCollideAt(Point3f(xsouth, yeast + r + 0.000001f, ztop), Point3f(x, y, z))
             shouldCollideAt(
@@ -318,6 +354,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.TOP,
                 Point3f(10.2f, 10.15f, 10.1f),
+                Direction.downVector,
             )
             shouldNotCollideAt(Point3f(xsouth, yeast, ztop + r + 0.000001f), Point3f(x, y, z))
 
@@ -327,22 +364,25 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.TOP,
                 Point3f(10.2f, 10.15f, 10.1f),
+                Direction.downVector,
             )
             shouldCollideAt(
                 Point3f(xsouth + r - 0.209f, yeast + r - 0.206f, ztop + r - 0.22f),
                 Point3f(x, y, z),
                 HitArea.EAST_FACE,
                 Point3f(10.2f, 10.15f, 10.1f),
+                Direction.westVector,
             )
             shouldCollideAt(
                 Point3f(xsouth + r - 0.206f, yeast + r - 0.22f, ztop + r - 0.209f),
                 Point3f(x, y, z),
                 HitArea.SOUTH_FACE,
                 Point3f(10.2f, 10.15f, 10.1f),
+                Direction.northVector,
             )
         }
 
-        // Bottom north west corner
+        // Bottom north-west corner
         run {
             // When the sphere's centre point is aligned to the corner in two axes
             shouldCollideAt(
@@ -350,6 +390,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.NORTH_FACE,
                 Point3f(9.8f, 9.85f, 9.9f),
+                Direction.southVector,
             )
             shouldNotCollideAt(Point3f(xnorth - r - 0.000001f, ywest, zbottom), Point3f(x, y, z))
             shouldCollideAt(
@@ -357,6 +398,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.WEST_FACE,
                 Point3f(9.8f, 9.85f, 9.9f),
+                Direction.eastVector,
             )
             shouldNotCollideAt(Point3f(xnorth, ywest - r - 0.000001f, zbottom), Point3f(x, y, z))
             shouldCollideAt(
@@ -364,6 +406,7 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.BOTTOM,
                 Point3f(9.8f, 9.85f, 9.9f),
+                Direction.upVector,
             )
             shouldNotCollideAt(Point3f(xnorth, ywest, zbottom - r - 0.000001f), Point3f(x, y, z))
 
@@ -373,18 +416,21 @@ internal class CollideSphereVsCuboidTest {
                 Point3f(x, y, z),
                 HitArea.BOTTOM,
                 Point3f(9.8f, 9.85f, 9.9f),
+                Direction.upVector,
             )
             shouldCollideAt(
                 Point3f(xnorth - r + 0.209f, ywest - r + 0.206f, zbottom - r + 0.22f),
                 Point3f(x, y, z),
                 HitArea.WEST_FACE,
                 Point3f(9.8f, 9.85f, 9.9f),
+                Direction.eastVector,
             )
             shouldCollideAt(
                 Point3f(xnorth - r + 0.206f, ywest - r + 0.22f, zbottom - r + 0.209f),
                 Point3f(x, y, z),
                 HitArea.NORTH_FACE,
                 Point3f(9.8f, 9.85f, 9.9f),
+                Direction.southVector,
             )
         }
     }
@@ -455,12 +501,12 @@ internal class CollideSphereVsCuboidTest {
             assertEquals(10.099723f, hit.hitPt.y, TOLERANCE, "hitPt.y")
             assertEquals(10.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-            assertEquals(1.0003086f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.099861f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+            assertEquals(0.9943219f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+            assertEquals(10.099723f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
             assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(1.5007474f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.0001135f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+            assertEquals(1.5056458f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+            assertEquals(10.000227f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
             assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
             assertEquals(-0.02370371f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
@@ -516,12 +562,12 @@ internal class CollideSphereVsCuboidTest {
             assertEquals(1.2505051f, hit.hitPt.y, TOLERANCE, "hitPt.y")
             assertEquals(10.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-            assertEquals(10.099861f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(1.5006914f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+            assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+            assertEquals(1.5066781f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
             assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(10.0001135f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(1.0002525f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+            assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+            assertEquals(0.9953543f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
             assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
             assertEquals(-0.0033333348f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
@@ -577,12 +623,12 @@ internal class CollideSphereVsCuboidTest {
             assertEquals(10.099723f, hit.hitPt.y, TOLERANCE, "hitPt.y")
             assertEquals(10.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-            assertEquals(1.5006914f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.099861f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+            assertEquals(1.5066781f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+            assertEquals(10.099723f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
             assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(1.0002525f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.0001135f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+            assertEquals(0.9953543f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+            assertEquals(10.000227f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
             assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
             assertEquals(0.02370371f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
@@ -638,12 +684,12 @@ internal class CollideSphereVsCuboidTest {
             assertEquals(1.250495f, hit.hitPt.y, TOLERANCE, "hitPt.y")
             assertEquals(10.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-            assertEquals(10.099861f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(1.0003086f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+            assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+            assertEquals(0.9943219f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
             assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(10.0001135f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(1.5007474f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+            assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+            assertEquals(1.5056458f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
             assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
             assertEquals(-0.0033333348f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
@@ -699,13 +745,13 @@ internal class CollideSphereVsCuboidTest {
             assertEquals(10.0f, hit.hitPt.y, TOLERANCE, "hitPt.y")
             assertEquals(1.2505051f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-            assertEquals(10.099861f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+            assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
             assertEquals(10.0f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(1.5006914f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+            assertEquals(1.5066781f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(10.0001135f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+            assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
             assertEquals(10.0f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(1.0002525f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+            assertEquals(0.9953543f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
             assertEquals(-0.0033333348f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
             assertEquals(0.0f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
@@ -760,13 +806,13 @@ internal class CollideSphereVsCuboidTest {
             assertEquals(10.0f, hit.hitPt.y, TOLERANCE, "hitPt.y")
             assertEquals(1.250495f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-            assertEquals(10.099861f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+            assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
             assertEquals(10.0f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(1.0003086f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+            assertEquals(0.9943219f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(10.0001135f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+            assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
             assertEquals(10.0f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(1.5007474f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+            assertEquals(1.5056458f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
             assertEquals(-0.0033333348f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
             assertEquals(0.0f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
@@ -825,13 +871,13 @@ internal class CollideSphereVsCuboidTest {
             assertEquals(10.002f, hit.hitPt.y, TOLERANCE, "hitPt.y")
             assertEquals(10.003f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-            assertEquals(9.994999f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.002009f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.002991f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+            assertEquals(9.996101f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+            assertEquals(10.002f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+            assertEquals(10.003f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(10.505001f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.000991f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.004009f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+            assertEquals(10.506335f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+            assertEquals(10.001f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+            assertEquals(10.004f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
             assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
             assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
@@ -863,13 +909,13 @@ internal class CollideSphereVsCuboidTest {
             assertEquals(10.21f, hit.hitPt.y, TOLERANCE, "hitPt.y")
             assertEquals(10.003f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-            assertEquals(10.002009f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.505001f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.002991f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+            assertEquals(10.002f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+            assertEquals(10.503899f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+            assertEquals(10.003f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(10.000991f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(9.994999f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.004009f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+            assertEquals(10.001f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+            assertEquals(9.993665f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+            assertEquals(10.004f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
             assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
             assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
@@ -901,13 +947,13 @@ internal class CollideSphereVsCuboidTest {
             assertEquals(10.002f, hit.hitPt.y, TOLERANCE, "hitPt.y")
             assertEquals(10.003f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-            assertEquals(10.505001f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.002009f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.002991f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+            assertEquals(10.503899f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+            assertEquals(10.002f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+            assertEquals(10.003f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(9.994999f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.000991f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.004009f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+            assertEquals(9.993665f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+            assertEquals(10.001f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+            assertEquals(10.004f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
             assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
             assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
@@ -939,13 +985,13 @@ internal class CollideSphereVsCuboidTest {
             assertEquals(10.29f, hit.hitPt.y, TOLERANCE, "hitPt.y")
             assertEquals(10.003f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-            assertEquals(10.002009f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(9.994999f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.002991f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+            assertEquals(10.002f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+            assertEquals(9.996101f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+            assertEquals(10.003f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(10.000991f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.505001f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.004009f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+            assertEquals(10.001f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+            assertEquals(10.506335f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+            assertEquals(10.004f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
             assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
             assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
@@ -977,13 +1023,13 @@ internal class CollideSphereVsCuboidTest {
             assertEquals(10.003f, hit.hitPt.y, TOLERANCE, "hitPt.y")
             assertEquals(10.29f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-            assertEquals(10.002009f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.002991f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(9.994999f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+            assertEquals(10.002f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+            assertEquals(10.003f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+            assertEquals(9.996101f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(10.000991f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.004009f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.505001f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+            assertEquals(10.001f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+            assertEquals(10.004f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+            assertEquals(10.506335f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
             assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
             assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
@@ -1015,13 +1061,13 @@ internal class CollideSphereVsCuboidTest {
             assertEquals(10.002f, hit.hitPt.y, TOLERANCE, "hitPt.y")
             assertEquals(10.21f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-            assertEquals(10.002991f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.002009f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.505001f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+            assertEquals(10.003f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+            assertEquals(10.002f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+            assertEquals(10.503899f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(10.004009f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.000991f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(9.994999f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+            assertEquals(10.004f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+            assertEquals(10.001f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+            assertEquals(9.993665f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
             assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
             assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
@@ -1037,11 +1083,5 @@ internal class CollideSphereVsCuboidTest {
 
     companion object {
         private const val TOLERANCE = 0.000001f
-
-        @BeforeAll
-        @JvmStatic
-        fun beforeAll() {
-            Log.ttyOutput = Log.TtyOutput.OFF
-        }
     }
 }

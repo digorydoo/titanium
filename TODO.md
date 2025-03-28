@@ -3,12 +3,16 @@
 ## Backlog
 
 * Physics
-    * Continue testing and implementing CollideSphereVsCuboid
-    * Rewrite brick collision strategies
+    * Do not use binary search for separation where possible; see CollideCylinderVsCuboid
+    * Implement HOPPING_PREVENTION_MAX_SPEED for all bodies; see CollideCylinderVsCuboid
+    * Fix problem that TestGel breaks horizontally through start level
+    * Fix problem that three balls in a row lead to a new collision in unit tests (or is it OK?)
     * Implement angular momentum for spheres
     * Implement FixedCapsuleBody (similar to a cylinder, but with spheres at the top and bottom)
 
 * Bugs
+    * Umlauts in German start menu suddenly work, why?!
+    * Jump action is broken
     * Railing 2 has strange lighting issue across instances (see level)
     * Sometimes keyboard strokes get lost (when frame takes too long, or stroke is hit too quickly)
     * Max spawn distance is either broken, or incorrectly set for gels in town scene (all are always rendered)
@@ -81,7 +85,7 @@
       irrelevant)
     * The symbols that appear when an action is available are managed by GameStatusBar (which should no longer be called
       a bar)
-    * When the action is chosen by the user, the GelActionManager invokes a method on the action object that was
+    * When the action is chosen by the user, the GelActionManager invokes a function on the action object that was
       registered by the gel
 
 * Dialogues and fonts
@@ -132,7 +136,7 @@
     * Gels need to load textures, meshes and shaders when they are spawned. Doing this from the game loop creates a
       frame drop, so this should always be done from a coroutine.
     * Spawn pts should not immediately return the gel; instead, they should take a lambda onCreated(gel)
-    * Gels must override an abstract method initConcurrently(), which is called within a coroutine
+    * Gels must override an abstract function initConcurrently(), which is called within a coroutine
     * The spawn pt should not add the gel to the layer until it has finished loading
     * Textures, meshes and renderer can be declared as lateinit, since the gel should not be known to anyone until it
       finished loading and is added to the layer
@@ -204,6 +208,7 @@
     * Inside a dialogue or menu, the cursor should appear, and mouse motion should no longer control the camera.
       Instead, the items of the dialogue or menu should be clickable. The cursor should disappear as soon as the
       dialogue or menu is dismissed.
+    * Should we periodically try to update the gamepad database over the internet? glfwUpdateGamepadMappings
 
 * Monitors
     * Both 16:9 and 16:10 should be fullscreen without any margin. 16:9 should be our FIXED_ASPECT_RATIO. On a 16:10

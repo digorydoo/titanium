@@ -1,6 +1,7 @@
 package ch.digorydoo.titanium.engine.physics.rigid_body
 
 import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.titanium.engine.utils.EPSILON
 
 /**
  * This body is "fixed", i.e. has no angular momentum.
@@ -20,7 +21,7 @@ class FixedSphereBody(
     elasticity = elasticity,
     friction = friction,
     gravity = gravity,
-    collisionRadius = radius + COLLISION_VICINITY
 ) {
+    override val enclosingRadius = radius + EPSILON
     override fun toString() = "FixedSphereBody($name, m=$mass, r=$radius)"
 }

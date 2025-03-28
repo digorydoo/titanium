@@ -1,4 +1,4 @@
-package ch.digorydoo.titanium.engine.physics.collide_regular
+package ch.digorydoo.titanium.engine.physics.collision_strategy
 
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.physics.HitArea
@@ -8,11 +8,8 @@ import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.utils.EPSILON
-import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.sign
-import kotlin.math.sqrt
+import kotlin.math.*
+import kotlin.random.Random
 
 internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, FixedCylinderBody>() {
     override fun check(
@@ -35,11 +32,11 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
         if (sphereTop < cylinderBottom) return false
         if (sphereBottom > cylinderTop) return false
 
-        var dx = centreX2 - centreX1
-        var dy = centreY2 - centreY1
-        val dsqr = (dx * dx) + (dy * dy) // squared distance in the XY plane
+        val dx = centreX2 - centreX1
+        val dy = centreY2 - centreY1
+        val dsqrXY = (dx * dx) + (dy * dy) // squared distance in the XY plane
         val rsum = body1.radius + body2.radius
-        if (dsqr > rsum * rsum) return false
+        if (dsqrXY > rsum * rsum) return false
         if (outHit == null) return true
 
         // The hit point's xy must lie within both circles, and the weighted average fulfills this criterion.
@@ -75,10 +72,10 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
 
         // Compute the overlap in XY at the original position
 
-        dx = sphereOrigCentreX - cylinderOrigCentreX
-        dy = sphereOrigCentreY - cylinderOrigCentreY
-        val xyDistance = sqrt(dx * dx + dy * dy)
-        val xyOverlap = body1.radius + body2.radius - xyDistance
+        val origDx = sphereOrigCentreX - cylinderOrigCentreX
+        val origDy = sphereOrigCentreY - cylinderOrigCentreY
+        val origXYDistance = sqrt(origDx * origDx + origDy * origDy)
+        val xyOverlap = body1.radius + body2.radius - origXYDistance
 
         // Determine where the cylinder was hit
 
@@ -95,7 +92,7 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
         } else {
             // Either there was no overlap at all prior to the collision, or there was an overlap on both axes.
             // The latter does not necessarily mean that there was a collision already at the original position.
-            // We interprete it that the sphere is approaching one of the two circular edges of the cylinder. The
+            // We interpret it that the sphere is approaching one of the two circular edges of the cylinder. The
             // relative speed tells us which side the hit was on.
 
             val vsphere = body1.speedBeforeCollisions
@@ -144,21 +141,40 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
             }
         }
 
-        // Determine the area that was hit
-
         outHit.area1 = HitArea.UNSPECIFIED // sphere do not have specific areas
 
-        outHit.area2 = when {
-            isSide -> HitArea.SIDE
-            sphereOrigCentreZ < cylinderOrigCentreZ -> HitArea.BOTTOM
-            else -> HitArea.TOP
+        when {
+            isSide -> {
+                outHit.area2 = HitArea.SIDE
+                val dXY = sqrt(dsqrXY)
+
+                if (dXY <= EPSILON) {
+                    Log.warn("Setting normal to a random direction, because bodies $body1 and $body2 are too close")
+                    val r = Random.nextFloat()
+                    outHit.hitNormal12.set(cos(r), sin(r), 0.0f)
+                } else {
+                    outHit.hitNormal12.set(dx / dXY, dy / dXY, 0.0f)
+                }
+            }
+            sphereOrigCentreZ < cylinderOrigCentreZ -> {
+                outHit.apply {
+                    area2 = HitArea.BOTTOM
+                    hitNormal12.set(0.0f, 0.0f, 1.0f)
+                }
+            }
+            else -> {
+                outHit.apply {
+                    area2 = HitArea.TOP
+                    hitNormal12.set(0.0f, 0.0f, -1.0f)
+                }
+            }
         }
 
         return true
     }
 
     override fun bounce(body1: FixedSphereBody, body2: FixedCylinderBody, hit: HitResult) {
-        separate(body1, body2, hit)
+        helper.separateByBinarySearch(body1, body2, hit.hitNormal12, this) // FIXME replace with a direct approach
 
         val m1 = body1.mass
         val m2 = body2.mass
@@ -166,23 +182,9 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
         val v1 = body1.nextSpeed
         val v2 = body2.nextSpeed
 
-        val elasticity = body1.elasticity * body2.elasticity
-
         if (hit.area2 != HitArea.SIDE) {
             val normDir12Z = if (hit.area2 == HitArea.BOTTOM) 1.0f else -1.0f
-
-            // This may change v1 and/or v2
-            applyFriction(
-                m1 = m1,
-                v1 = v1,
-                friction1 = body1.friction,
-                m2 = m2,
-                v2 = v2,
-                friction2 = body2.friction,
-                normDir12X = 0.0f,
-                normDir12Y = 0.0f,
-                normDir12Z = normDir12Z,
-            )
+            helper.applyFriction(body1, body2, 0.0f, 0.0f, normDir12Z)
 
             val v1z = v1.z // sphere
             val v2z = v2.z // cylinder
@@ -192,6 +194,8 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
                 // The two objects are separating
                 return
             }
+
+            val elasticity = body1.elasticity * body2.elasticity
 
             if (m1 >= LARGE_MASS) {
                 v2.z = v1z + vparallelDz * elasticity
@@ -224,151 +228,64 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
             val normDir12X = pdx / p2DDistance
             val normDir12Y = pdy / p2DDistance
 
-            // This may change v1 and/or v2
-            applyFriction(
-                m1 = m1,
-                v1 = v1,
-                friction1 = body1.friction,
-                m2 = m2,
-                v2 = v2,
-                friction2 = body2.friction,
-                normDir12X = normDir12X,
-                normDir12Y = normDir12Y,
-                normDir12Z = 0.0f,
-            )
-
-            val v1dotn = v1.x * normDir12X + v1.y * normDir12Y
-            val v1parallelX = normDir12X * v1dotn
-            val v1parallelY = normDir12Y * v1dotn
-
-            val v2dotn = v2.x * normDir12X + v2.y * normDir12Y
-            val v2parallelX = normDir12X * v2dotn
-            val v2parallelY = normDir12Y * v2dotn
-
-            val vparallelDx = v1parallelX - v2parallelX
-            val vparallelDy = v1parallelY - v2parallelY
-
-            if (m1 >= LARGE_MASS) {
-                val v2perpendX = v2.x - v2parallelX
-                val v2perpendY = v2.y - v2parallelY
-                val v2perpendZ = v2.z // v2parallelZ is 0
-
-                v2.x = v2perpendX + v1parallelX + vparallelDx * elasticity
-                v2.y = v2perpendY + v1parallelY + vparallelDy * elasticity
-                v2.z = v2perpendZ // v2parallelZ is 0
-            } else if (m2 >= LARGE_MASS) {
-                val v1perpendX = v1.x - v1parallelX
-                val v1perpendY = v1.y - v1parallelY
-                val v1perpendZ = v1.z // v1parallelZ is 0
-
-                v1.x = v1perpendX + v2parallelX - vparallelDx * elasticity
-                v1.y = v1perpendY + v2parallelY - vparallelDy * elasticity
-                v1.z = v1perpendZ // v1parallelZ is 0
-            } else {
-                val v1perpendX = v1.x - v1parallelX
-                val v1perpendY = v1.y - v1parallelY
-                val v1perpendZ = v1.z // v1parallelZ is 0
-
-                val v2perpendX = v2.x - v2parallelX
-                val v2perpendY = v2.y - v2parallelY
-                val v2perpendZ = v2.z // v2parallelZ is 0
-
-                val totalMass = m1 + m2
-
-                val sx = v1parallelX * m1 + v2parallelX * m2
-                val sy = v1parallelY * m1 + v2parallelY * m2
-
-                v1.x = v1perpendX + (sx - vparallelDx * elasticity * m2) / totalMass
-                v1.y = v1perpendY + (sy - vparallelDy * elasticity * m2) / totalMass
-                v1.z = v1perpendZ // v1parallelZ is 0
-
-                v2.x = v2perpendX + (sx + vparallelDx * elasticity * m1) / totalMass
-                v2.y = v2perpendY + (sy + vparallelDy * elasticity * m1) / totalMass
-                v2.z = v2perpendZ // v2parallelZ is 0
+            helper.apply {
+                applyFriction(body1, body2, normDir12X, normDir12Y, 0.0f)
+                bounceAtVerticalPlane(body1, body2, normDir12X, normDir12Y)
             }
         }
     }
 
-    override fun forceApart(
+    // TODO
+    private fun separateVertically(body1: FixedSphereBody, body2: FixedCylinderBody, normDir12Z: Float) {
+        //         val p1 = body1.nextPos
+        //         val p2 = body2.nextPos
+        //
+        //         // Try moving the bodies until they are separated in Z
+        //
+        //         val moveByWhenZ: Float
+        //
+        //         if (abs(normDirZ1) <= EPSILON) {
+        //             moveByWhenZ = Float.POSITIVE_INFINITY
+        //         } else {
+        //             // We want to scale normDir by a factor k such that the resulting z will have the required distance.
+        //             // Adding more than just EPSILON here because of failing tests (floating point inaccuracies)
+        //             val requiredZDistance = body1.radius + body2.height / 2 + 8.0f * EPSILON
+        //             val k = requiredZDistance / normDirZ1
+        //
+        //             // The length of the scaled normDir is the move distance
+        //             val dx = k * normDirX1
+        //             val dy = k * normDirY1
+        //             // dz == k * normDirZ1 == requiredZDistance
+        //             moveByWhenZ = sqrt(dx * dx + dy * dy + requiredZDistance * requiredZDistance)
+        //         }
+        //
+    }
+
+    // TODO
+    private fun separateHorizontally(
         body1: FixedSphereBody,
         body2: FixedCylinderBody,
-        normDirX1: Float,
-        normDirY1: Float,
-        normDirZ1: Float,
-        hit: HitResult,
+        normDir12X: Float,
+        normDir12Y: Float,
     ) {
-        val p1 = body1.nextPos
-        val p2 = body2.nextPos
-
-        // Try moving the bodies until they are separated in Z
-
-        val moveByWhenZ: Float
-
-        if (abs(normDirZ1) <= EPSILON) {
-            moveByWhenZ = Float.POSITIVE_INFINITY
-        } else {
-            // We want to scale normDir by a factor k such that the resulting z will have the required distance.
-            // Adding more than just EPSILON here because of failing tests (floating point inaccuracies)
-            val requiredZDistance = body1.radius + body2.height / 2 + 8.0f * EPSILON
-            val k = requiredZDistance / normDirZ1
-
-            // The length of the scaled normDir is the move distance
-            val dx = k * normDirX1
-            val dy = k * normDirY1
-            // dz == k * normDirZ1 == requiredZDistance
-            moveByWhenZ = sqrt(dx * dx + dy * dy + requiredZDistance * requiredZDistance)
-        }
-
-        // Try moving the bodies until they are separated in XY
-
-        val moveByWhenXY: Float
-        val normDirXYLen = sqrt(normDirX1 * normDirX1 + normDirY1 * normDirY1)
-
-        if (normDirXYLen <= EPSILON) {
-            moveByWhenXY = Float.POSITIVE_INFINITY
-        } else {
-            // We want to scale normDir by a factor k such that the distance in XY will have the required value.
-            // |k * (nx; ny)| = d, which is the same as k * |(nx; ny)| = d, or k = d / |(nx; ny)|
-            val requiredXYDistance = body1.radius + body2.radius + 8.0f * EPSILON
-            val k = requiredXYDistance / normDirXYLen
-
-            // The length of the scaled normDir is the move distance
-            val dx = k * normDirX1
-            val dy = k * normDirY1
-            val dz = k * normDirZ1
-            moveByWhenXY = sqrt(dx * dx + dy * dy + dz * dz)
-        }
-
-        // Take the smaller of the two move distances
-
-        val moveBy = min(moveByWhenZ, moveByWhenXY)
-        require(moveBy < Float.POSITIVE_INFINITY) // this can only fail if normDir does not have length 1
-
-        if (body1.mass >= LARGE_MASS) {
-            if (body2.mass >= LARGE_MASS) {
-                Log.warn("Cannot force $body1 and $body2 apart, because both are LARGE_MASS")
-            } else {
-                p2.x = p1.x - normDirX1 * moveBy
-                p2.y = p1.y - normDirY1 * moveBy
-                p2.z = p1.z - normDirZ1 * moveBy
-            }
-        } else if (body2.mass >= LARGE_MASS) {
-            p1.x = p2.x + normDirX1 * moveBy
-            p1.y = p2.y + normDirY1 * moveBy
-            p1.z = p2.z + normDirZ1 * moveBy
-        } else {
-            val centreX = (p1.x + p2.x) / 2.0f
-            val centreY = (p1.y + p2.y) / 2.0f
-            val centreZ = (p1.z + p2.z) / 2.0f
-            val half = moveBy / 2.0f
-
-            p1.x = centreX + normDirX1 * half
-            p1.y = centreY + normDirY1 * half
-            p1.z = centreZ + normDirZ1 * half
-
-            p2.x = centreX - normDirX1 * half
-            p2.y = centreY - normDirY1 * half
-            p2.z = centreZ - normDirZ1 * half
-        }
+        //         // Try moving the bodies until they are separated in XY
+        //
+        //         val moveByWhenXY: Float
+        //         val normDirXYLen = sqrt(normDirX1 * normDirX1 + normDirY1 * normDirY1)
+        //
+        //         if (normDirXYLen <= EPSILON) {
+        //             moveByWhenXY = Float.POSITIVE_INFINITY
+        //         } else {
+        //             // We want to scale normDir by a factor k such that the distance in XY will have the required value.
+        //             // |k * (nx; ny)| = d, which is the same as k * |(nx; ny)| = d, or k = d / |(nx; ny)|
+        //             val requiredXYDistance = body1.radius + body2.radius + 8.0f * EPSILON
+        //             val k = requiredXYDistance / normDirXYLen
+        //
+        //             // The length of the scaled normDir is the move distance
+        //             val dx = k * normDirX1
+        //             val dy = k * normDirY1
+        //             val dz = k * normDirZ1
+        //             moveByWhenXY = sqrt(dx * dx + dy * dy + dz * dz)
+        //         }
     }
 }

@@ -21,12 +21,14 @@ class UnexpectedHitAreaError(area: HitArea): Exception("Unexpected hit area: $ar
 
 internal interface HitResult {
     val hitPt: Point3f
+    val hitNormal12: Point3f // normal at hitPt pointing from body1 to body2
     val area1: HitArea
     val area2: HitArea
 }
 
 internal class MutableHitResult: HitResult {
     override val hitPt = MutablePoint3f()
+    override val hitNormal12 = MutablePoint3f()
     override var area1 = HitArea.UNSPECIFIED
     override var area2 = HitArea.UNSPECIFIED
 }

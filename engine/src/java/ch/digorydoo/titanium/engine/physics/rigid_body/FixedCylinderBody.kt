@@ -1,6 +1,7 @@
 package ch.digorydoo.titanium.engine.physics.rigid_body
 
 import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.sqrt
 
 /**
@@ -22,8 +23,8 @@ class FixedCylinderBody(
     elasticity = elasticity,
     friction = friction,
     gravity = gravity,
-    collisionRadius = sqrt((height * height / 4.0f) + (radius * radius)) + COLLISION_VICINITY
 ) {
+    override val enclosingRadius = sqrt((height * height / 4.0f) + (radius * radius)) + EPSILON
     override fun toString() =
         "FixedCylinderBody($name, m=$mass, r=$radius, h=$height)"
 }

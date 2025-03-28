@@ -40,7 +40,7 @@ class PlayerBehaviour(
         }
 
         leftJoyWithCameraCorrection
-            .set(App.input.values.leftJoy)
+            .set(App.input.leftJoy)
             .rotate(App.camera.currentPhi + 0.5 * PI)
 
         if (shouldJump()) {
@@ -54,9 +54,9 @@ class PlayerBehaviour(
         var shouldJump = false
 
         if (!frameMgr.isJumping) {
-            val input = App.input.values
+            val input = App.input
 
-            if (input.actionY.pressedOnce) {
+            if (input.jumpBtn.pressedOnce) {
                 if (hasGroundContact) {
                     shouldJump = true
                 } else {
@@ -93,7 +93,7 @@ class PlayerBehaviour(
 
     private fun handleWalkKeys() {
         val body = gel.body ?: return
-        val dir = Direction.fromVector(App.input.values.leftJoy, PI.toFloat() / 4.0f)
+        val dir = Direction.fromVector(App.input.leftJoy, PI.toFloat() / 4.0f)
 
         if (dir == null) {
             // leftJoy is at rest. Go idle!
@@ -109,7 +109,7 @@ class PlayerBehaviour(
             val joyNormX = dx / joyLen
             val joyNormY = dy / joyLen
 
-            val speedFactor = if (App.input.values.shift.pressed) 2.0f else clamp(joyLen, 0.0f, 1.0f)
+            val speedFactor = if (App.input.dashBtn.pressed) 2.0f else clamp(joyLen, 0.0f, 1.0f)
             val targetSpeed = WALK_SPEED * speedFactor
 
             dx = body.speed.x

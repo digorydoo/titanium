@@ -1,12 +1,10 @@
 package ch.digorydoo.titanium.game.gel.ball
 
 import ch.digorydoo.kutils.point.Point3f
-import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.file.MeshFileReader
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.mesh.MeshRenderer
-import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.game.gel.ball.BallSpawnPt.Kind
 
@@ -51,13 +49,6 @@ class BallGel private constructor(
         cullFace = true,
         depthTest = true
     )
-
-    override fun didCollide(other: GraphicElement, myHit: HitArea, otherHit: HitArea, hitPt: Point3f) {
-        // println("Ball collided with $other")
-    }
-
-    override fun didCollide(brick: Brick, hitPt: Point3f, hitNormal: Point3f) {
-    }
 
     override fun onRemoveZombie() {
         renderer.free()

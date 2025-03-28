@@ -37,10 +37,11 @@ sealed class RigidBody protected constructor(
     val elasticity: Float, // 0=totally inelastic, 1=fully elastic
     val friction: Float, // 0=no friction, 1=very high friction
     val gravity: Boolean,
-    val collisionRadius: Float, // must cover the entire body plus COLLISION_VICINITY
 ) {
     val pos = MutablePoint3f(initialPos)
     val speed = MutablePoint3f()
+
+    abstract val enclosingRadius: Float // must cover the entire body plus EPSILON
 
     private val _resultingForce = MutablePoint3f()
     val resultingForce: Point3f get() = _resultingForce
@@ -143,7 +144,6 @@ sealed class RigidBody protected constructor(
 
     companion object {
         const val LARGE_MASS = 10000.0f // bodies with a mass >= this will be considered immovable
-        const val COLLISION_VICINITY = 0.25f
 
         private const val MAX_SPEED = 100.0f
         private const val GRAVITY = 9.81f

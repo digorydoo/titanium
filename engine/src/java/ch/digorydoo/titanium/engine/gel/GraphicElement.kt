@@ -4,7 +4,8 @@ import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.string.zapPackageName
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.titanium.engine.brick.Brick
+import ch.digorydoo.titanium.engine.brick.BrickMaterial
+import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.VicinityList
@@ -157,32 +158,59 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
         }
     }
 
+    fun canCollide(): Boolean = when {
+        zombie || hidden || body == null -> false
+        spawnPt?.canCollide == false -> false
+        else -> true
+    }
+
     /**
-     * Called by CollisionDetector on both gels to check whether their bodies should be bounced. Their bodies are NOT be
+     * Called by CollisionManager on both gels to check whether their bodies should be bounced. Their bodies are NOT be
      * bounced if at least one of the two gels return false. (E.g. an NPC that should generally collide with stuff
      * may return true for any gel, while a fire that only needs to inform the NPC of the heat returns false to indicate
      * that its shape is not good for bouncing.) The implementation of this function must be efficient and must not
-     * have any side effects. This function may be called if gels are in close proximity even if they do not collide.
-     * On the other hand, this function may not be called even if gels do collide (which happens if the other gel
-     * returned false).
+     * have any side effects. This function may be called if gels are in proximity even if they do not collide. On the
+     * other hand, this function may not be called even if gels do collide (which happens if the other gel returned
+     * false).
      */
     open fun shouldBounceOnCollision(other: GraphicElement): Boolean {
         return true
     }
 
     /**
-     * Called by CollisionDetector when the gel collides with another. The other gel will also get a callback. If
+     * Gels returning false here will fall through bricks, and hence should probably have gravity disabled.
+     */
+    open fun shouldBounceOnCollision(brickShape: BrickShape): Boolean {
+        return true
+    }
+
+    /**
+     * Called by CollisionManager when the gel collides with another. The other gel will also get a callback. If
      * shouldBounceOnCollision returned true for one of the gels, this function will be called after the bodies have
      * been bounced. This function is called even if the bodies were not bounced.
      */
-    open fun didCollide(other: GraphicElement, myHit: HitArea, otherHit: HitArea, hitPt: Point3f) {}
+    open fun didCollide(
+        other: GraphicElement,
+        myHit: HitArea,
+        otherHit: HitArea,
+        hitPt: Point3f,
+        normalTowardsMe: Point3f,
+    ) {
+    }
 
-    open fun didCollide(brick: Brick, hitPt: Point3f, hitNormal: Point3f) {}
-
-    fun canCollide(): Boolean = when {
-        zombie || hidden || body == null -> false
-        spawnPt?.canCollide == false -> false
-        else -> true
+    /**
+     * Called by CollisionManager when the gel collides with a brick. If shouldBounceOnCollision returned true for this
+     * brickShape, this function will be called after the bodies have been bounced. This function is called even if the
+     * bodies were not bounced.
+     */
+    open fun didCollide(
+        shape: BrickShape,
+        material: BrickMaterial,
+        myHit: HitArea,
+        otherHit: HitArea,
+        hitPt: Point3f,
+        normalTowardsMe: Point3f,
+    ) {
     }
 
     override fun toString() =
