@@ -188,13 +188,15 @@ abstract class SpawnPt private constructor(
     fun didRemoveGel() {
         require(spawnCount > 0) { "Spawn count out of sync: $spawnCount" }
         spawnCount--
-        Log.info("didRemoveGel: SpawnPt $spawnObjTypeAsString: spawnCount=$spawnCount")
+        Log.info(TAG, "didRemoveGel: SpawnPt $spawnObjTypeAsString: spawnCount=$spawnCount")
     }
 
     override fun toString() =
         "SpawnPt(id=$id, type=$spawnObjTypeAsString)"
 
     companion object {
+        private val TAG = Log.Tag("SpawnPt")
+
         private const val MIN_SECONDS_UNTIL_DESPAWN = 10.0f
         private const val MIN_SECONDS_UNTIL_RESPAWN = 1.0f
         private const val SPAWN_DESPAWN_SQRDISTANCE = 5.0 * 5.0 // sqr distance from auto-spawn max to despawn min

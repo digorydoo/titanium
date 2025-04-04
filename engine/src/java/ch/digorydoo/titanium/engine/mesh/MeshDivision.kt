@@ -22,7 +22,7 @@ class MeshDivision(
 
             if (foundHere != null) {
                 if (found != null) {
-                    Log.warn("Mesh node id is not unique in division: $childId")
+                    Log.warn(TAG, "Mesh node id is not unique in division: $childId")
                 } else {
                     found = foundHere
                 }
@@ -41,4 +41,8 @@ class MeshDivision(
                 "}",
             )
         )
+
+    companion object {
+        private val TAG = Log.Tag("MeshDivision")
+    }
 }

@@ -20,8 +20,8 @@ class I18nBundle(private val name: String, private val locale: Locale) {
         val res = res // outside try-block, so it can fail by its own
         try {
             return res.getString(id.resId)
-        } catch (e: MissingResourceException) {
-            Log.warn("Missing i18n text: $id")
+        } catch (_: MissingResourceException) {
+            Log.warn(TAG, "Missing i18n text: $id")
             return null
         }
     }
@@ -42,5 +42,9 @@ class I18nBundle(private val name: String, private val locale: Locale) {
         require(id.bundle == this)
         val fmt = getString(id)
         return MessageFormat.format(fmt, *args) ?: ""
+    }
+
+    companion object {
+        private val TAG = Log.Tag("I18nBundle")
     }
 }

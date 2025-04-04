@@ -94,7 +94,7 @@ class BrickVolumeRendererImpl(
         if (debuggingShadows) setOf(ShaderFlags.DEBUG) else null,
     ).also {
         it.create()
-        if (debuggingShadows) Log.warn("BrickVolumeRendererImpl: debuggingShadows is enabled")
+        if (debuggingShadows) Log.warn(TAG, "BrickVolumeRendererImpl: debuggingShadows is enabled")
     }
 
     private var valid = true
@@ -112,7 +112,7 @@ class BrickVolumeRendererImpl(
     @Suppress("removal")
     protected fun finalize() {
         // Check that free has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error("BrickVolumeRendererImpl still valid at finalize")
+        if (valid) Log.error(TAG, "still valid at finalize")
     }
 
     override fun prepare() {
@@ -340,6 +340,7 @@ class BrickVolumeRendererImpl(
         }
 
     companion object {
+        private val TAG = Log.Tag("BrickVolumeRendererImpl")
         private const val SHADOW_MAX_RENDER_DISTANCE = 200.0f
         private const val TRANSPARENT_MAX_RENDER_DISTANCE = 64.0f // metres
         const val MAX_RENDER_DISTANCE = 350.0f // [metres] nothing gets rendered beyond this except in top-down mode

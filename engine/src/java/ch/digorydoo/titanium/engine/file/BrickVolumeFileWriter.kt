@@ -44,8 +44,10 @@ class BrickVolumeFileWriter private constructor(
     }
 
     companion object {
+        private val TAG = Log.Tag("BrickVolumeFileWriter")
+
         fun writeFile(bricks: BrickVolume) {
-            Log.info("PlayfieldFileWriter: Writing ${bricks.fileName}")
+            Log.info(TAG, "Writing ${bricks.fileName}")
 
             // val path = Assets.pathToPlayfield(pf.fileName) -- NO, not into the build folder!
             val path = "/Users/pamberg/Develop/titanium/assets/playfields/${bricks.fileName}" // FIXME

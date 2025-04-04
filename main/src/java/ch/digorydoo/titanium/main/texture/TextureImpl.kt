@@ -40,7 +40,7 @@ class TextureImpl(
     private fun freeNow() {
         require(valid)
         valid = false
-        // Log.info("TextureImpl: Freeing $this")
+        // Log.info(TAG, "Freeing $this")
         glDeleteTextures(texId)
         checkGLError()
     }
@@ -48,7 +48,7 @@ class TextureImpl(
     @Suppress("removal")
     protected fun finalize() {
         // Check that free has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error("Texture still valid at finalize: $this")
+        if (valid) Log.error(TAG, "still valid at finalize: $this")
     }
 
     override fun apply() {
@@ -122,4 +122,8 @@ class TextureImpl(
             "size=(${width}x$height)",
             "shared=$shared",
         ).joinToString(", ").let { "Texture($it)" }
+
+    companion object {
+        private val TAG = Log.Tag("TextureImpl")
+    }
 }

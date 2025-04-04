@@ -34,13 +34,15 @@ class GelListFileReader private constructor(private val reader: BufferedReader) 
                     result.add(App.factory.createSpawnPt(map))
                 }
             } catch (e: Exception) {
-                Log.error("Failed to create spawn point: $line")
+                Log.error(TAG, "Failed to create spawn point: $line")
                 throw e
             }
         }
     }
 
     companion object {
+        private val TAG = Log.Tag("GelListFileReader")
+
         fun readFile(fileName: String, result: MutableList<SpawnPt>): List<SpawnPt> {
             if (fileName.isEmpty()) throw Exception("File name is empty!")
 
@@ -51,7 +53,7 @@ class GelListFileReader private constructor(private val reader: BufferedReader) 
                 GelListFileReader(reader).read(result)
             }
 
-            Log.info("GelListFileReader: $fileName: ${result.size} spawn points")
+            Log.info(TAG, "$fileName: ${result.size} spawn points")
             return result
         }
     }

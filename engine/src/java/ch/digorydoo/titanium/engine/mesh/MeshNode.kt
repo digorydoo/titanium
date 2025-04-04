@@ -27,7 +27,7 @@ class MeshNode(
 
             if (foundHere != null) {
                 if (found != null) {
-                    Log.warn("Mesh node id is not unique in subtree: $childId")
+                    Log.warn(TAG, "Mesh node id is not unique in subtree: $childId")
                 } else {
                     found = foundHere
                 }
@@ -49,4 +49,8 @@ class MeshNode(
                 "}",
             )
         )
+
+    companion object {
+        private val TAG = Log.Tag("MeshNode")
+    }
 }

@@ -28,11 +28,13 @@ class PrefsFileWriter private constructor(
     }
 
     companion object {
+        private val TAG = Log.Tag("PrefsFileWriter")
+
         const val FILENAME = "user-prefs.dat"
 
         fun write(prefs: Preferences) {
             val path = App.assets.pathToPrefs(FILENAME)
-            Log.info("PrefsFileWriter: Writing $path")
+            Log.info(TAG, "Writing $path")
 
             val file = File(path)
             MyDataOutputStream.use(file) {

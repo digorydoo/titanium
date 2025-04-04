@@ -271,13 +271,15 @@ class MeshFileReader private constructor(private val input: MyDataInputStream) {
     }
 
     companion object {
+        private val TAG = Log.Tag("MeshFileReader")
+
         fun readFile(fileName: String): Mesh {
             val path = App.assets.pathToMesh(fileName)
             val file = File(path)
             val mesh = MyDataInputStream.use(file) {
                 MeshFileReader(it).read()
             }
-            Log.info("MeshFileReader: $fileName: ${mesh.divisions.size} divisions(s)")
+            Log.info(TAG, "$fileName: ${mesh.divisions.size} divisions(s)")
             return mesh
         }
     }

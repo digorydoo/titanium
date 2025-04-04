@@ -61,7 +61,7 @@ abstract class SpawnManager {
 
     fun despawnAndRemove(pt: SpawnPt) {
         if (!spawnPts.remove(pt)) {
-            Log.warn("Spawn point to be removed was not found in the list of spawn points!")
+            Log.warn(TAG, "Spawn point to be removed was not found in the list of spawn points!")
         }
 
         despawn(pt)
@@ -86,11 +86,11 @@ abstract class SpawnManager {
             try {
                 if (it.shouldSpawn()) {
                     val dist = it.pos.distanceTo(App.camera.sourcePos)
-                    Log.info("SpawnManager: Spawning $it, spawnPt distance=${dist.toInt()}m")
+                    Log.info(TAG, "Spawning $it, spawnPt distance=${dist.toInt()}m")
                     it.spawn()
                 }
             } catch (e: Exception) {
-                Log.error("SpawnManager: Failed to spawn $it: ${e.message}\n${e.stackTraceToString()}")
+                Log.error(TAG, "Failed to spawn $it: ${e.message}\n${e.stackTraceToString()}")
             }
         }
     }
@@ -132,5 +132,9 @@ abstract class SpawnManager {
         }
 
         return result.take(maxCount)
+    }
+
+    companion object {
+        private val TAG = Log.Tag("SpawnManager")
     }
 }

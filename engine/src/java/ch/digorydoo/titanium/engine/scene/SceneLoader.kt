@@ -50,7 +50,7 @@ class SceneLoader {
     val sceneBeingLoaded get() = if (stage == Stage.FINISHED) null else loaded.scene
 
     fun load(scene: Scene, playSound: Boolean = true, restore: RestoredState? = null) {
-        Log.info("SceneLoader: Loading $scene")
+        Log.info(TAG, "Loading $scene")
 
         require(stage == Stage.FINISHED) { "load called while a scene is being loaded" }
         stage = Stage.BEGIN
@@ -86,7 +86,7 @@ class SceneLoader {
     }
 
     fun callback() {
-        Log.info("SceneLoader: stage is now $stage")
+        Log.info(TAG, "stage is now $stage")
 
         // This is called from the main thread.
         require(needCallback) { "callback called when needCallback was false" }
@@ -207,5 +207,9 @@ class SceneLoader {
         // the progress value, we simply update the value without Mutex or similar mechanism.
 
         App.status.setLoadingProgress(progress)
+    }
+
+    companion object {
+        private val TAG = Log.Tag("SceneLoader")
     }
 }

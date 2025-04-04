@@ -24,9 +24,11 @@ class GelListFileWriter private constructor(private val writer: BufferedWriter) 
     }
 
     companion object {
+        private val TAG = Log.Tag("GelListFileWriter")
+
         fun writeFile(fileName: String, spawnPts: List<SpawnPt>) {
             if (fileName.isEmpty()) throw Exception("File name is empty!")
-            Log.info("GelListFileWriter: Writing $fileName")
+            Log.info(TAG, "Writing $fileName")
 
             // val path = Assets.pathToGelList(fileName) -- NO, not into the build folder!
             val path = "/Users/pamberg/Develop/titanium/assets/gellists/${fileName}" // FIXME

@@ -101,16 +101,16 @@ class CollisionManager {
                             if (anyCollisions) {
                                 // There were indeed tertiary collisions. This usually indicates the gel is stuck!
                                 if (stuckWith != null) {
-                                    Log.warn("Tertiary collision between $gel1 and $stuckWith!")
+                                    Log.warn(TAG, "Tertiary collision between $gel1 and $stuckWith!")
                                 } else {
-                                    Log.warn("Tertiary collision between $gel1 and a brick!")
+                                    Log.warn(TAG, "Tertiary collision between $gel1 and a brick!")
                                 }
                             }
                         }
                     }
                 }
             } catch (e: Exception) {
-                Log.error("Gel $gel1 crashed during collision detection!\n${e.stackTraceToString()}")
+                Log.error(TAG, "Gel $gel1 crashed during collision detection!\n${e.stackTraceToString()}")
                 gel1.setZombie()
             }
         }
@@ -252,6 +252,7 @@ class CollisionManager {
     }
 
     companion object {
+        private val TAG = Log.Tag("CollisionManager")
         const val COLLISION_VICINITY = 0.25f
     }
 }

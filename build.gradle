@@ -1,5 +1,5 @@
 buildscript {
-    ext.KOTLIN_VERSION = '2.0.21'
+    ext.KOTLIN_VERSION = '2.1.0'
     ext.COROUTINES_VERSION = '1.8.1'
     ext.JUNIT_VERSION = '5.10.3'
     ext.JAVA_LANG_VERSION = '17'

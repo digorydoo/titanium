@@ -58,7 +58,7 @@ class MutableLighting private constructor(
     }
 
     fun adaptToStoryTime() {
-        // FIXME Log.info("MutableLighting: adaptToStoryTime")
+        // FIXME Log.info(TAG, "adaptToStoryTime")
         adaptToRelTime(App.time.storyTimeProgress)
     }
 

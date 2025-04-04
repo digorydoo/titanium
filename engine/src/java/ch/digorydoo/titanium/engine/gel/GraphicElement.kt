@@ -78,7 +78,7 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
             sqrDistanceToCamera = App.camera.sourcePos.sqrDistanceTo(pos)
 
             if (spawnPt.canAutoDespawn(sqrDistanceToCamera)) {
-                Log.info("Despawning $this, gel distance=${sqrt(sqrDistanceToCamera).toInt()}m")
+                Log.info(TAG, "Despawning $this, gel distance=${sqrt(sqrDistanceToCamera).toInt()}m")
                 zombie = true
                 return
             }
@@ -116,10 +116,10 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
             }
 
             if (pos.x.isNaN() || pos.y.isNaN() || pos.z.isNaN()) {
-                Log.error("Removing gel $this, because its position became NaN: $pos")
+                Log.error(TAG, "Removing gel $this, because its position became NaN: $pos")
                 zombie = true
             } else if (!allowNegativeZ && pos.z < 0.0f) {
-                Log.warn("Gel $this will be removed, because it fell through z=0")
+                Log.warn(TAG, "Gel $this will be removed, because it fell through z=0")
                 zombie = true
             }
         }
@@ -215,4 +215,8 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
 
     override fun toString() =
         zapPackageName(super.toString())
+
+    companion object {
+        private val TAG = Log.Tag("GraphicElement")
+    }
 }

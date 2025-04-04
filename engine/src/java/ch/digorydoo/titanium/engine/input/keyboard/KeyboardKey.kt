@@ -10,10 +10,7 @@ enum class KeyboardKey {
     LEFT_META,
     RIGHT_META,
     LEFT_CTRL,
-
-    @Deprecated("Not available on some laptops")
-    RIGHT_CTRL,
-
+    RIGHT_CTRL, // caution: this modifier is not available on some laptops!
     ARROW_LEFT,
     ARROW_RIGHT,
     ARROW_UP,

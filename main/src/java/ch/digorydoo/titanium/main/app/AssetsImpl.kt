@@ -24,6 +24,8 @@ class AssetsImpl: Assets() {
     }
 
     companion object {
+        private val TAG = Log.Tag("AssetsImpl")
+
         private const val PROJECT_NAME = "titanium"
         private const val FULLY_QUALIFIED_NAME = "ch.digorydoo.$PROJECT_NAME"
 
@@ -43,14 +45,14 @@ class AssetsImpl: Assets() {
             val url = AssetsImpl::class.java.getResource("AssetsImpl.class")
 
             if (url == null) {
-                Log.error("Cannot find class")
+                Log.error(TAG, "Cannot find class")
                 return null
             }
 
             val protocol = url.protocol
 
             if (protocol == null || protocol.isEmpty()) {
-                Log.error("URL to class has no protocol: $url")
+                Log.error(TAG, "URL to class has no protocol: $url")
                 return null
             }
 
@@ -72,18 +74,18 @@ class AssetsImpl: Assets() {
                     hasAssetsInSubdir = false
                 }
                 else -> {
-                    Log.error("URL to class has unsupported protocol: $url")
+                    Log.error(TAG, "URL to class has unsupported protocol: $url")
                     return null
                 }
             }
 
             if (!url.path.startsWith(head)) {
-                Log.error("URL of class does not start with expected head: $url\nExpected: $head")
+                Log.error(TAG, "URL of class does not start with expected head: $url\nExpected: $head")
                 return null
             }
 
             if (!url.path.endsWith(tail)) {
-                Log.error("URL of class does not end with expected tail: $url\nExpected: $tail")
+                Log.error(TAG, "URL of class does not end with expected tail: $url\nExpected: $tail")
                 return null
             }
 
@@ -115,7 +117,7 @@ class AssetsImpl: Assets() {
             val file = File(path)
 
             if (!file.isDirectory) {
-                Log.error("Not a directory: $path")
+                Log.error(TAG, "Not a directory: $path")
             }
 
             return file.path

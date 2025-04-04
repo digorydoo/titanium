@@ -79,7 +79,7 @@ class SpawnPtMenu(private val actions: EditorActions) {
         choices.add(TextChoice(EngineTextId.BACK, onBack))
 
         // This log line is useful for copying the id from console output.
-        Log.info("Showing menu for ${pt.spawnPt.spawnObjTypeAsString} id=${pt.spawnPt.id}")
+        Log.info(TAG, "Showing menu for ${pt.spawnPt.spawnObjTypeAsString} id=${pt.spawnPt.id}")
 
         App.dlg.showChoices(
             choices,
@@ -121,6 +121,8 @@ class SpawnPtMenu(private val actions: EditorActions) {
     }
 
     companion object {
+        private val TAG = Log.Tag("SpawnPtMenu")
+
         private const val MAX_NUM_SPAWN_PTS_IN_MENU = 10
         private const val MOVE_STEP = 1.0f
         private const val MOVE_SMALL_STEP = 0.1f

@@ -46,7 +46,7 @@ class ShaderVBO {
     @Suppress("removal")
     protected fun finalize() {
         // Check that unload has been called. We can't throw from finalize, so log only.
-        if (id >= 0) Log.error("ShaderVBO still valid at finalize")
+        if (id >= 0) Log.error(TAG, "ShaderVBO still valid at finalize")
     }
 
     fun bind() {
@@ -64,5 +64,9 @@ class ShaderVBO {
         data.position(0)
         glBufferData(GL_ARRAY_BUFFER, data, type.glValue)
         checkGLError()
+    }
+
+    companion object {
+        private val TAG = Log.Tag("ShaderVBO")
     }
 }

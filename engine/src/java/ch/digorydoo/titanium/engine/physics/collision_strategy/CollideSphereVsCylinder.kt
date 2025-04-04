@@ -149,7 +149,10 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
                 val dXY = sqrt(dsqrXY)
 
                 if (dXY <= EPSILON) {
-                    Log.warn("Setting normal to a random direction, because bodies $body1 and $body2 are too close")
+                    Log.warn(
+                        TAG,
+                        "Setting normal to a random direction, because bodies $body1 and $body2 are too close"
+                    )
                     val r = Random.nextFloat()
                     outHit.hitNormal12.set(cos(r), sin(r), 0.0f)
                 } else {
@@ -174,118 +177,134 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
     }
 
     override fun bounce(body1: FixedSphereBody, body2: FixedCylinderBody, hit: HitResult) {
-        helper.separateByBinarySearch(body1, body2, hit.hitNormal12, this) // FIXME replace with a direct approach
+        when (hit.area2) {
+            HitArea.TOP -> {
+                val normDir12Z = hit.hitNormal12.z
 
-        val m1 = body1.mass
-        val m2 = body2.mass
+                separateInZ(body1, body2, normDir12Z)
+                helper.applyFriction(body1, body2, 0.0f, 0.0f, normDir12Z)
 
-        val v1 = body1.nextSpeed
-        val v2 = body2.nextSpeed
+                val deltaSpeedZ = body2.speed.z - body1.speed.z // positive if sphere falls down on cylinder
 
-        if (hit.area2 != HitArea.SIDE) {
-            val normDir12Z = if (hit.area2 == HitArea.BOTTOM) 1.0f else -1.0f
-            helper.applyFriction(body1, body2, 0.0f, 0.0f, normDir12Z)
+                if (deltaSpeedZ in 0.0f .. HOPPING_PREVENTION_MAX_SPEED) {
+                    // Prevent sphere lying on cylinder from constantly hopping due to gravity
+                    body1.nextSpeed.z = body2.nextSpeed.z
+                }
 
-            val v1z = v1.z // sphere
-            val v2z = v2.z // cylinder
-            val vparallelDz = v1z - v2z
+                helper.bounceAtHorizontalPlane(body1, body2, normDir12Z)
+            }
+            HitArea.BOTTOM -> {
+                val normDir12Z = hit.hitNormal12.z
 
-            if (sign(vparallelDz) != normDir12Z) {
-                // The two objects are separating
+                separateInZ(body1, body2, normDir12Z)
+                helper.applyFriction(body1, body2, 0.0f, 0.0f, normDir12Z)
+
+                // No remedy for cylinder standing on sphere hopping due to gravity, because this configuration should
+                // be instable anyway.
+
+                helper.bounceAtHorizontalPlane(body1, body2, normDir12Z)
+            }
+            else -> {
+                val normDir12X = hit.hitNormal12.x
+                val normDir12Y = hit.hitNormal12.y
+
+                separateInXY(body1, body2, normDir12X, normDir12Y)
+
+                helper.apply {
+                    applyFriction(body1, body2, normDir12X, normDir12Y, 0.0f)
+                    bounceAtVerticalPlane(body1, body2, normDir12X, normDir12Y)
+                }
+            }
+        }
+
+        verifySeparation(body1, body2, hit)
+    }
+
+    private fun separateInZ(sphere: FixedSphereBody, cylinder: FixedCylinderBody, normDir12Z: Float) {
+        val p1 = sphere.nextPos
+        val p2 = cylinder.nextPos
+
+        // Adding more than just EPSILON here because of flaky tests (must be floating-point inaccuracies)
+        val requiredDistance = sphere.radius + cylinder.height / 2.0f + 2.0f * EPSILON
+        val distanceAlongNormDir = (p2.z - p1.z) * normDir12Z
+        val moveBy = requiredDistance - distanceAlongNormDir
+
+        if (moveBy <= 0.0f) {
+            Log.warn(TAG, "separateInZ was called, but bodies seem to be vertically separated already")
+            return
+        }
+
+        when {
+            sphere.mass < LARGE_MASS -> when {
+                cylinder.mass < LARGE_MASS -> {
+                    val move1By = moveBy * cylinder.mass / (sphere.mass + cylinder.mass)
+                    val move2By = moveBy - move1By
+
+                    p1.z -= normDir12Z * move1By
+                    p2.z += normDir12Z * move2By
+                }
+                else -> {
+                    p1.z -= normDir12Z * moveBy
+                }
+            }
+            cylinder.mass < LARGE_MASS -> {
+                p2.z += normDir12Z * moveBy
+            }
+            else -> {
+                Log.warn(TAG, "Separating $sphere from $cylinder failed, because both bodies are LARGE_MASS")
                 return
-            }
-
-            val elasticity = body1.elasticity * body2.elasticity
-
-            if (m1 >= LARGE_MASS) {
-                v2.z = v1z + vparallelDz * elasticity
-            } else if (m2 >= LARGE_MASS) {
-                v1.z = v2z - vparallelDz * elasticity
-            } else {
-                val totalMass = m1 + m2
-                val sz = v1z * m1 + v2z * m2
-                v1.z = (sz - vparallelDz * elasticity * m2) / totalMass
-                v2.z = (sz + vparallelDz * elasticity * m1) / totalMass
-            }
-        } else {
-            // We treat this like bouncing a circle off another circle in the XY plane.
-
-            val p1x = body1.nextPos.x
-            val p1y = body1.nextPos.y
-
-            val p2x = body2.nextPos.x
-            val p2y = body2.nextPos.y
-
-            val pdx = p2x - p1x
-            val pdy = p2y - p1y
-            val p2DDistance = sqrt(pdx * pdx + pdy * pdy)
-
-            if (p2DDistance < EPSILON) {
-                Log.warn("Cannot compute new speeds of $body1 and $body2, because the distance in XY is too short")
-                return
-            }
-
-            val normDir12X = pdx / p2DDistance
-            val normDir12Y = pdy / p2DDistance
-
-            helper.apply {
-                applyFriction(body1, body2, normDir12X, normDir12Y, 0.0f)
-                bounceAtVerticalPlane(body1, body2, normDir12X, normDir12Y)
             }
         }
     }
 
-    // TODO
-    private fun separateVertically(body1: FixedSphereBody, body2: FixedCylinderBody, normDir12Z: Float) {
-        //         val p1 = body1.nextPos
-        //         val p2 = body2.nextPos
-        //
-        //         // Try moving the bodies until they are separated in Z
-        //
-        //         val moveByWhenZ: Float
-        //
-        //         if (abs(normDirZ1) <= EPSILON) {
-        //             moveByWhenZ = Float.POSITIVE_INFINITY
-        //         } else {
-        //             // We want to scale normDir by a factor k such that the resulting z will have the required distance.
-        //             // Adding more than just EPSILON here because of failing tests (floating point inaccuracies)
-        //             val requiredZDistance = body1.radius + body2.height / 2 + 8.0f * EPSILON
-        //             val k = requiredZDistance / normDirZ1
-        //
-        //             // The length of the scaled normDir is the move distance
-        //             val dx = k * normDirX1
-        //             val dy = k * normDirY1
-        //             // dz == k * normDirZ1 == requiredZDistance
-        //             moveByWhenZ = sqrt(dx * dx + dy * dy + requiredZDistance * requiredZDistance)
-        //         }
-        //
-    }
-
-    // TODO
-    private fun separateHorizontally(
+    private fun separateInXY(
         body1: FixedSphereBody,
         body2: FixedCylinderBody,
         normDir12X: Float,
         normDir12Y: Float,
     ) {
-        //         // Try moving the bodies until they are separated in XY
-        //
-        //         val moveByWhenXY: Float
-        //         val normDirXYLen = sqrt(normDirX1 * normDirX1 + normDirY1 * normDirY1)
-        //
-        //         if (normDirXYLen <= EPSILON) {
-        //             moveByWhenXY = Float.POSITIVE_INFINITY
-        //         } else {
-        //             // We want to scale normDir by a factor k such that the distance in XY will have the required value.
-        //             // |k * (nx; ny)| = d, which is the same as k * |(nx; ny)| = d, or k = d / |(nx; ny)|
-        //             val requiredXYDistance = body1.radius + body2.radius + 8.0f * EPSILON
-        //             val k = requiredXYDistance / normDirXYLen
-        //
-        //             // The length of the scaled normDir is the move distance
-        //             val dx = k * normDirX1
-        //             val dy = k * normDirY1
-        //             val dz = k * normDirZ1
-        //             moveByWhenXY = sqrt(dx * dx + dy * dy + dz * dz)
-        //         }
+        val p1 = body1.nextPos
+        val p2 = body2.nextPos
+
+        // Adding more than just EPSILON here because of flaky tests (must be floating-point inaccuracies)
+        val requiredDistance = body1.radius + body2.radius + 6.0f * EPSILON
+        val distanceAlongNormDir = (p2.x - p1.x) * normDir12X + (p2.y - p1.y) * normDir12Y
+        val moveBy = requiredDistance - distanceAlongNormDir
+
+        if (moveBy <= 0.0f) {
+            Log.warn(TAG, "separateInXY was called, but bodies seem to be vertically separated already")
+            return
+        }
+
+        when {
+            body1.mass < LARGE_MASS -> when {
+                body2.mass < LARGE_MASS -> {
+                    val move1By = moveBy * body2.mass / (body1.mass + body2.mass)
+                    val move2By = moveBy - move1By
+
+                    p1.x -= normDir12X * move1By
+                    p1.y -= normDir12Y * move1By
+
+                    p2.x += normDir12X * move2By
+                    p2.y += normDir12Y * move2By
+                }
+                else -> {
+                    p1.x -= normDir12X * moveBy
+                    p1.y -= normDir12Y * moveBy
+                }
+            }
+            body2.mass < LARGE_MASS -> {
+                p2.x += normDir12X * moveBy
+                p2.y += normDir12Y * moveBy
+            }
+            else -> {
+                Log.warn(TAG, "Separating $body1 from $body2 failed, because both bodies are LARGE_MASS")
+                return
+            }
+        }
+    }
+
+    companion object {
+        private val TAG = Log.Tag("CollideSphereVsCylinder")
     }
 }

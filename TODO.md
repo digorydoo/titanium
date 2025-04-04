@@ -9,6 +9,7 @@
     * Fix problem that three balls in a row lead to a new collision in unit tests (or is it OK?)
     * Implement angular momentum for spheres
     * Implement FixedCapsuleBody (similar to a cylinder, but with spheres at the top and bottom)
+    * Remove verifySeparation once strategies work well
 
 * Bugs
     * Umlauts in German start menu suddenly work, why?!

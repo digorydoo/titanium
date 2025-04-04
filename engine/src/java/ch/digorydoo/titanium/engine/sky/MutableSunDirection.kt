@@ -21,7 +21,7 @@ class MutableSunDirection private constructor(
     }
 
     fun setFromRelTime(relTime: Float) {
-        // Log.info("MutableSunDirection: setFromRelTime")
+        // Log.info(TAG, "setFromRelTime")
         print(".")
 
         // phi rotates around z

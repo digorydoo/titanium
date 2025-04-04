@@ -5,6 +5,7 @@ import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.MutableHitResult
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCuboidBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
+import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -76,11 +77,11 @@ internal class CollideCylinderVsCuboidTest {
         assertEquals(0.0f, hit.hitNormal12.y, TOLERANCE, "hitNormal12.y")
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
-        assertEquals(9.28812f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x") // inaccurate due to binary search
+        assertEquals(9.30011f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(10.0f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(10.0f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
-        assertEquals(10.01428f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
+        assertEquals(10.000111f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(10.0f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
@@ -135,12 +136,12 @@ internal class CollideCylinderVsCuboidTest {
         assertEquals(0.0f, hit.hitNormal12.y, TOLERANCE, "hitNormal12.y")
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
-        assertEquals(9.275658f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x") // inaccurate due to binary search
+        assertEquals(9.300016f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(10.0f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(9.31f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2 was moved only a tiny bit, because b2.mass >> b1.mass
-        assertEquals(10.001758f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
+        assertEquals(10.000018f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(10.0f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
@@ -195,11 +196,11 @@ internal class CollideCylinderVsCuboidTest {
         assertEquals(0.0f, hit.hitNormal12.y, TOLERANCE, "hitNormal12.y")
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
-        assertEquals(9.28812f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x") // inaccurate due to binary search
+        assertEquals(9.30011f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(10.0f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(10.69f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
-        assertEquals(10.01428f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
+        assertEquals(10.000111f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(10.0f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
@@ -255,11 +256,11 @@ internal class CollideCylinderVsCuboidTest {
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
         assertEquals(10.0f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
-        assertEquals(10.614744f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y") // inaccurate due to binary search
+        assertEquals(10.59989f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(10.0f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         assertEquals(10.0f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
-        assertEquals(9.982334f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        assertEquals(9.999889f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -314,11 +315,11 @@ internal class CollideCylinderVsCuboidTest {
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
         assertEquals(10.0f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
-        assertEquals(10.614744f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y") // inaccurate due to binary search
+        assertEquals(10.59989f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(9.31f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         assertEquals(10.0f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
-        assertEquals(9.982334f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        assertEquals(9.999889f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -373,11 +374,11 @@ internal class CollideCylinderVsCuboidTest {
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
         assertEquals(10.0f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
-        assertEquals(10.614744f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y") // inaccurate due to binary search
+        assertEquals(10.59989f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(10.69f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         assertEquals(10.0f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
-        assertEquals(9.982334f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        assertEquals(9.999889f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -431,11 +432,11 @@ internal class CollideCylinderVsCuboidTest {
         assertEquals(0.0f, hit.hitNormal12.y, TOLERANCE, "hitNormal12.y")
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
-        assertEquals(10.71188f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x") // inaccurate due to binary search
+        assertEquals(10.69989f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(10.0f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(10.0f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
-        assertEquals(9.98572f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
+        assertEquals(9.999889f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(10.0f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
@@ -490,11 +491,11 @@ internal class CollideCylinderVsCuboidTest {
         assertEquals(0.0f, hit.hitNormal12.y, TOLERANCE, "hitNormal12.y")
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
-        assertEquals(10.71188f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x") // inaccurate due to binary search
+        assertEquals(10.69989f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(10.0f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(9.31f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
-        assertEquals(9.98572f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
+        assertEquals(9.999889f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(10.0f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
@@ -549,11 +550,11 @@ internal class CollideCylinderVsCuboidTest {
         assertEquals(0.0f, hit.hitNormal12.y, TOLERANCE, "hitNormal12.y")
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
-        assertEquals(10.71188f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x") // inaccurate due to binary search
+        assertEquals(10.69989f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(10.0f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(10.69f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
-        assertEquals(9.98572f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
+        assertEquals(9.999889f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(10.0f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
@@ -592,7 +593,7 @@ internal class CollideCylinderVsCuboidTest {
         }
 
         assertEquals(10.0f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
-        assertEquals(9.400203f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
+        assertEquals(9.400204f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(10.0f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         assertTrue(ck.checkAndBounceIfNeeded(b1, b2, canBounce = true, hit), "should collide")
@@ -609,11 +610,11 @@ internal class CollideCylinderVsCuboidTest {
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
         assertEquals(10.0f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
-        assertEquals(9.385256f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y") // inaccurate due to binary search
+        assertEquals(9.40011f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(10.0f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         assertEquals(10.0f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
-        assertEquals(10.017666f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        assertEquals(10.000111f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -651,7 +652,7 @@ internal class CollideCylinderVsCuboidTest {
         }
 
         assertEquals(10.0f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
-        assertEquals(9.400203f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
+        assertEquals(9.400204f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(9.31f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         assertTrue(ck.checkAndBounceIfNeeded(b1, b2, canBounce = true, hit), "should collide")
@@ -668,11 +669,11 @@ internal class CollideCylinderVsCuboidTest {
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
         assertEquals(10.0f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
-        assertEquals(9.385256f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y") // inaccurate due to binary search
+        assertEquals(9.40011f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(9.31f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         assertEquals(10.0f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
-        assertEquals(10.017666f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        assertEquals(10.000111f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -710,7 +711,7 @@ internal class CollideCylinderVsCuboidTest {
         }
 
         assertEquals(10.0f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
-        assertEquals(9.400203f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
+        assertEquals(9.400204f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(10.69f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         assertTrue(ck.checkAndBounceIfNeeded(b1, b2, canBounce = true, hit), "should collide")
@@ -727,11 +728,11 @@ internal class CollideCylinderVsCuboidTest {
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
         assertEquals(10.0f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
-        assertEquals(9.385256f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y") // inaccurate due to binary search
+        assertEquals(9.40011f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(10.69f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         assertEquals(10.0f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
-        assertEquals(10.017666f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        assertEquals(10.000111f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -1275,7 +1276,7 @@ internal class CollideCylinderVsCuboidTest {
             applyForces()
         }
 
-        // The bodies should now collide, and since fz was greater, it should take this as a hit to the bottom/top.
+        // The bodies should now collide with a hit to the bottom/top.
         assertTrue(ck.checkAndBounceIfNeeded(cylinder, cuboid, canBounce = false, hit), "should collide")
         assertEquals(HitArea.BOTTOM, hit.area1, "hit.area1")
         assertEquals(HitArea.TOP, hit.area2, "hit.area2")
@@ -1288,10 +1289,10 @@ internal class CollideCylinderVsCuboidTest {
         }
         cuboid.stopAllMotion()
 
-        // The bodies should collide, and since fz was smaller, it should take this as a hit to the cuboid side.
+        // The bodies should collide, and it should still be bottom/top (important for bricks).
         assertTrue(ck.checkAndBounceIfNeeded(cylinder, cuboid, canBounce = false, hit), "should collide")
-        assertEquals(HitArea.SIDE, hit.area1, "hit.area1")
-        assertEquals(HitArea.NORTH_FACE, hit.area2, "hit.area2") // could also have been WEST_FACE
+        assertEquals(HitArea.BOTTOM, hit.area1, "hit.area1")
+        assertEquals(HitArea.TOP, hit.area2, "hit.area2")
 
         // Reset, and try the first check again at an initial position that already has a z overlap.
         cylinder.apply {
@@ -1351,12 +1352,12 @@ internal class CollideCylinderVsCuboidTest {
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
         // cylinder.nextPos has moved a little
-        assertEquals(2.4882236f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
+        assertEquals(2.585771f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
         assertEquals(2.5859048f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
         assertEquals(6.9972224f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
 
         // cuboid.nextPos has moved as well, even though it did not move by itself
-        assertEquals(5.0759745f, cuboid.nextPos.x, "cuboid.nextPos.x")
+        assertEquals(5.000104f, cuboid.nextPos.x, "cuboid.nextPos.x")
         assertEquals(5.5f, cuboid.nextPos.y, "cuboid.nextPos.y")
         assertEquals(4.0f, cuboid.nextPos.z, "cuboid.nextPos.z")
 
@@ -1475,12 +1476,12 @@ internal class CollideCylinderVsCuboidTest {
 
         // cylinder.nextPos has moved a little
         assertEquals(7.362095f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
-        assertEquals(8.540511f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
+        assertEquals(8.463436f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
         assertEquals(0.70277774f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
 
         // cuboid.nextPos was also pushed a little, even though it did not move by itself
         assertEquals(5.0f, cuboid.nextPos.x, "cuboid.nextPos.x")
-        assertEquals(5.43901f, cuboid.nextPos.y, "cuboid.nextPos.y")
+        assertEquals(5.4989567f, cuboid.nextPos.y, "cuboid.nextPos.y")
         assertEquals(4.0f, cuboid.nextPos.z, "cuboid.nextPos.z")
 
         // cylinder.nextSpeed was changed a little
@@ -1497,9 +1498,91 @@ internal class CollideCylinderVsCuboidTest {
         assertFalse(ck.checkAndBounceIfNeeded(cylinder, cuboid, canBounce = true, hit), "should no longer collide")
     }
 
-    // TODO test forceApart
+    @Test
+    fun `should force cylinder and cuboid apart when they collide at their orig pos with a clear dir of separation`() {
+        val cylinder = getCylinder(mass = 7.0f, radius = 2.0f, height = 1.0f)
+        val cuboid = getCuboid(mass = 9.0f, sizeX = 2.0f, sizeY = 2.0f, sizeZ = 2.0f)
+        val ck = CollideCylinderVsCuboid()
+        val hit = MutableHitResult()
+
+        cylinder.apply {
+            pos.set(10.0f, 10.0f, 10.0f)
+            applyForces()
+        }
+        cuboid.apply {
+            pos.set(9.0f, 11.0f, 9.0f)
+            applyForces()
+        }
+
+        assertTrue(ck.checkAndBounceIfNeeded(cylinder, cuboid, canBounce = true, hit), "should collide")
+
+        // Since the positions of the bodies are not identical, there is a clear direction of separation, and the result
+        // should not be random even though it is also a bit arbitrary since there is a large overlap in all directions.
+        assertEquals(HitArea.SIDE, hit.area1, "hit.area1")
+        assertEquals(HitArea.NORTH_FACE, hit.area2, "hit.area2")
+
+        assertEquals(8.0f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(10.0f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(9.75f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(1.0f, hit.hitNormal12.x, TOLERANCE, "hitNormal12.x") // north face from cylinder's point of view
+        assertEquals(0.0f, hit.hitNormal12.y, TOLERANCE, "hitNormal12.y")
+        assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
+
+        // Position was moved just along the x-axis (north-south axis)
+        assertEquals(7.7499995f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
+        assertEquals(10.0f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
+        assertEquals(10.0f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
+
+        assertEquals(10.75f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(11.0f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(9.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        // Speed wasn't changed at all since no force was involved
+        assertEquals(0.0f, cylinder.nextSpeed.x, TOLERANCE, "cylinder.nextSpeed.x")
+        assertEquals(0.0f, cylinder.nextSpeed.y, TOLERANCE, "cylinder.nextSpeed.y")
+        assertEquals(0.0f, cylinder.nextSpeed.z, TOLERANCE, "cylinder.nextSpeed.z")
+
+        assertEquals(0.0f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.0f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        assertFalse(ck.checkAndBounceIfNeeded(cylinder, cuboid, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
+    fun `should not mistake the hit area for a cuboid side near the edges of the TOP face`() {
+        val cylinder = getCylinder(mass = 20.0f, radius = 0.5f, height = 1.0f)
+        val cuboid = getCuboid(mass = LARGE_MASS, sizeX = 1.0f, sizeY = 1.0f, sizeZ = 1.0f)
+        val ck = CollideCylinderVsCuboid()
+        val hit = MutableHitResult()
+
+        cylinder.apply {
+            pos.set(22.492413f, 9.504805f, 2.500001f)
+            speed.set(-0.1391983f, 0.08817075f, -0.16350001f)
+            applyForces()
+        }
+        cuboid.apply {
+            pos.set(21.5f, 9.5f, 1.5f)
+            speed.set(0.0f, 0.0f, 0.0f)
+            applyForces()
+        }
+
+        assertTrue(ck.checkAndBounceIfNeeded(cylinder, cuboid, canBounce = false, hit), "should collide")
+
+        assertEquals(HitArea.BOTTOM, hit.area1, "hit.area1")
+        assertEquals(HitArea.TOP, hit.area2, "hit.area2")
+
+        assertEquals(22.0f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(9.506274f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(2.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(0.0f, hit.hitNormal12.x, TOLERANCE, "hitNormal12.x")
+        assertEquals(0.0f, hit.hitNormal12.y, TOLERANCE, "hitNormal12.y")
+        assertEquals(-1.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
+    }
 
     companion object {
-        private const val TOLERANCE = 0.000001f
+        private const val TOLERANCE = 0.0000001f
     }
 }

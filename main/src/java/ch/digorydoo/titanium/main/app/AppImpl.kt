@@ -60,7 +60,7 @@ class AppImpl: App() {
             startGame()
             loop()
         } catch (e: Exception) {
-            Log.error("Uncaught exception: ${e.message}\n${e.stackTraceToString()}")
+            Log.error(TAG, "Uncaught exception: ${e.message}\n${e.stackTraceToString()}")
             tearDown(removeLock = false)
             exitProcess(1)
         }
@@ -83,11 +83,11 @@ class AppImpl: App() {
         )
 
         Log.truncateLogFile()
-        Log.info("Logging to $logFile")
+        Log.info(TAG, "Logging to $logFile")
 
         prefs.loadFromFile()
 
-        Log.info("LWJGL version: " + Version.getVersion().toString())
+        Log.info(TAG, "LWJGL version: " + Version.getVersion().toString())
         GLFWErrorCallback.createThrow().set()
 
         // Do not include the hat switch in the list of Joystick buttons.
@@ -132,12 +132,12 @@ class AppImpl: App() {
 
         // The maximize callback is only called when Alt-clicking the zoom button, but not when going full-screen.
         // glfwSetWindowMaximizeCallback(window) { _, flag ->
-        //    Log.info("Maximize set to $flag")
+        //    Log.info(TAG, "Maximize set to $flag")
         // }
 
         glfwSetFramebufferSizeCallback(window) { window, fbWidth, fbHeight ->
             if (window != this.window) {
-                Log.error("onFramebufferSize called for window=$window, but our window is ${this.window}")
+                Log.error(TAG, "onFramebufferSize called for window=$window, but our window is ${this.window}")
             } else {
                 resolutionMgr.onFramebufferSize(fbWidth, fbHeight)
             }
@@ -152,7 +152,7 @@ class AppImpl: App() {
         if (gamepadId >= 0) {
             inputMgr.bindGamepad(gamepadId)
         } else {
-            Log.info("No game controller was found")
+            Log.info(TAG, "No game controller was found")
         }
 
         glfwMakeContextCurrent(window)
@@ -160,8 +160,8 @@ class AppImpl: App() {
         GL.createCapabilities() // attach LWJGL to GLFW's OpenGL context
         glfwShowWindow(window) // make the window visible
 
-        Log.info("OpenGL version: " + glGetString(GL_VERSION))
-        Log.info("GLSL version: " + glGetString(GL_SHADING_LANGUAGE_VERSION))
+        Log.info(TAG, "OpenGL version: " + glGetString(GL_VERSION))
+        Log.info(TAG, "GLSL version: " + glGetString(GL_SHADING_LANGUAGE_VERSION))
         checkGLError()
 
         shadowBuffer.initialize()
@@ -260,7 +260,7 @@ class AppImpl: App() {
         if (removeLock) {
             removeCrashLockFile() // must be last so we can detect all crashes
         } else {
-            Log.warn("Not removing lock, because previous errors were treated as fatal")
+            Log.warn(TAG, "Not removing lock, because previous errors were treated as fatal")
         }
     }
 
@@ -315,5 +315,9 @@ class AppImpl: App() {
             glfwPollEvents()
             inputMgr.update()
         }
+    }
+
+    companion object {
+        private val TAG = Log.Tag("AppImpl")
     }
 }

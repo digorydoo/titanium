@@ -39,11 +39,11 @@ class GamepadImpl: Gamepad() {
         hasMapping = glfwJoystickIsGamepad(gamepadId)
         guid = glfwGetJoystickGUID(gamepadId) ?: ""
         state.reset()
-        Log.info("Game controller bound: $name, id=$gamepadId, hasMapping=$hasMapping, guid=$guid")
+        Log.info(TAG, "Game controller bound: $name, id=$gamepadId, hasMapping=$hasMapping, guid=$guid")
     }
 
     override fun unbind() {
-        if (gamepadId >= 0) Log.info("Unbinding game controller $name, id=$gamepadId")
+        if (gamepadId >= 0) Log.info(TAG, "Unbinding game controller $name, id=$gamepadId")
         gamepadId = -1
         hasMapping = false
         name = ""
@@ -216,6 +216,7 @@ class GamepadImpl: Gamepad() {
     }
 
     companion object {
+        private val TAG = Log.Tag("GamepadImpl")
         private const val AXES_NON_LINEARITY = 2.0f
     }
 }

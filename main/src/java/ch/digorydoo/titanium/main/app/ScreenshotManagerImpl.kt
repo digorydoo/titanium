@@ -41,7 +41,7 @@ class ScreenshotManagerImpl: ScreenshotManager() {
         val rawWidth = widthArr[0]
         val rawHeight = heightArr[0]
 
-        Log.info("Taking screenshot of size ${rawWidth}x${rawHeight}")
+        Log.info(TAG, "Taking screenshot of size ${rawWidth}x${rawHeight}")
 
         val rawBuf = ByteBuffer.allocateDirect(rawWidth * rawHeight * 3).apply {
             order(ByteOrder.nativeOrder())
@@ -77,9 +77,9 @@ class ScreenshotManagerImpl: ScreenshotManager() {
                     fbAspectRatio / physicalAspectRatio
                 }
 
-            Log.info("   framebuf aspect ratio 16:${(16 / fbAspectRatio).toPrecision(1)}")
-            Log.info("   physical aspect ratio 16:${(16 / physicalAspectRatio).toPrecision(1)}")
-            Log.info("   rel=$relAspectRatio")
+            Log.info(TAG, "   framebuf aspect ratio 16:${(16 / fbAspectRatio).toPrecision(1)}")
+            Log.info(TAG, "   physical aspect ratio 16:${(16 / physicalAspectRatio).toPrecision(1)}")
+            Log.info(TAG, "   rel=$relAspectRatio")
 
             val fitAspectRatio = fbAspectRatio * relAspectRatio
 
@@ -97,8 +97,8 @@ class ScreenshotManagerImpl: ScreenshotManager() {
             }
         }
 
-        Log.info("   cropping it to ${croppedWidth}x${croppedHeight}")
-        Log.info("   croppedPixels is 16:${(16 / (croppedWidth.toFloat() / croppedHeight)).toPrecision(1)}")
+        Log.info(TAG, "   cropping it to ${croppedWidth}x${croppedHeight}")
+        Log.info(TAG, "   croppedPixels is 16:${(16 / (croppedWidth.toFloat() / croppedHeight)).toPrecision(1)}")
 
         val croppedBuf = ByteBuffer.allocateDirect(croppedWidth * croppedHeight * 3).apply {
             order(ByteOrder.nativeOrder())
@@ -108,12 +108,12 @@ class ScreenshotManagerImpl: ScreenshotManager() {
         var dy = (raw.height - croppedHeight) / 2
 
         if (dx < 0) {
-            Log.warn("dx is negative: $dx")
+            Log.warn(TAG, "dx is negative: $dx")
             dx = 0
         }
 
         if (dy < 0) {
-            Log.warn("dy is negative: $dy")
+            Log.warn(TAG, "dy is negative: $dy")
             dy = 0
         }
 
@@ -156,5 +156,9 @@ class ScreenshotManagerImpl: ScreenshotManager() {
         return ImageData(smallerBuf, ImageData.Type.RGB8, smallWidth, smallHeight).apply {
             drawImageScaled(src, 0, 0, smallWidth, smallHeight, antiAliasing = false)
         }
+    }
+
+    companion object {
+        private val TAG = Log.Tag("ScreenshotManagerImpl")
     }
 }

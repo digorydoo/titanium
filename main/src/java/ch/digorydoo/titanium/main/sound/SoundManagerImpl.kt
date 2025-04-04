@@ -26,24 +26,24 @@ class SoundManagerImpl: SoundManager {
         alcDevice = alcOpenDevice(null as ByteBuffer?)
 
         if (alcDevice == 0L) {
-            Log.error("SoundManager: Failed to open device! Sound will be disabled!")
+            Log.error(TAG, "Failed to open device! Sound will be disabled!")
             return
         }
 
         alcContext = alcCreateContext(alcDevice, null as IntBuffer?)
 
         if (!alcMakeContextCurrent(alcContext)) {
-            Log.error("SoundManager: Failed to make context current! Sound will be disabled!")
+            Log.error(TAG, "Failed to make context current! Sound will be disabled!")
             return
         }
 
         val alcCaps = ALC.createCapabilities(alcDevice)
         alCaps = AL.createCapabilities(alcCaps)
 
-        Log.info("OpenAL version: " + alGetString(AL_VERSION))
+        Log.info(TAG, "OpenAL version: " + alGetString(AL_VERSION))
         checkALError()
 
-        for (i in 0 ..< NUM_FX_SOURCES) {
+        (0 ..< NUM_FX_SOURCES).forEach {
             fxSources.add(SndSource.create())
         }
 
@@ -58,10 +58,10 @@ class SoundManagerImpl: SoundManager {
     }
 
     override fun tearDown() {
-        Log.info("SoundManager.tearDown")
+        Log.info(TAG, "tearDown")
 
         if (alCaps == null) {
-            Log.warn("SoundManager wasn't properly initialized!")
+            Log.warn(TAG, "Not properly initialized!")
             return
         }
 
@@ -96,11 +96,12 @@ class SoundManagerImpl: SoundManager {
             val sample = samples[smp.id] ?: Sample.load(smp).also { samples[smp.id] = it }
             sample.play(source, worldPt, volume)
         } catch (e: Exception) {
-            Log.error("SoundManagerImpl: Play sound failed: $smp: ${e.message}")
+            Log.error(TAG, "Play sound failed: $smp: ${e.message}")
         }
     }
 
     companion object {
+        private val TAG = Log.Tag("SoundManagerImpl")
         private const val NUM_FX_SOURCES = 4
 
         fun checkALError(ctx: String? = null) {

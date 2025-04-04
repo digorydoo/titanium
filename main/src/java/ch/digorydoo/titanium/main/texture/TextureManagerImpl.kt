@@ -38,7 +38,7 @@ class TextureManagerImpl: TextureManager {
         val texId = makeTexture()
 
         if (texId == null) {
-            Log.error("TextureManagerImpl: Failed to create GL texture for $fname")
+            Log.error(TAG, "Failed to create GL texture for $fname")
             return null
         }
 
@@ -125,13 +125,13 @@ class TextureManagerImpl: TextureManager {
         val data = stbi_load(path, arrWidth, arrHeight, arrChannels, 4)
 
         if (data == null) {
-            Log.error("Failed to load texture: ${stbi_failure_reason()}: $path")
+            Log.error(TAG, "Failed to load texture: ${stbi_failure_reason()}: $path")
             return null
         }
 
         val width = arrWidth[0]
         val height = arrHeight[0]
-        Log.info("TextureManager: $fname: ${width}x${height}")
+        Log.info(TAG, "$fname: ${width}x${height}")
 
         return ImageData(data, ImageData.Type.RGBA8, width, height)
     }
@@ -143,7 +143,7 @@ class TextureManagerImpl: TextureManager {
         val texId = glGenTextures()
 
         if (texId < 0) {
-            Log.error("genTextureFromData: Failed to generate texture!")
+            Log.error(TAG, "genTextureFromData: Failed to generate texture!")
             return null
         }
 
@@ -171,5 +171,9 @@ class TextureManagerImpl: TextureManager {
         // glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0)
 
         return texId
+    }
+
+    companion object {
+        private val TAG = Log.Tag("TextureManagerImpl")
     }
 }

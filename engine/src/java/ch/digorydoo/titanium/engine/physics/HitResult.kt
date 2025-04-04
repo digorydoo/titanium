@@ -31,6 +31,9 @@ internal class MutableHitResult: HitResult {
     override val hitNormal12 = MutablePoint3f()
     override var area1 = HitArea.UNSPECIFIED
     override var area2 = HitArea.UNSPECIFIED
+
+    override fun toString() =
+        "MutableHitResult(hitPt=$hitPt, hitNormal12=$hitNormal12, area1=$area1, area2=$area2)"
 }
 
 internal enum class CuboidHit {

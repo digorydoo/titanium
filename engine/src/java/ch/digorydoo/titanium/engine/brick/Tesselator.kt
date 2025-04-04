@@ -239,7 +239,7 @@ class Tesselator(
         // TODO: Implement this as a GL fan
 
         if (circum.size < 2) {
-            Log.warn("Tesselator: addFan: Too few points for circumference: ${circum.size}")
+            Log.warn(TAG, "addFan: Too few points for circumference: ${circum.size}")
             return
         }
 
@@ -307,7 +307,7 @@ class Tesselator(
         val count = min(upperPts.size, lowerPts.size)
 
         if (count < 2) {
-            Log.warn("Tesselator: addStrip: Too few points for upper and/or lower: $count")
+            Log.warn(TAG, "addStrip: Too few points for upper and/or lower: $count")
             return
         }
 
@@ -533,6 +533,7 @@ class Tesselator(
     }
 
     companion object {
+        private val TAG = Log.Tag("Tesselator")
         private const val TEX_BRICK_WIDTH = 64
         private const val TEX_BRICK_HEIGHT = 64
         private const val NUM_GROUPS_IN_TEX_X = 9

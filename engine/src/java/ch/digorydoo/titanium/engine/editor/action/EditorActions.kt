@@ -253,7 +253,7 @@ class EditorActions(
 
         if (App.spawnMgr.findSpawnPt(id) == null) {
             // This should never happen and indicates a bug in spawnMgr.
-            Log.error("Failed to retrieve spawn pt after insertion! id=$id")
+            Log.error(TAG, "Failed to retrieve spawn pt after insertion! id=$id")
         }
     }
 
@@ -283,5 +283,9 @@ class EditorActions(
     fun spawnPtChanged(pt: SpawnPt) {
         App.spawnMgr.despawn(pt)
         pt.spawn()
+    }
+
+    companion object {
+        private val TAG = Log.Tag("EditorActions")
     }
 }

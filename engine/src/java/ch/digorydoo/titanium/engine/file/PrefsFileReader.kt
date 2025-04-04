@@ -41,14 +41,16 @@ class PrefsFileReader private constructor(
     }
 
     companion object {
+        private val TAG = Log.Tag("PrefsFileReader")
+
         fun read(prefs: Preferences) {
             val path = App.assets.pathToPrefs(FILENAME)
             val file = File(path)
 
             if (!file.exists()) {
-                Log.info("PrefsFileReader: Not reading any prefs, because file does not exist: $path")
+                Log.info(TAG, "Not reading any prefs, because file does not exist: $path")
             } else {
-                Log.info("PrefsFileReader: Reading $path")
+                Log.info(TAG, "Reading $path")
                 MyDataInputStream.use(file) {
                     PrefsFileReader(it, prefs).read()
                 }

@@ -40,6 +40,7 @@ class WAVFileReader private constructor(private val stream: MyDataInputStream) {
         val dataNumBytes = stream.readInt32LittleEndian()
 
         Log.info(
+            TAG,
             "   " +
                 arrayOf(
                     "${bitsPerSample}bit",
@@ -59,6 +60,7 @@ class WAVFileReader private constructor(private val stream: MyDataInputStream) {
     }
 
     companion object {
+        private val TAG = Log.Tag("WAVFileReader")
         private const val WAV_PCM = 0x0001
         //        private const val WAV_IEEE_FLOAT = 0x0003
         //        private const val WAV_ALAW = 0x0006

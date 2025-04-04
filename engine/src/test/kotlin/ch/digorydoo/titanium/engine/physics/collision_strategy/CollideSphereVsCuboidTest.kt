@@ -1,6 +1,5 @@
 package ch.digorydoo.titanium.engine.physics.collision_strategy
 
-import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.MutableHitResult
@@ -16,28 +15,34 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 internal class CollideSphereVsCuboidTest {
-    @Test
-    fun `should correctly check sphere against cuboid`() {
-        val b1 = FixedSphereBody(
-            "b1",
-            initialPos = MutablePoint3f(),
-            mass = 10.0f,
+    private fun getSphere(mass: Float, radius: Float) =
+        FixedSphereBody(
+            "sphere",
+            initialPos = Point3f.zero,
+            mass = mass,
+            radius = radius,
             gravity = false,
-            radius = 0.5f,
             elasticity = 0.8f,
             friction = 0.2f,
         )
-        val b2 = FixedCuboidBody(
-            "b2",
-            initialPos = MutablePoint3f(),
-            mass = 11.0f,
+
+    private fun getCuboid(mass: Float, sizeX: Float, sizeY: Float, sizeZ: Float, elasticity: Float = 0.5f) =
+        FixedCuboidBody(
+            "cuboid",
+            initialPos = Point3f.zero,
+            mass = mass,
+            sizeX = sizeX,
+            sizeY = sizeY,
+            sizeZ = sizeZ,
             gravity = false,
-            elasticity = 0.5f,
+            elasticity = elasticity,
             friction = 0.2f,
-            sizeX = 0.4f,
-            sizeY = 0.3f,
-            sizeZ = 0.2f,
         )
+
+    @Test
+    fun `should correctly check sphere against cuboid`() {
+        val b1 = getSphere(mass = 10.0f, radius = 0.5f)
+        val b2 = getCuboid(mass = 11.0f, sizeX = 0.4f, sizeY = 0.3f, sizeZ = 0.2f)
 
         val ck = CollideSphereVsCuboid()
         val hit = MutableHitResult()
@@ -436,652 +441,876 @@ internal class CollideSphereVsCuboidTest {
     }
 
     @Test
-    fun `should correctly bounce the sphere off the cuboid`() {
-        val sphere = FixedSphereBody(
-            "b1",
-            initialPos = MutablePoint3f(),
-            mass = 9.0f,
-            gravity = false,
-            radius = 0.25f,
-            elasticity = 0.8f,
-            friction = 0.2f,
-        )
-        val cuboid = FixedCuboidBody(
-            "b2",
-            initialPos = MutablePoint3f(),
-            mass = 11.0f,
-            gravity = false,
-            elasticity = 0.8f,
-            friction = 0.2f,
-            sizeX = 0.5f,
-            sizeY = 0.5f,
-            sizeZ = 0.5f,
-        )
+    fun `should correctly bounce the sphere off the cuboid's NORTH face`() {
+        val sphere = getSphere(mass = 9.0f, radius = 0.25f)
+        val cuboid = getCuboid(mass = 11.0f, sizeX = 0.5f, sizeY = 0.5f, sizeZ = 0.5f, elasticity = 0.8f)
+
         val ck = CollideSphereVsCuboid()
         val hit = MutableHitResult()
 
-        // North face
-        run {
-            // The two should not collide at their initial position
-            sphere.pos.set(1.0f, 10.1f, 10.0f)
-            cuboid.pos.set(1.501f, 10.0f, 10.0f)
-            sphere.applyForces()
-            cuboid.applyForces()
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
-
-            // Add forces and compute nextSpeed
-            sphere.addForce(20.0f, -9.0f, 0.0f)
-            cuboid.addForce(-20.0f, 9.0f, 0.0f)
-            sphere.applyForces()
-            cuboid.applyForces()
-
-            assertEquals(1.0006173f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.099723f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(1.500495f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.000227f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(0.03703704f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
-            assertEquals(-0.016666668f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
-            assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
-
-            assertEquals(-0.030303033f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
-            assertEquals(0.013636365f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
-            assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
-
-            // The two should now collide
-            assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
-
-            assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
-            assertEquals(HitArea.NORTH_FACE, hit.area2, "hit.area2")
-
-            assertEquals(1.250495f, hit.hitPt.x, TOLERANCE, "hitPt.x")
-            assertEquals(10.099723f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-            assertEquals(10.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
-
-            assertEquals(0.9943219f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.099723f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(1.5056458f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.000227f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(-0.02370371f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
-            assertEquals(-0.0033333348f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
-            assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
-
-            assertEquals(0.019393943f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
-            assertEquals(0.0027272739f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
-            assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
-
-            // After bounce, the two should no longer collide
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
-        }
-
-        // East face
-        run {
-            // The two should not collide at their initial position
-            sphere.pos.set(10.1f, 1.501f, 10.0f)
-            cuboid.pos.set(10.0f, 1.0f, 10.0f)
-            sphere.applyForces()
-            cuboid.applyForces()
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
-
-            // Add forces and compute nextSpeed
-            sphere.addForce(-9.0f, -20.0f, 0.0f)
-            cuboid.addForce(9.0f, 20.0f, 0.0f)
-            sphere.applyForces()
-            cuboid.applyForces()
-
-            assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(1.5003828f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(1.0005051f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(-0.016666668f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
-            assertEquals(-0.03703704f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
-            assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
-
-            assertEquals(0.013636365f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
-            assertEquals(0.030303033f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
-            assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
-
-            // The two should now collide
-            assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
-
-            assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
-            assertEquals(HitArea.EAST_FACE, hit.area2, "hit.area2")
-
-            assertEquals(10.099723f, hit.hitPt.x, TOLERANCE, "hitPt.x")
-            assertEquals(1.2505051f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-            assertEquals(10.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
-
-            assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(1.5066781f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(0.9953543f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(-0.0033333348f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
-            assertEquals(0.02370371f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
-            assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
-
-            assertEquals(0.0027272739f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
-            assertEquals(-0.019393943f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
-            assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
-
-            // After bounce, the two should no longer collide
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
-        }
-
-        // South face
-        run {
-            // The two should not collide at their initial position
-            sphere.pos.set(1.501f, 10.1f, 10.0f)
-            cuboid.pos.set(1.0f, 10.0f, 10.0f)
-            sphere.applyForces()
-            cuboid.applyForces()
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
-
-            // Add forces and compute nextSpeed
-            sphere.addForce(-20.0f, -9.0f, 0.0f)
-            cuboid.addForce(20.0f, 9.0f, 0.0f)
-            sphere.applyForces()
-            cuboid.applyForces()
-
-            assertEquals(1.5003828f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.099723f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(1.0005051f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.000227f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(-0.03703704f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
-            assertEquals(-0.016666668f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
-            assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
-
-            assertEquals(0.030303033f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
-            assertEquals(0.013636365f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
-            assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
-
-            // The two should now collide
-            assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
-
-            assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
-            assertEquals(HitArea.SOUTH_FACE, hit.area2, "hit.area2")
-
-            assertEquals(1.2505051f, hit.hitPt.x, TOLERANCE, "hitPt.x")
-            assertEquals(10.099723f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-            assertEquals(10.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
-
-            assertEquals(1.5066781f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.099723f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(0.9953543f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.000227f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(0.02370371f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
-            assertEquals(-0.0033333348f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
-            assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
-
-            assertEquals(-0.019393943f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
-            assertEquals(0.0027272739f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
-            assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
-
-            // After bounce, the two should no longer collide
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
-        }
-
-        // West face
-        run {
-            // The two should not collide at their initial position
-            sphere.pos.set(10.1f, 1.0f, 10.0f)
-            cuboid.pos.set(10.0f, 1.501f, 10.0f)
-            sphere.applyForces()
-            cuboid.applyForces()
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
-
-            // Add forces and compute nextSpeed
-            sphere.addForce(-9.0f, 20.0f, 0.0f)
-            cuboid.addForce(9.0f, -20.0f, 0.0f)
-            sphere.applyForces()
-            cuboid.applyForces()
-
-            assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(1.0006173f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(1.500495f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(-0.016666668f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
-            assertEquals(0.03703704f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
-            assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
-
-            assertEquals(0.013636365f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
-            assertEquals(-0.030303033f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
-            assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
-
-            // The two should now collide
-            assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
-
-            assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
-            assertEquals(HitArea.WEST_FACE, hit.area2, "hit.area2")
-
-            assertEquals(10.099723f, hit.hitPt.x, TOLERANCE, "hitPt.x")
-            assertEquals(1.250495f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-            assertEquals(10.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
-
-            assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(0.9943219f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(1.5056458f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(-0.0033333348f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
-            assertEquals(-0.02370371f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
-            assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
-
-            assertEquals(0.0027272739f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
-            assertEquals(0.019393943f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
-            assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
-
-            // After bounce, the two should no longer collide
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
-        }
-
-        // Top face
-        run {
-            // The two should not collide at their initial position
-            sphere.pos.set(10.1f, 10.0f, 1.501f)
-            cuboid.pos.set(10.0f, 10.0f, 1.0f)
-            sphere.applyForces()
-            cuboid.applyForces()
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
-
-            // Add forces and compute nextSpeed
-            sphere.addForce(-9.0f, 0.0f, -20.0f)
-            cuboid.addForce(9.0f, 0.0f, 20.0f)
-            sphere.applyForces()
-            cuboid.applyForces()
-
-            assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.0f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(1.5003828f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.0f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(1.0005051f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(-0.016666668f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
-            assertEquals(0.0f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
-            assertEquals(-0.03703704f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
-
-            assertEquals(0.013636365f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
-            assertEquals(0.0f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
-            assertEquals(0.030303033f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
-
-            // The two should now collide
-            assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
-
-            assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
-            assertEquals(HitArea.TOP, hit.area2, "hit.area2")
-
-            assertEquals(10.099723f, hit.hitPt.x, TOLERANCE, "hitPt.x")
-            assertEquals(10.0f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-            assertEquals(1.2505051f, hit.hitPt.z, TOLERANCE, "hitPt.z")
-
-            assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.0f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(1.5066781f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.0f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(0.9953543f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(-0.0033333348f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
-            assertEquals(0.0f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
-            assertEquals(0.02370371f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
-
-            assertEquals(0.0027272739f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
-            assertEquals(0.0f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
-            assertEquals(-0.019393943f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
-
-            // After bounce, the two should no longer collide
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
-        }
-
-        // Bottom face
-        run {
-            // The two should not collide at their initial position
-            sphere.pos.set(10.1f, 10.0f, 1.0f)
-            cuboid.pos.set(10.0f, 10.0f, 1.501f)
-            sphere.applyForces()
-            cuboid.applyForces()
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
-
-            // Add forces and compute nextSpeed
-            sphere.addForce(-9.0f, 0.0f, 20.0f)
-            cuboid.addForce(9.0f, 0.0f, -20.0f)
-            sphere.applyForces()
-            cuboid.applyForces()
-
-            assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.0f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(1.0006173f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.0f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(1.500495f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(-0.016666668f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
-            assertEquals(0.0f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
-            assertEquals(0.03703704f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
-
-            assertEquals(0.013636365f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
-            assertEquals(0.0f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
-            assertEquals(-0.030303033f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
-
-            // The two should now collide
-            assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
-
-            assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
-            assertEquals(HitArea.BOTTOM, hit.area2, "hit.area2")
-
-            assertEquals(10.099723f, hit.hitPt.x, TOLERANCE, "hitPt.x")
-            assertEquals(10.0f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-            assertEquals(1.250495f, hit.hitPt.z, TOLERANCE, "hitPt.z")
-
-            assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.0f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(0.9943219f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.0f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(1.5056458f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(-0.0033333348f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
-            assertEquals(0.0f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
-            assertEquals(-0.02370371f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
-
-            assertEquals(0.0027272739f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
-            assertEquals(0.0f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
-            assertEquals(0.019393943f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
-
-            // After bounce, the two should no longer collide
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
-        }
+        // The two should not collide at their initial position
+        sphere.pos.set(1.0f, 10.1f, 10.0f)
+        cuboid.pos.set(1.501f, 10.0f, 10.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
+
+        // Add forces and compute nextSpeed
+        sphere.addForce(20.0f, -9.0f, 0.0f)
+        cuboid.addForce(-20.0f, 9.0f, 0.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+
+        assertEquals(1.0006173f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(10.099723f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(1.500495f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(10.000227f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(0.03703704f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(-0.016666668f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(-0.030303033f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.013636365f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // The two should now collide
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.NORTH_FACE, hit.area2, "hit.area2")
+
+        assertEquals(1.250495f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(10.099723f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(10.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(1.0005494f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(10.099723f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(1.5005504f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(10.000227f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(-0.02370371f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(-0.0033333348f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(0.019393943f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.0027272739f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // After bounce, the two should no longer collide
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
     }
 
     @Test
-    fun `should force the bodies apart when there is a clear direction of separation`() {
-        val sphere = FixedSphereBody(
-            "b1",
-            initialPos = MutablePoint3f(),
-            mass = 13.0f,
-            gravity = false,
-            radius = 0.3f,
-            elasticity = 0.8f,
-            friction = 0.2f,
-        )
-        val cuboid = FixedCuboidBody(
-            "b2",
-            initialPos = MutablePoint3f(),
-            mass = 8.0f,
-            gravity = false,
-            elasticity = 0.8f,
-            friction = 0.2f,
-            sizeX = 0.42f,
-            sizeY = 0.42f,
-            sizeZ = 0.42f,
-        )
+    fun `should correctly bounce the sphere off the cuboid's EAST face`() {
+        val sphere = getSphere(mass = 9.0f, radius = 0.25f)
+        val cuboid = getCuboid(mass = 11.0f, sizeX = 0.5f, sizeY = 0.5f, sizeZ = 0.5f, elasticity = 0.8f)
+
         val ck = CollideSphereVsCuboid()
         val hit = MutableHitResult()
 
-        // North face
-        run {
-            sphere.apply {
-                pos.set(10.0f, 10.002f, 10.003f)
-                applyForces()
-            }
-            cuboid.apply {
-                pos.set(10.5f, 10.001f, 10.004f)
-                applyForces()
-            }
-            assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+        // The two should not collide at their initial position
+        sphere.pos.set(10.1f, 1.501f, 10.0f)
+        cuboid.pos.set(10.0f, 1.0f, 10.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
 
-            assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
-            assertEquals(HitArea.NORTH_FACE, hit.area2, "hit.area2")
+        // Add forces and compute nextSpeed
+        sphere.addForce(-9.0f, -20.0f, 0.0f)
+        cuboid.addForce(9.0f, 20.0f, 0.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
 
-            assertEquals(10.29f, hit.hitPt.x, TOLERANCE, "hitPt.x")
-            assertEquals(10.002f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-            assertEquals(10.003f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+        assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(1.5003828f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(9.996101f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.002f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.003f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+        assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(1.0005051f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
-            assertEquals(10.506335f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.001f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.004f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+        assertEquals(-0.016666668f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(-0.03703704f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
 
-            assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
-            assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
-            assertEquals(0.0f, sphere.nextSpeed.z, "sphere.nextSpeed.z")
+        assertEquals(0.013636365f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.030303033f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
 
-            assertEquals(0.0f, cuboid.nextSpeed.x, "cuboid.nextSpeed.x")
-            assertEquals(0.0f, cuboid.nextSpeed.y, "cuboid.nextSpeed.y")
-            assertEquals(0.0f, cuboid.nextSpeed.z, "cuboid.nextSpeed.z")
+        // The two should now collide
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
 
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.EAST_FACE, hit.area2, "hit.area2")
+
+        assertEquals(10.099723f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(1.2505051f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(10.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(1.5004506f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(1.0004497f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(-0.0033333348f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(0.02370371f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(0.0027272739f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(-0.019393943f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // After bounce, the two should no longer collide
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
+    fun `should correctly bounce the sphere off the cuboid's SOUTH face`() {
+        val sphere = getSphere(mass = 9.0f, radius = 0.25f)
+        val cuboid = getCuboid(mass = 11.0f, sizeX = 0.5f, sizeY = 0.5f, sizeZ = 0.5f, elasticity = 0.8f)
+
+        val ck = CollideSphereVsCuboid()
+        val hit = MutableHitResult()
+
+        // The two should not collide at their initial position
+        sphere.pos.set(1.501f, 10.1f, 10.0f)
+        cuboid.pos.set(1.0f, 10.0f, 10.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
+
+        // Add forces and compute nextSpeed
+        sphere.addForce(-20.0f, -9.0f, 0.0f)
+        cuboid.addForce(20.0f, 9.0f, 0.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+
+        assertEquals(1.5003828f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(10.099723f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(1.0005051f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(10.000227f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(-0.03703704f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(-0.016666668f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(0.030303033f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.013636365f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // The two should now collide
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.SOUTH_FACE, hit.area2, "hit.area2")
+
+        assertEquals(1.2505051f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(10.099723f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(10.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(1.5004506f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(10.099723f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(1.0004497f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(10.000227f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(0.02370371f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(-0.0033333348f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(-0.019393943f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.0027272739f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // After bounce, the two should no longer collide
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
+    fun `should correctly bounce the sphere off the cuboid's WEST face`() {
+        val sphere = getSphere(mass = 9.0f, radius = 0.25f)
+        val cuboid = getCuboid(mass = 11.0f, sizeX = 0.5f, sizeY = 0.5f, sizeZ = 0.5f, elasticity = 0.8f)
+
+        val ck = CollideSphereVsCuboid()
+        val hit = MutableHitResult()
+
+        // The two should not collide at their initial position
+        sphere.pos.set(10.1f, 1.0f, 10.0f)
+        cuboid.pos.set(10.0f, 1.501f, 10.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
+
+        // Add forces and compute nextSpeed
+        sphere.addForce(-9.0f, 20.0f, 0.0f)
+        cuboid.addForce(9.0f, -20.0f, 0.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+
+        assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(1.0006173f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(1.500495f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(-0.016666668f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(0.03703704f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(0.013636365f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(-0.030303033f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // The two should now collide
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.WEST_FACE, hit.area2, "hit.area2")
+
+        assertEquals(10.099723f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(1.250495f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(10.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(1.0005494f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.0f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(1.5005504f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(-0.0033333348f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(-0.02370371f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(0.0027272739f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.019393943f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // After bounce, the two should no longer collide
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
+    fun `should correctly bounce the sphere off the cuboid's TOP face`() {
+        val sphere = getSphere(mass = 9.0f, radius = 0.25f)
+        val cuboid = getCuboid(mass = 11.0f, sizeX = 0.5f, sizeY = 0.5f, sizeZ = 0.5f, elasticity = 0.8f)
+
+        val ck = CollideSphereVsCuboid()
+        val hit = MutableHitResult()
+
+        // The two should not collide at their initial position
+        sphere.pos.set(10.1f, 10.0f, 1.501f)
+        cuboid.pos.set(10.0f, 10.0f, 1.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
+
+        // Add forces and compute nextSpeed
+        sphere.addForce(-9.0f, 0.0f, -20.0f)
+        cuboid.addForce(9.0f, 0.0f, 20.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+
+        assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(10.0f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(1.5003828f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(10.0f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(1.0005051f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(-0.016666668f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(0.0f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(-0.03703704f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(0.013636365f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.0f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(0.030303033f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // The two should now collide
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.TOP, hit.area2, "hit.area2")
+
+        assertEquals(10.099723f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(10.0f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(1.2505051f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(10.0f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(1.5004506f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(10.0f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(1.0004497f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(-0.0033333348f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(0.0f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+
+        assertEquals(0.0027272739f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.0f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+
+        // The sphere is standing on top of the cuboid, and the difference in z speed is small.
+        // The strategy is expected to set the sphere's z speed to the cuboid's before bouncing.
+        assertEquals(0.030303035f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+        assertEquals(0.030303035f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // After bounce, the two should no longer collide
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
+    fun `should correctly bounce the sphere off the cuboid's BOTTOM face`() {
+        val sphere = getSphere(mass = 9.0f, radius = 0.25f)
+        val cuboid = getCuboid(mass = 11.0f, sizeX = 0.5f, sizeY = 0.5f, sizeZ = 0.5f, elasticity = 0.8f)
+
+        val ck = CollideSphereVsCuboid()
+        val hit = MutableHitResult()
+
+        // The two should not collide at their initial position
+        sphere.pos.set(10.1f, 10.0f, 1.0f)
+        cuboid.pos.set(10.0f, 10.0f, 1.501f)
+        sphere.applyForces()
+        cuboid.applyForces()
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
+
+        // Add forces and compute nextSpeed
+        sphere.addForce(-9.0f, 0.0f, 20.0f)
+        cuboid.addForce(9.0f, 0.0f, -20.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+
+        assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(10.0f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(1.0006173f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(10.0f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(1.500495f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(-0.016666668f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(0.0f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.03703704f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(0.013636365f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.0f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(-0.030303033f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // The two should now collide
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.BOTTOM, hit.area2, "hit.area2")
+
+        assertEquals(10.099723f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(10.0f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(1.250495f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(10.099723f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(10.0f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(1.0005494f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.000227f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(10.0f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(1.5005504f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(-0.0033333348f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(0.0f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(-0.02370371f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(0.0027272739f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.0f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(0.019393943f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // After bounce, the two should no longer collide
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
+    fun `should correctly bounce the sphere off the cuboid's SOUTH-EAST edge, z-centre`() {
+        val sphere = getSphere(mass = 9.0f, radius = 0.25f)
+        val cuboid = getCuboid(mass = 11.0f, sizeX = 0.5f, sizeY = 0.5f, sizeZ = 0.5f, elasticity = 0.8f)
+
+        val ck = CollideSphereVsCuboid()
+        val hit = MutableHitResult()
+
+        // The two should not collide at their initial position
+        sphere.pos.set(10.4196f, 1.4339f, 10.0f)
+        cuboid.pos.set(10.0f, 1.0f, 10.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
+
+        // Add forces and compute nextSpeed
+        sphere.addForce(-4.0f, -4.0f, 1.0f)
+        cuboid.addForce(4.0f, 4.0f, -1.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+
+        assertEquals(10.4194765f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(1.4337765f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.0000305f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.000101f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(1.000101f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(9.999975f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(-0.0074074077f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(-0.0074074077f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0018518519f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(0.0060606063f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.0060606063f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(-0.0015151516f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // The two should now collide
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.EAST_FACE, hit.area2, "hit.area2") // also SOUTH_FACE, but this one's slightly closer
+
+        assertEquals(10.250101f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(1.250101f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(10.0000305f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(10.4194765f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(1.4338896f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.0000305f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.000101f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(1.0000083f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(9.999975f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(-0.0048203617f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(0.004740741f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0012050904f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(0.0039439322f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(-0.0038787883f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(-0.0009859831f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // After bounce, the two should no longer collide
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
+    fun `should correctly bounce the sphere off the cuboid's NORTH-WEST edge, z-centre`() {
+        val sphere = getSphere(mass = 9.0f, radius = 0.25f)
+        val cuboid = getCuboid(mass = 11.0f, sizeX = 0.5f, sizeY = 0.5f, sizeZ = 0.5f, elasticity = 0.8f)
+
+        val ck = CollideSphereVsCuboid()
+        val hit = MutableHitResult()
+
+        // The two should not collide at their initial position
+        sphere.pos.set(10.0f, 1.0f, 10.0f)
+        cuboid.pos.set(10.4241f, 1.4295f, 10.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
+
+        // Add forces and compute nextSpeed
+        sphere.addForce(4.0f, 4.0f, 1.0f)
+        cuboid.addForce(-4.0f, -4.0f, -1.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+
+        assertEquals(10.000123f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(1.0001235f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.0000305f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.423999f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(1.429399f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(9.999975f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(0.0074074077f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(0.0074074077f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0018518519f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(-0.0060606063f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(-0.0060606063f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(-0.0015151516f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // The two should now collide
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.WEST_FACE, hit.area2, "hit.area2") // also NORTH_FACE, but this one's slightly closer
+
+        assertEquals(10.173999f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(1.179399f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(10.0000305f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(10.000123f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(0.9999276f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.0000305f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.423999f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(1.4295594f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(9.999975f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(0.0048203617f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(-0.004740741f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0012050904f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(-0.0039439322f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.0038787883f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(-0.0009859831f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // After bounce, the two should no longer collide
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
+    fun `should correctly bounce the sphere off the cuboid's BOTTOM NORTH-EAST corner`() {
+        val sphere = getSphere(mass = 9.0f, radius = 0.25f)
+        val cuboid = getCuboid(mass = 11.0f, sizeX = 0.5f, sizeY = 0.5f, sizeZ = 0.5f, elasticity = 0.8f)
+
+        val ck = CollideSphereVsCuboid()
+        val hit = MutableHitResult()
+
+        // The two should not collide at their initial position
+        sphere.pos.set(10.0f, 1.394f, 10.0f)
+        cuboid.pos.set(10.392f, 1.0f, 10.397f)
+        sphere.applyForces()
+        cuboid.applyForces()
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should not collide")
+
+        // Add forces and compute nextSpeed
+        sphere.addForce(2.0f, -2.0f, 2.0f)
+        cuboid.addForce(-2.0f, 2.0f, -2.0f)
+        sphere.applyForces()
+        cuboid.applyForces()
+
+        assertEquals(10.000062f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(1.3939383f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.000062f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.39195f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(1.0000505f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.39695f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(0.0037037039f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(-0.0037037039f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0037037039f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(-0.0030303032f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.0030303032f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(-0.0030303032f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // The two should now collide
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.BOTTOM, hit.area2, "hit.area2") // also NORTH_FACE and EAST_FACE
+
+        assertEquals(10.14195f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(1.2500505f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(10.14695f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(10.000062f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(1.3939383f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(9.999896f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.39195f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(1.0000505f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.397085f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(0.002760895f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(-0.002760895f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(-0.0023703706f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(-0.002258914f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.002258914f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(0.0019393942f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        // After bounce, the two should no longer collide
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
+    fun `should force the bodies apart when they collide initially at the cuboid's NORTH face`() {
+        val sphere = getSphere(mass = 13.0f, radius = 0.3f)
+        val cuboid = getCuboid(mass = 8.0f, sizeX = 0.42f, sizeY = 0.42f, sizeZ = 0.42f, elasticity = 0.8f)
+
+        val ck = CollideSphereVsCuboid()
+        val hit = MutableHitResult()
+
+        sphere.apply {
+            pos.set(10.0f, 10.002f, 10.003f)
+            applyForces()
         }
-
-        // East face
-        run {
-            sphere.apply {
-                pos.set(10.002f, 10.5f, 10.003f)
-                applyForces()
-            }
-            cuboid.apply {
-                pos.set(10.001f, 10.0f, 10.004f)
-                applyForces()
-            }
-            assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
-
-            assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
-            assertEquals(HitArea.EAST_FACE, hit.area2, "hit.area2")
-
-            assertEquals(10.002f, hit.hitPt.x, TOLERANCE, "hitPt.x")
-            assertEquals(10.21f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-            assertEquals(10.003f, hit.hitPt.z, TOLERANCE, "hitPt.z")
-
-            assertEquals(10.002f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.503899f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.003f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(10.001f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(9.993665f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.004f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
-            assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
-            assertEquals(0.0f, sphere.nextSpeed.z, "sphere.nextSpeed.z")
-
-            assertEquals(0.0f, cuboid.nextSpeed.x, "cuboid.nextSpeed.x")
-            assertEquals(0.0f, cuboid.nextSpeed.y, "cuboid.nextSpeed.y")
-            assertEquals(0.0f, cuboid.nextSpeed.z, "cuboid.nextSpeed.z")
-
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+        cuboid.apply {
+            pos.set(10.5f, 10.001f, 10.004f)
+            applyForces()
         }
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
 
-        // South face
-        run {
-            sphere.apply {
-                pos.set(10.5f, 10.002f, 10.003f)
-                applyForces()
-            }
-            cuboid.apply {
-                pos.set(10.0f, 10.001f, 10.004f)
-                applyForces()
-            }
-            assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.NORTH_FACE, hit.area2, "hit.area2")
 
-            assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
-            assertEquals(HitArea.SOUTH_FACE, hit.area2, "hit.area2")
+        assertEquals(10.29f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(10.002f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(10.003f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-            assertEquals(10.21f, hit.hitPt.x, TOLERANCE, "hitPt.x")
-            assertEquals(10.002f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-            assertEquals(10.003f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+        assertEquals(9.99619f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(10.002f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.003f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(10.503899f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.002f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.003f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+        assertEquals(10.506191f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(10.001f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.004f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
-            assertEquals(9.993665f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.001f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.004f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+        assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
+        assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, "sphere.nextSpeed.z")
 
-            assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
-            assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
-            assertEquals(0.0f, sphere.nextSpeed.z, "sphere.nextSpeed.z")
+        assertEquals(0.0f, cuboid.nextSpeed.x, "cuboid.nextSpeed.x")
+        assertEquals(0.0f, cuboid.nextSpeed.y, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, "cuboid.nextSpeed.z")
 
-            assertEquals(0.0f, cuboid.nextSpeed.x, "cuboid.nextSpeed.x")
-            assertEquals(0.0f, cuboid.nextSpeed.y, "cuboid.nextSpeed.y")
-            assertEquals(0.0f, cuboid.nextSpeed.z, "cuboid.nextSpeed.z")
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    }
 
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    @Test
+    fun `should force the bodies apart when they collide initially at the cuboid's EAST face`() {
+        val sphere = getSphere(mass = 13.0f, radius = 0.3f)
+        val cuboid = getCuboid(mass = 8.0f, sizeX = 0.42f, sizeY = 0.42f, sizeZ = 0.42f, elasticity = 0.8f)
+
+        val ck = CollideSphereVsCuboid()
+        val hit = MutableHitResult()
+
+        sphere.apply {
+            pos.set(10.002f, 10.5f, 10.003f)
+            applyForces()
         }
-
-        // West face
-        run {
-            sphere.apply {
-                pos.set(10.002f, 10.0f, 10.003f)
-                applyForces()
-            }
-            cuboid.apply {
-                pos.set(10.001f, 10.5f, 10.004f)
-                applyForces()
-            }
-            assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
-
-            assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
-            assertEquals(HitArea.WEST_FACE, hit.area2, "hit.area2")
-
-            assertEquals(10.002f, hit.hitPt.x, TOLERANCE, "hitPt.x")
-            assertEquals(10.29f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-            assertEquals(10.003f, hit.hitPt.z, TOLERANCE, "hitPt.z")
-
-            assertEquals(10.002f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(9.996101f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.003f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(10.001f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.506335f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.004f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
-            assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
-            assertEquals(0.0f, sphere.nextSpeed.z, "sphere.nextSpeed.z")
-
-            assertEquals(0.0f, cuboid.nextSpeed.x, "cuboid.nextSpeed.x")
-            assertEquals(0.0f, cuboid.nextSpeed.y, "cuboid.nextSpeed.y")
-            assertEquals(0.0f, cuboid.nextSpeed.z, "cuboid.nextSpeed.z")
-
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+        cuboid.apply {
+            pos.set(10.001f, 10.0f, 10.004f)
+            applyForces()
         }
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
 
-        // Bottom face
-        run {
-            sphere.apply {
-                pos.set(10.002f, 10.003f, 10.0f)
-                applyForces()
-            }
-            cuboid.apply {
-                pos.set(10.001f, 10.004f, 10.5f)
-                applyForces()
-            }
-            assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.EAST_FACE, hit.area2, "hit.area2")
 
-            assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
-            assertEquals(HitArea.BOTTOM, hit.area2, "hit.area2")
+        assertEquals(10.002f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(10.21f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(10.003f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-            assertEquals(10.002f, hit.hitPt.x, TOLERANCE, "hitPt.x")
-            assertEquals(10.003f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-            assertEquals(10.29f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+        assertEquals(10.002f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(10.50381f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.003f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-            assertEquals(10.002f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.003f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(9.996101f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+        assertEquals(10.001f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(9.993809f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.004f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
-            assertEquals(10.001f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.004f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(10.506335f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+        assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
+        assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, "sphere.nextSpeed.z")
 
-            assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
-            assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
-            assertEquals(0.0f, sphere.nextSpeed.z, "sphere.nextSpeed.z")
+        assertEquals(0.0f, cuboid.nextSpeed.x, "cuboid.nextSpeed.x")
+        assertEquals(0.0f, cuboid.nextSpeed.y, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, "cuboid.nextSpeed.z")
 
-            assertEquals(0.0f, cuboid.nextSpeed.x, "cuboid.nextSpeed.x")
-            assertEquals(0.0f, cuboid.nextSpeed.y, "cuboid.nextSpeed.y")
-            assertEquals(0.0f, cuboid.nextSpeed.z, "cuboid.nextSpeed.z")
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    }
 
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    @Test
+    fun `should force the bodies apart when they collide initially at the cuboid's SOUTH face`() {
+        val sphere = getSphere(mass = 13.0f, radius = 0.3f)
+        val cuboid = getCuboid(mass = 8.0f, sizeX = 0.42f, sizeY = 0.42f, sizeZ = 0.42f, elasticity = 0.8f)
+
+        val ck = CollideSphereVsCuboid()
+        val hit = MutableHitResult()
+
+        sphere.apply {
+            pos.set(10.5f, 10.002f, 10.003f)
+            applyForces()
         }
-
-        // Top face
-        run {
-            sphere.apply {
-                pos.set(10.003f, 10.002f, 10.5f)
-                applyForces()
-            }
-            cuboid.apply {
-                pos.set(10.004f, 10.001f, 10.0f)
-                applyForces()
-            }
-            assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
-
-            assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
-            assertEquals(HitArea.TOP, hit.area2, "hit.area2")
-
-            assertEquals(10.003f, hit.hitPt.x, TOLERANCE, "hitPt.x")
-            assertEquals(10.002f, hit.hitPt.y, TOLERANCE, "hitPt.y")
-            assertEquals(10.21f, hit.hitPt.z, TOLERANCE, "hitPt.z")
-
-            assertEquals(10.003f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-            assertEquals(10.002f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-            assertEquals(10.503899f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
-
-            assertEquals(10.004f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
-            assertEquals(10.001f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
-            assertEquals(9.993665f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
-
-            assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
-            assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
-            assertEquals(0.0f, sphere.nextSpeed.z, "sphere.nextSpeed.z")
-
-            assertEquals(0.0f, cuboid.nextSpeed.x, "cuboid.nextSpeed.x")
-            assertEquals(0.0f, cuboid.nextSpeed.y, "cuboid.nextSpeed.y")
-            assertEquals(0.0f, cuboid.nextSpeed.z, "cuboid.nextSpeed.z")
-
-            assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+        cuboid.apply {
+            pos.set(10.0f, 10.001f, 10.004f)
+            applyForces()
         }
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.SOUTH_FACE, hit.area2, "hit.area2")
+
+        assertEquals(10.21f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(10.002f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(10.003f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(10.50381f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(10.002f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.003f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(9.993809f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(10.001f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.004f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
+        assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, "sphere.nextSpeed.z")
+
+        assertEquals(0.0f, cuboid.nextSpeed.x, "cuboid.nextSpeed.x")
+        assertEquals(0.0f, cuboid.nextSpeed.y, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, "cuboid.nextSpeed.z")
+
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
+    fun `should force the bodies apart when they collide initially at the cuboid's WEST face`() {
+        val sphere = getSphere(mass = 13.0f, radius = 0.3f)
+        val cuboid = getCuboid(mass = 8.0f, sizeX = 0.42f, sizeY = 0.42f, sizeZ = 0.42f, elasticity = 0.8f)
+
+        val ck = CollideSphereVsCuboid()
+        val hit = MutableHitResult()
+
+        sphere.apply {
+            pos.set(10.002f, 10.0f, 10.003f)
+            applyForces()
+        }
+        cuboid.apply {
+            pos.set(10.001f, 10.5f, 10.004f)
+            applyForces()
+        }
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.WEST_FACE, hit.area2, "hit.area2")
+
+        assertEquals(10.002f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(10.29f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(10.003f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(10.002f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(9.99619f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.003f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.001f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(10.506191f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.004f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
+        assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, "sphere.nextSpeed.z")
+
+        assertEquals(0.0f, cuboid.nextSpeed.x, "cuboid.nextSpeed.x")
+        assertEquals(0.0f, cuboid.nextSpeed.y, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, "cuboid.nextSpeed.z")
+
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
+    fun `should force the bodies apart when they collide initially at the cuboid's BOTTOM face`() {
+        val sphere = getSphere(mass = 13.0f, radius = 0.3f)
+        val cuboid = getCuboid(mass = 8.0f, sizeX = 0.42f, sizeY = 0.42f, sizeZ = 0.42f, elasticity = 0.8f)
+
+        val ck = CollideSphereVsCuboid()
+        val hit = MutableHitResult()
+
+        sphere.apply {
+            pos.set(10.002f, 10.003f, 10.0f)
+            applyForces()
+        }
+        cuboid.apply {
+            pos.set(10.001f, 10.004f, 10.5f)
+            applyForces()
+        }
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.BOTTOM, hit.area2, "hit.area2")
+
+        assertEquals(10.002f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(10.003f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(10.29f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(10.002f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(10.003f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(9.99619f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.001f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(10.004f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(10.506191f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
+        assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, "sphere.nextSpeed.z")
+
+        assertEquals(0.0f, cuboid.nextSpeed.x, "cuboid.nextSpeed.x")
+        assertEquals(0.0f, cuboid.nextSpeed.y, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, "cuboid.nextSpeed.z")
+
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
+    }
+
+    @Test
+    fun `should force the bodies apart when they collide initially at the cuboid's TOP face`() {
+        val sphere = getSphere(mass = 13.0f, radius = 0.3f)
+        val cuboid = getCuboid(mass = 8.0f, sizeX = 0.42f, sizeY = 0.42f, sizeZ = 0.42f, elasticity = 0.8f)
+
+        val ck = CollideSphereVsCuboid()
+        val hit = MutableHitResult()
+
+        sphere.apply {
+            pos.set(10.003f, 10.002f, 10.5f)
+            applyForces()
+        }
+        cuboid.apply {
+            pos.set(10.004f, 10.001f, 10.0f)
+            applyForces()
+        }
+        assertTrue(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = true, hit), "should collide")
+
+        assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
+        assertEquals(HitArea.TOP, hit.area2, "hit.area2")
+
+        assertEquals(10.003f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(10.002f, hit.hitPt.y, TOLERANCE, "hitPt.y")
+        assertEquals(10.21f, hit.hitPt.z, TOLERANCE, "hitPt.z")
+
+        assertEquals(10.003f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(10.002f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.50381f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.004f, cuboid.nextPos.x, TOLERANCE, "cuboid.nextPos.x")
+        assertEquals(10.001f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
+        assertEquals(9.993809f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
+
+        assertEquals(0.0f, sphere.nextSpeed.x, "sphere.nextSpeed.x")
+        assertEquals(0.0f, sphere.nextSpeed.y, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, "sphere.nextSpeed.z")
+
+        assertEquals(0.0f, cuboid.nextSpeed.x, "cuboid.nextSpeed.x")
+        assertEquals(0.0f, cuboid.nextSpeed.y, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, "cuboid.nextSpeed.z")
+
+        assertFalse(ck.checkAndBounceIfNeeded(sphere, cuboid, canBounce = false, hit), "should no longer collide")
     }
 
     companion object {
-        private const val TOLERANCE = 0.000001f
+        private const val TOLERANCE = 0.0000001f
     }
 }

@@ -59,6 +59,8 @@ class SaveGameFileWriter private constructor(
     }
 
     companion object {
+        private val TAG = Log.Tag("SaveGameFileWriter")
+
         const val PREFIX = "savegame-" // must be lowercase (see list())
         const val POSTFIX = ".dat" // must be lowercase
         private const val MAX_NUM_SAVEGAMES = 10 // because building the list of screenshots would become too slow
@@ -70,7 +72,7 @@ class SaveGameFileWriter private constructor(
 
         fun write(summary: Summary, state: SerializedState) {
             val path = App.assets.pathToSaveGame(summary.fileName)
-            Log.info("SaveGameFileWriter: Writing $path")
+            Log.info(TAG, "Writing $path")
 
             val file = File(path)
             MyDataOutputStream.use(file) {
@@ -85,11 +87,11 @@ class SaveGameFileWriter private constructor(
                     .takeIf { it.size > MAX_NUM_SAVEGAMES }
                     ?.last()
                     ?.let {
-                        Log.info("Deleting old savegame: ${it.name}")
+                        Log.info(TAG, "Deleting old savegame: ${it.name}")
                         it.delete()
                     }
             } catch (e: Exception) {
-                Log.error("Failed to delete old savegame: ${e.message}")
+                Log.error(TAG, "Failed to delete old savegame: ${e.message}")
             }
         }
     }

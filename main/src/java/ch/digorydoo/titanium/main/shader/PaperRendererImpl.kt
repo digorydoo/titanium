@@ -48,7 +48,7 @@ class PaperRendererImpl(
     @Suppress("removal")
     protected fun finalize() {
         // Check that free has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error("PaperRendererImpl still valid at finalize")
+        if (valid) Log.error(TAG, "still valid at finalize")
     }
 
     private val positions = floatArrayOf(
@@ -200,5 +200,9 @@ class PaperRendererImpl(
 
         glDisable(GL_BLEND)
         glDisable(GL_DEPTH_TEST)
+    }
+
+    companion object {
+        private val TAG = Log.Tag("PaperRendererImpl")
     }
 }

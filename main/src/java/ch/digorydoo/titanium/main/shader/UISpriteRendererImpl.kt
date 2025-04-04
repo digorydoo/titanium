@@ -38,7 +38,7 @@ class UISpriteRendererImpl(private val delegate: Delegate, private val antiAlias
     @Suppress("removal")
     protected fun finalize() {
         // Check that free has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error("UISpriteRendererImpl still valid at finalize")
+        if (valid) Log.error(TAG, "still valid at finalize")
     }
 
     private val positions = floatArrayOf(
@@ -154,5 +154,9 @@ class UISpriteRendererImpl(private val delegate: Delegate, private val antiAlias
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4)
         glDisable(GL_BLEND)
         checkGLError()
+    }
+
+    companion object {
+        private val TAG = Log.Tag("UISpriteRendererImpl")
     }
 }

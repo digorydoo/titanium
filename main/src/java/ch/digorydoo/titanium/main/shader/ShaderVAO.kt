@@ -31,12 +31,16 @@ class ShaderVAO {
     @Suppress("removal")
     protected fun finalize() {
         // Check that unload has been called. We can't throw from finalize, so log only.
-        if (id >= 0) Log.error("ShaderVAO still valid at finalize")
+        if (id >= 0) Log.error(TAG, "ShaderVAO still valid at finalize")
     }
 
     fun bind() {
         require(id >= 0) { "VAO is invalid" }
         glBindVertexArray(id)
         checkGLError()
+    }
+
+    companion object {
+        private val TAG = Log.Tag("ShaderVAO")
     }
 }

@@ -1,12 +1,14 @@
 package ch.digorydoo.titanium.engine.physics.collision_strategy
 
 import ch.digorydoo.kutils.point.MutablePoint3f
+import ch.digorydoo.kutils.point.Point2f
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.MutableHitResult
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.utils.assertGreaterThan
 import ch.digorydoo.titanium.engine.utils.assertLessThan
+import ch.digorydoo.titanium.engine.utils.assertWithin
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -118,13 +120,13 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(0.0f, b2.speed.z, "b2.speed.z")
 
         // b1.nextPos has been moved a little
-        assertEquals(9.993378f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
-        assertEquals(7.2023115f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
+        assertEquals(10.00463f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
+        assertEquals(7.200014f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y") // has slightly moved due to y diff of centres
         assertEquals(11.1f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has been moved a little
-        assertEquals(10.507826f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
-        assertEquals(7.097268f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        assertEquals(10.494528f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
+        assertEquals(7.0999827f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y") // has slightly moved due to y diff of centres
         assertEquals(10.45f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified
@@ -134,8 +136,14 @@ internal class CollideCylinderVsCylinderTest {
 
         // b2.nextSpeed has been modified
         assertEquals(0.07999805f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
-        assertEquals(-0.016334536f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
+        assertEquals(-0.01633464f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
         assertEquals(0.0f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
+
+        // Since it was SIDE, the cylinders should now be separated in XY
+        val centre1 = Point2f(b1.nextPos.x, b1.nextPos.y)
+        val centre2 = Point2f(b2.nextPos.x, b2.nextPos.y)
+        val newDistance = centre1.distanceTo(centre2).toFloat()
+        assertWithin(0.0f ..< 0.000007f, newDistance - (b1.radius + b2.radius), "gap") // less than 7 mm/1000
     }
 
     @Test
@@ -242,14 +250,14 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(0.0f, b2.speed.y, "b2.speed.y")
         assertEquals(0.0f, b2.speed.z, "b2.speed.z")
 
-        // b1.nextPos has been moved a little towards its original pos
-        assertEquals(8.202837f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
-        assertEquals(7.5081406f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
+        // b1.nextPos has been moved a little
+        assertEquals(8.200014f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x") // has slightly moved due to x diff of centres
+        assertEquals(7.494318f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(11.1f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
-        // b2.nextPos has been moved a little towards its original pos
-        assertEquals(8.097794f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
-        assertEquals(6.9936686f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        // b2.nextPos has been moved a little
+        assertEquals(8.099989f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x") // has slightly moved due to x diff of centres
+        assertEquals(7.0044193f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.45f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified
@@ -261,6 +269,12 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(-0.013157794f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
         assertEquals(-0.06444303f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
         assertEquals(0.0f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
+
+        // Since it was SIDE, the cylinders should now be separated in XY
+        val centre1 = Point2f(b1.nextPos.x, b1.nextPos.y)
+        val centre2 = Point2f(b2.nextPos.x, b2.nextPos.y)
+        val newDistance = centre1.distanceTo(centre2).toFloat()
+        assertWithin(0.0f ..< 0.000007f, newDistance - (b1.radius + b2.radius), "gap") // less than 7 mm/1000
     }
 
     @Test
@@ -368,25 +382,28 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(0.0f, b2.speed.y, "b2.speed.y")
         assertEquals(0.0f, b2.speed.z, "b2.speed.z")
 
-        // b1.nextPos has been moved a little towards its original pos
+        // b1.nextPos has been moved a little
         assertEquals(8.3f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(7.1f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(11.209642f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(11.204376f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
-        // b2.nextPos has been moved a little towards its original pos
+        // b2.nextPos has been moved a little
         assertEquals(8.1f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
         assertEquals(7.2f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(10.450278f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(10.454375f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
         assertEquals(0.0f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
-        assertEquals(0.086309545f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
 
         // b2.nextSpeed has been modified
         assertEquals(0.0f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
         assertEquals(0.0f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
-        assertEquals(-0.06712962f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
+
+        // b1 is standing on top of b2, and the difference in z speed is small.
+        // The strategy is expected to set b1's z speed to b2's before bouncing.
+        assertEquals(0.26851854f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
+        assertEquals(0.26851854f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
     }
 
     @Test
@@ -440,6 +457,14 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(1.0f, hit.hitNormal12.y, TOLERANCE, "hitNormal12.y")
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
+        assertEquals(10.0f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
+        assertEquals(10.01f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
+        assertEquals(10.51f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+
+        assertEquals(10.0f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
+        assertEquals(10.51f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        assertEquals(10.76f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+
         // The cylinders should no longer collide after bounce
         bounce()
         assertFalse(check())
@@ -464,14 +489,14 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(0.0f, b2.speed.y, TOLERANCE, "b2.speed.y")
         assertEquals(0.0f, b2.speed.z, TOLERANCE, "b2.speed.z")
 
-        // b1.nextPos has been moved
+        // b1.nextPos has moved a little
         assertEquals(10.0f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
-        assertEquals(9.9971075f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
+        assertEquals(10.009997f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
         assertEquals(10.51f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
-        // b2.nextPos is unchanged
+        // b2.nextPos has moved a little
         assertEquals(10.0f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
-        assertEquals(10.522893f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        assertEquals(10.510003f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.76f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified: still moves in the same direction, but slower
@@ -483,6 +508,12 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(0.0f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
         assertEquals(0.375f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
         assertEquals(0.10799999f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
+
+        // Since it was SIDE, the cylinders should now be separated in XY
+        val centre1 = Point2f(b1.nextPos.x, b1.nextPos.y)
+        val centre2 = Point2f(b2.nextPos.x, b2.nextPos.y)
+        val newDistance = centre1.distanceTo(centre2).toFloat()
+        assertWithin(0.0f ..< 0.000007f, newDistance - (b1.radius + b2.radius), "gap") // less than 7 mm/1000
     }
 
     @Test
@@ -560,14 +591,23 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(24.0f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // Bounce will force the two cylinders apart such that they no longer collide
-        Log.enabled = false // suppress expected log message
-        bounce()
-        Log.enabled = true
+        try {
+            Log.enabled = false // suppress expected log message
+            bounce()
 
-        assertFalse(
-            check(),
-            "should no longer collide, but they do: b1.nextPos=${b1.nextPos}, b2.nextPos=${b2.nextPos}"
-        )
+            assertFalse(
+                check(),
+                "should no longer collide, but they do: " +
+                    "b1.nextPos=${b1.nextPos}, " +
+                    "b2.nextPos=${b2.nextPos}, " +
+                    "hitNormal12=${hit.hitNormal12}, " +
+                    "expected distance in XY=${b1.radius + b2.radius}, " +
+                    "actual distance in XY=" +
+                    Point2f(b1.nextPos.x, b1.nextPos.y).distanceTo(Point2f(b2.nextPos.x, b2.nextPos.y))
+            )
+        } finally {
+            Log.enabled = true
+        }
 
         // A separation force was not added
         assertEquals(0.0f, b1.resultingForce.x, "b1.resultingForce.x")
@@ -608,12 +648,11 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(0.0f, b2.nextPos.z - b2.pos.z, "should not involve z with forced separation")
 
         // The new distance should be in the range we'd expect. Since z was not involved, we can just check XY length.
-        val dx = b1.nextPos.x - b2.nextPos.x
-        val dy = b1.nextPos.y - b2.nextPos.y
-        val dist = sqrt(dx * dx + dy * dy)
-        val rsum = b1.radius + b2.radius
-        assertLessThan(dist, rsum + 0.04f, "new distance") // 4cm, not very good
-        assertGreaterThan(dist, rsum - 0.04f, "new distance")
+        // Since it was SIDE, the cylinders should now be separated in XY
+        val centre1 = Point2f(b1.nextPos.x, b1.nextPos.y)
+        val centre2 = Point2f(b2.nextPos.x, b2.nextPos.y)
+        val newDistance = centre1.distanceTo(centre2).toFloat()
+        assertWithin(0.0f ..< 0.000011f, newDistance - (b1.radius + b2.radius), "gap") // less than 11 mm/1000
 
         // b1.nextSpeed is still zero
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -627,6 +666,6 @@ internal class CollideCylinderVsCylinderTest {
     }
 
     companion object {
-        private const val TOLERANCE = 0.000001f
+        private const val TOLERANCE = 0.0000001f
     }
 }

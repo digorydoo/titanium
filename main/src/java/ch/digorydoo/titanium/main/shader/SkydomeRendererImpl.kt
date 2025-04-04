@@ -37,7 +37,7 @@ class SkydomeRendererImpl(private val delegate: Delegate): SkydomeRenderer() {
     @Suppress("removal")
     protected fun finalize() {
         // Check that free has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error("SkydomeRendererImpl still valid at finalize")
+        if (valid) Log.error(TAG, "still valid at finalize")
     }
 
     override fun renderShadows() {}
@@ -85,4 +85,8 @@ class SkydomeRendererImpl(private val delegate: Delegate): SkydomeRenderer() {
     }
 
     override fun renderTransparent() {}
+
+    companion object {
+        private val TAG = Log.Tag("SkydomeRendererImpl")
+    }
 }

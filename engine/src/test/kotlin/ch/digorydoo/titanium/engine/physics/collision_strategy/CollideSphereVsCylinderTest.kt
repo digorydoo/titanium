@@ -8,6 +8,7 @@ import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.engine.utils.assertGreaterThan
 import ch.digorydoo.titanium.engine.utils.assertLessThan
+import kotlin.math.abs
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -124,13 +125,13 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(0.0f, cylinder.speed.z, "cylinder.speed.z")
 
         // sphere.nextPos has been moved a little
-        assertEquals(10.001324f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-        assertEquals(7.2006893f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.00463f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(7.200014f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
         assertEquals(10.45f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
         // cylinder.nextPos has been moved a little
-        assertEquals(10.498436f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
-        assertEquals(7.099185f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
+        assertEquals(10.494528f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
+        assertEquals(7.0999827f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
         assertEquals(10.45f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
 
         // sphere.nextSpeed has been modified
@@ -248,13 +249,13 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(0.0f, cylinder.speed.z, "cylinder.speed.z")
 
         // sphere.nextPos has been moved a little
-        assertEquals(8.200846f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-        assertEquals(7.4983892f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(8.200014f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(7.494318f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
         assertEquals(10.4f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
         // cylinder.nextPos has been moved a little
-        assertEquals(8.099342f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
-        assertEquals(7.001252f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
+        assertEquals(8.099989f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
+        assertEquals(7.0044193f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
         assertEquals(10.45f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
 
         // sphere.nextSpeed has been modified
@@ -350,7 +351,16 @@ internal class CollideSphereVsCylinderTest {
 
         // The two should no longer collide after bounce
         bounce()
-        assertFalse(check())
+        assertFalse(
+            check(),
+            "should no longer collide, but they do: " +
+                "sphere.nextPos=${sphere.nextPos}, " +
+                "b2.nextPos=${cylinder.nextPos}, " +
+                "hitNormal12=${hit.hitNormal12}, " +
+                "expected distance in Z=${sphere.radius + cylinder.height / 2}, " +
+                "actual distance in Z=" +
+                abs(sphere.nextPos.z - cylinder.nextPos.z)
+        )
 
         // sphere.pos is unchanged
         assertEquals(8.3f, sphere.pos.x, "sphere.pos.x")
@@ -372,25 +382,28 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(0.0f, cylinder.speed.y, "cylinder.speed.y")
         assertEquals(0.0f, cylinder.speed.z, "cylinder.speed.z")
 
-        // sphere.nextPos has been moved a little towards its original pos
+        // sphere.nextPos has been moved a little
         assertEquals(8.3f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
         assertEquals(7.1f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-        assertEquals(10.956721f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+        assertEquals(10.954376f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-        // cylinder.nextPos has been moved a little towards its original pos
+        // cylinder.nextPos has been moved a little
         assertEquals(8.1f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
         assertEquals(7.2f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
-        assertEquals(10.40255f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
+        assertEquals(10.404374f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
 
         // sphere.nextSpeed has been modified
         assertEquals(0.0f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
         assertEquals(0.0f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
-        assertEquals(0.086309545f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
 
         // cylinder.nextSpeed has been modified
         assertEquals(0.0f, cylinder.nextSpeed.x, TOLERANCE, "cylinder.nextSpeed.x")
         assertEquals(0.0f, cylinder.nextSpeed.y, TOLERANCE, "cylinder.nextSpeed.y")
-        assertEquals(-0.06712962f, cylinder.nextSpeed.z, TOLERANCE, "cylinder.nextSpeed.z")
+
+        // The sphere is lying on top of cylinder, and the difference in z speed is small.
+        // The strategy is expected to set sphere's z speed to the cylinder's before bouncing.
+        assertEquals(0.26851854f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+        assertEquals(0.26851854f, cylinder.nextSpeed.z, TOLERANCE, "cylinder.nextSpeed.z")
     }
 
     @Test
@@ -443,6 +456,14 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(1.0f, hit.hitNormal12.y, TOLERANCE, "hitNormal12.y")
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
+        assertEquals(10.0f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(10.01f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.51f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+
+        assertEquals(10.0f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
+        assertEquals(10.51f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
+        assertEquals(10.76f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
+
         // The bodies should no longer collide after bounce
         bounce()
         assertFalse(check())
@@ -469,12 +490,12 @@ internal class CollideSphereVsCylinderTest {
 
         // sphere.nextPos has been moved
         assertEquals(10.0f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-        assertEquals(10.006764f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.009997f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
         assertEquals(10.51f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
-        // cylinder.nextPos is unchanged
+        // cylinder.nextPos has been moved
         assertEquals(10.0f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
-        assertEquals(10.513236f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
+        assertEquals(10.510003f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
         assertEquals(10.76f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
 
         // sphere.nextSpeed has been modified
@@ -635,6 +656,6 @@ internal class CollideSphereVsCylinderTest {
     }
 
     companion object {
-        private const val TOLERANCE = 0.000001f
+        private const val TOLERANCE = 0.0000001f
     }
 }

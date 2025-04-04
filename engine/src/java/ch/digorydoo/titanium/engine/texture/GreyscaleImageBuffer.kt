@@ -21,7 +21,7 @@ class GreyscaleImageBuffer {
 
         if (bytes.capacity() < numBytes) {
             bytes = ByteBuffer.allocateDirect(numBytes)
-            Log.info("GreyscaleImageBuffer: Reallocated buffer to $numBytes bytes")
+            Log.info(TAG, "Reallocated buffer to $numBytes bytes")
         }
     }
 
@@ -238,6 +238,8 @@ class GreyscaleImageBuffer {
     }
 
     companion object {
+        private val TAG = Log.Tag("GreyscaleImageBuffer")
+
         const val OUTLINE_RANGE = 3
         private val outlineWeights = arrayOf(
             0.15f, 0.28f, 0.37f, 0.40f, 0.37f, 0.28f, 0.15f,

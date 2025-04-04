@@ -28,7 +28,7 @@ class PrefsManager: Preferences {
         try {
             PrefsFileReader.read(this)
         } catch (e: Exception) {
-            Log.error("Failed to read prefs file: ${e.message}")
+            Log.error(TAG, "Failed to read prefs file: ${e.message}")
         }
 
         changed = false
@@ -40,9 +40,13 @@ class PrefsManager: Preferences {
         try {
             PrefsFileWriter.write(this)
         } catch (e: Exception) {
-            Log.error("Failed to write prefs file: ${e.message}")
+            Log.error(TAG, "Failed to write prefs file: ${e.message}")
         }
 
         changed = false
+    }
+
+    companion object {
+        private val TAG = Log.Tag("PrefsManager")
     }
 }

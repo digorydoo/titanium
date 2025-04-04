@@ -76,7 +76,7 @@ object ButtonBuilder {
                 val valueTex = frames.tex
 
                 if (valueTex == null) {
-                    Log.warn("ButtonBuilder: BoolChoice buttonValue: valueTex is null")
+                    Log.warn(TAG, "BoolChoice buttonValue: valueTex is null")
                     buttonValue = null
                 } else {
                     frames.setFrame(if (choice.curValue) 1 else 0)
@@ -113,7 +113,7 @@ object ButtonBuilder {
             val incDecTex = frames.tex
 
             if (incDecTex == null) {
-                Log.warn("ButtonBuilder: incDecTex is null")
+                Log.warn(TAG, "incDecTex is null")
                 incDec = null
             } else {
                 frames.setFrame(0)
@@ -161,7 +161,7 @@ object ButtonBuilder {
         val textWidth = ITEM_VALUE_MAX_WIDTH + 2 * ITEM_TEXT_INNER_PADDING
         val textHeight = ceil(sz.y).toInt() + 2 * ITEM_TEXT_INNER_PADDING
         return App.textures.createTexture(textWidth, textHeight).also {
-            Log.info("Item value texture created: w=${it.width}, h=${it.height}, value=$value")
+            Log.info(TAG, "Item value texture created: w=${it.width}, h=${it.height}, value=$value")
             redrawStringValue(it, value)
         }
     }
@@ -199,7 +199,7 @@ object ButtonBuilder {
             drawInto {
                 val src = summary.screenshot
                 if (src == null) {
-                    Log.warn("Drawing an empty thumbnail, because screenshotWhenOpened is null")
+                    Log.warn(TAG, "Drawing an empty thumbnail, because screenshotWhenOpened is null")
                     clear(Colour.blue)
                 } else {
                     drawImageScaled(
@@ -213,4 +213,6 @@ object ButtonBuilder {
                 }
             }
         }
+
+    private val TAG = Log.Tag("ButtonBuilder")
 }

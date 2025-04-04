@@ -61,7 +61,7 @@ class MeshRendererImpl(
     @Suppress("removal")
     protected fun finalize() {
         // Check that free has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error("MeshRendererImpl still valid at finalize")
+        if (valid) Log.error(TAG, "still valid at finalize")
     }
 
     private val rootTransform = MutableMatrix4f()
@@ -220,6 +220,8 @@ class MeshRendererImpl(
     override fun renderTransparent() {}
 
     companion object {
+        private val TAG = Log.Tag("MeshRendererImpl")
+
         private fun MeshMaterial.props(): MaterialProps = when (this) {
             MeshMaterial.DEFAULT -> greyStoneProps
             MeshMaterial.RED_CLOTH -> redClothProps

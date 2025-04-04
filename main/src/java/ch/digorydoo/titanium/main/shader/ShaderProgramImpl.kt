@@ -35,7 +35,7 @@ class ShaderProgramImpl(
         val status = arr[0]
 
         if (status != GL_TRUE) {
-            Log.error(glGetProgramInfoLog(id))
+            Log.error(TAG, glGetProgramInfoLog(id))
             throw Exception("Failed to link program $type")
         }
 
@@ -44,7 +44,7 @@ class ShaderProgramImpl(
     }
 
     fun unload() {
-        Log.info("Unloading program $type ($id)")
+        Log.info(TAG, "Unloading program $type ($id)")
         require(id >= 0) { "Program $type not loaded" }
 
         glDeleteProgram(id)
@@ -55,7 +55,7 @@ class ShaderProgramImpl(
     @Suppress("removal")
     protected fun finalize() {
         // Check that unload has been called. We can't throw from finalize, so log only.
-        if (id >= 0) Log.error("ShaderProgramImpl still valid at finalize")
+        if (id >= 0) Log.error(TAG, "still valid at finalize")
     }
 
     fun use() {
@@ -67,5 +67,9 @@ class ShaderProgramImpl(
     fun findLocations(uniforms: ShaderUniforms, attributes: ShaderAttributes) {
         uniforms.findLocations(id)
         attributes.findLocations(id)
+    }
+
+    companion object {
+        private val TAG = Log.Tag("ShaderProgramImpl")
     }
 }

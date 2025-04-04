@@ -18,7 +18,7 @@ class GameStatusBar {
     private var isShown = false
 
     fun onBeforeLoadScene() {
-        Log.info("GameStatusBar: onBeforeLoadScene")
+        Log.info(TAG, "onBeforeLoadScene")
 
         // SceneLoader is expected to throw away all gels
         require(progressBar?.zombie != false) { "progressBar still alive" }
@@ -45,7 +45,7 @@ class GameStatusBar {
     }
 
     fun onAfterLoadScene() {
-        Log.info("GameStatusBar: onAfterLoadScene")
+        Log.info(TAG, "onAfterLoadScene")
         isLoadingScene = false
 
         progressBar?.setZombie()
@@ -101,6 +101,7 @@ class GameStatusBar {
     }
 
     companion object {
+        private val TAG = Log.Tag("GameStatusBar")
         private const val PROGRESS_BAR_BOTTOM_MARGIN = 48.0f // dp
     }
 }

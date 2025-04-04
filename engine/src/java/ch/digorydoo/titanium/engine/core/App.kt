@@ -97,17 +97,20 @@ abstract class App {
                     val pathWithoutExt = logFile.path.slice(0 ..< logFile.path.length - logFile.extension.length - 1)
                     val movedLogFile = File("$pathWithoutExt$newExt")
                     logFile.renameTo(movedLogFile)
-                    Log.warn("A recent crash was detected. The old log was found and moved to: ${movedLogFile.path}")
+                    Log.warn(
+                        TAG,
+                        "A recent crash was detected. The old log was found and moved to: ${movedLogFile.path}"
+                    )
                 } else {
-                    Log.warn("A recent crash was detected, but no log was found!")
+                    Log.warn(TAG, "A recent crash was detected, but no log was found!")
                 }
             } else {
                 lockFile.writeText("0") // we could write the process id here, but it doesn't matter
-                Log.info("Created new lock file: ${lockFile.path}")
+                Log.info(TAG, "Created new lock file: ${lockFile.path}")
                 allGood = true
             }
         } catch (e: Exception) {
-            Log.error("Exception while detecting recent crash: ${e.message}")
+            Log.error(TAG, "Exception while detecting recent crash: ${e.message}")
         }
 
         return allGood
@@ -120,6 +123,8 @@ abstract class App {
     protected abstract fun exit()
 
     companion object {
+        private val TAG = Log.Tag("App")
+
         const val FIXED_ASPECT_RATIO = 16.0f / 9.0f
         const val WORLD_TO_GL_FACTOR = 0.1125f // zoom factor for world coords; does not affect dialogues or menus
         const val MILLIMETRES_PER_INCH = 25.4f // don't change this

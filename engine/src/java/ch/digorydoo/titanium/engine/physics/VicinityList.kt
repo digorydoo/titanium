@@ -24,7 +24,7 @@ internal class VicinityList {
 
     fun add(gel: GraphicElement) {
         if (numSlotsUsed >= CAPACITY) {
-            Log.error("Dropping $gel from vicinity list since the capacity is exceeded")
+            Log.error(TAG, "Dropping $gel from vicinity list since the capacity is exceeded")
             return
         }
         array[numSlotsUsed++] = gel
@@ -37,6 +37,7 @@ internal class VicinityList {
     }
 
     companion object {
+        private val TAG = Log.Tag("VicinityList")
         private const val CAPACITY = 10
     }
 }

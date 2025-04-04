@@ -40,7 +40,7 @@ class GameTime {
         storyMidnightNanos = now - ((hours * 3600.0f + minutes * 60.0f + seconds) *
             NANOS_PER_SECOND / STORY_TIME_REAL_TIME_RATIO).toLong()
         updateStoryTime(now)
-        Log.info("setStoryTime: $storyClockHoursHand:$storyClockMinutesHand:$storyClockSecondsHand")
+        Log.info(TAG, "setStoryTime: $storyClockHoursHand:$storyClockMinutesHand:$storyClockSecondsHand")
 
         if (App.scene.lightingFollowsStoryTime) {
             App.scene.lighting.adaptToStoryTime()
@@ -93,14 +93,14 @@ class GameTime {
             // such as the menu bar blocked our main thread.
 
             val dtSeconds = dtNanos.toFloat() / NANOS_PER_SECOND // seconds
-            Log.info("GameTime: Hiccup detected! The frame took $dtSeconds seconds. Session time is $prevSessionTime.")
+            Log.info(TAG, "Hiccup detected! The frame took $dtSeconds seconds. Session time is $prevSessionTime.")
 
             // Move timeOffset such that sessionTime will look as if the frame took exactly MAX_DELTA_TIME_NANOS.
             val maxDeltaTimeSeconds = MAX_DELTA_TIME_NANOS.toFloat() / NANOS_PER_SECOND
             sessionTimeOffset += dtSeconds - maxDeltaTimeSeconds
             sessionTime += maxDeltaTimeSeconds - dtSeconds
 
-            Log.info("GameTime: New session time is $sessionTime (timeOffset=$sessionTimeOffset)")
+            Log.info(TAG, "New session time is $sessionTime (timeOffset=$sessionTimeOffset)")
         }
     }
 
@@ -136,7 +136,7 @@ class GameTime {
             fps = fpsMeasureCounter * 2
             fpsMeasureCounter = 0
             fpsMeasureNanos = now
-            // Log.info("FPS $fps dtn $dtNanos sleep ${MIN_DELTA_TIME_NANOS - dtNanos} overslept $sleepOverhead")
+            // Log.info(TAG, "FPS $fps dtn $dtNanos sleep ${MIN_DELTA_TIME_NANOS - dtNanos} overslept $sleepOverhead")
         }
     }
 
@@ -151,6 +151,8 @@ class GameTime {
     }
 
     companion object {
+        private val TAG = Log.Tag("GameTime")
+
         const val RELTIME0200 = 2.0f / 24
         const val RELTIME0600 = 6.0f / 24
         const val RELTIME1200 = 12.0f / 24

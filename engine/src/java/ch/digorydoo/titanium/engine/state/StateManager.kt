@@ -52,7 +52,7 @@ abstract class StateManager {
             val scene = sceneId.createScene()
             App.load(scene, restore = restoredState)
         } catch (e: Exception) {
-            Log.error("Exception: ${e.message}")
+            Log.error(TAG, "Exception: ${e.message}")
             return
         }
     }
@@ -63,13 +63,13 @@ abstract class StateManager {
             SaveGameFileWriter.write(summary, state)
             return true
         } catch (e: Exception) {
-            Log.error("Exception: ${e.message}")
+            Log.error(TAG, "Exception: ${e.message}")
             return false
         }
     }
 
     fun clearAllState() {
-        Log.info("StateManager: clearAllState called")
+        Log.info(TAG, "clearAllState called")
 
         // Nothing to do yet, because currently all state information is owned by other objects.
         //
@@ -134,5 +134,9 @@ abstract class StateManager {
 
         restoreGameSpecificValues(s, r)
         return r
+    }
+
+    companion object {
+        private val TAG = Log.Tag("StateManager")
     }
 }

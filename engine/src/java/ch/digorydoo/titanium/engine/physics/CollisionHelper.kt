@@ -17,6 +17,7 @@ internal class CollisionHelper<B1: RigidBody, B2: RigidBody> {
      * mathematical approach, therefore use this function only when a direct mathematical approach is difficult, or as
      * a preliminary implementation for a newly implemented body.
      */
+    @Deprecated("Separation with binary search leads to inaccurate results and is bad for performance")
     fun separateByBinarySearch(body1: B1, body2: B2, hitNormal12: Point3f, strategy: CollisionStrategy<B1, B2>) {
         val p1 = body1.nextPos
         val p2 = body2.nextPos
@@ -29,7 +30,7 @@ internal class CollisionHelper<B1: RigidBody, B2: RigidBody> {
         var moveBy = body1.enclosingRadius + body2.enclosingRadius + EPSILON - distanceAlongHitNormal
 
         if (moveBy <= 0.0f) {
-            Log.warn("separateByBinarySearch called, but bodies seem to be far enough already")
+            Log.warn(TAG, "separateByBinarySearch called, but bodies seem to be far enough already")
             moveBy = EPSILON
         }
 
@@ -78,7 +79,7 @@ internal class CollisionHelper<B1: RigidBody, B2: RigidBody> {
                     backZ2 = p2.z + hitNormal12.z * moveBy
                 }
                 else -> {
-                    Log.warn("Separating $body1 from $body2 failed, because both bodies are LARGE_MASS")
+                    Log.warn(TAG, "Separating $body1 from $body2 failed, because both bodies are LARGE_MASS")
                     return
                 }
             }
@@ -90,6 +91,7 @@ internal class CollisionHelper<B1: RigidBody, B2: RigidBody> {
                 // This should not happen except in a rare case when the hitNormal was set to a random direction,
                 // because the bodies are in the exact same spot, and the random direction was chosen unluckily.
                 Log.warn(
+                    TAG,
                     arrayOf(
                         "Separating $body1 from $body2 failed. Are enclosingRadius and hitNormal correct?",
                         "   enclosingRadius1=${body1.enclosingRadius}",
@@ -168,7 +170,7 @@ internal class CollisionHelper<B1: RigidBody, B2: RigidBody> {
 
         // Do a sanity check for now. May be removed later.
         if (strategy.check(body1, backX1, backY1, backZ1, body2, backX2, backY2, backZ2, null)) {
-            Log.error("separateByBinarySearch left the bodies $body1 and $body2 still colliding!")
+            Log.error(TAG, "separateByBinarySearch left the bodies $body1 and $body2 still colliding!")
         }
     }
 
@@ -400,7 +402,44 @@ internal class CollisionHelper<B1: RigidBody, B2: RigidBody> {
         }
     }
 
+    /**
+     * Same as bounceAtPlane, but optimised for the case when normDir12X and Y are known to be 0
+     */
+    fun bounceAtHorizontalPlane(body1: B1, body2: B2, normDir12Z: Float) {
+        val m1 = body1.mass
+        val m2 = body2.mass
+
+        val v1 = body1.nextSpeed
+        val v2 = body2.nextSpeed
+
+        val elasticity = body1.elasticity * body2.elasticity
+
+        val v1parallelZ = normDir12Z * (v1.z * normDir12Z)
+        val v2parallelZ = normDir12Z * (v2.z * normDir12Z)
+
+        val vparallelDz = v1parallelZ - v2parallelZ
+
+        if (m1 >= LARGE_MASS) {
+            val v2perpendZ = v2.z - v2parallelZ
+            v2.z = v2perpendZ + v1parallelZ + vparallelDz * elasticity
+        } else if (m2 >= LARGE_MASS) {
+            val v1perpendZ = v1.z - v1parallelZ
+            v1.z = v1perpendZ + v2parallelZ - vparallelDz * elasticity
+        } else {
+            val v1perpendZ = v1.z - v1parallelZ
+            val v2perpendZ = v2.z - v2parallelZ
+
+            val totalMass = m1 + m2
+            val sz = v1parallelZ * m1 + v2parallelZ * m2
+
+            v1.z = v1perpendZ + (sz - vparallelDz * elasticity * m2) / totalMass
+            v2.z = v2perpendZ + (sz + vparallelDz * elasticity * m1) / totalMass
+        }
+    }
+
     companion object {
+        private val TAG = Log.Tag("CollisionHelper")
+
         private const val MAX_BINARY_SEARCH_ITERATIONS = 4 // must be small to keep this efficient
         private const val SEPARATION_ACCURACY = 0.0005f // 5 mm/10
     }

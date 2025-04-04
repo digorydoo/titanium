@@ -51,7 +51,7 @@ class BrickVolumeFileReader private constructor(
                     try {
                         volume.setAtBrickCoord(x, y, z, brick)
                     } catch (e: Exception) {
-                        Log.error("BrickVolumeFileReader: setAtBrickCoord failed at $x, $y, $z")
+                        Log.error(TAG, "BrickVolumeFileReader: setAtBrickCoord failed at $x, $y, $z")
                         throw e
                     }
                 }
@@ -63,6 +63,8 @@ class BrickVolumeFileReader private constructor(
     }
 
     companion object {
+        private val TAG = Log.Tag("BrickVolumeFileReader")
+
         fun readFile(brickVolumeFileName: String, texFileName: String): BrickVolume {
             val path = App.assets.pathToPlayfield(brickVolumeFileName)
             val file = File(path)
@@ -70,7 +72,7 @@ class BrickVolumeFileReader private constructor(
                 BrickVolumeFileReader(it, brickVolumeFileName, texFileName).read()
             }
             val size = "${brickVolume.xsize}x${brickVolume.ysize}x${brickVolume.zsize}"
-            Log.info("BrickVolumeFileReader: $brickVolumeFileName: $size")
+            Log.info(TAG, "$brickVolumeFileName: $size")
             return brickVolume
         }
     }

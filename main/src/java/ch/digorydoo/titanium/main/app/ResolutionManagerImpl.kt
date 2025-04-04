@@ -47,7 +47,7 @@ class ResolutionManagerImpl: ResolutionManager() {
     }
 
     override fun setWindowModeAndUpdatePrefs() {
-        Log.info("Entering window mode")
+        Log.info(TAG, "Entering window mode")
 
         val app = App.singleton as AppImpl
         val window = app.window
@@ -66,7 +66,7 @@ class ResolutionManagerImpl: ResolutionManager() {
         val screenHeight: Int
 
         if (videoMode == null) {
-            Log.warn("Cannot determine resolution of primary monitor! Falling back to defaults")
+            Log.warn(TAG, "Cannot determine resolution of primary monitor! Falling back to defaults")
             screenWidth = 640
             screenHeight = 480
         } else {
@@ -117,12 +117,12 @@ class ResolutionManagerImpl: ResolutionManager() {
 
         val resX = resolution.numPixelsX
         val resY = resolution.numPixelsY
-        Log.info("Entering fullscreen: monitor=$monitor, res=${resX}x${resY}")
+        Log.info(TAG, "Entering fullscreen: monitor=$monitor, res=${resX}x${resY}")
 
         if (monitor != monitorOfOrigVideoMode) {
             origVideoMode = glfwGetVideoMode(monitor)
             monitorOfOrigVideoMode = monitor
-            Log.info("Original resolution was ${origVideoMode?.width()}x${origVideoMode?.height()}")
+            Log.info(TAG, "Original resolution was ${origVideoMode?.width()}x${origVideoMode?.height()}")
         }
 
         windowWidth = resX
@@ -148,7 +148,7 @@ class ResolutionManagerImpl: ResolutionManager() {
         val fbHeight = if (windowSizeIgnoreArgs) windowHeight else heightArg
         windowSizeIgnoreArgs = false // use the arguments in subsequent window sizing events
 
-        Log.info("onFramebufferSize: fbWidth=$fbWidth, fbHeight=$fbHeight")
+        Log.info(TAG, "onFramebufferSize: fbWidth=$fbWidth, fbHeight=$fbHeight")
         updateViewport(fbWidth, fbHeight)
     }
 
@@ -165,7 +165,7 @@ class ResolutionManagerImpl: ResolutionManager() {
         val window = app.window
 
         val fbAspectRatio = fbWidth.toFloat() / fbHeight
-        Log.info("FB is 16:${(16 / fbAspectRatio).toPrecision(1)}")
+        Log.info(TAG, "FB is 16:${(16 / fbAspectRatio).toPrecision(1)}")
 
         val dipSizeX: Int
         val dipSizeY: Int
@@ -184,20 +184,20 @@ class ResolutionManagerImpl: ResolutionManager() {
 
             val monMmSizeX = tmp1[0] // in millimetres
             val monMmSizeY = tmp2[0]
-            Log.info("Monitor mm size reported as ${monMmSizeX}mm x ${monMmSizeY}mm")
+            Log.info(TAG, "Monitor mm size reported as ${monMmSizeX}mm x ${monMmSizeY}mm")
 
             physicalAspectRatio = monMmSizeX.toFloat() / monMmSizeY
-            Log.info("Monitor is 16:${(16 / physicalAspectRatio).toPrecision(1)}")
+            Log.info(TAG, "Monitor is 16:${(16 / physicalAspectRatio).toPrecision(1)}")
 
             if (app.prefs.scaleUI) {
                 val mode = glfwGetVideoMode(monitor)
                 val monPxSizeX = mode?.width() ?: 0
                 val monPxSizeY = mode?.height() ?: 0
-                Log.info("Video mode px size reported as ${monPxSizeX}px x ${monPxSizeY}px")
+                Log.info(TAG, "Video mode px size reported as ${monPxSizeX}px x ${monPxSizeY}px")
 
                 val dpix = if (monMmSizeX > 0) monPxSizeX.toFloat() * MILLIMETRES_PER_INCH / monMmSizeX else 72.0f
                 val dpiy = if (monMmSizeY > 0) monPxSizeY.toFloat() * MILLIMETRES_PER_INCH / monMmSizeY else 72.0f
-                Log.info("Estimated dpi is $dpix x $dpiy")
+                Log.info(TAG, "Estimated dpi is $dpix x $dpiy")
 
                 // We define dipSize as the number of device pixels of the width of a square 1x1 in 96dpi, rounded down to a
                 // full number of device pixels, and never less than 1.
@@ -206,9 +206,9 @@ class ResolutionManagerImpl: ResolutionManager() {
                 // My MacBook Pro: 227 dpi -> 1 dip = 2 px
                 dipSizeX = max(1, (dpix / 96.0f).toInt())
                 dipSizeY = max(1, (dpiy / 96.0f).toInt())
-                Log.info("Using a dip-size of ($dipSizeX, $dipSizeY) device pixels")
+                Log.info(TAG, "Using a dip-size of ($dipSizeX, $dipSizeY) device pixels")
             } else {
-                Log.info("Using a fixed dip-size of 1x1")
+                Log.info(TAG, "Using a fixed dip-size of 1x1")
                 dipSizeX = 1
                 dipSizeY = 1
             }
@@ -289,7 +289,7 @@ class ResolutionManagerImpl: ResolutionManager() {
         _dpToGlFactor.x = 2.0f / widthInDip // in GL, screen width is 2 (-1..+1)
         _dpToGlFactor.y = 2.0f / heightInDip
 
-        Log.info("Content size: (${contentWidth}px, ${contentHeight}px)=(${widthInDip}dp, ${heightInDip}dp)")
+        Log.info(TAG, "Content size: (${contentWidth}px, ${contentHeight}px)=(${widthInDip}dp, ${heightInDip}dp)")
         app.onViewportUpdated()
     }
 
@@ -332,16 +332,16 @@ class ResolutionManagerImpl: ResolutionManager() {
                 var mon = availableMonitors.find { it.name == prefMonitor }?.ptr
 
                 if (mon != null) {
-                    Log.info("Monitor from prefs found: $prefMonitor")
+                    Log.info(TAG, "Monitor from prefs found: $prefMonitor")
                 } else {
-                    Log.info("None of connected monitors matches prefs: $prefMonitor")
+                    Log.info(TAG, "None of connected monitors matches prefs: $prefMonitor")
                     mon = glfwGetPrimaryMonitor() // try the primary monitor instead
                 }
 
                 val res = getAvailableResolutions(mon).find { it.numPixelsX == resX && it.numPixelsY == resY }
 
                 if (res != null) {
-                    Log.info("Resolution from prefs found: ${resX}x${resY}")
+                    Log.info(TAG, "Resolution from prefs found: ${resX}x${resY}")
                     return MonitorAndResolution(mon, res)
                 }
             }
@@ -356,7 +356,7 @@ class ResolutionManagerImpl: ResolutionManager() {
             val monAndRes = findBestResolutionForMonitor(monitor.ptr, videoModeOfDesktop)
 
             if (monAndRes == null) {
-                Log.warn("Ignoring monitor ${monitor.name}, because no suitable resolution was found")
+                Log.warn(TAG, "Ignoring monitor ${monitor.name}, because no suitable resolution was found")
             } else {
                 list.add(monAndRes)
             }
@@ -365,16 +365,16 @@ class ResolutionManagerImpl: ResolutionManager() {
         val primaryMonitor = glfwGetPrimaryMonitor()
 
         if (list.isEmpty()) {
-            Log.warn("The list of matching monitors and resolutions is empty! Trying the primary monitor anyway!")
+            Log.warn(TAG, "The list of matching monitors and resolutions is empty! Trying the primary monitor anyway!")
 
             if (primaryMonitor == 0L) {
-                Log.warn("Primary monitor is 0L")
+                Log.warn(TAG, "Primary monitor is 0L")
             }
 
             val videoMode = glfwGetVideoMode(primaryMonitor)
 
             if (videoMode == null) {
-                Log.warn("Video mode of primary monitor is null")
+                Log.warn(TAG, "Video mode of primary monitor is null")
             }
 
             val res = Resolution(videoMode?.width() ?: 0, videoMode?.height() ?: 0)
@@ -392,11 +392,11 @@ class ResolutionManagerImpl: ResolutionManager() {
     ): GLFWVidMode? {
         return when (monitor == monitorCurrentlyFullscreen) {
             true -> origVideoModeOfMonitorCurrentlyFullscreen ?: run {
-                Log.warn("origVideoMode is null, but monitor is monitorCurrentlyFullscreen")
+                Log.warn(TAG, "origVideoMode is null, but monitor is monitorCurrentlyFullscreen")
                 null
             }
             false -> glfwGetVideoMode(monitor) ?: run {
-                Log.warn("glfwGetVideoMode returned null for monitor $monitor")
+                Log.warn(TAG, "glfwGetVideoMode returned null for monitor $monitor")
                 null
             }
         }
@@ -414,6 +414,7 @@ class ResolutionManagerImpl: ResolutionManager() {
             else -> resolutions.indexOfFirst(desktopWidth, desktopHeight).also {
                 if (it == -1) {
                     Log.warn(
+                        TAG,
                         "Cannot find resolution ${desktopWidth}x${desktopHeight} even though it should be in the list"
                     )
                 }
@@ -421,7 +422,7 @@ class ResolutionManagerImpl: ResolutionManager() {
         }
 
         return resolutions.pickBestMatch(resolutionOfDesktop)?.let {
-            Log.info("Monitor $monitor: Picked ${it.res}: ${it.reasonOfPick.asText}")
+            Log.info(TAG, "Monitor $monitor: Picked ${it.res}: ${it.reasonOfPick.asText}")
             MonitorAndResolution(monitor, it.res)
         }
     }
@@ -442,7 +443,7 @@ class ResolutionManagerImpl: ResolutionManager() {
         val monitors = glfwGetMonitors()
 
         if (monitors == null) {
-            Log.warn("glfwGetMonitors returned null! Trying to use primary monitor.")
+            Log.warn(TAG, "glfwGetMonitors returned null! Trying to use primary monitor.")
             result.add(glfwGetPrimaryMonitor())
         } else {
             monitors.position(0)
@@ -451,7 +452,7 @@ class ResolutionManagerImpl: ResolutionManager() {
                 val m = monitors.get()
 
                 if (m == 0L) {
-                    Log.warn("glfwGetMonitors returned an entry that is 0L")
+                    Log.warn(TAG, "glfwGetMonitors returned an entry that is 0L")
                 } else {
                     result.add(m)
                 }
@@ -500,5 +501,9 @@ class ResolutionManagerImpl: ResolutionManager() {
 
         // GLFW can report resolutions with multiple refresh rates, but we're only interested in the size.
         return result.distinctBy { "${it.numPixelsX}x${it.numPixelsY}" }
+    }
+
+    companion object {
+        private val TAG = Log.Tag("ResolutionManagerImpl")
     }
 }

@@ -148,7 +148,7 @@ internal class CollideSphereVsSphereTest {
         val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
         val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
         val newDistance = centre1.distanceTo(centre2).toFloat()
-        assertWithin(0.0f ..< 0.00001f, newDistance - (b1.radius + b2.radius), "gap") // less than 1 mm/100
+        assertWithin(0.0f ..< 0.000006f, newDistance - (b1.radius + b2.radius), "gap") // less than 6 mm/1000
     }
 
     @Test
@@ -276,7 +276,7 @@ internal class CollideSphereVsSphereTest {
         val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
         val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
         val newDistance = centre1.distanceTo(centre2).toFloat()
-        assertWithin(0.0f ..< 0.00001f, newDistance - (b1.radius + b2.radius), "gap") // less than 1 mm/100
+        assertWithin(0.0f ..< 0.000006f, newDistance - (b1.radius + b2.radius), "gap") // less than 6 mm/1000
     }
 
     @Test
@@ -511,12 +511,12 @@ internal class CollideSphereVsSphereTest {
         // b1.nextPos has been moved a little
         assertEquals(5.002467f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(7.197798f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(3.0021899f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(3.0021896f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has been moved a little
-        assertEquals(5.9658356f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
-        assertEquals(5.133421f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(7.453066f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(5.965836f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
+        assertEquals(5.1334195f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        assertEquals(7.4530683f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // b1.nextSpeed has been modified
         assertEquals(0.05256485f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -525,14 +525,14 @@ internal class CollideSphereVsSphereTest {
 
         // b2.nextSpeed has been modified
         assertEquals(-0.71368563f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
-        assertEquals(-0.22575068f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
-        assertEquals(2.490962f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
+        assertEquals(-0.22575086f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
+        assertEquals(2.4909616f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
 
         // Check the gap between the nextPos
         val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
         val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
         val newDistance = centre1.distanceTo(centre2).toFloat()
-        assertWithin(0.0f ..< 0.00001f, newDistance - (b1.radius + b2.radius), "gap") // less than 1 mm/100
+        assertWithin(0.0f ..< 0.000006f, newDistance - (b1.radius + b2.radius), "gap") // less than 6 mm/1000
     }
 
     @Test
@@ -659,7 +659,7 @@ internal class CollideSphereVsSphereTest {
         val dy = b1.nextPos.y - b2.nextPos.y
         val dist = sqrt(dx * dx + dy * dy)
         val rsum = b1.radius + b2.radius
-        assertWithin(0.0f .. 0.026f, dist - rsum, "new distance") // less than 3 mm, not very good
+        assertWithin(0.0f .. 0.00002f, dist - rsum, "new distance") // less than 2 mm/100
 
         // b1.nextSpeed is still zero
         assertEquals(0.0f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
@@ -736,13 +736,13 @@ internal class CollideSphereVsSphereTest {
         assertEquals(0.0f, b2.nextSpeed.z, "b2.nextSpeed.z")
 
         // b1.nextPos has moved a little
-        assertEquals(9.795833f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
-        assertEquals(10.204167f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(9.897916f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(9.795832f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
+        assertEquals(10.204168f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
+        assertEquals(9.897915f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has moved a little
-        assertEquals(10.462501f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
-        assertEquals(9.537499f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        assertEquals(10.462502f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
+        assertEquals(9.537498f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(10.231252f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // The new distance should be in the range we'd expect
@@ -751,8 +751,7 @@ internal class CollideSphereVsSphereTest {
         val dz = b1.nextPos.z - b2.nextPos.z
         val dist = sqrt(dx * dx + dy * dy + dz * dz)
         val rsum = b1.radius + b2.radius
-        assertLessThan(dist, rsum + 0.00001f, "new distance") // 1 mm/100
-        assertGreaterThan(dist, rsum - 0.00001f, "new distance")
+        assertWithin(0.0f .. 0.000006f, dist - rsum, "new distance") // less than 6 mm/1000
 
         // They should no longer collide now
         assertFalse(ck.checkAndBounceIfNeeded(b1, b2, canBounce = false, hit), "should no longer collide")
@@ -827,9 +826,9 @@ internal class CollideSphereVsSphereTest {
         assertEquals(10.0f, b1.nextPos.z, "b1.nextPos.z")
 
         // b2.pos has been moved
-        assertEquals(10.666669f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
-        assertEquals(9.333331f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
-        assertEquals(10.333336f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
+        assertEquals(10.66667f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
+        assertEquals(9.33333f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
+        assertEquals(10.333337f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // The new distance should be in the range we'd expect
         val dx = b1.nextPos.x - b2.nextPos.x
@@ -837,8 +836,7 @@ internal class CollideSphereVsSphereTest {
         val dz = b1.nextPos.z - b2.nextPos.z
         val dist = sqrt(dx * dx + dy * dy + dz * dz)
         val rsum = b1.radius + b2.radius
-        assertLessThan(dist, rsum + 0.000005f, "new distance") // less than 5 mm/1000
-        assertGreaterThan(dist, rsum - 0.000005f, "new distance")
+        assertWithin(0.0f .. 0.000006f, dist - rsum, "new distance") // less than 6 mm/1000
 
         // They should no longer collide now
         assertFalse(ck.checkAndBounceIfNeeded(b1, b2, canBounce = false, hit), "should no longer collide")
@@ -908,9 +906,9 @@ internal class CollideSphereVsSphereTest {
         assertEquals(0.0f, b2.nextSpeed.z, "b2.nextSpeed.z")
 
         // b1.nextPos has been moved
-        assertEquals(9.533331f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
-        assertEquals(10.466669f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(9.7666645f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(9.53333f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
+        assertEquals(10.46667f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
+        assertEquals(9.766664f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.pos is unchanged, because b2 is a LARGE_MASS
         assertEquals(10.2f, b2.nextPos.x, "b2.nextPos.x")
@@ -923,8 +921,7 @@ internal class CollideSphereVsSphereTest {
         val dz = b1.nextPos.z - b2.nextPos.z
         val dist = sqrt(dx * dx + dy * dy + dz * dz)
         val rsum = b1.radius + b2.radius
-        assertLessThan(dist, rsum + 0.000005f, "new distance") // less than 5 mm/1000
-        assertGreaterThan(dist, rsum - 0.000005f, "new distance")
+        assertWithin(0.0f .. 0.000006f, dist - rsum, "new distance") // less than 6 mm/1000
 
         // They should no longer collide now
         assertFalse(ck.checkAndBounceIfNeeded(b1, b2, canBounce = false, hit), "should no longer collide")
@@ -1113,6 +1110,6 @@ internal class CollideSphereVsSphereTest {
     }
 
     companion object {
-        private const val TOLERANCE = 0.000001f
+        private const val TOLERANCE = 0.0000001f
     }
 }

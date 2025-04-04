@@ -63,7 +63,7 @@ class ShaderManagerImpl: ShaderManager() {
     }
 
     private fun loadShader(fname: String, type: Int, flags: Set<ShaderFlags>?): Int? {
-        Log.info("ShaderManagerImpl: Loading shader $fname")
+        Log.info(TAG, "Loading shader $fname")
         checkGLError()
 
         val contents = getPrecompiledShader(fname, flags) ?: return null
@@ -71,7 +71,7 @@ class ShaderManagerImpl: ShaderManager() {
         checkGLError()
 
         if (shader <= 0) {
-            Log.error("Couldn't create shader object: $fname")
+            Log.error(TAG, "Couldn't create shader object: $fname")
             return null
         }
 
@@ -88,7 +88,7 @@ class ShaderManagerImpl: ShaderManager() {
             }
 
         if (status != GL_TRUE) {
-            Log.error("Compiling shader failed with status $status\n" + glGetShaderInfoLog(shader).trim())
+            Log.error(TAG, "Compiling shader failed with status $status\n" + glGetShaderInfoLog(shader).trim())
             glDeleteShader(shader)
             return null
         }
@@ -97,8 +97,12 @@ class ShaderManagerImpl: ShaderManager() {
     }
 
     override fun unloadAllNonSharedPrograms() {
-        Log.info("ShaderManagerImpl: Unloading all ${allNonSharedPrograms.size} of non-shared programmes")
+        Log.info(TAG, "Unloading all ${allNonSharedPrograms.size} of non-shared programmes")
         allNonSharedPrograms.forEach { it.unload() }
         allNonSharedPrograms.clear()
+    }
+
+    companion object {
+        private val TAG = Log.Tag("ShaderManagerImpl")
     }
 }

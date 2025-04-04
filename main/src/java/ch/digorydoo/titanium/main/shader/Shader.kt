@@ -33,7 +33,7 @@ class Shader(type: ProgramType, flags: Set<ShaderFlags>? = null) {
     @Suppress("removal")
     protected fun finalize() {
         // Check that unload has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error("Shader wrapping ${program.type} still valid at finalize")
+        if (valid) Log.error(TAG, "Wrapper of ${program.type} still valid at finalize")
     }
 
     fun bindVAO() {
@@ -43,5 +43,9 @@ class Shader(type: ProgramType, flags: Set<ShaderFlags>? = null) {
     fun connectToVBO(attr: Attribute) {
         vao.bind()
         attributes.connectVAOToVBO(attr)
+    }
+
+    companion object {
+        private val TAG = Log.Tag("Shader")
     }
 }

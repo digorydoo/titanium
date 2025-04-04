@@ -7,7 +7,11 @@ import ch.digorydoo.kutils.point.Point3i
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.brick.BrickVolume
 import ch.digorydoo.titanium.engine.brick.BrickVolume.BrickFaceCovering
-import ch.digorydoo.titanium.engine.physics.*
+import ch.digorydoo.titanium.engine.physics.CuboidCheckResults
+import ch.digorydoo.titanium.engine.physics.CuboidHit
+import ch.digorydoo.titanium.engine.physics.HitArea
+import ch.digorydoo.titanium.engine.physics.HitResult
+import ch.digorydoo.titanium.engine.physics.MutableHitResult
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCuboidBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
@@ -394,8 +398,13 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
                 return topBottomFace
             }
 
-            // The speeds look towards each-other both in XY and Z.
-            return if (relSpeedXYLen > abs(relSpeedZ)) sidesFace else topBottomFace
+            // The speeds look towards each-other both in XY and Z. Prefer the TOP face, because mistaking it for a
+            // side face when cylinder is standing near the edge of the top face can be distastrous for bricks!
+            return when {
+                topBottomFace.area == HitArea.TOP -> topBottomFace
+                relSpeedXYLen > abs(relSpeedZ) -> sidesFace
+                else -> topBottomFace
+            }
         }
 
         val topBottomFace = checkFaces(topBottom)
@@ -412,12 +421,12 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
         val results = face.checkResults
 
         if (results.hit == CuboidHit.UNKNOWN) {
-            Log.warn("checkFaces() returned UNKNOWN when it should have returned null: $face")
+            Log.warn(TAG, "checkFaces() returned UNKNOWN when it should have returned null: $face")
             return false
         }
 
         if (results.hit == CuboidHit.HIT_FULLY_COVERED_FACE) {
-            Log.warn("The face is fully covered and should not be the only one that was hit")
+            Log.warn(TAG, "The face is fully covered and should not be the only one that was hit")
             // continue
         }
 
@@ -469,7 +478,7 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
                     body1.nextSpeed.z = body2.nextSpeed.z
                 }
 
-                helper.bounceAtPlane(body1, body2, 0.0f, 0.0f, normDir12Z) // FIXME bounceAtHorizontalPlane
+                helper.bounceAtHorizontalPlane(body1, body2, normDir12Z)
             }
             HitArea.BOTTOM -> {
                 val normDir12Z = 1.0f // points from body1 to body2
@@ -483,30 +492,22 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
                     body2.nextSpeed.z = body1.nextSpeed.z
                 }
 
-                helper.bounceAtPlane(body1, body2, 0.0f, 0.0f, normDir12Z) // FIXME bounceAtHorizontalPlane
+                helper.bounceAtHorizontalPlane(body1, body2, normDir12Z)
             }
             else -> {
-                // Separation for the sides of the cuboid is a bit trickier. For now, let's just use a binary search.
-                helper.separateByBinarySearch(body1, body2, hit.hitNormal12, this)
+                val normDir12X = hit.hitNormal12.x
+                val normDir12Y = hit.hitNormal12.y
 
-                val normal = when (hit.area2) {
-                    HitArea.NORTH_FACE -> Direction.northVector
-                    HitArea.EAST_FACE -> Direction.eastVector
-                    HitArea.SOUTH_FACE -> Direction.southVector
-                    HitArea.WEST_FACE -> Direction.westVector
-                    else -> throw UnexpectedHitAreaError(hit.area2)
-                }
-
-                val normDir12X = -normal.x
-                val normDir12Y = -normal.y
-                val normDir12Z = -normal.z
+                separateHorizontally(body1, body2, normDir12X, normDir12Y)
 
                 helper.apply {
-                    applyFriction(body1, body2, normDir12X, normDir12Y, normDir12Z)
-                    bounceAtPlane(body1, body2, normDir12X, normDir12Y, normDir12Z)
+                    applyFriction(body1, body2, normDir12X, normDir12Y, 0.0f)
+                    bounceAtVerticalPlane(body1, body2, normDir12X, normDir12Y)
                 }
             }
         }
+
+        verifySeparation(body1, body2, hit)
     }
 
     private fun separateVertically(cylinder: FixedCylinderBody, cuboid: FixedCuboidBody, normDir12Z: Float) {
@@ -518,7 +519,7 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
         val moveBy = requiredDistance - currentDistance
 
         if (moveBy <= 0.0f) {
-            Log.warn("separateVertically was called, but bodies seem to be vertically separated already")
+            Log.warn(TAG, "separateVertically was called, but bodies seem to be vertically separated already")
             return
         }
 
@@ -539,9 +540,110 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
                 p2.z += normDir12Z * moveBy
             }
             else -> {
-                Log.warn("Separating $cylinder from $cuboid failed, because both bodies are LARGE_MASS")
+                Log.warn(TAG, "Separating $cylinder from $cuboid failed, because both bodies are LARGE_MASS")
                 return
             }
         }
+    }
+
+    private fun separateHorizontally(
+        body1: FixedCylinderBody,
+        body2: FixedCuboidBody,
+        normDir12X: Float,
+        normDir12Y: Float,
+    ) {
+        val p1 = body1.nextPos
+        val p2 = body2.nextPos
+        val cylinderRadius = body1.radius
+
+        // Compute the position of the circle if we moved it completely to the other side of the plane.
+
+        val distanceAlongNormal = (p2.x - p1.x) * normDir12X + (p2.y - p1.y) * normDir12Y
+        val halfSizeDotN = body2.halfSizeX * normDir12X + body2.halfSizeY * normDir12Y
+        val requiredDistanceAlongNormal = cylinderRadius + abs(halfSizeDotN)
+        var moveBy = requiredDistanceAlongNormal - distanceAlongNormal
+
+        if (moveBy + EPSILON <= 0.0f) {
+            Log.warn(TAG, "separate was called, but bodies seem to be separated already")
+            return
+        }
+
+        val m1x = p1.x - normDir12X * moveBy
+        val m1y = p1.y - normDir12Y * moveBy
+
+        // If the circle is close to a cuboid corner, we may have moved it too far.
+
+        val distanceToPlane = distanceAlongNormal - abs(halfSizeDotN)
+        val sphereCentreProjectedOntoPlaneX = p1.x + distanceToPlane * normDir12X
+        val sphereCentreProjectedOntoPlaneY = p1.y + distanceToPlane * normDir12Y
+
+        val clampedX = clamp(sphereCentreProjectedOntoPlaneX, p2.x - body2.halfSizeX, p2.x + body2.halfSizeX)
+        val clampedY = clamp(sphereCentreProjectedOntoPlaneY, p2.y - body2.halfSizeY, p2.y + body2.halfSizeY)
+
+        val m1cx = m1x - clampedX
+        val m1cy = m1y - clampedY
+        val sqrDistOfM1ToClamped = m1cx * m1cx + m1cy * m1cy
+        val distanceOfM1ToClamped = sqrt(sqrDistOfM1ToClamped)
+        val m1TooFar = distanceOfM1ToClamped - cylinderRadius
+
+        if (m1TooFar > EPSILON) {
+            // See physics.txt: "Separating a sphere and a cuboid"
+
+            val m1dotn = m1x * normDir12X + m1y * normDir12Y
+            val pcdotn = clampedX * normDir12X + clampedY * normDir12Y
+            val b = 2.0f * (m1dotn - pcdotn)
+            val c = sqrDistOfM1ToClamped - cylinderRadius * cylinderRadius
+            val discriminant = b * b - 4 * c // A=1
+
+            if (discriminant < 0.0f) {
+                Log.warn(TAG, "Quadratic equation has no solution, probably a bug")
+            } else {
+                val sqrDiscr = sqrt(discriminant)
+                val q1 = (-b + sqrDiscr) / 2.0f
+                val q2 = (-b - sqrDiscr) / 2.0f
+
+                // We take the smaller q, because the other solution is on the other side of the plane.
+                val q = min(q1, q2)
+
+                if (q < 0.0f) {
+                    Log.warn(TAG, "q is negative, probably a bug")
+                } else {
+                    moveBy -= q
+                }
+            }
+        }
+
+        moveBy += EPSILON
+
+        when {
+            body1.mass < LARGE_MASS -> when {
+                body2.mass < LARGE_MASS -> {
+                    val move1By = moveBy * body2.mass / (body1.mass + body2.mass)
+                    val move2By = moveBy - move1By
+
+                    p1.x -= normDir12X * move1By
+                    p1.y -= normDir12Y * move1By
+
+                    p2.x += normDir12X * move2By
+                    p2.y += normDir12Y * move2By
+                }
+                else -> {
+                    p1.x -= normDir12X * moveBy
+                    p1.y -= normDir12Y * moveBy
+                }
+            }
+            body2.mass < LARGE_MASS -> {
+                p2.x += normDir12X * moveBy
+                p2.y += normDir12Y * moveBy
+            }
+            else -> {
+                Log.warn(TAG, "Separating $body1 from $body2 failed, because both bodies are LARGE_MASS")
+                return
+            }
+        }
+    }
+
+    companion object {
+        private val TAG = Log.Tag("CollideCylinderVsCuboid")
     }
 }

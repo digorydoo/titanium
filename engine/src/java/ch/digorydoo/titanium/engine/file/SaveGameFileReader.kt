@@ -49,7 +49,7 @@ class SaveGameFileReader private constructor(
             val value = stream.readInt32()
 
             if (key == null) {
-                Log.warn("Ignoring key $usKey, because no matching StateId was found!")
+                Log.warn(TAG, "Ignoring key $usKey, because no matching StateId was found!")
             } else {
                 state.ints[key] = value
             }
@@ -64,7 +64,7 @@ class SaveGameFileReader private constructor(
             val value = stream.readFloat()
 
             if (key == null) {
-                Log.warn("Ignoring key $usKey, because no matching StateId was found!")
+                Log.warn(TAG, "Ignoring key $usKey, because no matching StateId was found!")
             } else {
                 state.floats[key] = value
             }
@@ -79,7 +79,7 @@ class SaveGameFileReader private constructor(
             val value = stream.readPoint3f()
 
             if (key == null) {
-                Log.warn("Ignoring key $usKey, because no matching StateId was found!")
+                Log.warn(TAG, "Ignoring key $usKey, because no matching StateId was found!")
             } else {
                 state.point3fs[key] = value
             }
@@ -95,6 +95,8 @@ class SaveGameFileReader private constructor(
     }
 
     companion object {
+        private val TAG = Log.Tag("SaveGameFileReader")
+
         fun listFiles(): List<File> =
             (File(App.assets.pathToSaveGames).listFiles()?.toList() ?: emptyList<File>())
                 .filter { file ->
@@ -112,7 +114,7 @@ class SaveGameFileReader private constructor(
                     try {
                         summary = readSummary(file.name)
                     } catch (e: Exception) {
-                        Log.warn("Failed to load summary: ${file.name}\n   ${e.message}")
+                        Log.warn(TAG, "Failed to load summary: ${file.name}\n   ${e.message}")
                         summary = null
                     }
                     summary
@@ -120,7 +122,7 @@ class SaveGameFileReader private constructor(
 
         private fun readSummary(fileName: String): Summary {
             val path = App.assets.pathToSaveGame(fileName)
-            Log.info("SaveGameFileReader: Reading summary from $path")
+            Log.info(TAG, "Reading summary from $path")
 
             val file = File(path)
             return MyDataInputStream.use(file) {
@@ -138,7 +140,7 @@ class SaveGameFileReader private constructor(
 
         fun readContent(fileName: String): SerializedState {
             val path = App.assets.pathToSaveGame(fileName)
-            Log.info("SaveGameFileReader: Reading content from $path")
+            Log.info(TAG, "Reading content from $path")
 
             val file = File(path)
             return MyDataInputStream.use(file) {

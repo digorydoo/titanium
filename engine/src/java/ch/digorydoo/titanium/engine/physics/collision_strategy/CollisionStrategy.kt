@@ -57,6 +57,39 @@ internal abstract class CollisionStrategy<B1: RigidBody, B2: RigidBody> {
      */
     protected abstract fun bounce(body1: B1, body2: B2, hit: HitResult)
 
+    /**
+     * FIXME Remove this function once strategies work well
+     */
+    protected fun verifySeparation(body1: B1, body2: B2, hit: HitResult) {
+        val ck = check(
+            body1,
+            body1.nextPos.x,
+            body1.nextPos.y,
+            body1.nextPos.z,
+            body2,
+            body2.nextPos.x,
+            body2.nextPos.y,
+            body2.nextPos.z,
+            null
+        )
+        if (ck) {
+            throw Exception(
+                arrayOf(
+                    "bounce() failed to properly separate the bodies:",
+                    "   body1=$body1",
+                    "   body2=$body2",
+                    "   hit=$hit",
+                    "   body1.pos=${body1.pos}",
+                    "   body2.pos=${body2.pos}",
+                    "   body1.speed=${body1.speed}",
+                    "   body2.speed=${body2.speed}",
+                    "   body1.sBeforeC=${body1.speedBeforeCollisions}",
+                    "   body2.sBeforeC=${body2.speedBeforeCollisions}",
+                ).joinToString("\n")
+            )
+        }
+    }
+
     companion object {
         @JvmStatic
         protected val HOPPING_PREVENTION_MAX_SPEED = 0.8f // a larger speed won't count as "hopping"

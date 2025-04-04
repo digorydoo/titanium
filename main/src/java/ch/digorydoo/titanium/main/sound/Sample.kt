@@ -32,10 +32,12 @@ class Sample private constructor(
     }
 
     companion object {
+        private val TAG = Log.Tag("Sample")
+
         private const val SAMPLING_FREQ = 44100
 
         fun load(smp: SampleId): Sample {
-            Log.info("Sample: Loading $smp")
+            Log.info(TAG, "Loading $smp")
 
             val tmpArr = intArrayOf(0)
             AL10.alGenBuffers(tmpArr)

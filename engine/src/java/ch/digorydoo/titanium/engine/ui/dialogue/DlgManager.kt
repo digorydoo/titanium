@@ -122,7 +122,7 @@ class DlgManager {
 
     fun dismiss(dlg: Dialogue) {
         if (activeDlg != dlg) {
-            Log.error("Cannot remove dlg $dlg, because another is active: $activeDlg")
+            Log.error(TAG, "Cannot remove dlg $dlg, because another is active: $activeDlg")
             return
         }
         activeDlg = null
@@ -132,5 +132,9 @@ class DlgManager {
 
     fun dismiss() {
         activeDlg?.let { dismiss(it) }
+    }
+
+    companion object {
+        private val TAG = Log.Tag("DlgManager")
     }
 }

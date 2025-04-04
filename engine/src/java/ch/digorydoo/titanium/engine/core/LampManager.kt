@@ -31,12 +31,12 @@ class LampManager {
         val idx = findRankOfLamp(wrapper)
         if (idx < 0) lamps.add(wrapper) else lamps.add(idx, wrapper)
         nextIdxToReview = idx + 1
-        Log.info("Lamp added. Got ${lamps.size} lamps.")
+        Log.info(TAG, "Lamp added. Got ${lamps.size} lamps.")
     }
 
     fun remove(lamp: Lamp) {
         lamps.removeAll { it.lamp == lamp }
-        Log.info("Lamp removed. Got ${lamps.size} lamps.")
+        Log.info(TAG, "Lamp removed. Got ${lamps.size} lamps.")
     }
 
     fun getOrNull(idx: Int): Lamp? =
@@ -73,9 +73,13 @@ class LampManager {
         }
 
         if (shouldBeAtIdx != reviewIdx) {
-            Log.info("Lamp was at idx $reviewIdx, moving it to $shouldBeAtIdx")
+            Log.info(TAG, "Lamp was at idx $reviewIdx, moving it to $shouldBeAtIdx")
             lamps.removeAt(reviewIdx)
             lamps.add(shouldBeAtIdx, wrapper)
         }
+    }
+
+    companion object {
+        private val TAG = Log.Tag("LampManager")
     }
 }

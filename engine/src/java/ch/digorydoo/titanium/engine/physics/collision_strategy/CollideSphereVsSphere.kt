@@ -1,10 +1,12 @@
 package ch.digorydoo.titanium.engine.physics.collision_strategy
 
+import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.HitResult
 import ch.digorydoo.titanium.engine.physics.MutableHitResult
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
+import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.cos
 import kotlin.math.sin
@@ -34,7 +36,7 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
         val d = sqrt(dsqr) // always >= 0
 
         if (d <= EPSILON) {
-            Log.warn("Setting normal to a random direction, because bodies $body1 and $body2 are too close")
+            Log.warn(TAG, "Setting normal to a random direction, because bodies $body1 and $body2 are too close")
             val r = Random.nextFloat()
             outHit.apply {
                 hitPt.set(centreX1, centreY1, centreZ1)
@@ -58,7 +60,7 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
     }
 
     override fun bounce(body1: FixedSphereBody, body2: FixedSphereBody, hit: HitResult) {
-        helper.separateByBinarySearch(body1, body2, hit.hitNormal12, this) // FIXME replace with a direct approach
+        separate(body1, body2, hit.hitNormal12)
 
         val p1x = body1.nextPos.x
         val p1y = body1.nextPos.y
@@ -74,7 +76,7 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
         val pLen = sqrt(pdx * pdx + pdy * pdy + pdz * pdz)
 
         if (pLen < EPSILON) {
-            Log.warn("Failed to compute new speeds for $body1 and $body2, because they are too close")
+            Log.warn(TAG, "Failed to compute new speeds for $body1 and $body2, because they are too close")
             return
         }
 
@@ -86,48 +88,61 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
             applyFriction(body1, body2, normDir12X, normDir12Y, normDir12Z)
             bounceAtPlane(body1, body2, normDir12X, normDir12Y, normDir12Z)
         }
+
+        verifySeparation(body1, body2, hit)
     }
 
-    // TODO
-    private fun separate(
-        body1: FixedSphereBody,
-        body2: FixedSphereBody,
-        normDir12X: Float,
-        normDir12Y: Float,
-        normDir12Z: Float,
-    ) {
-        //         val p1 = body1.nextPos
-        //         val p2 = body2.nextPos
-        //
-        //         // Some tests are flaky unless we're adding here more than EPSILON (must be float inaccuracies)
-        //         val moveBy = body1.radius + body2.radius + 6.0f * EPSILON
-        //
-        //         if (body1.mass >= LARGE_MASS) {
-        //             if (body2.mass >= LARGE_MASS) {
-        //                 Log.warn("Cannot force $body1 and $body2 apart, because both are LARGE_MASS")
-        //             } else {
-        //                 p2.x = p1.x - normDirX1 * moveBy
-        //                 p2.y = p1.y - normDirY1 * moveBy
-        //                 p2.z = p1.z - normDirZ1 * moveBy
-        //             }
-        //         } else if (body2.mass >= LARGE_MASS) {
-        //             p1.x = p2.x + normDirX1 * moveBy
-        //             p1.y = p2.y + normDirY1 * moveBy
-        //             p1.z = p2.z + normDirZ1 * moveBy
-        //         } else {
-        //             val centreX = (p1.x + p2.x) / 2.0f
-        //             val centreY = (p1.y + p2.y) / 2.0f
-        //             val centreZ = (p1.z + p2.z) / 2.0f
-        //             val half = moveBy / 2.0f
-        //
-        //             p1.x = centreX + normDirX1 * half
-        //             p1.y = centreY + normDirY1 * half
-        //             p1.z = centreZ + normDirZ1 * half
-        //
-        //             p2.x = centreX - normDirX1 * half
-        //             p2.y = centreY - normDirY1 * half
-        //             p2.z = centreZ - normDirZ1 * half
-        //         }
-        //     }
+    private fun separate(body1: FixedSphereBody, body2: FixedSphereBody, normDir12: Point3f) {
+        val p1 = body1.nextPos
+        val p2 = body2.nextPos
+
+        val normDir12X = normDir12.x
+        val normDir12Y = normDir12.y
+        val normDir12Z = normDir12.z
+
+        // Some tests are flaky unless we're adding here more than EPSILON (must be float inaccuracies)
+        val requiredDistance = body1.radius + body2.radius + 6.0f * EPSILON
+        val distanceAlongNormal = (p2.x - p1.x) * normDir12X + (p2.y - p1.y) * normDir12Y + (p2.z - p1.z) * normDir12Z
+        val moveBy = requiredDistance - distanceAlongNormal
+
+        if (moveBy <= 0.0f) {
+            Log.warn(TAG, "separate was called, but bodies seem to be separated already")
+            return
+        }
+
+        when {
+            body1.mass < LARGE_MASS -> when {
+                body2.mass < LARGE_MASS -> {
+                    val move1By = moveBy * body2.mass / (body1.mass + body2.mass)
+                    val move2By = moveBy - move1By
+
+                    p1.x -= normDir12X * move1By
+                    p1.y -= normDir12Y * move1By
+                    p1.z -= normDir12Z * move1By
+
+                    p2.x += normDir12X * move2By
+                    p2.y += normDir12Y * move2By
+                    p2.z += normDir12Z * move2By
+                }
+                else -> {
+                    p1.x -= normDir12X * moveBy
+                    p1.y -= normDir12Y * moveBy
+                    p1.z -= normDir12Z * moveBy
+                }
+            }
+            body2.mass < LARGE_MASS -> {
+                p2.x += normDir12X * moveBy
+                p2.y += normDir12Y * moveBy
+                p2.z += normDir12Z * moveBy
+            }
+            else -> {
+                Log.warn(TAG, "Separating $body1 from $body2 failed, because both bodies are LARGE_MASS")
+                return
+            }
+        }
+    }
+
+    companion object {
+        private val TAG = Log.Tag("CollideSphereVsSphere")
     }
 }
