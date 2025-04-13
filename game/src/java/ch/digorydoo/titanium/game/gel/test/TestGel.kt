@@ -11,6 +11,7 @@ import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.texture.FrameCollection
 import ch.digorydoo.titanium.engine.utils.EPSILON
+import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -42,6 +43,7 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
     private var jumpInFrames: Int
     private var didCollideWithFloor = true
     private var hasGroundContact = true
+    private var didChangeDir = false
 
     private val renderProps = object: PaperRenderer.Delegate() {
         override val renderPos = this@TestGel.pos
@@ -63,11 +65,30 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
         hitPt: Point3f,
         hitNormal: Point3f,
     ) {
-        println("$this collided with $other")
+        if (myHit == HitArea.TOP) {
+            print("t")
+        } else if (otherHit == HitArea.TOP) {
+            print("T")
+            didCollideWithFloor = true
+            return
+        } else if (myHit == HitArea.BOTTOM && otherHit == HitArea.UNSPECIFIED) {
+            // Typically a sphere. Add some random instability force.
+            print("U")
+            val a = Random.nextFloat() * Math.PI * 2.0f
+            val fx = INSTABILITY_FORCE * cos(a).toFloat()
+            val fy = INSTABILITY_FORCE * sin(a).toFloat()
+            body.addForce(fx * body.mass, fy * body.mass, 2.0f * INSTABILITY_FORCE * body.mass)
+            other.body?.let {
+                it.addForce(-fx * it.mass, -fy * it.mass, 0.0f)
+            }
+        } else {
+            print("g")
+        }
+
         changeDirection()
         val ob = other.body
 
-        if (other !is TestGel && ob != null) {
+        if (other !is TestGel && ob != null && ob.resultingForce.maxAbsComponent() < 0.1f) {
             // Give the other body a slight push in XY.
             val dx = other.pos.x - pos.x
             val dy = other.pos.y - pos.y
@@ -75,6 +96,10 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
 
             if (dist2D > EPSILON) {
                 ob.addForce(PUSHING_FORCE * dx / dist2D, PUSHING_FORCE * dy / dist2D, 0.0f)
+            }
+
+            if (ob.nextSpeed.z <= 0.0f) {
+                ob.addForce(0.0f, 0.0f, 48.0f)
             }
         }
     }
@@ -85,7 +110,7 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
         myHit: HitArea,
         otherHit: HitArea,
         hitPt: Point3f,
-        hitNormal: Point3f,
+        normalTowardsMe: Point3f,
     ) {
         when (otherHit) {
             HitArea.NORTH_FACE,
@@ -93,19 +118,22 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
             HitArea.SOUTH_FACE,
             HitArea.WEST_FACE,
             -> {
-                println("hit with $otherHit, $shape, $material at $hitPt, n=$hitNormal")
-                changeDirection()
+                changeDirection(normalTowardsMe)
+                print("b")
             }
             HitArea.TOP -> {
                 didCollideWithFloor = true
             }
-            else -> {
-                println("hit with $otherHit, $shape, $material at $hitPt, n=$hitNormal")
-            }
+            else -> Unit
         }
     }
 
     override fun onAnimateActive() {
+        if (didChangeDir) {
+            print("-")
+            didChangeDir = false
+        }
+
         if (didCollideWithFloor) {
             hasGroundContact = true
             didCollideWithFloor = false // must be set again by didCollide
@@ -118,10 +146,10 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
             body.addForce(movingForce.x, movingForce.y, 0.0f)
         }
 
-        // if (--jumpInFrames <= 0) {
-        //     jumpInFrames = JUMP_IN_FRAMES_MIN + (Random.nextFloat() * JUMP_IN_FRAMES_RANGE).toInt()
-        //     body.force.z += JUMP_FORCE
-        // }
+        if (--jumpInFrames <= 0) {
+            jumpInFrames = JUMP_IN_FRAMES_MIN + (Random.nextFloat() * JUMP_IN_FRAMES_RANGE).toInt()
+            body.addForce(0.0f, 0.0f, JUMPING_FORCE)
+        }
     }
 
     private fun changeDirection() {
@@ -129,6 +157,16 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
         movingForce.x = MOVING_FORCE * body.mass * cos(a).toFloat()
         movingForce.y = MOVING_FORCE * body.mass * sin(a).toFloat()
         rotationSpeed = 0.05f * (1.0f - 2.0f * Random.nextFloat())
+        didChangeDir = true
+    }
+
+    private fun changeDirection(normalTowardsMe: Point3f) {
+        val rnd = 0.42f * (1.0f - 2.0f * Random.nextFloat())
+        val a = atan2(normalTowardsMe.y, normalTowardsMe.x) + rnd
+        movingForce.x = MOVING_FORCE * body.mass * cos(a).toFloat()
+        movingForce.y = MOVING_FORCE * body.mass * sin(a).toFloat()
+        rotationSpeed = 0.05f * (1.0f - 2.0f * Random.nextFloat())
+        didChangeDir = true
     }
 
     init {
@@ -147,10 +185,11 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
 
     companion object {
         private const val BODY_HEIGHT = 1.0f
-        private const val MOVING_FORCE = 7.0f
+        private const val MOVING_FORCE = 10.0f
         private const val PUSHING_FORCE = 42.0f
-        private const val JUMPING_FORCE = 1200.0f
+        private const val JUMPING_FORCE = 5900.0f
         private const val JUMP_IN_FRAMES_MIN = 120
         private const val JUMP_IN_FRAMES_RANGE = 420
+        private const val INSTABILITY_FORCE = 4.2f
     }
 }

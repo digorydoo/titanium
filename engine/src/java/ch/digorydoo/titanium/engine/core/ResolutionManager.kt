@@ -129,16 +129,18 @@ abstract class ResolutionManager {
     }
 
     companion object {
-        // Nintendo Switch console is           1280x720
-        // Nintendo Switch TV output up to      1920x1080
-        // My old EIZO 22inch monitor was       1680x1050
-        // My current Samsung 27inch monitor is 2560x1440
-        // 4K UHD is                            3840x2160
+        // Nintendo Switch console is           1280x720  (16:9)
+        // My MacBook Pro when non-Retina       1440x900  (16:10)
+        // Nintendo Switch TV output up to      1920x1080 (16:9)
+        // My old EIZO 22inch monitor was       1680x1050 (16:10)
+        // My current Samsung 27inch monitor is 2560x1440 (16:9)
+        // 4K UHD is                            3840x2160 (16:9)
+        // Öz Ultra Wide is                     5120x2160 (16:6.75, or 21.33:9)
 
         private const val PREFERRED_MIN_NUM_PIXELS_X = 1280
         private const val PREFERRED_MIN_NUM_PIXELS_Y = 720
 
-        private const val PREFERRED_MAX_NUM_PIXELS_X = 1920
-        private const val PREFERRED_MAX_NUM_PIXELS_Y = 1080
+        private const val PREFERRED_MAX_NUM_PIXELS_X = 2560
+        private const val PREFERRED_MAX_NUM_PIXELS_Y = 1440
     }
 }

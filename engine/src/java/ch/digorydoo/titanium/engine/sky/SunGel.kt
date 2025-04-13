@@ -48,12 +48,12 @@ class SunGel: GraphicElement() {
 
     private val move = object: Behaviour {
         override fun animate() {
-            pos.set(App.camera.sourcePos)
+            val cam = App.camera.sourcePos
             val dir = App.scene.lighting.sunDir.vector
-            pos.add(
-                dir.x * SUN_DISTANCE,
-                dir.y * SUN_DISTANCE,
-                dir.z * SUN_DISTANCE,
+            moveTo(
+                cam.x + dir.x * SUN_DISTANCE,
+                cam.y + dir.y * SUN_DISTANCE,
+                cam.z + dir.z * SUN_DISTANCE,
             )
         }
     }

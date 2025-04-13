@@ -34,7 +34,7 @@ class CompassGel: GraphicElement() {
             override val width = (props.frameSize.x * props.scaleFactor.x).toInt()
 
             override fun setPos(x: Int, y: Int) {
-                this@CompassGel.pos.set(x, y, 0)
+                this@CompassGel.moveTo(x, y, 0)
             }
         }
     )

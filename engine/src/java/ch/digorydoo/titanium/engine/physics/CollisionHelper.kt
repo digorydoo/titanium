@@ -48,7 +48,9 @@ internal class CollisionHelper<B1: RigidBody, B2: RigidBody> {
             when {
                 body1.mass < LARGE_MASS -> when {
                     body2.mass < LARGE_MASS -> {
-                        val move1By = moveBy * body2.mass / (body1.mass + body2.mass)
+                        // Do not distribute the distance by mass! If the lighter object is cornered, the
+                        // CollisionManager would have trouble moving the heavier object away!
+                        val move1By = moveBy * 0.5f
                         val move2By = moveBy - move1By
 
                         backX1 = p1.x - hitNormal12.x * move1By

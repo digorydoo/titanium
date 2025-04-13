@@ -116,7 +116,7 @@ internal object DlgBuilder {
             val bgTop = screenHeight - bgTex.height - DLG_BOTTOM_MARGIN
             val bgBtm = bgTop + bgTex.height
 
-            dlgTextGel.pos.set(bgLeft, bgTop, 0.0f)
+            dlgTextGel.moveTo(bgLeft, bgTop, 0.0f)
 
             if (choices.isNullOrEmpty()) {
                 // When there are no choices, the buttons is the key symbol for the dialogue's dismiss action.

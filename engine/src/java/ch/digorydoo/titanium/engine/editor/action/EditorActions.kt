@@ -151,7 +151,7 @@ class EditorActions(
     fun movePlayerToCursorPos() {
         selection.collapseSelection()
         val pt = selection.getPosCentreInWorldCoords()
-        App.player?.pos?.set(pt)
+        App.player?.moveTo(pt)
     }
 
     fun switchCameraTarget(backwards: Boolean) {

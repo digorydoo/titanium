@@ -81,8 +81,8 @@ class PlayerBehaviour(
         body.addForce(0.0f, 0.0f, JUMP_Z_FORCE)
 
         if (!leftJoyWithCameraCorrection.isZero()) {
-            body.speed.x *= 0.3f
-            body.speed.y *= 0.3f
+            body.speed.x *= 0.6f
+            body.speed.y *= 0.6f
             body.addForce(
                 leftJoyWithCameraCorrection.y * JUMP_XY_FORCE,
                 leftJoyWithCameraCorrection.x * JUMP_XY_FORCE,
@@ -132,8 +132,8 @@ class PlayerBehaviour(
 
     companion object {
         private const val WALK_SPEED = 5.0f
-        private const val JUMP_Z_FORCE = 42.0f
-        private const val JUMP_XY_FORCE = 42.0f
+        private const val JUMP_Z_FORCE = 10100.0f
+        private const val JUMP_XY_FORCE = 4096.0f
         private const val WALK_FORCE = 1300.0f
         private const val TOUCHDOWN_MIN_SPEED = -2.77f // speed where touchdown sound has volume 0
         private const val TOUCHDOWN_MAX_SPEED = -6.66f // speed where touchdown sound has full volume

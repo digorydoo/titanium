@@ -30,14 +30,20 @@ internal class VicinityList {
         array[numSlotsUsed++] = gel
     }
 
+    // TODO throw ConcurrentModificationException if add or clear is called during forEach
+
     fun forEach(lambda: (gel: GraphicElement) -> Unit) {
         (0 ..< numSlotsUsed).forEach { i ->
             lambda(array[i])
         }
     }
 
+    fun contains(gel: GraphicElement): Boolean {
+        return (0 ..< numSlotsUsed).any { array[it] == gel }
+    }
+
     companion object {
         private val TAG = Log.Tag("VicinityList")
-        private const val CAPACITY = 10
+        private const val CAPACITY = 20
     }
 }

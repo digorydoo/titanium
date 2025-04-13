@@ -25,8 +25,8 @@ class VaseGel private constructor(
     override val body = FixedCylinderBody(
         "$kind",
         initialPos = pos + bodyPosOffset,
-        elasticity = 0.3f,
-        mass = 133.0f,
+        elasticity = 0.64f,
+        mass = 64.0f, // 133.0f,
         gravity = true,
         radius = 0.25f,
         height = BODY_HEIGHT,

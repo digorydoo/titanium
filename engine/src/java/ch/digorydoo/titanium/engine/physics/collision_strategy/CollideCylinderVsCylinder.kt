@@ -1,6 +1,8 @@
 package ch.digorydoo.titanium.engine.physics.collision_strategy
 
+import ch.digorydoo.kutils.point.Point3i
 import ch.digorydoo.kutils.utils.Log
+import ch.digorydoo.titanium.engine.brick.IBrickFaceCoveringRetriever
 import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.HitResult
 import ch.digorydoo.titanium.engine.physics.MutableHitResult
@@ -11,6 +13,16 @@ import kotlin.math.*
 import kotlin.random.Random
 
 internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, FixedCylinderBody>() {
+    override fun configure(
+        body1IsBrick: Boolean,
+        body2IsBrick: Boolean,
+        bricks: IBrickFaceCoveringRetriever?,
+        brickCoords: Point3i?,
+    ) {
+        if (body1IsBrick) throw NotImplementedError()
+        if (body2IsBrick) throw NotImplementedError()
+    }
+
     override fun check(
         body1: FixedCylinderBody,
         centreX1: Float,
@@ -241,7 +253,9 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
         when {
             body1.mass < LARGE_MASS -> when {
                 body2.mass < LARGE_MASS -> {
-                    val move1By = moveBy * body2.mass / (body1.mass + body2.mass)
+                    // Do not distribute the distance by mass! If the lighter object is cornered, the CollisionManager
+                    // would have trouble moving the heavier object away!
+                    val move1By = moveBy * 0.5f
                     val move2By = moveBy - move1By
 
                     p1.z -= normDir12Z * move1By
@@ -283,7 +297,9 @@ internal class CollideCylinderVsCylinder: CollisionStrategy<FixedCylinderBody, F
         when {
             body1.mass < LARGE_MASS -> when {
                 body2.mass < LARGE_MASS -> {
-                    val move1By = moveBy * body2.mass / (body1.mass + body2.mass)
+                    // Do not distribute the distance by mass! If the lighter object is cornered, the CollisionManager
+                    // would have trouble moving the heavier object away!
+                    val move1By = moveBy * 0.5f
                     val move2By = moveBy - move1By
 
                     p1.x -= normDir12X * move1By

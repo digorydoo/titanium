@@ -42,7 +42,7 @@ class MenuTabIndicatorGel(private val tabs: List<MenuTabDescriptor>): GraphicEle
         } else {
             opacity = 1.0f
             val bounds = tab.bounds
-            pos.set(bounds.left, bounds.bottom + MARGIN_TOP, 0)
+            moveTo(bounds.left, bounds.bottom + MARGIN_TOP, 0)
             frameSize.x = (bounds.right - bounds.left).toFloat()
         }
     }

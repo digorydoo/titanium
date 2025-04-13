@@ -129,15 +129,15 @@ class CursorGelHolder {
         val lowerSW = MutablePoint3f(upperSW).apply { z = z0 }
         val lowerSE = MutablePoint3f(upperSE).apply { z = z0 }
 
-        cursorUpperNW?.pos?.set(upperNW)
-        cursorUpperNE?.pos?.set(upperNE)
-        cursorUpperSW?.pos?.set(upperSW)
-        cursorUpperSE?.pos?.set(upperSE)
+        cursorUpperNW?.moveTo(upperNW)
+        cursorUpperNE?.moveTo(upperNE)
+        cursorUpperSW?.moveTo(upperSW)
+        cursorUpperSE?.moveTo(upperSE)
 
-        cursorLowerNW?.pos?.set(lowerNW)
-        cursorLowerNE?.pos?.set(lowerNE)
-        cursorLowerSW?.pos?.set(lowerSW)
-        cursorLowerSE?.pos?.set(lowerSE)
+        cursorLowerNW?.moveTo(lowerNW)
+        cursorLowerNE?.moveTo(lowerNE)
+        cursorLowerSW?.moveTo(lowerSW)
+        cursorLowerSE?.moveTo(lowerSE)
 
         val head = when {
             r.x0 < r.x1 -> when {

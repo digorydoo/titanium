@@ -3,17 +3,24 @@
 ## Backlog
 
 * Physics
-    * Do not use binary search for separation where possible; see CollideCylinderVsCuboid
+    * Maybe separation distance weighting by speed could lead to better results? (need to +1 to avoid division by 0)
+    * Check strategies for situations when bodies are moved too far
+    * Friction and elasticity are applied multiple times
+        * should first compute collisions and separation without bounce
+        * call didCollide only once; bounce only once!
+        * needs to remember on what iteration collision was first seen, then
+          bounce in that order (e.g. when one non-moving body is hit by another body, and the non-moving body
+          is pushed into another non-moving body, then the speed must be passed on)
     * Implement HOPPING_PREVENTION_MAX_SPEED for all bodies; see CollideCylinderVsCuboid
-    * Fix problem that TestGel breaks horizontally through start level
     * Fix problem that three balls in a row lead to a new collision in unit tests (or is it OK?)
     * Implement angular momentum for spheres
     * Implement FixedCapsuleBody (similar to a cylinder, but with spheres at the top and bottom)
     * Remove verifySeparation once strategies work well
 
 * Bugs
+    * Log: "Unloading all 3450 of non-shared programmes..." BrickVolumeRendererImpl should be created by BrickVolume,
+      not by BrickSubvolume!
     * Umlauts in German start menu suddenly work, why?!
-    * Jump action is broken
     * Railing 2 has strange lighting issue across instances (see level)
     * Sometimes keyboard strokes get lost (when frame takes too long, or stroke is hit too quickly)
     * Max spawn distance is either broken, or incorrectly set for gels in town scene (all are always rendered)

@@ -41,13 +41,10 @@ internal class CollideSphereVsCylinderTest {
         val ck = CollideSphereVsCylinder()
         val hit = MutableHitResult()
 
-        fun check() = ck.checkAndBounceIfNeeded(sphere, cylinder, canBounce = false, hit)
-        fun bounce() = ck.checkAndBounceIfNeeded(sphere, cylinder, canBounce = true, hit)
-
         // The two bodies should not collide at their original position
         sphere.applyForces()
         cylinder.applyForces()
-        assertFalse(check())
+        assertFalse(ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit))
 
         // Apply a force to each towards the other
         sphere.apply {
@@ -60,7 +57,7 @@ internal class CollideSphereVsCylinderTest {
         }
 
         // The two bodies should now collide
-        assertTrue(check())
+        assertTrue(ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit))
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1") // spheres do not have specific areas
         assertEquals(HitArea.SIDE, hit.area2, "hit.area2")
@@ -101,8 +98,8 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(10.45f, cylinder.nextPos.z, "cylinder.nextPos.z") // the same as before
 
         // The two should no longer collide after bounce
-        bounce()
-        assertFalse(check())
+        ck.bounce(sphere, cylinder, hit)
+        assertFalse(ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit))
 
         // sphere.pos is unchanged
         assertEquals(10.0f, sphere.pos.x, "sphere.pos.x")
@@ -125,13 +122,13 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(0.0f, cylinder.speed.z, "cylinder.speed.z")
 
         // sphere.nextPos has been moved a little
-        assertEquals(10.00463f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-        assertEquals(7.200014f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(10.004624f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(7.2000155f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
         assertEquals(10.45f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
         // cylinder.nextPos has been moved a little
-        assertEquals(10.494528f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
-        assertEquals(7.0999827f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
+        assertEquals(10.494521f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
+        assertEquals(7.099984f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
         assertEquals(10.45f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
 
         // sphere.nextSpeed has been modified
@@ -170,13 +167,10 @@ internal class CollideSphereVsCylinderTest {
         val ck = CollideSphereVsCylinder()
         val hit = MutableHitResult()
 
-        fun check() = ck.checkAndBounceIfNeeded(sphere, cylinder, canBounce = false, hit)
-        fun bounce() = ck.checkAndBounceIfNeeded(sphere, cylinder, canBounce = true, hit)
-
         // The two bodies should not collide at their original position
         sphere.applyForces()
         cylinder.applyForces()
-        assertFalse(check())
+        assertFalse(ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit))
 
         // Apply a force to each towards the other
         sphere.apply {
@@ -189,7 +183,7 @@ internal class CollideSphereVsCylinderTest {
         }
 
         // The two bodies now collide
-        assertTrue(check())
+        assertTrue(ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit))
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1") // spheres do not have specific areas
         assertEquals(HitArea.SIDE, hit.area2, "hit.area2")
@@ -225,8 +219,8 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(10.45f, cylinder.nextPos.z, "cylinder.nextPos.z") // the same as before
 
         // The two should no longer collide after bounce
-        bounce()
-        assertFalse(check())
+        ck.bounce(sphere, cylinder, hit)
+        assertFalse(ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit))
 
         // sphere.pos is unchanged
         assertEquals(8.2f, sphere.pos.x, "sphere.pos.x")
@@ -249,13 +243,13 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(0.0f, cylinder.speed.z, "cylinder.speed.z")
 
         // sphere.nextPos has been moved a little
-        assertEquals(8.200014f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
-        assertEquals(7.494318f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
+        assertEquals(8.200013f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
+        assertEquals(7.49431f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
         assertEquals(10.4f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
         // cylinder.nextPos has been moved a little
-        assertEquals(8.099989f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
-        assertEquals(7.0044193f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
+        assertEquals(8.099987f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
+        assertEquals(7.004411f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
         assertEquals(10.45f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
 
         // sphere.nextSpeed has been modified
@@ -294,13 +288,13 @@ internal class CollideSphereVsCylinderTest {
         val ck = CollideSphereVsCylinder()
         val hit = MutableHitResult()
 
-        fun check() = ck.checkAndBounceIfNeeded(sphere, cylinder, canBounce = false, hit)
-        fun bounce() = ck.checkAndBounceIfNeeded(sphere, cylinder, canBounce = true, hit)
-
         // The two bodies should not collide at their original position
         sphere.applyForces()
         cylinder.applyForces()
-        assertFalse(check(), "should not collide at initial pos")
+        assertFalse(
+            ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit),
+            "should not collide at initial pos"
+        )
 
         // Apply a force to each towards the other
         sphere.apply {
@@ -313,7 +307,10 @@ internal class CollideSphereVsCylinderTest {
         }
 
         // The two bodies now collide
-        assertTrue(check(), "should collide after adding forces")
+        assertTrue(
+            ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit),
+            "should collide after adding forces"
+        )
 
         // sphere's bottom collided with cylinder's top
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1") // spheres do not have specific areas
@@ -350,9 +347,9 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(10.404475f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
 
         // The two should no longer collide after bounce
-        bounce()
+        ck.bounce(sphere, cylinder, hit)
         assertFalse(
-            check(),
+            ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit),
             "should no longer collide, but they do: " +
                 "sphere.nextPos=${sphere.nextPos}, " +
                 "b2.nextPos=${cylinder.nextPos}, " +
@@ -385,12 +382,12 @@ internal class CollideSphereVsCylinderTest {
         // sphere.nextPos has been moved a little
         assertEquals(8.3f, sphere.nextPos.x, TOLERANCE, "sphere.nextPos.x")
         assertEquals(7.1f, sphere.nextPos.y, TOLERANCE, "sphere.nextPos.y")
-        assertEquals(10.954376f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
+        assertEquals(10.954362f, sphere.nextPos.z, TOLERANCE, "sphere.nextPos.z")
 
         // cylinder.nextPos has been moved a little
         assertEquals(8.1f, cylinder.nextPos.x, TOLERANCE, "cylinder.nextPos.x")
         assertEquals(7.2f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
-        assertEquals(10.404374f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
+        assertEquals(10.40436f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
 
         // sphere.nextSpeed has been modified
         assertEquals(0.0f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
@@ -431,9 +428,6 @@ internal class CollideSphereVsCylinderTest {
         val ck = CollideSphereVsCylinder()
         val hit = MutableHitResult()
 
-        fun check() = ck.checkAndBounceIfNeeded(sphere, cylinder, canBounce = false, hit)
-        fun bounce() = ck.checkAndBounceIfNeeded(sphere, cylinder, canBounce = true, hit)
-
         // We give sphere an initial speed
         sphere.speed.set(0.0f, 0.6f, 0.6f)
 
@@ -442,7 +436,7 @@ internal class CollideSphereVsCylinderTest {
         cylinder.applyForces()
 
         // The bodies should now collide
-        assertTrue(check())
+        assertTrue(ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit))
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1") // spheres do not have specific areas
         assertEquals(HitArea.SIDE, hit.area2, "hit.area2")
@@ -465,8 +459,8 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(10.76f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
 
         // The bodies should no longer collide after bounce
-        bounce()
-        assertFalse(check())
+        ck.bounce(sphere, cylinder, hit)
+        assertFalse(ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit))
 
         // sphere.pos is unchanged
         assertEquals(10.0f, sphere.pos.x, TOLERANCE, "sphere.pos.x")
@@ -535,16 +529,13 @@ internal class CollideSphereVsCylinderTest {
         val ck = CollideSphereVsCylinder()
         val hit = MutableHitResult()
 
-        fun check() = ck.checkAndBounceIfNeeded(sphere, cylinder, canBounce = false, hit)
-        fun bounce() = ck.checkAndBounceIfNeeded(sphere, cylinder, canBounce = true, hit)
-
         // Apply forces to end anim phase 1 and update nextPos and nextSpeed
         sphere.applyForces()
         cylinder.applyForces()
 
         // The two bodies should obviously collide
         Log.enabled = false // suppress expected log message
-        assertTrue(check(), "initial pos should collide")
+        assertTrue(ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit), "initial pos should collide")
         Log.enabled = true
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1") // spheres do not have specific areas
@@ -583,11 +574,11 @@ internal class CollideSphereVsCylinderTest {
 
         // Bounce will force the two bodies apart such that they no longer collide
         Log.enabled = false // suppress expected log message
-        bounce()
+        ck.bounce(sphere, cylinder, hit)
         Log.enabled = true
 
         assertFalse(
-            check(),
+            ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit),
             "should no longer collide, but they do: " +
                 "sphere.nextPos=${sphere.nextPos}, cylinder.nextPos=${cylinder.nextPos}"
         )

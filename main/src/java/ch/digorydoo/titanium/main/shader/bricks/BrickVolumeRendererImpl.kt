@@ -23,6 +23,10 @@ class BrickVolumeRendererImpl(
     private val tex: Texture,
     private val modelData: BrickModelData,
 ): BrickVolumeRenderer {
+    init {
+        Log.info(TAG, "BrickVolumeRendererImpl c'tor")
+    }
+
     private class SolidData {
         private val positionVBO = ShaderVBO()
         private val normalVBO = ShaderVBO()

@@ -14,7 +14,7 @@ class BallGel private constructor(
     kind: Kind,
 ): GraphicElement(spawnPt, initialPos) {
     constructor(spawnPt: BallSpawnPt): this(spawnPt, spawnPt.pos, spawnPt.kind)
-    constructor(kind: Kind, x: Float, y: Float, z: Float): this(null, Point3f(x, y, z), kind)
+    // constructor(kind: Kind, x: Float, y: Float, z: Float): this(null, Point3f(x, y, z), kind)
 
     init {
         bodyPosOffset.set(0.0f, 0.0f, BALL_RADIUS)
@@ -30,7 +30,7 @@ class BallGel private constructor(
         mass = 0.5f,
         gravity = true,
         radius = BALL_RADIUS,
-        friction = 0.1f,
+        friction = 0.01f,
     )
 
     private val mesh = MeshFileReader.readFile(

@@ -52,7 +52,7 @@ class AppImpl: App() {
 
     var window = 0L; private set
 
-    private var needsClear = true
+    private var needsClear = 0
 
     fun run() {
         try {
@@ -139,6 +139,7 @@ class AppImpl: App() {
             if (window != this.window) {
                 Log.error(TAG, "onFramebufferSize called for window=$window, but our window is ${this.window}")
             } else {
+                needsClear = NEEDS_CLEAR_NUM_FRAMES
                 resolutionMgr.onFramebufferSize(fbWidth, fbHeight)
             }
         }
@@ -174,17 +175,17 @@ class AppImpl: App() {
     }
 
     fun onEnterWindowMode() {
-        needsClear = true
+        needsClear = NEEDS_CLEAR_NUM_FRAMES
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL) // show cursor
     }
 
     fun onEnterFullscreen() {
-        needsClear = true
+        needsClear = NEEDS_CLEAR_NUM_FRAMES
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN) // hide cursor
     }
 
     fun onViewportUpdated() {
-        needsClear = true
+        needsClear = NEEDS_CLEAR_NUM_FRAMES
     }
 
     private fun onJoystick(joyId: Int, event: Int) {
@@ -281,9 +282,10 @@ class AppImpl: App() {
         while (!glfwWindowShouldClose(window)) {
             glClear(GL_DEPTH_BUFFER_BIT)
 
-            if (needsClear) {
+            if (needsClear > 0) {
                 // We need to clear both framebuffers to make sure the area outside the viewport is black.
-                needsClear = false
+                Log.info(TAG, "Clearing frame buffers")
+                needsClear-- // we do this multiple times, because it sometimes doesn't immediately work (why?!)
                 glClear(GL_COLOR_BUFFER_BIT)
                 glfwSwapBuffers(window)
                 glClear(GL_COLOR_BUFFER_BIT)
@@ -319,5 +321,6 @@ class AppImpl: App() {
 
     companion object {
         private val TAG = Log.Tag("AppImpl")
+        private const val NEEDS_CLEAR_NUM_FRAMES = 3
     }
 }

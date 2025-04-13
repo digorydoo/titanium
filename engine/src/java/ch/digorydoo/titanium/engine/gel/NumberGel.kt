@@ -35,7 +35,7 @@ class NumberGel(alignment: Align.Alignment? = null): GraphicElement() {
             override val height = DIGIT_HEIGHT
 
             override fun setPos(x: Int, y: Int) {
-                this@NumberGel.pos.set(x, y, 0)
+                this@NumberGel.moveTo(x, y, 0)
             }
         }
     )

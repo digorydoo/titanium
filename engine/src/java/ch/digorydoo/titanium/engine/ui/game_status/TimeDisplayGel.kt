@@ -92,7 +92,7 @@ class TimeDisplayGel: GraphicElement() {
             override val width = TIME_DISPLAY_WIDTH
 
             override fun setPos(x: Int, y: Int) {
-                this@TimeDisplayGel.pos.set(x, y, 0)
+                this@TimeDisplayGel.moveTo(x, y, 0)
             }
         }
     )

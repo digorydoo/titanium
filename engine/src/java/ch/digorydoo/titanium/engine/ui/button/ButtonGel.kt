@@ -137,7 +137,7 @@ class ButtonGel(
             override val height = bgTex.height
 
             override fun setPos(x: Int, y: Int) {
-                this@ButtonGel.pos.set(x, y, 0)
+                this@ButtonGel.moveTo(x, y, 0)
             }
         }
     )

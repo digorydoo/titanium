@@ -82,18 +82,18 @@ class Font private constructor(
             val fname = when (fontName) {
                 FontName.DIALOG_FONT,
                 FontName.SNACKBAR_FONT,
-                -> "zakirahs-hand-bold-non-commercial.ttf"
+                    -> "zakirahs-hand-bold-non-commercial.ttf"
 
                 FontName.SMALL_UI_FONT,
                 FontName.TOPIC_FONT,
-                -> "xball-non-commercial.ttf"
+                    -> "xball-non-commercial.ttf"
             }
 
             val pixelHeight = when (fontName) {
                 FontName.DIALOG_FONT -> 27.0f
-                FontName.SNACKBAR_FONT -> 22.0f
-                FontName.SMALL_UI_FONT -> 16.0f
-                FontName.TOPIC_FONT -> 20.0f
+                FontName.SNACKBAR_FONT -> 23.0f
+                FontName.SMALL_UI_FONT -> 18.0f
+                FontName.TOPIC_FONT -> 22.0f
             }
 
             val charGap = when (fontName) {
@@ -106,7 +106,7 @@ class Font private constructor(
             val filter: (v: Float) -> Float = when (fontName) {
                 FontName.DIALOG_FONT,
                 FontName.SNACKBAR_FONT,
-                -> { value ->
+                    -> { value ->
                     // sharpen the anti-aliasing border slightly
                     val v = value.pow(2.0f)
                     val t = threshold(v, 0.2f)
@@ -115,7 +115,7 @@ class Font private constructor(
 
                 FontName.SMALL_UI_FONT,
                 FontName.TOPIC_FONT,
-                -> { value -> value }
+                    -> { value -> value }
             }
 
             val path = App.assets.pathToFont(fname)

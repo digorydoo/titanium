@@ -60,7 +60,7 @@ enum class BrickMaterial(val value: Int) {
             GLASS,
             METAL_RED,
             ZZ_TEST,
-                -> 0.8f
+            -> 0.8f
 
             ASPHALT_BLUE,
             ASPHALT_RED,
@@ -85,28 +85,28 @@ enum class BrickMaterial(val value: Int) {
             WHITE_CONCRETE,
             WINDOW_DETAILS,
             WINDOW_INTERIOR,
-                -> 0.7f
+            -> 0.75f
 
             CARPET_BLUE,
             CARPET_BROWN,
             CARPET_RED,
-                -> 0.6f
+            -> 0.6f
 
             WOODEN_PLANKS_H,
             WOODEN_PLANKS_V_BRITE,
             WOODEN_PLANKS_V_DARK,
             WOOD_DARK,
             WOOD_RED,
-                -> 0.52f
+            -> 0.52f
 
             FOREST_GROUND,
             GRASSY_GROUND,
             GRASSY_PATH,
             ROAD_PEBBLES,
-                -> 0.5f
+            -> 0.5f
 
             STANDING_WATER,
-                -> 0.1f
+            -> 0.1f
         }
 
     val friction: Float
@@ -114,7 +114,7 @@ enum class BrickMaterial(val value: Int) {
             GLASS,
             METAL_RED,
             ZZ_TEST,
-                -> 0.15f
+            -> 0.01f
 
             ASPHALT_BLUE,
             ASPHALT_RED,
@@ -139,28 +139,28 @@ enum class BrickMaterial(val value: Int) {
             WHITE_CONCRETE,
             WINDOW_DETAILS,
             WINDOW_INTERIOR,
-                -> 0.6f
+            -> 0.1f
 
             CARPET_BLUE,
             CARPET_BROWN,
             CARPET_RED,
-                -> 0.75f
+            -> 0.3f
 
             WOODEN_PLANKS_H,
             WOODEN_PLANKS_V_BRITE,
             WOODEN_PLANKS_V_DARK,
             WOOD_DARK,
             WOOD_RED,
-                -> 0.65f
+            -> 0.2f
 
             FOREST_GROUND,
             GRASSY_GROUND,
             GRASSY_PATH,
             ROAD_PEBBLES,
-                -> 0.7f
+            -> 0.42f
 
             STANDING_WATER,
-                -> 0.9f
+            -> 0.9f
         }
 
     companion object {

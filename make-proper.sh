@@ -110,7 +110,7 @@ else
    if [[ -d "src" ]]; then
       rm -rf src || true
    fi
-   cp -r "$KUTILS_DIR"/main/src kutils/
+   cp -r "$KUTILS_DIR"/main/src src
 fi
 
 cd "$SELF_DIR"
@@ -143,11 +143,14 @@ echo "${YELLOW}Importing assets$PLAIN"
 echo "Cleaning..."
 ./gradlew clean
 
-if [[ -d "$ASSETS_DIR"/generated ]]; then
-   rm -rf "$ASSETS_DIR"/generated
+# Make sure not to use ASSETS_DIR here, because on Windows we need to use the copied assets directory instead.
+# Using a relative path should work for all platforms.
+
+if [[ -d assets/generated ]]; then
+   rm -rf assets/generated
 fi
 
-mkdir "$ASSETS_DIR"/generated
+mkdir assets/generated
 
 # Only build import_asset, because if main was built now, its post-build.sh would fail.
 echo "Building import_asset..."
@@ -155,17 +158,17 @@ echo "Building import_asset..."
 
 echo "Importing Collada..."
 ./import-asset.sh collada \
-   --out-dir="$ASSETS_DIR"/generated/mesh/ \
+   --out-dir=assets/generated/mesh/ \
    --overwrite \
-   "$ASSETS_DIR"/private/collada/*.dae
+   assets/private/collada/*.dae
 
 echo "Importing brick textures..."
 ./import-asset.sh brick-textures \
-   --out-file="$ASSETS_DIR"/generated/textures/tiles-town.png \
+   --out-file=assets/generated/textures/tiles-town.png \
    --overwrite \
    --padding=2 \
    --arrange-across=9 \
-   "$ASSETS_DIR"/private/textures-tiles-town/*.png
+   assets/private/textures-tiles-town/*.png
 
 # --------------------------------------------------------------------------------------------------------------------
 

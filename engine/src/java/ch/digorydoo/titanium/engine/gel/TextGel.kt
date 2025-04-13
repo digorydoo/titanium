@@ -52,7 +52,7 @@ class TextGel(text: String, alignment: Align.Alignment? = null): GraphicElement(
             override var shakeValue
                 get() = this@TextGel.pos.x
                 set(x) {
-                    this@TextGel.pos.x = x
+                    this@TextGel.moveTo(x, this@TextGel.pos.y, 0.0f)
                 }
         }
     )
@@ -70,7 +70,7 @@ class TextGel(text: String, alignment: Align.Alignment? = null): GraphicElement(
             override val height = texture.height
 
             override fun setPos(x: Int, y: Int) {
-                this@TextGel.pos.set(x, y, 0)
+                this@TextGel.moveTo(x, y, 0)
             }
         }
     )

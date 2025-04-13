@@ -77,7 +77,7 @@ class UIAreaGel(
                 else -> screenHeightDp
             }
 
-            pos.set(left, top, 0)
+            moveTo(left, top, 0)
             frameSize.set(right - left, bottom - top)
 
             prevScreenWidth = screenWidthDp

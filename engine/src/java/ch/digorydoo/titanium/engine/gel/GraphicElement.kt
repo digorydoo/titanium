@@ -30,7 +30,10 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
     }
 
     open val body: RigidBody? = null
-    val pos = MutablePoint3f(initialPos) // note that the pos will follow body.pos if body is set
+
+    private val _pos = MutablePoint3f(initialPos) // note that the pos will follow body.pos if body is set
+    val pos: Point3f get() = _pos
+
     protected val bodyPosOffset = MutablePoint3f() // relation is: pos = body.pos - bodyPosOffset
 
     protected var inDialog = Visibility.FROZEN_VISIBLE
@@ -55,6 +58,27 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
 
     fun hide() {
         setHiddenOnNextFrameTo = true
+    }
+
+    fun moveTo(newPos: Point3f) {
+        moveTo(newPos.x, newPos.y, newPos.z)
+    }
+
+    fun moveTo(x: Int, y: Int, z: Int) {
+        moveTo(x.toFloat(), y.toFloat(), z.toFloat())
+    }
+
+    fun moveTo(x: Float, y: Float, z: Float) {
+        _pos.set(x, y, z)
+
+        val body = body ?: return
+        body.stopAllMotion()
+
+        val bx = x + bodyPosOffset.x
+        val by = y + bodyPosOffset.y
+        val bz = z + bodyPosOffset.z
+        body.pos.set(bx, by, bz)
+        body.nextPos.set(bx, by, bz)
     }
 
     protected open fun onAnimateActive() {}
@@ -112,7 +136,8 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
 
             if (body != null) {
                 body.move()
-                pos.set(body.pos.x - bodyPosOffset.x, body.pos.y - bodyPosOffset.y, body.pos.z - bodyPosOffset.z)
+                val bp = body.pos
+                _pos.set(bp.x - bodyPosOffset.x, bp.y - bodyPosOffset.y, bp.z - bodyPosOffset.z)
             }
 
             if (pos.x.isNaN() || pos.y.isNaN() || pos.z.isNaN()) {

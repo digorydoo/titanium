@@ -67,7 +67,7 @@ class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): GraphicElement(
         hitPt: Point3f,
         hitNormal: Point3f,
     ) {
-        if (hitNormal.z > 0.0f && body.nextSpeed.z < 0.0f) {
+        if (otherHit == HitArea.TOP && body.speedBeforeCollisions.z < 0.0f) {
             playerBehaviour.apply {
                 didCollideWithFloor = true
                 touchDownSpeed = body.nextSpeed.z

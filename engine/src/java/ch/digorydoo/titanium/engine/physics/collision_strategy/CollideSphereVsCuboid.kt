@@ -5,8 +5,8 @@ import ch.digorydoo.kutils.point.MutablePoint3i
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.point.Point3i
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.titanium.engine.brick.BrickVolume
-import ch.digorydoo.titanium.engine.brick.BrickVolume.BrickFaceCovering
+import ch.digorydoo.titanium.engine.brick.BrickFaceCovering
+import ch.digorydoo.titanium.engine.brick.IBrickFaceCoveringRetriever
 import ch.digorydoo.titanium.engine.physics.*
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCuboidBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
@@ -14,6 +14,7 @@ import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE
 import ch.digorydoo.titanium.engine.utils.Direction
 import ch.digorydoo.titanium.engine.utils.EPSILON
 import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
@@ -31,16 +32,25 @@ internal class CollideSphereVsCuboid: CollisionStrategy<FixedSphereBody, FixedCu
         FaceWithResults(HitArea.BOTTOM, Direction.downVector),
     )
 
-    var brickVolume: BrickVolume? = null
-    val brickCoords = MutablePoint3i()
+    private var bricks: IBrickFaceCoveringRetriever? = null
+    private val brickCoords = MutablePoint3i()
 
-    fun prepare(newBrickVolume: BrickVolume, newBrickCoords: Point3i) {
-        brickVolume = newBrickVolume
-        brickCoords.set(newBrickCoords)
-    }
+    override fun configure(
+        body1IsBrick: Boolean,
+        body2IsBrick: Boolean,
+        bricks: IBrickFaceCoveringRetriever?,
+        brickCoords: Point3i?,
+    ) {
+        if (body1IsBrick) throw NotImplementedError()
 
-    override fun done() {
-        brickVolume = null
+        if (body2IsBrick) {
+            require(bricks != null)
+            require(brickCoords != null)
+            this.bricks = bricks
+            this.brickCoords.set(brickCoords)
+        } else {
+            this.bricks = null
+        }
     }
 
     override fun check(
@@ -59,9 +69,44 @@ internal class CollideSphereVsCuboid: CollisionStrategy<FixedSphereBody, FixedCu
         val cuboidSizeX = body2.sizeX
         val cuboidSizeY = body2.sizeY
         val cuboidSizeZ = body2.sizeZ
-        val halfSizeX = body2.halfSizeX
-        val halfSizeY = body2.halfSizeY
-        val halfSizeZ = body2.halfSizeZ
+        val cuboidHalfSizeX = body2.halfSizeX
+        val cuboidHalfSizeY = body2.halfSizeY
+        val cuboidHalfSizeZ = body2.halfSizeZ
+
+        val minTop = min(centreZ2 + cuboidHalfSizeZ, centreZ1 + sphereRadius)
+        val maxBottom = max(centreZ2 - cuboidHalfSizeZ, centreZ1 - sphereRadius)
+        val overlapHeight = minTop - maxBottom
+
+        if (overlapHeight <= 0) {
+            return false // the sphere is completely above or below the cuboid
+        }
+
+        val overlapZ = maxBottom + overlapHeight * 0.5f
+
+        val isCircleContainedInCuboid2D = (centreX2 - cuboidHalfSizeX <= centreX1 - sphereRadius) &&
+            (centreX2 + cuboidHalfSizeX >= centreX1 + sphereRadius) &&
+            (centreY2 - cuboidHalfSizeY <= centreY1 - sphereRadius) &&
+            (centreY2 + cuboidHalfSizeY >= centreY1 + sphereRadius)
+
+        if (isCircleContainedInCuboid2D) {
+            // Since we already know that there is a z overlap, this must be a vertical hit!
+            if (centreZ1 < overlapZ) {
+                outHit?.apply {
+                    hitPt.set(centreX1, centreY1, centreZ2 - cuboidHalfSizeZ)
+                    area1 = HitArea.UNSPECIFIED // spheres do not have specific areas
+                    area2 = HitArea.BOTTOM // cuboid's bottom
+                    hitNormal12.set(0.0f, 0.0f, 1.0f)
+                }
+            } else {
+                outHit?.apply {
+                    hitPt.set(centreX1, centreY1, centreZ2 + cuboidHalfSizeZ)
+                    area1 = HitArea.UNSPECIFIED // spheres do not have specific areas
+                    area2 = HitArea.TOP // cuboid's top
+                    hitNormal12.set(0.0f, 0.0f, -1.0f)
+                }
+            }
+            return true
+        }
 
         fun check(normal: Point3f, result: CuboidCheckResults) {
             result.apply {
@@ -74,9 +119,9 @@ internal class CollideSphereVsCuboid: CollisionStrategy<FixedSphereBody, FixedCu
             val normalZ = normal.z
 
             // Find the centre on the face described by the normal, and subtract it from the sphere's centre
-            val faceCentreToSphereCentreX = centreX1 - (centreX2 + normalX * halfSizeX)
-            val faceCentreToSphereCentreY = centreY1 - (centreY2 + normalY * halfSizeY)
-            val faceCentreToSphereCentreZ = centreZ1 - (centreZ2 + normalZ * halfSizeZ)
+            val faceCentreToSphereCentreX = centreX1 - (centreX2 + normalX * cuboidHalfSizeX)
+            val faceCentreToSphereCentreY = centreY1 - (centreY2 + normalY * cuboidHalfSizeY)
+            val faceCentreToSphereCentreZ = centreZ1 - (centreZ2 + normalZ * cuboidHalfSizeZ)
 
             // Compute the signed distance between the sphere's centre and the face
             val d = faceCentreToSphereCentreX * normalX +
@@ -113,9 +158,9 @@ internal class CollideSphereVsCuboid: CollisionStrategy<FixedSphereBody, FixedCu
             val closestPtOnPlaneY = centreY1 - d * normalY
             val closestPtOnPlaneZ = centreZ1 - d * normalZ
 
-            val clampedX = clamp(closestPtOnPlaneX, centreX2 - halfSizeX, centreX2 + halfSizeX)
-            val clampedY = clamp(closestPtOnPlaneY, centreY2 - halfSizeY, centreY2 + halfSizeY)
-            val clampedZ = clamp(closestPtOnPlaneZ, centreZ2 - halfSizeZ, centreZ2 + halfSizeZ)
+            val clampedX = clamp(closestPtOnPlaneX, centreX2 - cuboidHalfSizeX, centreX2 + cuboidHalfSizeX)
+            val clampedY = clamp(closestPtOnPlaneY, centreY2 - cuboidHalfSizeY, centreY2 + cuboidHalfSizeY)
+            val clampedZ = clamp(closestPtOnPlaneZ, centreZ2 - cuboidHalfSizeZ, centreZ2 + cuboidHalfSizeZ)
 
             result.apply {
                 hitPtValid = true
@@ -126,12 +171,12 @@ internal class CollideSphereVsCuboid: CollisionStrategy<FixedSphereBody, FixedCu
             }
 
             // Check if the closestPtOnPlane is inside the face
-            val closestPtInsideFace = closestPtOnPlaneX > centreX2 - halfSizeX &&
-                closestPtOnPlaneX < centreX2 + halfSizeX &&
-                closestPtOnPlaneY > centreY2 - halfSizeY &&
-                closestPtOnPlaneY < centreY2 + halfSizeY &&
-                closestPtOnPlaneZ > centreZ2 - halfSizeZ &&
-                closestPtOnPlaneZ < centreZ2 + halfSizeZ
+            val closestPtInsideFace = closestPtOnPlaneX > centreX2 - cuboidHalfSizeX &&
+                closestPtOnPlaneX < centreX2 + cuboidHalfSizeX &&
+                closestPtOnPlaneY > centreY2 - cuboidHalfSizeY &&
+                closestPtOnPlaneY < centreY2 + cuboidHalfSizeY &&
+                closestPtOnPlaneZ > centreZ2 - cuboidHalfSizeZ &&
+                closestPtOnPlaneZ < centreZ2 + cuboidHalfSizeZ
 
             if (closestPtInsideFace) {
                 result.hit = CuboidHit.HIT_WITH_CLOSEST_PT_INSIDE_FACE
@@ -146,7 +191,7 @@ internal class CollideSphereVsCuboid: CollisionStrategy<FixedSphereBody, FixedCu
 
             result.hit = when {
                 dsqr > sphereRadiusSqr -> CuboidHit.UNKNOWN // sphere doesn't collide with this face
-                else -> when (brickVolume?.getBrickFaceCovering(brickCoords, normal)) {
+                else -> when (bricks?.getBrickFaceCovering(brickCoords, normal.x, normal.y, normal.z)) {
                     null, BrickFaceCovering.NOT_COVERED -> CuboidHit.HIT_WITH_CLOSEST_PT_OUTSIDE_FACE
                     BrickFaceCovering.PARTIALLY_COVERED -> CuboidHit.HIT_PARTIALLY_COVERED_FACE
                     BrickFaceCovering.FULLY_COVERED -> CuboidHit.HIT_FULLY_COVERED_FACE
@@ -170,7 +215,7 @@ internal class CollideSphereVsCuboid: CollisionStrategy<FixedSphereBody, FixedCu
                     require(results.hitPtValid)
                     outHit?.apply {
                         hitPt.set(results.hitPtX, results.hitPtY, results.hitPtZ)
-                        area1 = HitArea.UNSPECIFIED // sphere do not have specific areas
+                        area1 = HitArea.UNSPECIFIED // spheres do not have specific areas
                         area2 = face.area
                     }
                     return true
@@ -221,10 +266,6 @@ internal class CollideSphereVsCuboid: CollisionStrategy<FixedSphereBody, FixedCu
 
         if (bestMatchHit == CuboidHit.UNKNOWN) return false
 
-        if (bestMatchHit == CuboidHit.HIT_FULLY_COVERED_FACE) {
-            Log.warn(TAG, "The face is fully covered and should not be the only one that was hit")
-        }
-
         val faceNormal = when (bestMatchArea) {
             HitArea.NORTH_FACE -> Direction.northVector
             HitArea.EAST_FACE -> Direction.eastVector
@@ -238,7 +279,7 @@ internal class CollideSphereVsCuboid: CollisionStrategy<FixedSphereBody, FixedCu
         outHit?.apply {
             hitPt.set(bestMatchX, bestMatchY, bestMatchZ)
             hitNormal12.set(-faceNormal.x, -faceNormal.y, -faceNormal.z)
-            area1 = HitArea.UNSPECIFIED // sphere do not have specific areas
+            area1 = HitArea.UNSPECIFIED // spheres do not have specific areas
             area2 = bestMatchArea
         }
         return true
@@ -338,12 +379,15 @@ internal class CollideSphereVsCuboid: CollisionStrategy<FixedSphereBody, FixedCu
             }
         }
 
-        moveBy += EPSILON
+        // Adding more than just EPSILON here because of flaky tests (must be floating-point inaccuracies)
+        moveBy += 2.0f * EPSILON
 
         when {
             body1.mass < LARGE_MASS -> when {
                 body2.mass < LARGE_MASS -> {
-                    val move1By = moveBy * body2.mass / (body1.mass + body2.mass)
+                    // Do not distribute the distance by mass! If the lighter object is cornered, the CollisionManager
+                    // would have trouble moving the heavier object away!
+                    val move1By = moveBy * 0.5f
                     val move2By = moveBy - move1By
 
                     p1.x -= normDir12X * move1By

@@ -20,6 +20,7 @@ import kotlin.math.max
 class ResolutionManagerImpl: ResolutionManager() {
     class MonitorWithPtr(name: String, val ptr: Long): Monitor(name)
     class MonitorAndResolution(val monitor: Long, val res: Resolution)
+    class OrigDesktopResolution(val monitor: Long, val videoMode: GLFWVidMode, val resX: Int, val resY: Int)
 
     var physicalAspectRatio = 1.0f; private set // aspect ratio of monitor or window
 
@@ -35,8 +36,7 @@ class ResolutionManagerImpl: ResolutionManager() {
     private var windowWidth = 0
     private var windowHeight = 0
     private var windowSizeIgnoreArgs = true
-    private var origVideoMode: GLFWVidMode? = null
-    private var monitorOfOrigVideoMode = 0L
+    private var origDesktopResolution: OrigDesktopResolution? = null
 
     fun setFullscreenMode(enable: Boolean) {
         if (enable) {
@@ -57,8 +57,8 @@ class ResolutionManagerImpl: ResolutionManager() {
 
         val monitor = glfwGetPrimaryMonitor()
 
-        val videoMode = when (monitor == monitorOfOrigVideoMode) {
-            true -> origVideoMode // monitor is currently in full-screen
+        val videoMode = when (monitor == origDesktopResolution?.monitor) {
+            true -> origDesktopResolution!!.videoMode // monitor is currently in full-screen
             false -> glfwGetVideoMode(monitor)
         }
 
@@ -74,8 +74,18 @@ class ResolutionManagerImpl: ResolutionManager() {
             screenHeight = videoMode.height()
         }
 
-        windowWidth = (screenWidth * 0.75f).toInt()
-        windowHeight = (windowWidth / FIXED_ASPECT_RATIO).toInt()
+        val screenAspectRatio = screenWidth.toFloat() / screenHeight
+
+        if (screenAspectRatio < FIXED_ASPECT_RATIO) {
+            // The screen is more narrow than our desired aspect ratio.
+            windowWidth = (screenWidth * 0.8f).toInt()
+            windowHeight = (windowWidth / FIXED_ASPECT_RATIO).toInt()
+        } else {
+            // The screen is wider than (or equal to) our desired aspect ratio.
+            windowHeight = (screenHeight * 0.8f).toInt()
+            windowWidth = (windowHeight * FIXED_ASPECT_RATIO).toInt()
+        }
+
         windowSizeIgnoreArgs = true // callback should ignore args and use the above instead
 
         val left = (screenWidth - windowWidth) / 2
@@ -92,14 +102,7 @@ class ResolutionManagerImpl: ResolutionManager() {
      * If window is still 0L, we're at init time.
      */
     override fun setFullscreenAndUpdatePrefs() {
-        val app = App.singleton as AppImpl
-        val window = app.window
-
-        val monAndRes = when {
-            window == 0L -> pickMonitorAndResolutionForFullscreen(0L, null)
-            else -> pickMonitorAndResolutionForFullscreen(monitorOfOrigVideoMode, origVideoMode)
-        }
-
+        val monAndRes = pickMonitorAndResolutionForFullscreen()
         setFullscreenAndUpdatePrefs(monAndRes.monitor, monAndRes.res)
     }
 
@@ -119,11 +122,24 @@ class ResolutionManagerImpl: ResolutionManager() {
         val resY = resolution.numPixelsY
         Log.info(TAG, "Entering fullscreen: monitor=$monitor, res=${resX}x${resY}")
 
-        if (monitor != monitorOfOrigVideoMode) {
-            origVideoMode = glfwGetVideoMode(monitor)
-            monitorOfOrigVideoMode = monitor
-            Log.info(TAG, "Original resolution was ${origVideoMode?.width()}x${origVideoMode?.height()}")
+        if (origDesktopResolution == null) {
+            val primaryMonitor = glfwGetPrimaryMonitor()
+            val origMode = glfwGetVideoMode(primaryMonitor)
+
+            if (origMode == null) {
+                Log.warn(TAG, "Cannot determine video mode of primary monitor $primaryMonitor")
+            } else {
+                val odr = OrigDesktopResolution(
+                    monitor = primaryMonitor,
+                    videoMode = origMode,
+                    resX = origMode.width(),
+                    resY = origMode.height(),
+                )
+                origDesktopResolution = odr
+            }
         }
+
+        Log.info(TAG, "Original desktop resolution is ${origDesktopResolution?.resX}x${origDesktopResolution?.resY}")
 
         windowWidth = resX
         windowHeight = resY
@@ -144,12 +160,17 @@ class ResolutionManagerImpl: ResolutionManager() {
         // first time. (They're wrong on my MacBook Pro, they're correct on my Mac Mini.)
         // So, we use windowWidth and windowHeight instead initially.
 
-        val fbWidth = if (windowSizeIgnoreArgs) windowWidth else widthArg
-        val fbHeight = if (windowSizeIgnoreArgs) windowHeight else heightArg
+        val newWidth = if (windowSizeIgnoreArgs) windowWidth else widthArg
+        val newHeight = if (windowSizeIgnoreArgs) windowHeight else heightArg
         windowSizeIgnoreArgs = false // use the arguments in subsequent window sizing events
 
-        Log.info(TAG, "onFramebufferSize: fbWidth=$fbWidth, fbHeight=$fbHeight")
-        updateViewport(fbWidth, fbHeight)
+        if (newWidth <= 0 || newHeight <= 0) {
+            // This happens on Windows when the window is minimized.
+            Log.warn(TAG, "Not resizing viewport, because given size is invalid: ($newWidth, $newHeight)")
+        } else {
+            Log.info(TAG, "onFramebufferSize: arg ($widthArg, $heightArg), using ($newWidth, $newHeight)")
+            updateViewport(newWidth, newHeight)
+        }
     }
 
     private fun updateViewport() {
@@ -199,13 +220,14 @@ class ResolutionManagerImpl: ResolutionManager() {
                 val dpiy = if (monMmSizeY > 0) monPxSizeY.toFloat() * MILLIMETRES_PER_INCH / monMmSizeY else 72.0f
                 Log.info(TAG, "Estimated dpi is $dpix x $dpiy")
 
-                // We define dipSize as the number of device pixels of the width of a square 1x1 in 96dpi, rounded down to a
-                // full number of device pixels, and never less than 1.
+                // We define dipSize as the number of device pixels of the width of a square 1x1 in 72dpi, rounded down
+                // to a full number of device pixels, and never less than 1.
                 // My old EIZO:     90 dpi -> 1 dip = 1 px
                 // My new Samsung: 109 dpi -> 1 dip = 1 px
-                // My MacBook Pro: 227 dpi -> 1 dip = 2 px
-                dipSizeX = max(1, (dpix / 96.0f).toInt())
-                dipSizeY = max(1, (dpiy / 96.0f).toInt())
+                // My MacBook Pro: 127 dpi -> 1 dip = 1 px
+                // Öz Ultra Wide:  140 dpi -> 1 dip = 1 px
+                dipSizeX = max(1, (dpix / 72.0f).toInt())
+                dipSizeY = max(1, (dpiy / 72.0f).toInt())
                 Log.info(TAG, "Using a dip-size of ($dipSizeX, $dipSizeY) device pixels")
             } else {
                 Log.info(TAG, "Using a fixed dip-size of 1x1")
@@ -298,6 +320,11 @@ class ResolutionManagerImpl: ResolutionManager() {
         app.prefs.autoPickMonitorAndRes = auto
 
         if (auto) {
+            App.prefs.apply {
+                nameOfMonitor = ""
+                fullscreenResX = 0
+                fullscreenResY = 0
+            }
             setFullscreenMode(app.prefs.fullscreen)
         }
     }
@@ -314,10 +341,7 @@ class ResolutionManagerImpl: ResolutionManager() {
         updateViewport()
     }
 
-    private fun pickMonitorAndResolutionForFullscreen(
-        monitorCurrentlyFullscreen: Long,
-        origVideoModeOfMonitorCurrentlyFullscreen: GLFWVidMode?,
-    ): MonitorAndResolution {
+    private fun pickMonitorAndResolutionForFullscreen(): MonitorAndResolution {
         val list = mutableListOf<MonitorAndResolution>()
         val availableMonitors = getAvailableMonitors()
 
@@ -348,12 +372,7 @@ class ResolutionManagerImpl: ResolutionManager() {
         }
 
         availableMonitors.forEach { monitor ->
-            val videoModeOfDesktop = getVideoModeOfDesktop(
-                monitor.ptr,
-                monitorCurrentlyFullscreen,
-                origVideoModeOfMonitorCurrentlyFullscreen,
-            )
-            val monAndRes = findBestResolutionForMonitor(monitor.ptr, videoModeOfDesktop)
+            val monAndRes = findBestResolutionForMonitor(monitor.ptr)
 
             if (monAndRes == null) {
                 Log.warn(TAG, "Ignoring monitor ${monitor.name}, because no suitable resolution was found")
@@ -385,41 +404,11 @@ class ResolutionManagerImpl: ResolutionManager() {
         }
     }
 
-    private fun getVideoModeOfDesktop(
-        monitor: Long,
-        monitorCurrentlyFullscreen: Long,
-        origVideoModeOfMonitorCurrentlyFullscreen: GLFWVidMode?,
-    ): GLFWVidMode? {
-        return when (monitor == monitorCurrentlyFullscreen) {
-            true -> origVideoModeOfMonitorCurrentlyFullscreen ?: run {
-                Log.warn(TAG, "origVideoMode is null, but monitor is monitorCurrentlyFullscreen")
-                null
-            }
-            false -> glfwGetVideoMode(monitor) ?: run {
-                Log.warn(TAG, "glfwGetVideoMode returned null for monitor $monitor")
-                null
-            }
-        }
-    }
-
-    private fun findBestResolutionForMonitor(monitor: Long, videoModeOfDesktop: GLFWVidMode?): MonitorAndResolution? {
+    private fun findBestResolutionForMonitor(monitor: Long): MonitorAndResolution? {
         require(monitor != 0L)
         val resolutions = getAvailableResolutions(monitor)
-
-        val desktopWidth = videoModeOfDesktop?.width() ?: 0
-        val desktopHeight = videoModeOfDesktop?.height() ?: 0
-
-        val resolutionOfDesktop = when (videoModeOfDesktop) {
-            null -> -1
-            else -> resolutions.indexOfFirst(desktopWidth, desktopHeight).also {
-                if (it == -1) {
-                    Log.warn(
-                        TAG,
-                        "Cannot find resolution ${desktopWidth}x${desktopHeight} even though it should be in the list"
-                    )
-                }
-            }
-        }
+        val odr = origDesktopResolution
+        val resolutionOfDesktop = if (odr == null) -1 else resolutions.indexOfFirst(odr.resX, odr.resY)
 
         return resolutions.pickBestMatch(resolutionOfDesktop)?.let {
             Log.info(TAG, "Monitor $monitor: Picked ${it.res}: ${it.reasonOfPick.asText}")

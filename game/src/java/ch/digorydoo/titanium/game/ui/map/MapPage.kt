@@ -16,15 +16,15 @@ class MapPage: MenuTabPage {
         mapGel = MapGel().also {
             App.content.add(it, LayerKind.UI_BELOW_DLG)
             it.hide()
-            it.pos.set(App.screenWidthDp / 2 - it.width / 2, 100.0f, 0.0f)
+            it.moveTo(App.screenWidthDp / 2 - it.width / 2, 100.0f, 0.0f)
         }
 
         require(curLocationGel == null)
-        curLocationGel = CurrentLocationGel().also {
-            App.content.add(it, LayerKind.UI_BELOW_DLG)
-            it.hide()
-            worldCoordToMap(App.player?.pos ?: App.camera.targetPos, it.pos)
-            it.rotationPhi = (3.0 * PI / 2.0).toFloat() - App.camera.currentPhi // TODO use player orientation
+        curLocationGel = CurrentLocationGel().also { loc ->
+            App.content.add(loc, LayerKind.UI_BELOW_DLG)
+            loc.hide()
+            loc.moveTo(MutablePoint3f().apply { worldCoordToMap(App.player?.pos ?: App.camera.targetPos, this) })
+            loc.rotationPhi = (3.0 * PI / 2.0).toFloat() - App.camera.currentPhi // TODO use player orientation
         }
     }
 

@@ -32,16 +32,10 @@ class StartScene: Scene(
         App.time.setStoryTime(21, 15)
 
         App.camera.apply {
-            setTarget(28.0f, 11.5f, 5.0f, jump = true)
-            setSourceRelativeToTarget(phi = -(0.81 * PI).toFloat(), rho = -1.02f, jump = true)
+            setTarget(28.9f, 10.9f, 9.5f, jump = true)
+            setSourceRelativeToTarget(phi = -(0.75 * PI).toFloat(), rho = -0.5f, jump = true)
             mode = FIXED_DISTANCE
         }
-
-        // BallGel(BallSpawnPt.Kind.BALL_R25CM, 24.0f, 12.0f, 2.2f).also {
-        //     App.content.add(it, LayerKind.MAIN_COLLIDABLE)
-        //     it.body.speed.x = 0.0f
-        //     it.body.speed.y = -9.9f
-        // }
 
         // Show the menu later to give the gels time to animate once, e.g. StreetLampGel needs to move its halo.
         App.runAtEndOfFrame {

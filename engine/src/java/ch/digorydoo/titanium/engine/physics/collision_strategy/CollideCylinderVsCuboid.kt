@@ -5,8 +5,8 @@ import ch.digorydoo.kutils.point.MutablePoint3i
 import ch.digorydoo.kutils.point.Point2f
 import ch.digorydoo.kutils.point.Point3i
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.titanium.engine.brick.BrickVolume
-import ch.digorydoo.titanium.engine.brick.BrickVolume.BrickFaceCovering
+import ch.digorydoo.titanium.engine.brick.BrickFaceCovering
+import ch.digorydoo.titanium.engine.brick.IBrickFaceCoveringRetriever
 import ch.digorydoo.titanium.engine.physics.CuboidCheckResults
 import ch.digorydoo.titanium.engine.physics.CuboidHit
 import ch.digorydoo.titanium.engine.physics.HitArea
@@ -43,16 +43,25 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
         HorizontalFaceWithResults(HitArea.BOTTOM, -1.0f),
     )
 
-    var brickVolume: BrickVolume? = null
-    val brickCoords = MutablePoint3i()
+    private var bricks: IBrickFaceCoveringRetriever? = null
+    private val brickCoords = MutablePoint3i()
 
-    fun prepare(newBrickVolume: BrickVolume, newBrickCoords: Point3i) {
-        brickVolume = newBrickVolume
-        brickCoords.set(newBrickCoords)
-    }
+    override fun configure(
+        body1IsBrick: Boolean,
+        body2IsBrick: Boolean,
+        bricks: IBrickFaceCoveringRetriever?,
+        brickCoords: Point3i?,
+    ) {
+        if (body1IsBrick) throw NotImplementedError()
 
-    override fun done() {
-        brickVolume = null
+        if (body2IsBrick) {
+            require(bricks != null)
+            require(brickCoords != null)
+            this.bricks = bricks
+            this.brickCoords.set(brickCoords)
+        } else {
+            this.bricks = null
+        }
     }
 
     override fun check(
@@ -189,7 +198,7 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
 
             result.hit = when {
                 dsqr > cylinderRadiusSqr -> CuboidHit.UNKNOWN // cylinder doesn't collide with this face
-                else -> when (brickVolume?.getBrickFaceCovering(brickCoords, normalX, normalY, 0.0f)) {
+                else -> when (bricks?.getBrickFaceCovering(brickCoords, normalX, normalY, 0.0f)) {
                     null, BrickFaceCovering.NOT_COVERED -> CuboidHit.HIT_WITH_CLOSEST_PT_OUTSIDE_FACE
                     BrickFaceCovering.PARTIALLY_COVERED -> CuboidHit.HIT_PARTIALLY_COVERED_FACE
                     BrickFaceCovering.FULLY_COVERED -> CuboidHit.HIT_FULLY_COVERED_FACE
@@ -248,7 +257,7 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
                 result.hitPtZ = faceZ
                 result.distanceToClosestPtOnPlane = 0.0f
 
-                result.hit = when (brickVolume?.getBrickFaceCovering(brickCoords, 0.0f, 0.0f, normalZ)) {
+                result.hit = when (bricks?.getBrickFaceCovering(brickCoords, 0.0f, 0.0f, normalZ)) {
                     null, BrickFaceCovering.NOT_COVERED -> CuboidHit.HIT_WITH_CLOSEST_PT_INSIDE_FACE
                     BrickFaceCovering.PARTIALLY_COVERED -> CuboidHit.HIT_PARTIALLY_COVERED_FACE
                     BrickFaceCovering.FULLY_COVERED -> CuboidHit.HIT_FULLY_COVERED_FACE
@@ -271,7 +280,7 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
                 result.hitPtZ = faceZ
                 result.distanceToClosestPtOnPlane = 0.0f
 
-                result.hit = when (brickVolume?.getBrickFaceCovering(brickCoords, 0.0f, 0.0f, normalZ)) {
+                result.hit = when (bricks?.getBrickFaceCovering(brickCoords, 0.0f, 0.0f, normalZ)) {
                     null, BrickFaceCovering.NOT_COVERED -> CuboidHit.HIT_WITH_CLOSEST_PT_INSIDE_FACE
                     BrickFaceCovering.PARTIALLY_COVERED -> CuboidHit.HIT_PARTIALLY_COVERED_FACE
                     BrickFaceCovering.FULLY_COVERED -> CuboidHit.HIT_FULLY_COVERED_FACE
@@ -425,11 +434,6 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
             return false
         }
 
-        if (results.hit == CuboidHit.HIT_FULLY_COVERED_FACE) {
-            Log.warn(TAG, "The face is fully covered and should not be the only one that was hit")
-            // continue
-        }
-
         // There was a hit. If the caller does not need to know the hit point, we're done.
         if (outHit == null) return true
 
@@ -526,7 +530,9 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
         when {
             cylinder.mass < LARGE_MASS -> when {
                 cuboid.mass < LARGE_MASS -> {
-                    val move1By = moveBy * cuboid.mass / (cylinder.mass + cuboid.mass)
+                    // Do not distribute the distance by mass! If the lighter object is cornered, the CollisionManager
+                    // would have trouble moving the heavier object away!
+                    val move1By = moveBy * 0.5f
                     val move2By = moveBy - move1By
 
                     p1.z -= normDir12Z * move1By
@@ -613,12 +619,15 @@ internal class CollideCylinderVsCuboid: CollisionStrategy<FixedCylinderBody, Fix
             }
         }
 
-        moveBy += EPSILON
+        // Adding more than just EPSILON here because of flaky tests (must be floating-point inaccuracies)
+        moveBy += 8.0f * EPSILON
 
         when {
             body1.mass < LARGE_MASS -> when {
                 body2.mass < LARGE_MASS -> {
-                    val move1By = moveBy * body2.mass / (body1.mass + body2.mass)
+                    // Do not distribute the distance by mass! If the lighter object is cornered, the CollisionManager
+                    // would have trouble moving the heavier object away!
+                    val move1By = moveBy * 0.5f
                     val move2By = moveBy - move1By
 
                     p1.x -= normDir12X * move1By
