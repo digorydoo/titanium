@@ -1,6 +1,7 @@
 package ch.digorydoo.titanium.engine.ui.game_status
 
 import ch.digorydoo.kutils.utils.Log
+import ch.digorydoo.titanium.BuildConfig
 import ch.digorydoo.titanium.engine.behaviours.Align
 import ch.digorydoo.titanium.engine.behaviours.Align.Anchor
 import ch.digorydoo.titanium.engine.core.App
@@ -55,10 +56,12 @@ class GameStatusBar {
     }
 
     private fun makeGels() {
-        if (fpsGel == null) {
-            fpsGel = NumberGel(
-                alignment = Align.Alignment(anchor = Anchor.BOTTOM_CENTRE, marginBottom = 8, xOffset = 64)
-            ).also { App.content.add(it, LayerKind.UI_BELOW_DLG) }
+        if (!BuildConfig.isProduction()) {
+            if (fpsGel == null) {
+                fpsGel = NumberGel(
+                    alignment = Align.Alignment(anchor = Anchor.BOTTOM_CENTRE, marginBottom = 8, xOffset = 64)
+                ).also { App.content.add(it, LayerKind.UI_BELOW_DLG) }
+            }
         }
 
         if (compass == null) {

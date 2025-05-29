@@ -2,6 +2,7 @@ package ch.digorydoo.titanium.game.core
 
 enum class SpawnObjType {
     BALL_R25CM,
+    BALL_R33CM,
     BENCH_1,
     GNARLED_TREE_LARGE,
     GNARLED_TREE_MEDIUM,

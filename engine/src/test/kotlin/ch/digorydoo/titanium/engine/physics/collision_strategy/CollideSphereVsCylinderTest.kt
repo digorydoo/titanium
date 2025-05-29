@@ -2,8 +2,8 @@ package ch.digorydoo.titanium.engine.physics.collision_strategy
 
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.titanium.engine.physics.HitArea
-import ch.digorydoo.titanium.engine.physics.MutableHitResult
+import ch.digorydoo.titanium.engine.physics.helper.HitArea
+import ch.digorydoo.titanium.engine.physics.helper.MutableHitResult
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.engine.utils.assertGreaterThan
@@ -97,8 +97,8 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(7.1f, cylinder.nextPos.y, "cylinder.nextPos.y") // the same as before
         assertEquals(10.45f, cylinder.nextPos.z, "cylinder.nextPos.z") // the same as before
 
-        // The two should no longer collide after bounce
-        ck.bounce(sphere, cylinder, hit)
+        // The two should no longer collide after separation
+        ck.separate(sphere, cylinder, hit)
         assertFalse(ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit))
 
         // sphere.pos is unchanged
@@ -131,12 +131,22 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(7.099984f, cylinder.nextPos.y, TOLERANCE, "cylinder.nextPos.y")
         assertEquals(10.45f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
 
-        // sphere.nextSpeed has been modified
+        // nextSpeed should still have the previous values
+        assertEquals(0.2820513f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(0.0f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(-0.33333334f, cylinder.nextSpeed.x, TOLERANCE, "cylinder.nextSpeed.x")
+        assertEquals(0.0f, cylinder.nextSpeed.y, TOLERANCE, "cylinder.nextSpeed.y")
+        assertEquals(0.0f, cylinder.nextSpeed.z, TOLERANCE, "cylinder.nextSpeed.z")
+
+        ck.computeNextSpeed(sphere, cylinder, hit)
+
+        // Now nextSpeed should be the speed after bounce
         assertEquals(-0.06769057f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
         assertEquals(0.013821598f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
         assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
 
-        // cylinder.nextSpeed has been modified
         assertEquals(0.079997964f, cylinder.nextSpeed.x, TOLERANCE, "cylinder.nextSpeed.x")
         assertEquals(-0.016334612f, cylinder.nextSpeed.y, TOLERANCE, "cylinder.nextSpeed.y")
         assertEquals(0.0f, cylinder.nextSpeed.z, TOLERANCE, "cylinder.nextSpeed.z")
@@ -219,7 +229,8 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(10.45f, cylinder.nextPos.z, "cylinder.nextPos.z") // the same as before
 
         // The two should no longer collide after bounce
-        ck.bounce(sphere, cylinder, hit)
+        ck.separate(sphere, cylinder, hit)
+        ck.computeNextSpeed(sphere, cylinder, hit)
         assertFalse(ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit))
 
         // sphere.pos is unchanged
@@ -347,7 +358,8 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(10.404475f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
 
         // The two should no longer collide after bounce
-        ck.bounce(sphere, cylinder, hit)
+        ck.separate(sphere, cylinder, hit)
+        ck.computeNextSpeed(sphere, cylinder, hit)
         assertFalse(
             ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit),
             "should no longer collide, but they do: " +
@@ -459,7 +471,8 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(10.76f, cylinder.nextPos.z, TOLERANCE, "cylinder.nextPos.z")
 
         // The bodies should no longer collide after bounce
-        ck.bounce(sphere, cylinder, hit)
+        ck.separate(sphere, cylinder, hit)
+        ck.computeNextSpeed(sphere, cylinder, hit)
         assertFalse(ck.check(sphere, sphere.nextPos, cylinder, cylinder.nextPos, hit))
 
         // sphere.pos is unchanged
@@ -574,7 +587,8 @@ internal class CollideSphereVsCylinderTest {
 
         // Bounce will force the two bodies apart such that they no longer collide
         Log.enabled = false // suppress expected log message
-        ck.bounce(sphere, cylinder, hit)
+        ck.separate(sphere, cylinder, hit)
+        ck.computeNextSpeed(sphere, cylinder, hit)
         Log.enabled = true
 
         assertFalse(

@@ -3,19 +3,23 @@ package ch.digorydoo.titanium.engine.physics
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.MutablePoint3i
 import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.kutils.point.Point3i
 import ch.digorydoo.kutils.utils.Log
+import ch.digorydoo.titanium.BuildConfig
 import ch.digorydoo.titanium.engine.brick.Brick
-import ch.digorydoo.titanium.engine.brick.BrickFaceCoveringRetriever
 import ch.digorydoo.titanium.engine.brick.BrickMaterial
 import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.brick.BrickVolume
 import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
-import ch.digorydoo.titanium.engine.physics.collision_strategy.*
+import ch.digorydoo.titanium.engine.gel.MutableGelSet
+import ch.digorydoo.titanium.engine.physics.helper.BrickCollision
+import ch.digorydoo.titanium.engine.physics.helper.Collision
+import ch.digorydoo.titanium.engine.physics.helper.CollisionSet
+import ch.digorydoo.titanium.engine.physics.helper.GelCollision
+import ch.digorydoo.titanium.engine.physics.helper.MutableHitResult
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCuboidBody
-import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
-import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
 import kotlin.math.abs
@@ -23,121 +27,182 @@ import kotlin.math.max
 import kotlin.random.Random
 
 class CollisionManager {
+    private sealed class AbortIterationException: Exception()
+
+    private class GelCrashedInInnerLoopError(val gel: GraphicElement, val wrappedError: Exception):
+        AbortIterationException()
+
+    private class BodyWasPushedTooFarFromItsOrigPos(val body: RigidBody, val distance: Float, val other: RigidBody):
+        AbortIterationException()
+
+    private class BodyWasPushedTooFarRelatively(
+        val body: RigidBody,
+        val distance: Float,
+        val nextPosBefore: Point3f,
+        val other: RigidBody,
+    ): AbortIterationException()
+
     private var collisionTicket = 0L
     private val hit = MutableHitResult()
     private val hitNormal21 = MutablePoint3f()
     private val brick = Brick()
     private val brickCoords = MutablePoint3i()
-    private val brickWorldCoords = MutablePoint3f()
     private val tmpPos1 = MutablePoint3f()
     private val tmpPos2 = MutablePoint3f()
-
-    private val sphereVsSphere = CollideSphereVsSphere()
-    private val sphereVsCylinder = CollideSphereVsCylinder()
-    private val sphereVsCuboid = CollideSphereVsCuboid()
-    private val cylinderVsCylinder = CollideCylinderVsCylinder()
-    private val cylinderVsCuboid = CollideCylinderVsCuboid()
-
-    private var brickFaceCoveringRetriever: BrickFaceCoveringRetriever? = null
-
-    private val involvedGels = mutableSetOf<GraphicElement>() // FIXME inefficient
-    private val moreInvolvedGels = mutableSetOf<GraphicElement>()
+    private val strategies = CollisionStrategiesWrapper()
+    private val collisions = CollisionSet()
+    private val involvedGels = MutableGelSet()
+    private val moreInvolvedGels = MutableGelSet()
 
     fun handleCollisions() {
-        val bricks = App.content.bricks ?: return // should only happen at scene loading time
-        val content = App.content
-        val ticket = ++collisionTicket // get a fresh ticket
-
+        ++collisionTicket // get a fresh ticket
+        collisions.clear()
         involvedGels.clear()
         moreInvolvedGels.clear()
+
+        handlePrimaryCollisions()
+
+        if (involvedGels.isNotEmpty()) {
+            // The separation of the bodies may have led to secondary collisions.
+            handleSecondaryCollisions()
+        }
+
+        collisions.forEach { computeNextSpeedAndNotifyGels(it) }
+
+        if (!BuildConfig.isProduction()) {
+            sanityCheckAfterAllCollisions()
+        }
+    }
+
+    private fun handlePrimaryCollisions() {
+        val bricks = App.content.bricks
+        val content = App.content
+        val ticket = collisionTicket
 
         content.forEachIndexedGelInCollidableLayer { i, gel1 ->
             val vicinity1 = gel1.vicinity
             vicinity1.clearIfOutdated(ticket)
 
-            if (gel1.canCollide()) {
+            if (gel1.canCollideWithGels()) {
                 // We start here from i + 1, because gel1 has already been checked against gels with lower indices.
                 content.forEachIndexedGelInCollidableLayer(i + 1) { _, gel2 ->
-                    if (gel2.canCollide()) {
+                    if (gel2.canCollideWithGels()) {
                         if (areGelsWithinCollisionRange(gel1, gel2)) {
-                            gel2.vicinity.apply {
-                                clearIfOutdated(ticket)
-                                add(gel1)
-                            }
-                            vicinity1.add(gel2)
+                            val vicinity2 = gel2.vicinity
+                            vicinity2.clearIfOutdated(ticket)
 
-                            if (handleWithinCollisionRange(gel1, gel2)) {
+                            vicinity1.add(gel2) // MutableGelSet never adds duplicates
+                            vicinity2.add(gel1)
+
+                            try {
+                                if (checkAndSeparate(gel1, gel2, hit)) {
+                                    involvedGels.add(gel1)
+                                    involvedGels.add(gel2)
+                                }
+                            } catch (e: AbortIterationException) {
+                                Log.warn(TAG, "The following problem was caught during primary collision phase")
+                                recoverFrom(e)
                                 involvedGels.add(gel1)
                                 involvedGels.add(gel2)
                             }
                         }
                     }
                 }
+            }
 
-                if (handle(gel1, bricks)) {
+            if (bricks != null && gel1.canCollideWithBricks()) {
+                try {
+                    if (checkAndSeparate(gel1, bricks)) {
+                        involvedGels.add(gel1)
+                    }
+                } catch (e: AbortIterationException) {
+                    Log.warn(TAG, "The following problem was caught during primary collision phase")
+                    recoverFrom(e)
                     involvedGels.add(gel1)
                 }
             }
         }
+    }
 
-        if (involvedGels.isNotEmpty()) {
-            // The separation of the bodies may have led to secondary collisions with other bodies.
-            var outerIteration = 1
+    private fun handleSecondaryCollisions() {
+        val bricks = App.content.bricks
+        var outerIteration = 1
 
-            do {
-                var needsOuterRetry = false
+        do {
+            var needsOuterRetry = false
 
+            try {
                 involvedGels.forEach { gel1 ->
-                    var innerIteration = 1
-                    var rndRange = RANDOMIZE_NEXTPOS
-                    val body1 = gel1.body
+                    try {
+                        var innerIteration = 1
+                        var rndRange = RANDOMIZE_NEXTPOS
+                        val body1 = gel1.body
 
-                    do {
-                        var anyCollisions = false
-                        var fastestStillInvolved = gel1
-                        var speedOfFastest = body1?.speedBeforeCollisions?.maxAbsComponent() ?: 0.0f
+                        do {
+                            var anyCollisions = false
+                            var fastestStillInvolved = gel1
+                            var speedOfFastest = body1?.speedBeforeCollisions?.maxAbsComponent() ?: 0.0f
 
-                        gel1.vicinity.forEach { gel2 ->
-                            if (handleWithinCollisionRange(gel1, gel2)) {
-                                if (!involvedGels.contains(gel2)) moreInvolvedGels.add(gel2)
-                                anyCollisions = true
-                                needsOuterRetry = true
-
-                                val speed = gel2.body?.speedBeforeCollisions?.maxAbsComponent() ?: 0.0f
-
-                                if (speed > speedOfFastest) {
-                                    fastestStillInvolved = gel2
-                                    speedOfFastest = speed
+                            gel1.vicinity.forEach { gel2 ->
+                                if (!BuildConfig.isProduction()) {
+                                    // Since gel2 is in the vicinity of gel1, we have already decided that both of them
+                                    // can take part in a collision, and so calling canCollideWithGels again is not
+                                    // necessary. I check this in development to make sure this is actually true.
+                                    require(gel1.canCollideWithGels()) { "gel1 in vicinity, but cannot collide" }
+                                    require(gel2.canCollideWithGels()) { "gel2 in vicinity, but cannot collide" }
                                 }
 
-                                if (innerIteration > 1) {
-                                    // Slightly randomize the position in an attempt to break circular collisions.
-                                    randomizeNextPos(gel2, rndRange) // gel1 is handled further below
+                                if (checkAndSeparate(gel1, gel2, hit)) {
+                                    if (!involvedGels.contains(gel2)) moreInvolvedGels.add(gel2)
+
+                                    anyCollisions = true
+                                    needsOuterRetry = true
+
+                                    val speed = gel2.body?.speedBeforeCollisions?.maxAbsComponent() ?: 0.0f
+
+                                    if (speed > speedOfFastest) {
+                                        fastestStillInvolved = gel2
+                                        speedOfFastest = speed
+                                    }
+
+                                    if (innerIteration > 1) {
+                                        // Attempt to improve handling of circular collisions.
+                                        randomizeNextPos(gel2, rndRange) // gel1 is handled further below
+                                    }
                                 }
                             }
-                        }
 
-                        if (handle(gel1, bricks)) {
-                            anyCollisions = true
+                            if (bricks != null && gel1.canCollideWithBricks()) {
+                                if (checkAndSeparate(gel1, bricks)) {
+                                    anyCollisions = true
+                                    needsOuterRetry = true
+                                }
+                            }
+
+                            if (anyCollisions && innerIteration > 1) {
+                                randomizeNextPos(gel1, rndRange)
+
+                                // The fastest gel gets an extra push, because it's likely that it's outside the
+                                // congestion.
+                                randomizeNextPos(fastestStillInvolved, rndRange * 2.0f)
+                            }
+
+                            if (!anyCollisions) break
+                            rndRange = rndRange * 2.0f
+                        } while (++innerIteration <= MAX_NUM_INNER_ITERATIONS)
+
+                        if (innerIteration > MAX_NUM_INNER_ITERATIONS) {
+                            Log.warn(TAG, "Too many inner iterations: $gel1, ${body1?.nextPos}")
                             needsOuterRetry = true
+                        } else if (innerIteration > MAX_NUM_INNER_ITERATIONS_WITHOUT_WARNING) {
+                            Log.warn(TAG, "Took $innerIteration inner iterations: $gel1, ${body1?.nextPos}")
                         }
-
-                        if (anyCollisions && innerIteration > 1) {
-                            randomizeNextPos(gel1, rndRange)
-
-                            // The fastest gets an extra push, because it's likely that it's outside the congestion.
-                            randomizeNextPos(fastestStillInvolved, rndRange * 2.0f)
-                        }
-
-                        if (!anyCollisions) break
-                        rndRange = rndRange * 2.0f
-                    } while (++innerIteration <= MAX_NUM_INNER_ITERATIONS)
-
-                    if (innerIteration > MAX_NUM_INNER_ITERATIONS) {
-                        Log.warn(TAG, "Too many inner iterations: $gel1, ${body1?.nextPos}")
-                        needsOuterRetry = true
-                    } else if (innerIteration > MAX_NUM_INNER_ITERATIONS_WITHOUT_WARNING) {
-                        Log.warn(TAG, "Took $innerIteration inner iterations: $gel1, ${body1?.nextPos}")
+                    } catch (e: AbortIterationException) {
+                        // Pass this on to the outer loop.
+                        throw e
+                    } catch (e: Exception) {
+                        // Wrap this in a kind of AbortIterationException so that it's caught from the outer loop.
+                        throw GelCrashedInInnerLoopError(gel1, e)
                     }
                 }
 
@@ -146,37 +211,139 @@ class CollisionManager {
                     moreInvolvedGels.clear()
                     needsOuterRetry = true
                 }
+            } catch (e: AbortIterationException) {
+                Log.warn(TAG, "Iteration #$outerIteration aborted")
+                needsOuterRetry = true
+                recoverFrom(e)
+            }
 
-                if (!needsOuterRetry) break
-            } while (++outerIteration <= MAX_NUM_OUTER_ITERATIONS)
+            if (!needsOuterRetry) break
+        } while (++outerIteration <= MAX_NUM_OUTER_ITERATIONS)
 
-            if (outerIteration > MAX_NUM_OUTER_ITERATIONS) {
-                Log.error(TAG, "Failed to handle collisions within a sane amount of iterations")
-            } else if (outerIteration > MAX_NUM_OUTER_ITERATIONS_WITHOUT_WARNING) {
-                Log.warn(TAG, "Took $outerIteration OUTER iterations")
+        if (outerIteration > MAX_NUM_OUTER_ITERATIONS) {
+            Log.error(TAG, "Failed to handle collisions within a sane amount of iterations")
+        } else if (outerIteration > MAX_NUM_OUTER_ITERATIONS_WITHOUT_WARNING) {
+            Log.warn(TAG, "Took $outerIteration OUTER iterations")
+        }
+    }
+
+    private fun computeNextSpeedAndNotifyGels(collision: Collision) {
+        val n12 = collision.hitNormal12
+        hitNormal21.set(-n12.x, -n12.y, -n12.z)
+
+        when (collision) {
+            is GelCollision -> {
+                val gel1 = collision.gel1
+                val gel2 = collision.gel2
+
+                strategies.computeNextSpeed(gel1, gel2, collision)
+
+                try {
+                    gel1.didCollide(
+                        gel2,
+                        myHit = collision.area1,
+                        otherHit = collision.area2,
+                        hitPt = collision.hitPt,
+                        normalTowardsMe = hitNormal21
+                    )
+                } catch (e: Exception) {
+                    Log.error(
+                        TAG,
+                        "Gel $gel1 crashed in didCollide on colliding with $gel2: " +
+                            "${e.message}\n${e.stackTraceToString()}"
+                    )
+                    gel1.setZombie()
+                }
+
+                try {
+                    gel2.didCollide(
+                        gel1,
+                        myHit = collision.area2,
+                        otherHit = collision.area1,
+                        hitPt = collision.hitPt,
+                        normalTowardsMe = n12
+                    )
+                } catch (e: Exception) {
+                    Log.error(
+                        TAG,
+                        "Gel $gel2 crashed in didCollide on colliding with $gel1: " +
+                            "${e.message}\n${e.stackTraceToString()}"
+                    )
+                    gel2.setZombie()
+                }
+            }
+            is BrickCollision -> {
+                val gel = collision.gel
+                val brickBody = getRigidBody(collision.brickCoords, collision.shape, collision.material)!!
+                strategies.computeNextSpeed(gel, brickBody, collision.brickCoords, collision)
+
+                try {
+                    gel.didCollide(
+                        collision.shape,
+                        collision.material,
+                        myHit = collision.area1,
+                        otherHit = collision.area2,
+                        hitPt = collision.hitPt,
+                        normalTowardsMe = hitNormal21
+                    )
+                } catch (e: Exception) {
+                    Log.error(
+                        TAG,
+                        "Gel $gel crashed in didCollide on colliding with brick ${collision.brickCoords}: " +
+                            "${e.message}\n${e.stackTraceToString()}"
+                    )
+                    gel.setZombie()
+                }
             }
         }
+    }
 
-        // If the following sanity check fails, then COLLISION_VICINITY is probably too small.
-        // FIXME This is inefficient and should be removed later.
-        content.forEachIndexedGelInCollidableLayer { i, gel1 ->
-            if (gel1.canCollide()) {
-                content.forEachIndexedGelInCollidableLayer(i + 1) { _, gel2 ->
-                    if (gel2.canCollide()) {
-                        if (checkCollideAtNextPos(gel1, gel2)) {
-                            Log.error(
-                                TAG,
-                                arrayOf(
-                                    "Gels still collided at their nextPos: $gel1, $gel2",
-                                    "   gel1 involved: ${involvedGels.contains(gel1)}",
-                                    "   gel2 involved: ${involvedGels.contains(gel2)}",
-                                    "   gel1 in vicinity: ${gel2.vicinity.contains(gel1)}",
-                                    "   gel2 in vicinity: ${gel1.vicinity.contains(gel2)}",
-                                ).joinToString("\n")
-                            )
-                        }
-                    }
+    private fun recoverFrom(e: AbortIterationException) {
+        when (e) {
+            is GelCrashedInInnerLoopError -> {
+                val error = e.wrappedError
+                val gel = e.gel
+                Log.error(TAG, "Gel $gel crash in inner loop: ${error.message}\n${error.stackTraceToString()}")
+                gel.setZombie()
+                gel.vicinity.clear()
+            }
+            is BodyWasPushedTooFarFromItsOrigPos -> {
+                val body = e.body
+                val distance = e.distance
+                val other = e.other
+                var msg = "Pushed $body too far from its orig pos, distance=$distance, while colliding with $other."
+
+                if (strategies.checkPosBeforeCollisions(e.body, e.other)) {
+                    msg += " They collide at their orig pos already, so it seems we had to force them apart."
+                    // don't reset nextPos
+                } else {
+                    msg += " Moving the first body's nextPos halfway towards its orig pos."
+                    val pos = body.pos
+                    val nextPos = body.nextPos
+                    nextPos.set(
+                        (pos.x + nextPos.x) * 0.5f,
+                        (pos.y + nextPos.y) * 0.5f,
+                        (pos.z + nextPos.z) * 0.5f,
+                    )
                 }
+
+                Log.warn(TAG, msg)
+            }
+            is BodyWasPushedTooFarRelatively -> {
+                val body = e.body
+                val distance = e.distance
+                val other = e.other
+                var msg = "Pushed $body by $distance, which is > enclosing radius ${other.enclosingRadius} of $other."
+
+                if (strategies.checkPosBeforeCollisions(e.body, e.other)) {
+                    msg += " They collide at their orig pos already, so it seems we had to force them apart."
+                    // don't reset nextPos
+                } else {
+                    msg += " Setting the first body's nextPos to where it was before the problem occurred."
+                    e.body.nextPos.set(e.nextPosBefore)
+                }
+
+                Log.warn(TAG, msg)
             }
         }
     }
@@ -192,42 +359,6 @@ class CollisionManager {
         }
     }
 
-    private fun checkCollideAtNextPos(gel1: GraphicElement, gel2: GraphicElement): Boolean {
-        val body1 = gel1.body ?: return false
-        val body2 = gel2.body ?: return false
-
-        fun <B1: RigidBody, B2: RigidBody> ck(
-            strategy: CollisionStrategy<B1, B2>,
-            b1: B1,
-            b2: B2,
-        ): Boolean {
-            strategy.configure(body1IsBrick = false, body2IsBrick = false, null, null)
-            val p1 = b1.nextPos
-            val p2 = b2.nextPos
-            return strategy.check(b1, p1.x, p1.y, p1.z, b2, p2.x, p2.y, p2.z, hit)
-        }
-
-        val collide = when (body1) {
-            is FixedSphereBody -> when (body2) {
-                is FixedSphereBody -> ck(sphereVsSphere, body1, body2)
-                is FixedCylinderBody -> ck(sphereVsCylinder, body1, body2)
-                is FixedCuboidBody -> ck(sphereVsCuboid, body1, body2)
-            }
-            is FixedCylinderBody -> when (body2) {
-                is FixedSphereBody -> ck(sphereVsCylinder, body2, body1)
-                is FixedCylinderBody -> ck(cylinderVsCylinder, body1, body2)
-                is FixedCuboidBody -> ck(cylinderVsCuboid, body1, body2)
-            }
-            is FixedCuboidBody -> when (body2) {
-                is FixedSphereBody -> ck(sphereVsCuboid, body2, body1)
-                is FixedCylinderBody -> ck(cylinderVsCuboid, body2, body1)
-                is FixedCuboidBody -> throw NotImplementedError() // FIXME
-            }
-        }
-
-        return collide
-    }
-
     private fun areGelsWithinCollisionRange(gel1: GraphicElement, gel2: GraphicElement): Boolean {
         val b1 = gel1.body ?: return false
         val b2 = gel2.body ?: return false
@@ -240,113 +371,61 @@ class CollisionManager {
         return dsqr <= maxDist * maxDist
     }
 
-    private fun handleWithinCollisionRange(gel1: GraphicElement, gel2: GraphicElement): Boolean {
+    private fun checkAndSeparate(gel1: GraphicElement, gel2: GraphicElement, hit: MutableHitResult): Boolean {
         val body1 = gel1.body ?: return false
         val body2 = gel2.body ?: return false
 
-        tmpPos1.set(body1.nextPos)
-        tmpPos2.set(body2.nextPos)
+        if (!gel1.shouldBounceOnCollision() || !gel2.shouldBounceOnCollision()) {
+            // Simply check for a collision when one of the gels does not want bouncing, e.g. fire vs. player.
+            if (strategies.checkNextPos(gel1, gel2, hit, separate = false)) {
+                collisions.add(gel1, gel2, hit)
+                return true
+            }
+        } else {
+            tmpPos1.set(body1.nextPos)
+            tmpPos2.set(body2.nextPos)
 
-        // We know that gel1 and gel2 are within collision range, so it should be efficient enough to call
-        // shouldBounceOnCollision even though we don't know yet if they actually collide. A gel that is not solid
-        // returns false here, so we should only bounce if both return true.
-        val bounce = gel1.shouldBounceOnCollision(gel2) && gel2.shouldBounceOnCollision(gel1)
-
-        val didCollide = checkAndBounceIfNeeded(
-            body1 = body1,
-            body2 = body2,
-            body2IsBrick = false,
-            bounce = bounce,
-        )
-        if (!didCollide) return false
-
-        val dx1 = abs(body1.nextPos.x - tmpPos1.x)
-        val dy1 = abs(body1.nextPos.y - tmpPos1.y)
-        val dz1 = abs(body1.nextPos.z - tmpPos1.z)
-        val maxAbs1 = max(dx1, max(dy1, dz1))
-
-        val dx2 = abs(body2.nextPos.x - tmpPos2.x)
-        val dy2 = abs(body2.nextPos.y - tmpPos2.y)
-        val dz2 = abs(body2.nextPos.z - tmpPos2.z)
-        val maxAbs2 = max(dx2, max(dy2, dz2))
-
-        if (maxAbs1 > SEPARATION_CHECK_THRESHOLD || maxAbs2 > SEPARATION_CHECK_THRESHOLD) {
-            Log.warn(
-                TAG,
-                arrayOf(
-                    "Gel separation moved bodies too far!",
-                    "   $gel1",
-                    "      body.pos=${body1.pos}",
-                    "      body.speedBeforeC=${body1.speedBeforeCollisions}",
-                    "      posBefore=$tmpPos1",
-                    "      moved=$maxAbs1",
-                    "      body.nextPos=${body1.nextPos}",
-                    "   $gel2",
-                    "      body.pos=${body2.pos}",
-                    "      body.speedBeforeC=${body2.speedBeforeCollisions}",
-                    "      posBefore=$tmpPos2",
-                    "      moved=$maxAbs2",
-                    "      body.nextPos=${body2.nextPos}",
-                ).joinToString("\n")
-            )
+            if (strategies.checkNextPos(gel1, gel2, hit, separate = true)) {
+                abortIfPushedTooFar(body1, tmpPos1, body2, tmpPos2)
+                collisions.add(gel1, gel2, hit)
+                return true
+            }
         }
 
-        val n12 = hit.hitNormal12
-        hitNormal21.set(-n12.x, -n12.y, -n12.z)
-
-        gel1.didCollide(gel2, myHit = hit.area1, otherHit = hit.area2, hitPt = hit.hitPt, normalTowardsMe = hitNormal21)
-        gel2.didCollide(gel1, myHit = hit.area2, otherHit = hit.area1, hitPt = hit.hitPt, normalTowardsMe = n12)
-        return true
+        return false
     }
 
-    private fun checkAndBounceIfNeeded(
-        body1: RigidBody,
-        body2: RigidBody,
-        body2IsBrick: Boolean,
-        bounce: Boolean,
+    private fun checkAndSeparate(
+        gel: GraphicElement,
+        brickBody: RigidBody,
+        brickCoords: Point3i,
+        brickShape: BrickShape,
+        brickMaterial: BrickMaterial,
+        hit: MutableHitResult,
     ): Boolean {
-        fun <B1: RigidBody, B2: RigidBody> ck(
-            strategy: CollisionStrategy<B1, B2>,
-            b1: B1,
-            b2: B2,
-            b1IsBrick: Boolean = false,
-            b2IsBrick: Boolean = false,
-        ): Boolean {
-            val bfcr = brickFaceCoveringRetriever?.takeIf { it.volume == App.bricks }
-                ?: BrickFaceCoveringRetriever(App.bricks).also { brickFaceCoveringRetriever = it }
+        val bodyOfGel = gel.body ?: return false
 
-            if (b1IsBrick || b2IsBrick) {
-                strategy.configure(body1IsBrick = b1IsBrick, body2IsBrick = b2IsBrick, bfcr, brickCoords)
-            } else {
-                strategy.configure(body1IsBrick = false, body2IsBrick = false, null, null)
+        if (!gel.shouldBounceOnCollision()) {
+            // Simply check for a collision when the gel does not want bouncing, e.g. fog vs. brick.
+            if (strategies.checkNextPos(gel, brickBody, brickCoords, hit, separate = false)) {
+                collisions.add(gel, brickCoords, brickShape, brickMaterial, hit)
+                return true
             }
-            val p1 = b1.nextPos
-            val p2 = b2.nextPos
-            val didCollide = strategy.check(b1, p1.x, p1.y, p1.z, b2, p2.x, p2.y, p2.z, hit)
-            if (didCollide && bounce) strategy.bounce(b1, b2, hit)
-            return didCollide
+        } else {
+            tmpPos1.set(bodyOfGel.nextPos)
+            tmpPos2.set(brickBody.nextPos)
+
+            if (strategies.checkNextPos(gel, brickBody, brickCoords, hit, separate = true)) {
+                abortIfPushedTooFar(bodyOfGel, tmpPos1, brickBody, tmpPos2)
+                collisions.add(gel, brickCoords, brickShape, brickMaterial, hit)
+                return true
+            }
         }
 
-        return when (body1) {
-            is FixedSphereBody -> when (body2) {
-                is FixedSphereBody -> ck(sphereVsSphere, body1, body2, b2IsBrick = body2IsBrick)
-                is FixedCylinderBody -> ck(sphereVsCylinder, body1, body2, b2IsBrick = body2IsBrick)
-                is FixedCuboidBody -> ck(sphereVsCuboid, body1, body2, b2IsBrick = body2IsBrick)
-            }
-            is FixedCylinderBody -> when (body2) {
-                is FixedSphereBody -> ck(sphereVsCylinder, body2, body1, b1IsBrick = body2IsBrick)
-                is FixedCylinderBody -> ck(cylinderVsCylinder, body1, body2, b2IsBrick = body2IsBrick)
-                is FixedCuboidBody -> ck(cylinderVsCuboid, body1, body2, b2IsBrick = body2IsBrick)
-            }
-            is FixedCuboidBody -> when (body2) {
-                is FixedSphereBody -> ck(sphereVsCuboid, body2, body1, b1IsBrick = body2IsBrick)
-                is FixedCylinderBody -> ck(cylinderVsCuboid, body2, body1, b1IsBrick = body2IsBrick)
-                is FixedCuboidBody -> throw NotImplementedError() // FIXME
-            }
-        }
+        return false
     }
 
-    private fun handle(gel: GraphicElement, brickVolume: BrickVolume): Boolean {
+    private fun checkAndSeparate(gel: GraphicElement, brickVolume: BrickVolume): Boolean {
         val body = gel.body ?: return false
         if (body.mass >= LARGE_MASS) return false
 
@@ -369,10 +448,12 @@ class CollisionManager {
             for (brickY in minBrickY .. maxBrickY) {
                 for (brickZ in minBrickZ .. maxBrickZ) {
                     brickCoords.set(brickX, brickY, brickZ)
-                    brickVolume.getAtBrickCoord(brickCoords, brick, outWorldCoords = brickWorldCoords)
+                    brickVolume.getAtBrickCoord(brickCoords, brick)
+                    val shape = brick.shape
+                    val material = brick.material
 
-                    getRigidBody(brick.shape, brick.material, brickWorldCoords)?.let {
-                        if (handleWithinCollisionRange(gel, it, brick.shape, brick.material)) {
+                    getRigidBody(brickCoords, shape, material)?.let {
+                        if (checkAndSeparate(gel, it, brickCoords, shape, material, hit)) {
                             anyCollisions = true
                         }
                     }
@@ -383,76 +464,11 @@ class CollisionManager {
         return anyCollisions
     }
 
-    private fun handleWithinCollisionRange(
-        gel: GraphicElement,
-        brickBody: RigidBody,
-        shape: BrickShape,
-        material: BrickMaterial,
-    ): Boolean {
-        val bodyOfGel = gel.body ?: return false
-
-        tmpPos1.set(bodyOfGel.nextPos)
-        tmpPos2.set(brickBody.nextPos)
-
-        val bounce = gel.shouldBounceOnCollision(shape)
-
-        val didCollide = checkAndBounceIfNeeded(
-            body1 = bodyOfGel,
-            body2 = brickBody,
-            body2IsBrick = true,
-            bounce = bounce,
-        )
-        if (!didCollide) return false
-
-        val dx1 = abs(bodyOfGel.nextPos.x - tmpPos1.x)
-        val dy1 = abs(bodyOfGel.nextPos.y - tmpPos1.y)
-        val dz1 = abs(bodyOfGel.nextPos.z - tmpPos1.z)
-        val maxAbs1 = max(dx1, max(dy1, dz1))
-
-        val dx2 = abs(brickBody.nextPos.x - tmpPos2.x)
-        val dy2 = abs(brickBody.nextPos.y - tmpPos2.y)
-        val dz2 = abs(brickBody.nextPos.z - tmpPos2.z)
-        val maxAbs2 = max(dx2, max(dy2, dz2))
-
-        if (maxAbs1 > SEPARATION_CHECK_THRESHOLD || maxAbs2 > 0.0f) {
-            Log.warn(
-                TAG,
-                arrayOf(
-                    "Brick separation moved bodies too far!",
-                    "   $gel",
-                    "      body.pos=${bodyOfGel.pos}",
-                    "      body.speedBeforeC=${bodyOfGel.speedBeforeCollisions}",
-                    "      posBefore=$tmpPos1",
-                    "      moved=$maxAbs1",
-                    "      body.nextPos=${bodyOfGel.nextPos}",
-                    "   Brick($shape, $material)",
-                    "      body.pos=${brickBody.pos}",
-                    "      body.speedBeforeC=${brickBody.speedBeforeCollisions}",
-                    "      posBefore=$tmpPos2",
-                    "      moved=$maxAbs2",
-                    "      body.nextPos=${brickBody.nextPos}",
-                ).joinToString("\n")
-            )
-        }
-
-        val n12 = hit.hitNormal12
-        hitNormal21.set(-n12.x, -n12.y, -n12.z)
-
-        gel.didCollide(
-            shape,
-            material,
-            myHit = hit.area1,
-            otherHit = hit.area2,
-            hitPt = hit.hitPt,
-            normalTowardsMe = hitNormal21
-        )
-        return true
-    }
-
-    private fun getRigidBody(shape: BrickShape, material: BrickMaterial, brickWorldCoords: Point3f): RigidBody? {
+    // FIXME Do this from BrickModel, reuse instances of RigidBody
+    private fun getRigidBody(brickCoords: Point3i, shape: BrickShape, material: BrickMaterial): RigidBody? {
         if (shape == BrickShape.NONE) return null
         return FixedCuboidBody(
-            "Brick($shape, $material, $brickWorldCoords)",
+            "Brick($shape, $material, $brickCoords)",
             initialPos = Point3f.zero,
             mass = LARGE_MASS,
             elasticity = material.elasticity,
@@ -462,23 +478,101 @@ class CollisionManager {
             sizeY = 0.0f,
             sizeZ = 0.0f,
         ).apply {
-            val x = brickWorldCoords.x + 0.5f * WORLD_BRICK_SIZE
-            val y = brickWorldCoords.y + 0.5f * WORLD_BRICK_SIZE
-            val z = brickWorldCoords.z + 0.5f * WORLD_BRICK_SIZE
+            val x = (brickCoords.x + 0.5f) * WORLD_BRICK_SIZE
+            val y = (brickCoords.y + 0.5f) * WORLD_BRICK_SIZE
+            val z = (brickCoords.z + 0.5f) * WORLD_BRICK_SIZE
             pos.set(x, y, z)
             nextPos.set(x, y, z)
             setSize(WORLD_BRICK_SIZE, WORLD_BRICK_SIZE, WORLD_BRICK_SIZE)
         }
     }
 
+    private fun abortIfPushedTooFar(
+        body1: RigidBody,
+        nextPos1Before: Point3f,
+        body2: RigidBody,
+        nextPos2Before: Point3f,
+    ) {
+        val distanceToPos1 = run {
+            val dx = abs(body1.nextPos.x - body1.pos.x)
+            val dy = abs(body1.nextPos.y - body1.pos.y)
+            val dz = abs(body1.nextPos.z - body1.pos.z)
+            max(dx, max(dy, dz))
+        }
+
+        if (distanceToPos1 > MAX_PUSH_DISTANCE) {
+            throw BodyWasPushedTooFarFromItsOrigPos(body1, distanceToPos1, body2)
+        }
+
+        val distanceToPos2 = run {
+            val dx = abs(body2.nextPos.x - body2.pos.x)
+            val dy = abs(body2.nextPos.y - body2.pos.y)
+            val dz = abs(body2.nextPos.z - body2.pos.z)
+            max(dx, max(dy, dz))
+        }
+
+        if (distanceToPos2 > MAX_PUSH_DISTANCE) {
+            throw BodyWasPushedTooFarFromItsOrigPos(body2, distanceToPos2, body1)
+        }
+
+        val distanceToBefore1 = run {
+            val dx = abs(body1.nextPos.x - nextPos1Before.x)
+            val dy = abs(body1.nextPos.y - nextPos1Before.y)
+            val dz = abs(body1.nextPos.z - nextPos1Before.z)
+            max(dx, max(dy, dz))
+        }
+
+        if (distanceToBefore1 > body2.enclosingRadius) {
+            throw BodyWasPushedTooFarRelatively(body1, distanceToBefore1, nextPos1Before, body2)
+        }
+
+        val distanceToBefore2 = run {
+            val dx = abs(body2.nextPos.x - nextPos2Before.x)
+            val dy = abs(body2.nextPos.y - nextPos2Before.y)
+            val dz = abs(body2.nextPos.z - nextPos2Before.z)
+            max(dx, max(dy, dz))
+        }
+
+        if (distanceToBefore2 > body1.enclosingRadius) {
+            throw BodyWasPushedTooFarRelatively(body2, distanceToBefore2, nextPos2Before, body1)
+        }
+    }
+
+    private fun sanityCheckAfterAllCollisions() {
+        require(!BuildConfig.isProduction())
+
+        val content = App.content
+        content.forEachIndexedGelInCollidableLayer { i, gel1 ->
+            if (gel1.canCollideWithGels()) {
+                // If the following sanity check fails, then COLLISION_VICINITY is probably too small.
+                content.forEachIndexedGelInCollidableLayer(i + 1) { _, gel2 ->
+                    if (gel2.canCollideWithGels()) {
+                        if (strategies.checkNextPos(gel1, gel2, hit, separate = false)) {
+                            Log.error(
+                                TAG,
+                                arrayOf(
+                                    "Gels still collided at their nextPos: $gel1, $gel2",
+                                    "   gel1 involved: ${involvedGels.contains(gel1)}",
+                                    "   gel2 involved: ${involvedGels.contains(gel2)}",
+                                    "   gel1 in vicinity: ${gel2.vicinity.contains(gel1)}",
+                                    "   gel2 in vicinity: ${gel1.vicinity.contains(gel2)}",
+                                ).joinToString("\n")
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     companion object {
         private val TAG = Log.Tag("CollisionManager")
         private const val COLLISION_VICINITY = 0.35f
-        private const val MAX_NUM_OUTER_ITERATIONS = 60
+        private const val MAX_NUM_OUTER_ITERATIONS = 100 // should never be as high as this
         private const val MAX_NUM_OUTER_ITERATIONS_WITHOUT_WARNING = 40
         private const val MAX_NUM_INNER_ITERATIONS = 42
         private const val MAX_NUM_INNER_ITERATIONS_WITHOUT_WARNING = 20
+        private const val MAX_PUSH_DISTANCE = 0.42f
         private const val RANDOMIZE_NEXTPOS = 0.00000000001f // 1 mm/100000000, will be ~0.01m on the 30th iteration
-        private const val SEPARATION_CHECK_THRESHOLD = 0.2f
     }
 }

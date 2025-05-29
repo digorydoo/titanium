@@ -7,8 +7,7 @@ import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.brick.BrickMaterial
 import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.physics.HitArea
-import ch.digorydoo.titanium.engine.physics.VicinityList
+import ch.digorydoo.titanium.engine.physics.helper.HitArea
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.engine.shader.Renderer
 import kotlin.math.sqrt
@@ -50,7 +49,7 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
     protected var allowNegativeZ = false
 
     protected abstract val renderer: Renderer
-    internal val vicinity = VicinityList() // used by CollisionManager
+    internal val vicinity = MutableGelSet()
 
     fun show() {
         setHiddenOnNextFrameTo = false
@@ -183,36 +182,33 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
         }
     }
 
-    fun canCollide(): Boolean = when {
-        zombie || hidden || body == null -> false
-        spawnPt?.canCollide == false -> false
-        else -> true
-    }
-
     /**
-     * Called by CollisionManager on both gels to check whether their bodies should be bounced. Their bodies are NOT be
-     * bounced if at least one of the two gels return false. (E.g. an NPC that should generally collide with stuff
-     * may return true for any gel, while a fire that only needs to inform the NPC of the heat returns false to indicate
-     * that its shape is not good for bouncing.) The implementation of this function must be efficient and must not
-     * have any side effects. This function may be called if gels are in proximity even if they do not collide. On the
-     * other hand, this function may not be called even if gels do collide (which happens if the other gel returned
-     * false).
+     * Subclasses overriding canCollideWithGels or canCollideWithBricks should always call this method to determine
+     * whether the gel is actually able to receive collisions at all.
      */
-    open fun shouldBounceOnCollision(other: GraphicElement): Boolean {
-        return true
-    }
+    protected fun canCollide(): Boolean = !zombie && !hidden && body != null && spawnPt?.canCollide != false
 
     /**
-     * Gels returning false here will fall through bricks, and hence should probably have gravity disabled.
+     * A sword currently held by a character is an example of a gel returning true here but returning false from
+     * canCollideWithBricks. The sword can safely ignore bricks, but should be able to hit the opponent.
      */
-    open fun shouldBounceOnCollision(brickShape: BrickShape): Boolean {
-        return true
-    }
+    open fun canCollideWithGels(): Boolean = canCollide()
 
     /**
-     * Called by CollisionManager when the gel collides with another. The other gel will also get a callback. If
-     * shouldBounceOnCollision returned true for one of the gels, this function will be called after the bodies have
-     * been bounced. This function is called even if the bodies were not bounced.
+     * A rain drop is an example of a gel returning true here but returning false from canCollideWithGels. The small
+     * raindrop may fall through objects, but it should splash on the floor.
+     */
+    open fun canCollideWithBricks(): Boolean = canCollide()
+
+    /**
+     * A fire or poisonous gas is an example of a gel returning false here. Other gels may need to react to collisions
+     * with it, but it should be allowed to overlap. A poisonous gas may even return true from canCollideWithBricks and
+     * cleverly glide along the floor while not being strictly bounced off the floor.
+     */
+    open fun shouldBounceOnCollision(): Boolean = true
+
+    /**
+     * Called by CollisionManager when the gel collides with another. The other gel will also get a callback.
      */
     open fun didCollide(
         other: GraphicElement,
@@ -224,9 +220,7 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
     }
 
     /**
-     * Called by CollisionManager when the gel collides with a brick. If shouldBounceOnCollision returned true for this
-     * brickShape, this function will be called after the bodies have been bounced. This function is called even if the
-     * bodies were not bounced.
+     * Called by CollisionManager when the gel collides with a brick.
      */
     open fun didCollide(
         shape: BrickShape,

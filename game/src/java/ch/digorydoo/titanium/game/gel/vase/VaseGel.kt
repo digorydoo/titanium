@@ -28,7 +28,7 @@ class VaseGel private constructor(
         elasticity = 0.64f,
         mass = 64.0f, // 133.0f,
         gravity = true,
-        radius = 0.25f,
+        radius = 0.3f,
         height = BODY_HEIGHT,
         friction = 0.6f,
     )

@@ -3,6 +3,7 @@ package ch.digorydoo.titanium.main.app
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.kutils.utils.Log.Severity
 import ch.digorydoo.kutils.utils.Log.TtyOutput
+import ch.digorydoo.titanium.BuildConfig
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.scene.ActiveSceneContent
 import ch.digorydoo.titanium.game.core.StateManagerImpl
@@ -87,7 +88,8 @@ class AppImpl: App() {
 
         prefs.loadFromFile()
 
-        Log.info(TAG, "LWJGL version: " + Version.getVersion().toString())
+        Log.info(TAG, "BuildConfig: isWindows=${BuildConfig.isWindows()}, isProduction=${BuildConfig.isProduction()}")
+        Log.info(TAG, "LWJGL version: ${Version.getVersion()}")
         GLFWErrorCallback.createThrow().set()
 
         // Do not include the hat switch in the list of Joystick buttons.

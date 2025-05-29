@@ -1,3 +1,5 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
 buildscript {
     ext.KOTLIN_VERSION = '2.1.0'
     ext.COROUTINES_VERSION = '1.8.1'
@@ -10,6 +12,72 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$KOTLIN_VERSION"
+    }
+}
+
+rootProject.ext.buildFlavour = ""
+
+subprojects {
+    tasks.register("buildProd") {
+        group = "build"
+        description = "Build with production flavour"
+        doFirst {
+            rootProject.ext.buildFlavour = "production"
+        }
+        finalizedBy "build"
+    }
+
+    tasks.register("buildDev") {
+        group = "build"
+        description = "Build with development flavour"
+        doFirst {
+            rootProject.ext.buildFlavour = "development"
+        }
+        finalizedBy "build"
+    }
+
+    tasks.register("runProd") {
+        group = "application"
+        description = "Run with production flavour"
+        doFirst {
+            rootProject.ext.buildFlavour = "production"
+        }
+        finalizedBy "run"
+    }
+
+    tasks.register("runDev") {
+        group = "application"
+        description = "Run with development flavour"
+        doFirst {
+            rootProject.ext.buildFlavour = "development"
+        }
+        finalizedBy "run"
+    }
+
+    // FIXME generateSource is not re-run when gradle thinks it's up-to-date
+    tasks.register('generateSources') {
+        def outputDir = "$buildDir/generated/java"
+        ext.outputDir = outputDir
+        outputs.dir outputDir
+        doFirst {
+            // Note: buildFlavour will be empty when running tests.
+
+            mkdir "$outputDir/ch/digorydoo/titanium"
+            file("$outputDir/ch/digorydoo/titanium/BuildConfig.java").text =
+                """|package ch.digorydoo.titanium;
+                   |public class BuildConfig {
+                   |    public static Boolean isWindows() {
+                   |        return ${Os.isFamily(Os.FAMILY_WINDOWS)};
+                   |    }
+                   |    public static Boolean isProduction() {
+                   |        return ${rootProject.ext.buildFlavour == "production"};
+                   |    }
+                   |}""".stripMargin()
+        }
+    }
+
+    tasks.matching { it.name == "compileKotlin" }.configureEach {
+        dependsOn tasks.named("generateSources")
     }
 }
 

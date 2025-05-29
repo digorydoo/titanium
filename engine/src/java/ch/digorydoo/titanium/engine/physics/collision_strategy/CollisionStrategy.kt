@@ -2,10 +2,11 @@ package ch.digorydoo.titanium.engine.physics.collision_strategy
 
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.point.Point3i
+import ch.digorydoo.titanium.BuildConfig
 import ch.digorydoo.titanium.engine.brick.IBrickFaceCoveringRetriever
-import ch.digorydoo.titanium.engine.physics.CollisionHelper
-import ch.digorydoo.titanium.engine.physics.HitResult
-import ch.digorydoo.titanium.engine.physics.MutableHitResult
+import ch.digorydoo.titanium.engine.physics.helper.CollisionHelper
+import ch.digorydoo.titanium.engine.physics.helper.HitResult
+import ch.digorydoo.titanium.engine.physics.helper.MutableHitResult
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 
 internal abstract class CollisionStrategy<B1: RigidBody, B2: RigidBody> {
@@ -45,41 +46,44 @@ internal abstract class CollisionStrategy<B1: RigidBody, B2: RigidBody> {
         check(body1, centre1.x, centre1.y, centre1.z, body2, centre2.x, centre2.y, centre2.z, outHit)
 
     /**
-     * Function that needs to be implemented by the strategy to separate the two bodies after a collision and properly
-     * assign new values of nextSpeed.
+     * Function that needs to be implemented by the strategy to separate the two bodies after a collision.
      */
-    abstract fun bounce(body1: B1, body2: B2, hit: HitResult)
+    abstract fun separate(body1: B1, body2: B2, hit: HitResult)
 
     /**
-     * FIXME Remove this function once strategies work well
+     * Function that needs to be implemented by the strategy to compute the new speed after a collision.
      */
+    abstract fun computeNextSpeed(body1: B1, body2: B2, hit: HitResult)
+
     protected fun verifySeparation(body1: B1, body2: B2, hit: HitResult) {
-        val ck = check(
-            body1,
-            body1.nextPos.x,
-            body1.nextPos.y,
-            body1.nextPos.z,
-            body2,
-            body2.nextPos.x,
-            body2.nextPos.y,
-            body2.nextPos.z,
-            null
-        )
-        if (ck) {
-            throw Exception(
-                arrayOf(
-                    "bounce() failed to properly separate the bodies:",
-                    "   body1=$body1",
-                    "   body2=$body2",
-                    "   hit=$hit",
-                    "   body1.pos=${body1.pos}",
-                    "   body2.pos=${body2.pos}",
-                    "   body1.speed=${body1.speed}",
-                    "   body2.speed=${body2.speed}",
-                    "   body1.sBeforeC=${body1.speedBeforeCollisions}",
-                    "   body2.sBeforeC=${body2.speedBeforeCollisions}",
-                ).joinToString("\n")
+        if (!BuildConfig.isProduction()) {
+            val stillCollide = check(
+                body1,
+                body1.nextPos.x,
+                body1.nextPos.y,
+                body1.nextPos.z,
+                body2,
+                body2.nextPos.x,
+                body2.nextPos.y,
+                body2.nextPos.z,
+                null
             )
+            if (stillCollide) {
+                throw Exception(
+                    arrayOf(
+                        "bounce() failed to properly separate the bodies:",
+                        "   body1=$body1",
+                        "   body2=$body2",
+                        "   hit=$hit",
+                        "   body1.pos=${body1.pos}",
+                        "   body2.pos=${body2.pos}",
+                        "   body1.speed=${body1.speed}",
+                        "   body2.speed=${body2.speed}",
+                        "   body1.sBeforeC=${body1.speedBeforeCollisions}",
+                        "   body2.sBeforeC=${body2.speedBeforeCollisions}",
+                    ).joinToString("\n")
+                )
+            }
         }
     }
 

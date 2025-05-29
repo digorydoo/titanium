@@ -3,9 +3,9 @@ package ch.digorydoo.titanium.engine.physics.collision_strategy
 import ch.digorydoo.kutils.point.Point3i
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.brick.IBrickFaceCoveringRetriever
-import ch.digorydoo.titanium.engine.physics.HitArea
-import ch.digorydoo.titanium.engine.physics.HitResult
-import ch.digorydoo.titanium.engine.physics.MutableHitResult
+import ch.digorydoo.titanium.engine.physics.helper.HitArea
+import ch.digorydoo.titanium.engine.physics.helper.HitResult
+import ch.digorydoo.titanium.engine.physics.helper.MutableHitResult
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
@@ -188,44 +188,18 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
         return true
     }
 
-    override fun bounce(body1: FixedSphereBody, body2: FixedCylinderBody, hit: HitResult) {
+    override fun separate(body1: FixedSphereBody, body2: FixedCylinderBody, hit: HitResult) {
         when (hit.area2) {
-            HitArea.TOP -> {
+            HitArea.TOP,
+            HitArea.BOTTOM,
+            -> {
                 val normDir12Z = hit.hitNormal12.z
-
                 separateInZ(body1, body2, normDir12Z)
-                helper.applyFriction(body1, body2, 0.0f, 0.0f, normDir12Z)
-
-                val deltaSpeedZ = body2.speed.z - body1.speed.z // positive if sphere falls down on cylinder
-
-                if (deltaSpeedZ in 0.0f .. HOPPING_PREVENTION_MAX_SPEED) {
-                    // Prevent sphere lying on cylinder from constantly hopping due to gravity
-                    body1.nextSpeed.z = body2.nextSpeed.z
-                }
-
-                helper.bounceAtHorizontalPlane(body1, body2, normDir12Z)
-            }
-            HitArea.BOTTOM -> {
-                val normDir12Z = hit.hitNormal12.z
-
-                separateInZ(body1, body2, normDir12Z)
-                helper.applyFriction(body1, body2, 0.0f, 0.0f, normDir12Z)
-
-                // No remedy for cylinder standing on sphere hopping due to gravity, because this configuration should
-                // be instable anyway.
-
-                helper.bounceAtHorizontalPlane(body1, body2, normDir12Z)
             }
             else -> {
                 val normDir12X = hit.hitNormal12.x
                 val normDir12Y = hit.hitNormal12.y
-
                 separateInXY(body1, body2, normDir12X, normDir12Y)
-
-                helper.apply {
-                    applyFriction(body1, body2, normDir12X, normDir12Y, 0.0f)
-                    bounceAtVerticalPlane(body1, body2, normDir12X, normDir12Y)
-                }
             }
         }
 
@@ -316,6 +290,42 @@ internal class CollideSphereVsCylinder: CollisionStrategy<FixedSphereBody, Fixed
             else -> {
                 Log.warn(TAG, "Separating $body1 from $body2 failed, because both bodies are LARGE_MASS")
                 return
+            }
+        }
+    }
+
+    override fun computeNextSpeed(body1: FixedSphereBody, body2: FixedCylinderBody, hit: HitResult) {
+        when (hit.area2) {
+            HitArea.TOP -> {
+                val normDir12Z = hit.hitNormal12.z
+                helper.applyFriction(body1, body2, 0.0f, 0.0f, normDir12Z)
+
+                val deltaSpeedZ = body2.speed.z - body1.speed.z // positive if sphere falls down on cylinder
+
+                if (deltaSpeedZ in 0.0f .. HOPPING_PREVENTION_MAX_SPEED) {
+                    // Prevent sphere lying on cylinder from constantly hopping due to gravity
+                    body1.nextSpeed.z = body2.nextSpeed.z
+                }
+
+                helper.bounceAtHorizontalPlane(body1, body2, normDir12Z)
+            }
+            HitArea.BOTTOM -> {
+                val normDir12Z = hit.hitNormal12.z
+                helper.applyFriction(body1, body2, 0.0f, 0.0f, normDir12Z)
+
+                // No remedy for cylinder standing on sphere hopping due to gravity, because this configuration should
+                // be instable anyway.
+
+                helper.bounceAtHorizontalPlane(body1, body2, normDir12Z)
+            }
+            else -> {
+                val normDir12X = hit.hitNormal12.x
+                val normDir12Y = hit.hitNormal12.y
+
+                helper.apply {
+                    applyFriction(body1, body2, normDir12X, normDir12Y, 0.0f)
+                    bounceAtVerticalPlane(body1, body2, normDir12X, normDir12Y)
+                }
             }
         }
     }

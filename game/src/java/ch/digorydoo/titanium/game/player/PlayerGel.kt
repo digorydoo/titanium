@@ -7,7 +7,7 @@ import ch.digorydoo.titanium.engine.brick.BrickMaterial
 import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
-import ch.digorydoo.titanium.engine.physics.HitArea
+import ch.digorydoo.titanium.engine.physics.helper.HitArea
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.texture.FrameCollection
@@ -65,7 +65,7 @@ class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): GraphicElement(
         myHit: HitArea,
         otherHit: HitArea,
         hitPt: Point3f,
-        hitNormal: Point3f,
+        normalTowardsMe: Point3f,
     ) {
         if (otherHit == HitArea.TOP && body.speedBeforeCollisions.z < 0.0f) {
             playerBehaviour.apply {

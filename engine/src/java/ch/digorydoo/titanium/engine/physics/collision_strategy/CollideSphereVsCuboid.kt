@@ -7,7 +7,7 @@ import ch.digorydoo.kutils.point.Point3i
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.brick.BrickFaceCovering
 import ch.digorydoo.titanium.engine.brick.IBrickFaceCoveringRetriever
-import ch.digorydoo.titanium.engine.physics.*
+import ch.digorydoo.titanium.engine.physics.helper.*
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCuboidBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
@@ -285,25 +285,9 @@ internal class CollideSphereVsCuboid: CollisionStrategy<FixedSphereBody, FixedCu
         return true
     }
 
-    override fun bounce(body1: FixedSphereBody, body2: FixedCuboidBody, hit: HitResult) {
+    override fun separate(body1: FixedSphereBody, body2: FixedCuboidBody, hit: HitResult) {
         val normal = hit.hitNormal12
-        val normDir12X = normal.x
-        val normDir12Y = normal.y
-        val normDir12Z = normal.z
-
-        separate(body1, body2, normDir12X, normDir12Y, normDir12Z)
-        helper.applyFriction(body1, body2, normDir12X, normDir12Y, normDir12Z)
-
-        if (hit.area2 == HitArea.TOP) {
-            val deltaSpeedZ = body2.speed.z - body1.speed.z // positive if sphere falls down on cuboid
-
-            if (deltaSpeedZ in 0.0f .. HOPPING_PREVENTION_MAX_SPEED) {
-                // Prevent sphere standing on cuboid from constantly hopping due to gravity
-                body1.nextSpeed.z = body2.nextSpeed.z
-            }
-        }
-
-        helper.bounceAtPlane(body1, body2, normDir12X, normDir12Y, normDir12Z)
+        separate(body1, body2, normal.x, normal.y, normal.z)
         verifySeparation(body1, body2, hit)
     }
 
@@ -414,6 +398,26 @@ internal class CollideSphereVsCuboid: CollisionStrategy<FixedSphereBody, FixedCu
                 return
             }
         }
+    }
+
+    override fun computeNextSpeed(body1: FixedSphereBody, body2: FixedCuboidBody, hit: HitResult) {
+        val normal = hit.hitNormal12
+        val normDir12X = normal.x
+        val normDir12Y = normal.y
+        val normDir12Z = normal.z
+
+        helper.applyFriction(body1, body2, normDir12X, normDir12Y, normDir12Z)
+
+        if (hit.area2 == HitArea.TOP) {
+            val deltaSpeedZ = body2.speed.z - body1.speed.z // positive if sphere falls down on cuboid
+
+            if (deltaSpeedZ in 0.0f .. HOPPING_PREVENTION_MAX_SPEED) {
+                // Prevent sphere standing on cuboid from constantly hopping due to gravity
+                body1.nextSpeed.z = body2.nextSpeed.z
+            }
+        }
+
+        helper.bounceAtPlane(body1, body2, normDir12X, normDir12Y, normDir12Z)
     }
 
     companion object {

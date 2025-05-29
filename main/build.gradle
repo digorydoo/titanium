@@ -6,6 +6,7 @@ apply plugin: 'application'
 sourceSets {
     main {
         java.srcDirs "src/java"
+        java.srcDir tasks.named("generateSources").get().outputDir // add generated sources
     }
 }
 
@@ -28,26 +29,6 @@ if (Os.isFamily(Os.FAMILY_WINDOWS)) {
     project.ext.lwjglNatives = "natives-macos"
     applicationDefaultJvmArgs = ["-XstartOnFirstThread"]
 }
-
-// Generate a BuildConfig.java, which can be imported from Kotlin.
-
-tasks.register('generateSources') {
-    ext.outputDir = "$buildDir/generated/java"
-    outputs.dir outputDir
-    doFirst {
-        mkdir "$outputDir/ch/digorydoo/titanium"
-        file("$outputDir/ch/digorydoo/titanium/BuildConfig.java").text =
-            """|package ch.digorydoo.titanium;
-               |public class BuildConfig {
-               |    public static Boolean isWindows() {
-               |        return ${if (Os.isFamily(Os.FAMILY_WINDOWS)) "true" else "false"};
-               |}
-               |}""".stripMargin()
-    }
-}
-
-compileKotlin.dependsOn generateSources
-sourceSets.main.java.srcDir generateSources.outputDir
 
 dependencies {
     implementation platform('org.jetbrains.kotlin:kotlin-bom')

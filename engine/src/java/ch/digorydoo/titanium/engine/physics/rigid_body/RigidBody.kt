@@ -1,8 +1,8 @@
 package ch.digorydoo.titanium.engine.physics.rigid_body
 
-import ch.digorydoo.kutils.math.clamp
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.core.GameTime.Companion.DELTA_TIME
 import kotlin.math.sqrt
 
@@ -99,9 +99,17 @@ sealed class RigidBody protected constructor(
             val ay = _resultingForce.y / mass
             val az = _resultingForce.z / mass
 
-            nextSpeed.x = clamp(speed.x + ax * DELTA_TIME, -MAX_SPEED, MAX_SPEED)
-            nextSpeed.y = clamp(speed.y + ay * DELTA_TIME, -MAX_SPEED, MAX_SPEED)
-            nextSpeed.z = clamp(speed.z + az * DELTA_TIME, -MAX_SPEED, MAX_SPEED)
+            nextSpeed.x = speed.x + ax * DELTA_TIME
+            nextSpeed.y = speed.y + ay * DELTA_TIME
+            nextSpeed.z = speed.z + az * DELTA_TIME
+
+            if (nextSpeed.maxAbsComponent() > MAX_SPEED) {
+                Log.warn(TAG, "Limiting nextSpeed of $this to $MAX_SPEED, because ${nextSpeed.length()} is too fast")
+                nextSpeed.normalize()
+                nextSpeed.x *= MAX_SPEED
+                nextSpeed.y *= MAX_SPEED
+                nextSpeed.z *= MAX_SPEED
+            }
         }
 
         val vx = nextSpeed.x
@@ -143,9 +151,10 @@ sealed class RigidBody protected constructor(
     }
 
     companion object {
+        private val TAG = Log.Tag("RigidBody")
         const val LARGE_MASS = 10000.0f // bodies with a mass >= this will be considered immovable
 
-        private const val MAX_SPEED = 100.0f
+        private const val MAX_SPEED = 25.0f
         private const val GRAVITY = 9.81f
         private const val MIN_SPEED_FOR_SIGNIFICANT_DIRECTION = 0.0001f // 1 mm/100 per second
     }

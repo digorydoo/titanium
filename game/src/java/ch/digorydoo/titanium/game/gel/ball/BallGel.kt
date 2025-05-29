@@ -16,8 +16,13 @@ class BallGel private constructor(
     constructor(spawnPt: BallSpawnPt): this(spawnPt, spawnPt.pos, spawnPt.kind)
     // constructor(kind: Kind, x: Float, y: Float, z: Float): this(null, Point3f(x, y, z), kind)
 
+    private val radius = when (kind) {
+        Kind.BALL_R25CM -> 0.25f
+        Kind.BALL_R33CM -> 0.33f
+    }
+
     init {
-        bodyPosOffset.set(0.0f, 0.0f, BALL_RADIUS)
+        bodyPosOffset.set(0.0f, 0.0f, radius)
         inDialog = Visibility.ACTIVE
         inMenu = Visibility.INVISIBLE
         inEditor = Visibility.ACTIVE
@@ -26,16 +31,26 @@ class BallGel private constructor(
     override val body = FixedSphereBody(
         "$kind",
         initialPos = pos + bodyPosOffset,
-        elasticity = 0.9f,
-        mass = 0.5f,
+        elasticity = when (kind) {
+            Kind.BALL_R25CM -> 0.96f
+            Kind.BALL_R33CM -> 0.99f
+        },
+        mass = when (kind) {
+            Kind.BALL_R25CM -> 0.52f
+            Kind.BALL_R33CM -> 0.42f
+        },
+        radius = radius,
+        friction = when (kind) {
+            Kind.BALL_R25CM -> 0.001f
+            Kind.BALL_R33CM -> 0.009f
+        },
         gravity = true,
-        radius = BALL_RADIUS,
-        friction = 0.01f,
     )
 
     private val mesh = MeshFileReader.readFile(
         when (kind) {
             Kind.BALL_R25CM -> "ball-r25cm.msh"
+            Kind.BALL_R33CM -> "ball-r33cm.msh"
         }
     )
 
@@ -55,8 +70,4 @@ class BallGel private constructor(
     }
 
     override fun toString() = "BallGel(${spawnPt?.id})"
-
-    companion object {
-        private const val BALL_RADIUS = 0.25f
-    }
 }

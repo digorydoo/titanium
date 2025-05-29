@@ -32,8 +32,8 @@ class StartScene: Scene(
         App.time.setStoryTime(21, 15)
 
         App.camera.apply {
-            setTarget(28.9f, 10.9f, 9.5f, jump = true)
-            setSourceRelativeToTarget(phi = -(0.75 * PI).toFloat(), rho = -0.5f, jump = true)
+            setTarget(28.1f, 10.1f, 6.0f, jump = true)
+            setSourceRelativeToTarget(phi = -(0.75 * PI).toFloat(), rho = -0.9f, jump = true)
             mode = FIXED_DISTANCE
         }
 

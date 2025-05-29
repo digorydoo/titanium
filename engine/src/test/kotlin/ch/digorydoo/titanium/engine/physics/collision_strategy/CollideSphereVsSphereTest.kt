@@ -3,8 +3,8 @@ package ch.digorydoo.titanium.engine.physics.collision_strategy
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.titanium.engine.physics.HitArea
-import ch.digorydoo.titanium.engine.physics.MutableHitResult
+import ch.digorydoo.titanium.engine.physics.helper.HitArea
+import ch.digorydoo.titanium.engine.physics.helper.MutableHitResult
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.utils.assertGreaterThan
@@ -97,8 +97,8 @@ internal class CollideSphereVsSphereTest {
         assertEquals(64.2f, b2.nextPos.y, "b2.nextPos.y") // the same as before
         assertEquals(96.57f, b2.nextPos.z, "b2.nextPos.z") // the same as before
 
-        // The two should no longer collide after bounce
-        ck.bounce(b1, b2, hit)
+        // The two should no longer collide after separation
+        ck.separate(b1, b2, hit)
         assertFalse(ck.check(b1, b1.nextPos, b2, b2.nextPos, hit))
 
         // b1.pos is unchanged
@@ -131,21 +131,31 @@ internal class CollideSphereVsSphereTest {
         assertEquals(64.200066f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y")
         assertEquals(96.570045f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
-        // b1.nextSpeed has been modified
-        assertEquals(-0.10577727f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
-        assertEquals(-0.021846741f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
-        assertEquals(-0.015291878f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
-
-        // b2.nextSpeed has been modified
-        assertEquals(0.117530346f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
-        assertEquals(0.024274152f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
-        assertEquals(0.01699098f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
-
         // Check the gap between the nextPos
         val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
         val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
         val newDistance = centre1.distanceTo(centre2).toFloat()
         assertWithin(0.0f ..< 0.000007f, newDistance - (b1.radius + b2.radius), "gap") // less than 7 mm/1000
+
+        // nextSpeed should still have the previous values
+        assertEquals(0.45000002f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
+        assertEquals(0.0f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
+        assertEquals(0.0f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
+
+        assertEquals(-0.5f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
+        assertEquals(0.0f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
+        assertEquals(0.0f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
+
+        ck.computeNextSpeed(b1, b2, hit)
+
+        // Now nextSpeed should be the speed after bounce
+        assertEquals(-0.10577727f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
+        assertEquals(-0.021846741f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
+        assertEquals(-0.015291878f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
+
+        assertEquals(0.117530346f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
+        assertEquals(0.024274152f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
+        assertEquals(0.01699098f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
     }
 
     @Test
@@ -223,7 +233,8 @@ internal class CollideSphereVsSphereTest {
         assertEquals(96.57f, b2.nextPos.z, "b2.nextPos.z") // the same as before
 
         // The two should no longer collide after bounce
-        ck.bounce(b1, b2, hit)
+        ck.separate(b1, b2, hit)
+        ck.computeNextSpeed(b1, b2, hit)
         assertFalse(ck.check(b1, b1.nextPos, b2, b2.nextPos, hit))
 
         // b1.pos is unchanged
@@ -348,7 +359,8 @@ internal class CollideSphereVsSphereTest {
         assertEquals(96.40926f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // The two should no longer collide after bounce
-        ck.bounce(b1, b2, hit)
+        ck.separate(b1, b2, hit)
+        ck.computeNextSpeed(b1, b2, hit)
         assertFalse(ck.check(b1, b1.nextPos, b2, b2.nextPos, hit))
 
         // b1.pos is unchanged
@@ -465,7 +477,7 @@ internal class CollideSphereVsSphereTest {
         // b1.nextPos has moved a little in the direction of its speed
         assertEquals(5.002467f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(7.1977973f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y")
-        assertEquals(3.0021904765f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
+        assertEquals(3.0021906f, b1.nextPos.z, TOLERANCE, "b1.nextPos.z")
 
         // b2.nextPos has moved a little in the direction of its speed
         assertEquals(5.965833f, b2.nextPos.x, TOLERANCE, "b2.nextPos.x")
@@ -473,7 +485,8 @@ internal class CollideSphereVsSphereTest {
         assertEquals(7.4530554f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // The two should no longer collide after bounce
-        ck.bounce(b1, b2, hit)
+        ck.separate(b1, b2, hit)
+        ck.computeNextSpeed(b1, b2, hit)
         assertFalse(ck.check(b1, b1.nextPos, b2, b2.nextPos, hit))
 
         // b1.pos is unchanged
@@ -593,7 +606,8 @@ internal class CollideSphereVsSphereTest {
 
         // Bounce will force the two spheres apart such that they no longer collide
         Log.enabled = false // suppress expected log message
-        ck.bounce(b1, b2, hit)
+        ck.separate(b1, b2, hit)
+        ck.computeNextSpeed(b1, b2, hit)
         Log.enabled = true
 
         assertFalse(
@@ -686,7 +700,8 @@ internal class CollideSphereVsSphereTest {
 
         // They should collide at their original position
         assertTrue(ck.check(b1, b1.nextPos, b2, b2.nextPos, hit), "should collide")
-        ck.bounce(b1, b2, hit)
+        ck.separate(b1, b2, hit)
+        ck.computeNextSpeed(b1, b2, hit)
 
         // Since b1.pos and b2.pos are farther away than just EPSILON, forcing the bodies apart should not have taken
         // a random direction, which means that the result should be stable.
@@ -772,7 +787,8 @@ internal class CollideSphereVsSphereTest {
 
         // They should collide at their original position
         assertTrue(ck.check(b1, b1.nextPos, b2, b2.nextPos, hit), "should collide")
-        ck.bounce(b1, b2, hit)
+        ck.separate(b1, b2, hit)
+        ck.computeNextSpeed(b1, b2, hit)
 
         // Since b1.pos and b2.pos are farther away than just EPSILON, forcing the bodies apart should not have taken
         // a random direction, which means that the result should be stable.
@@ -858,7 +874,8 @@ internal class CollideSphereVsSphereTest {
 
         // They should collide at their original position
         assertTrue(ck.check(b1, b1.nextPos, b2, b2.nextPos, hit), "should collide")
-        ck.bounce(b1, b2, hit)
+        ck.separate(b1, b2, hit)
+        ck.computeNextSpeed(b1, b2, hit)
 
         // Since b1.pos and b2.pos are farther away than just EPSILON, forcing the bodies apart should not have taken
         // a random direction, which means that the result should be stable.
@@ -953,8 +970,15 @@ internal class CollideSphereVsSphereTest {
         fun check13() = ck.check(b1, b1.nextPos, b3, b3.nextPos, hit)
         fun check23() = ck.check(b2, b2.nextPos, b3, b3.nextPos, hit)
 
-        fun bounce12() = ck.bounce(b1, b2, hit)
-        fun bounce23() = ck.bounce(b2, b3, hit)
+        fun bounce12() {
+            ck.separate(b1, b2, hit)
+            ck.computeNextSpeed(b1, b2, hit)
+        }
+
+        fun bounce23() {
+            ck.separate(b2, b3, hit)
+            ck.computeNextSpeed(b2, b3, hit)
+        }
 
         b1.applyForces()
         b2.applyForces()

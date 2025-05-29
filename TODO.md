@@ -5,12 +5,6 @@
 * Physics
     * Maybe separation distance weighting by speed could lead to better results? (need to +1 to avoid division by 0)
     * Check strategies for situations when bodies are moved too far
-    * Friction and elasticity are applied multiple times
-        * should first compute collisions and separation without bounce
-        * call didCollide only once; bounce only once!
-        * needs to remember on what iteration collision was first seen, then
-          bounce in that order (e.g. when one non-moving body is hit by another body, and the non-moving body
-          is pushed into another non-moving body, then the speed must be passed on)
     * Implement HOPPING_PREVENTION_MAX_SPEED for all bodies; see CollideCylinderVsCuboid
     * Fix problem that three balls in a row lead to a new collision in unit tests (or is it OK?)
     * Implement angular momentum for spheres

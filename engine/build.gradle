@@ -4,6 +4,7 @@ apply plugin: 'application'
 sourceSets {
     main {
         java.srcDirs "src/java"
+        java.srcDir tasks.named("generateSources").get().outputDir // add generated sources
         resources.srcDirs "src/res"
     }
 }

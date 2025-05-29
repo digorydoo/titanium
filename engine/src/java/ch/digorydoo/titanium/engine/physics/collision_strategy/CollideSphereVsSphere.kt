@@ -1,12 +1,11 @@
 package ch.digorydoo.titanium.engine.physics.collision_strategy
 
-import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.point.Point3i
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.brick.IBrickFaceCoveringRetriever
-import ch.digorydoo.titanium.engine.physics.HitArea
-import ch.digorydoo.titanium.engine.physics.HitResult
-import ch.digorydoo.titanium.engine.physics.MutableHitResult
+import ch.digorydoo.titanium.engine.physics.helper.HitArea
+import ch.digorydoo.titanium.engine.physics.helper.HitResult
+import ch.digorydoo.titanium.engine.physics.helper.MutableHitResult
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.utils.EPSILON
@@ -71,43 +70,11 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
         return true
     }
 
-    override fun bounce(body1: FixedSphereBody, body2: FixedSphereBody, hit: HitResult) {
-        separate(body1, body2, hit.hitNormal12)
-
-        val p1x = body1.nextPos.x
-        val p1y = body1.nextPos.y
-        val p1z = body1.nextPos.z
-
-        val p2x = body2.nextPos.x
-        val p2y = body2.nextPos.y
-        val p2z = body2.nextPos.z
-
-        val pdx = p2x - p1x
-        val pdy = p2y - p1y
-        val pdz = p2z - p1z
-        val pLen = sqrt(pdx * pdx + pdy * pdy + pdz * pdz)
-
-        if (pLen < EPSILON) {
-            Log.warn(TAG, "Failed to compute new speeds for $body1 and $body2, because they are too close")
-            return
-        }
-
-        val normDir12X = pdx / pLen
-        val normDir12Y = pdy / pLen
-        val normDir12Z = pdz / pLen
-
-        helper.apply {
-            applyFriction(body1, body2, normDir12X, normDir12Y, normDir12Z)
-            bounceAtPlane(body1, body2, normDir12X, normDir12Y, normDir12Z)
-        }
-
-        verifySeparation(body1, body2, hit)
-    }
-
-    private fun separate(body1: FixedSphereBody, body2: FixedSphereBody, normDir12: Point3f) {
+    override fun separate(body1: FixedSphereBody, body2: FixedSphereBody, hit: HitResult) {
         val p1 = body1.nextPos
         val p2 = body2.nextPos
 
+        val normDir12 = hit.hitNormal12
         val normDir12X = normDir12.x
         val normDir12Y = normDir12.y
         val normDir12Z = normDir12.z
@@ -119,6 +86,7 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
 
         if (moveBy <= 0.0f) {
             Log.warn(TAG, "separate was called, but bodies seem to be separated already")
+            verifySeparation(body1, body2, hit)
             return
         }
 
@@ -153,6 +121,37 @@ internal class CollideSphereVsSphere: CollisionStrategy<FixedSphereBody, FixedSp
                 Log.warn(TAG, "Separating $body1 from $body2 failed, because both bodies are LARGE_MASS")
                 return
             }
+        }
+
+        verifySeparation(body1, body2, hit)
+    }
+
+    override fun computeNextSpeed(body1: FixedSphereBody, body2: FixedSphereBody, hit: HitResult) {
+        val p1x = body1.nextPos.x
+        val p1y = body1.nextPos.y
+        val p1z = body1.nextPos.z
+
+        val p2x = body2.nextPos.x
+        val p2y = body2.nextPos.y
+        val p2z = body2.nextPos.z
+
+        val pdx = p2x - p1x
+        val pdy = p2y - p1y
+        val pdz = p2z - p1z
+        val pLen = sqrt(pdx * pdx + pdy * pdy + pdz * pdz)
+
+        if (pLen < EPSILON) {
+            Log.warn(TAG, "Failed to compute new speeds for $body1 and $body2, because they are too close")
+            return
+        }
+
+        val normDir12X = pdx / pLen
+        val normDir12Y = pdy / pLen
+        val normDir12Z = pdz / pLen
+
+        helper.apply {
+            applyFriction(body1, body2, normDir12X, normDir12Y, normDir12Z)
+            bounceAtPlane(body1, body2, normDir12X, normDir12Y, normDir12Z)
         }
     }
 

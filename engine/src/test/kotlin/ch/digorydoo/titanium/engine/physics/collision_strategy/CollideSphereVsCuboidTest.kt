@@ -4,8 +4,8 @@ import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.point.Point3i
 import ch.digorydoo.titanium.engine.brick.BrickFaceCovering
 import ch.digorydoo.titanium.engine.brick.IBrickFaceCoveringRetriever
-import ch.digorydoo.titanium.engine.physics.HitArea
-import ch.digorydoo.titanium.engine.physics.MutableHitResult
+import ch.digorydoo.titanium.engine.physics.helper.HitArea
+import ch.digorydoo.titanium.engine.physics.helper.MutableHitResult
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCuboidBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
@@ -490,7 +490,10 @@ internal class CollideSphereVsCuboidTest {
 
         // The two should now collide
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+
+        // The two should no longer collide after separation
+        ck.separate(sphere, cuboid, hit)
+        assertFalse(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should no longer collide")
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.NORTH_FACE, hit.area2, "hit.area2")
@@ -507,6 +510,18 @@ internal class CollideSphereVsCuboidTest {
         assertEquals(10.000227f, cuboid.nextPos.y, TOLERANCE, "cuboid.nextPos.y")
         assertEquals(10.0f, cuboid.nextPos.z, TOLERANCE, "cuboid.nextPos.z")
 
+        // nextSpeed should still be the previous values
+        assertEquals(0.03703704f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
+        assertEquals(-0.016666668f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
+        assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
+
+        assertEquals(-0.030303033f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
+        assertEquals(0.013636365f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
+        assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
+
+        ck.computeNextSpeed(sphere, cuboid, hit)
+
+        // Now nextSpeed should be the speed after bounce
         assertEquals(-0.02370371f, sphere.nextSpeed.x, TOLERANCE, "sphere.nextSpeed.x")
         assertEquals(-0.0033333348f, sphere.nextSpeed.y, TOLERANCE, "sphere.nextSpeed.y")
         assertEquals(0.0f, sphere.nextSpeed.z, TOLERANCE, "sphere.nextSpeed.z")
@@ -514,9 +529,6 @@ internal class CollideSphereVsCuboidTest {
         assertEquals(0.019393943f, cuboid.nextSpeed.x, TOLERANCE, "cuboid.nextSpeed.x")
         assertEquals(0.0027272739f, cuboid.nextSpeed.y, TOLERANCE, "cuboid.nextSpeed.y")
         assertEquals(0.0f, cuboid.nextSpeed.z, TOLERANCE, "cuboid.nextSpeed.z")
-
-        // After bounce, the two should no longer collide
-        assertFalse(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should no longer collide")
     }
 
     @Test
@@ -558,7 +570,8 @@ internal class CollideSphereVsCuboidTest {
 
         // The two should now collide
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.EAST_FACE, hit.area2, "hit.area2")
@@ -626,7 +639,8 @@ internal class CollideSphereVsCuboidTest {
 
         // The two should now collide
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.SOUTH_FACE, hit.area2, "hit.area2")
@@ -694,7 +708,8 @@ internal class CollideSphereVsCuboidTest {
 
         // The two should now collide
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.WEST_FACE, hit.area2, "hit.area2")
@@ -762,7 +777,8 @@ internal class CollideSphereVsCuboidTest {
 
         // The two should now collide
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.TOP, hit.area2, "hit.area2")
@@ -833,7 +849,8 @@ internal class CollideSphereVsCuboidTest {
 
         // The two should now collide
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.BOTTOM, hit.area2, "hit.area2")
@@ -901,7 +918,8 @@ internal class CollideSphereVsCuboidTest {
 
         // The two should now collide
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.EAST_FACE, hit.area2, "hit.area2") // also SOUTH_FACE, but this one's slightly closer
@@ -969,7 +987,8 @@ internal class CollideSphereVsCuboidTest {
 
         // The two should now collide
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.WEST_FACE, hit.area2, "hit.area2") // also NORTH_FACE, but this one's slightly closer
@@ -1037,7 +1056,8 @@ internal class CollideSphereVsCuboidTest {
 
         // The two should now collide
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.BOTTOM, hit.area2, "hit.area2") // also NORTH_FACE and EAST_FACE
@@ -1084,7 +1104,8 @@ internal class CollideSphereVsCuboidTest {
         }
 
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.NORTH_FACE, hit.area2, "hit.area2")
@@ -1130,7 +1151,8 @@ internal class CollideSphereVsCuboidTest {
         }
 
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.EAST_FACE, hit.area2, "hit.area2")
@@ -1176,7 +1198,8 @@ internal class CollideSphereVsCuboidTest {
         }
 
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.SOUTH_FACE, hit.area2, "hit.area2")
@@ -1222,7 +1245,8 @@ internal class CollideSphereVsCuboidTest {
         }
 
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.WEST_FACE, hit.area2, "hit.area2")
@@ -1268,7 +1292,8 @@ internal class CollideSphereVsCuboidTest {
         }
 
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.BOTTOM, hit.area2, "hit.area2")
@@ -1314,7 +1339,8 @@ internal class CollideSphereVsCuboidTest {
         }
 
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
 
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
         assertEquals(HitArea.TOP, hit.area2, "hit.area2")
@@ -1387,7 +1413,8 @@ internal class CollideSphereVsCuboidTest {
         assertEquals(5.749998f, hit.hitPt.y, TOLERANCE, "hitPt.y")
         assertEquals(3.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
         assertFalse(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should no longer collide")
 
         // The sphere is moved to the cuboid's top
@@ -1411,7 +1438,7 @@ internal class CollideSphereVsCuboidTest {
 
         sphere.apply {
             pos.set(31.362595f, 4.250001f, 2.250001f)
-            speed.set(36.509506f, 0.058833f, -0.16350001f)
+            speed.set(9.509506f, 0.058833f, -0.16350001f)
             applyForces()
         }
         cuboid.apply {
@@ -1439,13 +1466,14 @@ internal class CollideSphereVsCuboidTest {
 
         assertTrue(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should collide")
         assertEquals(HitArea.UNSPECIFIED, hit.area1, "hit.area1")
-        assertEquals(HitArea.SOUTH_FACE, hit.area2, "hit.area2")
+        assertEquals(HitArea.TOP, hit.area2, "hit.area2")
 
-        assertEquals(32.0f, hit.hitPt.x, TOLERANCE, "hitPt.x")
+        assertEquals(31.521086f, hit.hitPt.x, TOLERANCE, "hitPt.x")
         assertEquals(4.2509813f, hit.hitPt.y, TOLERANCE, "hitPt.y")
         assertEquals(2.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-        ck.bounce(sphere, cuboid, hit)
+        ck.separate(sphere, cuboid, hit)
+        ck.computeNextSpeed(sphere, cuboid, hit)
         assertFalse(ck.check(sphere, sphere.nextPos, cuboid, cuboid.nextPos, hit), "should no longer collide")
     }
 

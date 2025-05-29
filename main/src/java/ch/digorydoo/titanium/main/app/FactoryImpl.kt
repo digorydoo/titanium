@@ -81,6 +81,7 @@ class FactoryImpl: Factory {
 
             // other
             SpawnObjType.BALL_R25CM -> BallSpawnPt(raw, BallSpawnPt.Kind.BALL_R25CM)
+            SpawnObjType.BALL_R33CM -> BallSpawnPt(raw, BallSpawnPt.Kind.BALL_R33CM)
             SpawnObjType.STREET_LAMP_TRADITIONAL -> StreetLampSpawnPt(raw, StreetLampSpawnPt.Kind.TRADITIONAL)
             SpawnObjType.VASE_H1M -> VaseSpawnPt(raw, VaseSpawnPt.Kind.VASE_H1M)
             SpawnObjType.TEST_GEL -> TestSpawnPt(raw)

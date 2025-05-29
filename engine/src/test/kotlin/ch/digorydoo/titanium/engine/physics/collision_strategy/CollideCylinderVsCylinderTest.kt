@@ -3,8 +3,8 @@ package ch.digorydoo.titanium.engine.physics.collision_strategy
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point2f
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.titanium.engine.physics.HitArea
-import ch.digorydoo.titanium.engine.physics.MutableHitResult
+import ch.digorydoo.titanium.engine.physics.helper.HitArea
+import ch.digorydoo.titanium.engine.physics.helper.MutableHitResult
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.utils.assertGreaterThan
 import ch.digorydoo.titanium.engine.utils.assertLessThan
@@ -92,8 +92,8 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(7.1f, b2.nextPos.y, "b2.nextPos.y") // the same as before
         assertEquals(10.45f, b2.nextPos.z, "b2.nextPos.z") // the same as before
 
-        // The two should no longer collide after bounce
-        ck.bounce(b1, b2, hit)
+        // The two should no longer collide after separation
+        ck.separate(b1, b2, hit)
         assertFalse(ck.check(b1, b1.nextPos, b2, b2.nextPos, hit))
 
         // b1.pos is unchanged
@@ -106,16 +106,6 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(7.1f, b2.pos.y, "b2.pos.y")
         assertEquals(10.45f, b2.pos.z, "b2.pos.z")
 
-        // b1 had no speed before we added a force
-        assertEquals(0.0f, b1.speed.x, "b1.speed.x")
-        assertEquals(0.0f, b1.speed.y, "b1.speed.y")
-        assertEquals(0.0f, b1.speed.z, "b1.speed.z")
-
-        // b2 had no speed before we added a force
-        assertEquals(0.0f, b2.speed.x, "b2.speed.x")
-        assertEquals(0.0f, b2.speed.y, "b2.speed.y")
-        assertEquals(0.0f, b2.speed.z, "b2.speed.z")
-
         // b1.nextPos has been moved a little
         assertEquals(10.004624f, b1.nextPos.x, TOLERANCE, "b1.nextPos.x")
         assertEquals(7.2000155f, b1.nextPos.y, TOLERANCE, "b1.nextPos.y") // has slightly moved due to y diff of centres
@@ -126,6 +116,33 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(7.099984f, b2.nextPos.y, TOLERANCE, "b2.nextPos.y") // has slightly moved due to y diff of centres
         assertEquals(10.45f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
+        // Since it was SIDE, the cylinders should now be separated in XY
+        val centre1 = Point2f(b1.nextPos.x, b1.nextPos.y)
+        val centre2 = Point2f(b2.nextPos.x, b2.nextPos.y)
+        val newDistance = centre1.distanceTo(centre2).toFloat()
+        assertWithin(0.0f ..< 0.000007f, newDistance - (b1.radius + b2.radius), "gap") // less than 7 mm/1000
+
+        // nextSpeed should still be the previous value
+        assertEquals(0.2820513f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
+        assertEquals(0.0f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
+        assertEquals(0.0f, b1.nextSpeed.z, TOLERANCE, "b1.nextSpeed.z")
+
+        assertEquals(-0.33333334f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
+        assertEquals(0.0f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
+        assertEquals(0.0f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
+
+        ck.computeNextSpeed(b1, b2, hit)
+
+        // b1 had no speed before we added a force
+        assertEquals(0.0f, b1.speed.x, "b1.speed.x")
+        assertEquals(0.0f, b1.speed.y, "b1.speed.y")
+        assertEquals(0.0f, b1.speed.z, "b1.speed.z")
+
+        // b2 had no speed before we added a force
+        assertEquals(0.0f, b2.speed.x, "b2.speed.x")
+        assertEquals(0.0f, b2.speed.y, "b2.speed.y")
+        assertEquals(0.0f, b2.speed.z, "b2.speed.z")
+
         // b1.nextSpeed has been modified
         assertEquals(-0.06769069f, b1.nextSpeed.x, TOLERANCE, "b1.nextSpeed.x")
         assertEquals(0.013821525f, b1.nextSpeed.y, TOLERANCE, "b1.nextSpeed.y")
@@ -135,12 +152,6 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(0.07999805f, b2.nextSpeed.x, TOLERANCE, "b2.nextSpeed.x")
         assertEquals(-0.01633464f, b2.nextSpeed.y, TOLERANCE, "b2.nextSpeed.y")
         assertEquals(0.0f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
-
-        // Since it was SIDE, the cylinders should now be separated in XY
-        val centre1 = Point2f(b1.nextPos.x, b1.nextPos.y)
-        val centre2 = Point2f(b2.nextPos.x, b2.nextPos.y)
-        val newDistance = centre1.distanceTo(centre2).toFloat()
-        assertWithin(0.0f ..< 0.000007f, newDistance - (b1.radius + b2.radius), "gap") // less than 7 mm/1000
     }
 
     @Test
@@ -221,7 +232,8 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(10.45f, b2.nextPos.z, "b2.nextPos.z") // the same as before
 
         // The two should no longer collide after bounce
-        ck.bounce(b1, b2, hit)
+        ck.separate(b1, b2, hit)
+        ck.computeNextSpeed(b1, b2, hit)
         assertFalse(ck.check(b1, b1.nextPos, b2, b2.nextPos, hit))
 
         // b1.pos is unchanged
@@ -350,7 +362,8 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(10.454475f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // The two should no longer collide after bounce
-        ck.bounce(b1, b2, hit)
+        ck.separate(b1, b2, hit)
+        ck.computeNextSpeed(b1, b2, hit)
         assertFalse(ck.check(b1, b1.nextPos, b2, b2.nextPos, hit))
 
         // b1.pos is unchanged
@@ -454,7 +467,8 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(10.76f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // The cylinders should no longer collide after bounce
-        ck.bounce(b1, b2, hit)
+        ck.separate(b1, b2, hit)
+        ck.computeNextSpeed(b1, b2, hit)
         assertFalse(ck.check(b1, b1.nextPos, b2, b2.nextPos, hit))
 
         // b1.pos is unchanged
@@ -578,7 +592,8 @@ internal class CollideCylinderVsCylinderTest {
         // Bounce will force the two cylinders apart such that they no longer collide
         try {
             Log.enabled = false // suppress expected log message
-            ck.bounce(b1, b2, hit)
+            ck.separate(b1, b2, hit)
+            ck.computeNextSpeed(b1, b2, hit)
 
             assertFalse(
                 ck.check(b1, b1.nextPos, b2, b2.nextPos, hit),
