@@ -90,6 +90,14 @@ class ButtonGel(
         }
     }
 
+    fun show() {
+        setHiddenOnNextFrameTo = false
+    }
+
+    fun hide() {
+        setHiddenOnNextFrameTo = true
+    }
+
     val opacity: Float
         get() = when {
             !fading -> 1.0f

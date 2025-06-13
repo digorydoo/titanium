@@ -112,9 +112,18 @@ enum class BrickMaterial(val value: Int) {
     val friction: Float
         get() = when (this) {
             GLASS,
-            METAL_RED,
             ZZ_TEST,
             -> 0.01f
+
+            METAL_RED,
+            -> 0.6f
+
+            WOODEN_PLANKS_H,
+            WOODEN_PLANKS_V_BRITE,
+            WOODEN_PLANKS_V_DARK,
+            WOOD_DARK,
+            WOOD_RED,
+            -> 0.8f
 
             ASPHALT_BLUE,
             ASPHALT_RED,
@@ -139,28 +148,21 @@ enum class BrickMaterial(val value: Int) {
             WHITE_CONCRETE,
             WINDOW_DETAILS,
             WINDOW_INTERIOR,
-            -> 0.1f
+            -> 0.96f
 
             CARPET_BLUE,
             CARPET_BROWN,
             CARPET_RED,
-            -> 0.3f
-
-            WOODEN_PLANKS_H,
-            WOODEN_PLANKS_V_BRITE,
-            WOODEN_PLANKS_V_DARK,
-            WOOD_DARK,
-            WOOD_RED,
-            -> 0.2f
+            -> 0.97f
 
             FOREST_GROUND,
             GRASSY_GROUND,
             GRASSY_PATH,
             ROAD_PEBBLES,
-            -> 0.42f
+            -> 0.98f
 
             STANDING_WATER,
-            -> 0.9f
+            -> 0.99f
         }
 
     companion object {

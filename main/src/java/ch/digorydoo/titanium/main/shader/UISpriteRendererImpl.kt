@@ -35,7 +35,6 @@ class UISpriteRendererImpl(private val delegate: Delegate, private val antiAlias
         }
     }
 
-    @Suppress("removal")
     protected fun finalize() {
         // Check that free has been called. We can't throw from finalize, so log only.
         if (valid) Log.error(TAG, "still valid at finalize")
@@ -59,8 +58,17 @@ class UISpriteRendererImpl(private val delegate: Delegate, private val antiAlias
     private fun updatePositions() {
         val scaledSize = delegate.frameSize.newScaled(delegate.scaleFactor)
 
-        val left = -1.0f + App.dpToGlX(delegate.renderPos.x)
-        val top = 1.0f - App.dpToGlY(delegate.renderPos.y)
+        val left: Float
+        val top: Float
+
+        if (delegate.renderPosIsNormalised) {
+            left = delegate.renderPos.x
+            top = delegate.renderPos.y
+        } else {
+            left = -1.0f + App.dpToGlX(delegate.renderPos.x)
+            top = 1.0f - App.dpToGlY(delegate.renderPos.y)
+        }
+
         val right = left + App.dpToGlX(scaledSize.x)
         val bottom = top - App.dpToGlY(scaledSize.y)
 

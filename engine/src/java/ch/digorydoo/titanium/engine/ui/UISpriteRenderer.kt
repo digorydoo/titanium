@@ -12,6 +12,7 @@ abstract class UISpriteRenderer: Renderer {
         abstract val tex: Texture?
         open val brightness = 1.0f // 0=black, 1=normal, 2=white
         open val opacity = 1.0f // 0=invisible, 1=opaque
+        open val renderPosIsNormalised = false // false=dp, true=normalised screen coords
         open val rotation = 0.0f // rotation, in Radians
         open val scaleFactor = Point2f(1.0f, 1.0f)
         open val texOffset = Point2f.zero // offset in texture pixels

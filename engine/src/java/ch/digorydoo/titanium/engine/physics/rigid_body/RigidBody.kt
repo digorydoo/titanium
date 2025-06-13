@@ -153,9 +153,9 @@ sealed class RigidBody protected constructor(
     companion object {
         private val TAG = Log.Tag("RigidBody")
         const val LARGE_MASS = 10000.0f // bodies with a mass >= this will be considered immovable
+        const val GRAVITY = 9.81f
 
         private const val MAX_SPEED = 25.0f
-        private const val GRAVITY = 9.81f
         private const val MIN_SPEED_FOR_SIGNIFICANT_DIRECTION = 0.0001f // 1 mm/100 per second
     }
 }

@@ -8,12 +8,13 @@ import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.font.FontManager.FontName.DIALOG_FONT
 import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.engine.ui.*
-import ch.digorydoo.titanium.engine.ui.KeyBtnGel.Kind.*
 import ch.digorydoo.titanium.engine.ui.button.ButtonBuilder
 import ch.digorydoo.titanium.engine.ui.choice.BoolChoice
 import ch.digorydoo.titanium.engine.ui.choice.Choice
 import ch.digorydoo.titanium.engine.ui.choice.FloatChoice
 import ch.digorydoo.titanium.engine.ui.choice.SavegameChoice
+import ch.digorydoo.titanium.engine.ui.icon.DlgInputIconGel
+import ch.digorydoo.titanium.engine.ui.icon.Icon.*
 import kotlin.math.ceil
 import kotlin.math.max
 
@@ -26,7 +27,7 @@ internal object DlgBuilder {
         playSoundOnDismiss: Boolean = false,
     ): Dialogue {
         var dlgTextGel: DlgTextGel? = null
-        var buttons: List<KeyBtnGel>? = null
+        var icon: DlgInputIconGel? = null
         var itemWidth = 0
 
         if (!choices.isNullOrEmpty()) {
@@ -76,14 +77,13 @@ internal object DlgBuilder {
             }
 
             if (lastItemIsDismiss) {
-                val btn = KeyBtnGel(
-                    kindWhenGamepad = B,
-                    kindWhenKeyboard = ESC,
-                    posX = App.screenWidthDp - ITEM_MARGIN_RIGHT - ITEM_KEY_OFFSET_X,
-                    posY = App.screenHeightDp - ITEM_MARGIN_BOTTOM - ITEM_DEFAULT_HEIGHT + ITEM_KEY_OFFSET_Y,
+                icon = DlgInputIconGel(
+                    iconWhenGamepad = B,
+                    iconWhenKeyboard = ESC,
+                    posX = App.screenWidthDp - ITEM_MARGIN_RIGHT - ITEM_ICON_OFFSET_X,
+                    posY = App.screenHeightDp - ITEM_MARGIN_BOTTOM - ITEM_DEFAULT_HEIGHT + ITEM_ICON_OFFSET_Y,
                     glowEnabled = false,
                 )
-                buttons = listOf(btn)
             }
         }
 
@@ -119,15 +119,13 @@ internal object DlgBuilder {
             dlgTextGel.moveTo(bgLeft, bgTop, 0.0f)
 
             if (choices.isNullOrEmpty()) {
-                // When there are no choices, the buttons is the key symbol for the dialogue's dismiss action.
-                buttons = listOf(
-                    KeyBtnGel(
-                        kindWhenGamepad = A,
-                        kindWhenKeyboard = RETURN,
-                        posX = (bgLeft + bgTex.width - DLG_BTN_RIGHT_MARGIN).toInt(),
-                        posY = (bgBtm - DLG_BTN_BOTTOM_MARGIN).toInt(),
-                        glowEnabled = true,
-                    )
+                // When there are no choices, it's a modal dialogue, and icon is its dismiss action.
+                icon = DlgInputIconGel(
+                    iconWhenGamepad = A,
+                    iconWhenKeyboard = RETURN,
+                    posX = (bgLeft + bgTex.width - DLG_BTN_RIGHT_MARGIN).toInt(),
+                    posY = (bgBtm - DLG_BTN_BOTTOM_MARGIN).toInt(),
+                    glowEnabled = true,
                 )
             }
         }
@@ -136,7 +134,7 @@ internal object DlgBuilder {
 
         return Dialogue(
             dlgTextGel = dlgTextGel,
-            buttons = buttons,
+            icon = icon,
             choices = choices,
             initHilitedIdx = initHilitedIdx,
             lastItemIsDismiss = lastItemIsDismiss,
@@ -147,9 +145,6 @@ internal object DlgBuilder {
     private fun makeDlgBgTexture(dlgWidth: Int, dlgHeight: Int) =
         App.textures.createTexture(dlgWidth, dlgHeight).also {
             it.drawInto {
-                // clear(Colour.transparent)
-                // fillRoundRect(MutableRecti(0, 0, dlgWidth, dlgHeight), CORNER_SIZE, CORNER_SIZE, bgColour)
-
                 clear(dlgBgColour)
 
                 val off = DLG_CORNER_SIZE / 2

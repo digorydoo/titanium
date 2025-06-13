@@ -60,23 +60,25 @@ class SceneLoader {
         loaded = Artifacts()
         loaded.scene = scene
 
-        App.content.setAllGelsToZombie() // zombies will free their resources before the first callback
-        App.content.player = null
-        App.content.scene = loadingScreen
-
-        App.content.bricks?.free()
-        App.content.bricks = null
+        val content = App.content
+        content.isLoading = true
+        content.setAllGelsToZombie() // zombies will free their resources before the first callback
+        content.player = null
+        content.scene = loadingScreen
+        content.bricks?.free()
+        content.bricks = null
 
         App.spawnMgr.clear()
         App.sky.unload()
         App.shaders.unloadAllNonSharedPrograms()
 
         // Set the camera mode for the loading screen.
-        App.camera.mode = Mode.FIXED_SOURCE
-        App.camera.setSource(20.0f, 20.0f, 20.0f, jump = true)
-        App.camera.setTarget(10.0f, 10.0f, 0.0f, jump = true)
+        val camera = App.camera
+        camera.mode = Mode.FIXED_SOURCE
+        camera.setSource(20.0f, 20.0f, 20.0f, jump = true)
+        camera.setTarget(10.0f, 10.0f, 0.0f, jump = true)
 
-        App.status.onBeforeLoadScene()
+        App.hud.onBeforeLoadScene()
 
         scope.launch {
             // Load as much as possible here from this thread.
@@ -119,8 +121,10 @@ class SceneLoader {
             }
             Stage.FINISHING_UP -> {
                 val scene = loaded.scene!!
-                App.content.scene = scene
-                App.content.bricks = loaded.bricks
+                val content = App.content
+                content.isLoading = false
+                content.scene = scene
+                content.bricks = loaded.bricks
 
                 App.camera.mode = Mode.SMART
                 restoreFromSavegameIfNeeded()
@@ -136,7 +140,7 @@ class SceneLoader {
                     scene.lighting.adaptToStoryTime() // because ActiveSceneContent does not do this on every frame
                 }
 
-                App.status.onAfterLoadScene()
+                App.hud.onAfterLoadScene()
 
                 if (playSoundOnFinish) {
                     App.sound.play(EngineSampleId.SCENE_LOADED)
@@ -206,7 +210,7 @@ class SceneLoader {
         // Assuming unguarded read operations of Floats are safe in Kotlin, and assuming the GameStatusBar only reads
         // the progress value, we simply update the value without Mutex or similar mechanism.
 
-        App.status.setLoadingProgress(progress)
+        App.hud.setLoadingProgress(progress)
     }
 
     companion object {

@@ -2,14 +2,8 @@
 
 ## Backlog
 
-* Physics
-    * Maybe separation distance weighting by speed could lead to better results? (need to +1 to avoid division by 0)
-    * Check strategies for situations when bodies are moved too far
-    * Implement HOPPING_PREVENTION_MAX_SPEED for all bodies; see CollideCylinderVsCuboid
-    * Fix problem that three balls in a row lead to a new collision in unit tests (or is it OK?)
-    * Implement angular momentum for spheres
-    * Implement FixedCapsuleBody (similar to a cylinder, but with spheres at the top and bottom)
-    * Remove verifySeparation once strategies work well
+* Gel actions
+    * ActionManager: rotationPhi currently does not work correctly, because player's rotationPhi is just camera...
 
 * Bugs
     * Log: "Unloading all 3450 of non-shared programmes..." BrickVolumeRendererImpl should be created by BrickVolume,
@@ -17,7 +11,6 @@
     * Umlauts in German start menu suddenly work, why?!
     * Railing 2 has strange lighting issue across instances (see level)
     * Sometimes keyboard strokes get lost (when frame takes too long, or stroke is hit too quickly)
-    * Max spawn distance is either broken, or incorrectly set for gels in town scene (all are always rendered)
 
 * Materials
     * Ideally, MeshMaterial and BrickMaterial should be merged, and both should use the same shaders
@@ -37,6 +30,11 @@
       menu.
     * Implement undo for spawn pt actions (serialize spawn pt, restore)
     * Editor should delete neighouring bricks that get enclosed while drawing... or shouldn't it?
+
+* Physics
+    * Sometimes a ball just stops on the floor with no rebound at all. It does not seem to be caused by hopping
+      prevention, so what's the cause?
+    * Implement angular momentum for spheres
 
 * Height maps
     * Implement height maps as gels
@@ -79,16 +77,6 @@
 * Game/town
     * Design a male NPC
     * Design a female NPC
-
-* Gel actions
-    * If a gel provides an action to the user (e.g. a treasure chest allowing for "OPEN"), the gel must register an
-      action point in a similar way how light sources are registered
-    * A GelActionManager decides which action is closest and within the player gel's field of view (the camera is
-      irrelevant)
-    * The symbols that appear when an action is available are managed by GameStatusBar (which should no longer be called
-      a bar)
-    * When the action is chosen by the user, the GelActionManager invokes a function on the action object that was
-      registered by the gel
 
 * Dialogues and fonts
     * The story time should be paused while the gameMenu or a dialog is active
@@ -133,6 +121,9 @@
     * proceed darf pro Step nur einmal aufgerufen werden
     * CutsceneManager wartet delay ab und ruft erst dann nextStep erneut auf
     * Solange proceed nicht aufgerufen wird, bleibt Cutscene hängen, z.B. in einer Conversation
+
+* Spawn points
+    * Automatic spawning should be deactivated when a gel crashes during spawning, to prevent from flooding the log
 
 * Deferred gel initialisation
     * Gels need to load textures, meshes and shaders when they are spawned. Doing this from the game loop creates a

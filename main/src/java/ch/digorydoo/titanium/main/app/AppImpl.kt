@@ -298,6 +298,7 @@ class AppImpl: App() {
 
             time.maintain()
             content.animate()
+            lamps.maintain()
 
             // Rendering shadows
             if (content.scene.hasShadows) {
@@ -311,7 +312,6 @@ class AppImpl: App() {
 
             // Finishing frame
             handleSceneLoading()
-            lamps.maintain()
             runEndOfFrameLambdas()
             screenshot.takeIfNecessary(window)
 

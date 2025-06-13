@@ -10,8 +10,8 @@ const val DLG_TEXT_MARGIN_X = 16
 const val DLG_TEXT_MARGIN_Y = 16
 const val DLG_BOTTOM_MARGIN = 48
 const val DLG_LR_MARGIN = 8
-const val DLG_BTN_RIGHT_MARGIN = 48
-const val DLG_BTN_BOTTOM_MARGIN = 12
+const val DLG_BTN_RIGHT_MARGIN = 80
+const val DLG_BTN_BOTTOM_MARGIN = 18
 const val DLG_TEXT_PADDING = 8 // must be large enough for glyphs not overlapping the box
 const val DLG_DEFAULT_WIDTH = 800 // width when there are no choice items
 const val DLG_MIN_WIDTH = 700
@@ -34,8 +34,8 @@ const val ITEM_MIN_WIDTH = 312
 const val ITEM_MARGIN_RIGHT = 92
 const val ITEM_MARGIN_TOP = 64 // comes into play when total height of items exceeds screen height
 const val ITEM_MARGIN_BOTTOM = 128
-const val ITEM_KEY_OFFSET_X = 38 // distance from right side of item to the left side of its key symbol
-const val ITEM_KEY_OFFSET_Y = 48
+const val ITEM_ICON_OFFSET_X = 56 // distance from right side of item to the left side of its icon
+const val ITEM_ICON_OFFSET_Y = 46
 
 val itemOtlColour = Colour.grey300
 

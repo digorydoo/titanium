@@ -25,7 +25,7 @@ class BallGel private constructor(
         bodyPosOffset.set(0.0f, 0.0f, radius)
         inDialog = Visibility.ACTIVE
         inMenu = Visibility.INVISIBLE
-        inEditor = Visibility.ACTIVE
+        inEditor = Visibility.FROZEN_VISIBLE
     }
 
     override val body = FixedSphereBody(
@@ -41,8 +41,8 @@ class BallGel private constructor(
         },
         radius = radius,
         friction = when (kind) {
-            Kind.BALL_R25CM -> 0.001f
-            Kind.BALL_R33CM -> 0.009f
+            Kind.BALL_R25CM -> 0.05f
+            Kind.BALL_R33CM -> 0.09f
         },
         gravity = true,
     )

@@ -33,7 +33,7 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
         friction = 0.2f,
         gravity = false,
         mass = RigidBody.LARGE_MASS,
-        radius = 0.25f,
+        radius = 0.17f,
         height = BODY_HEIGHT,
     )
 
@@ -171,7 +171,7 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
     override fun toString() = "StreetLampGel(${spawnPt.id})"
 
     companion object {
-        private const val BODY_HEIGHT = 4.0f
+        private const val BODY_HEIGHT = 4.9f
         private const val HALO_SCALING = 0.025f
         private const val HALO_Z_OFFSET = 4.36f
         private const val LAMP_RADIUS = 10.0f

@@ -202,7 +202,7 @@ abstract class GameMenu {
         const val SAVEGAME_THUMBNAIL_WIDTH = 128
         const val SAVEGAME_THUMBNAIL_HEIGHT = (SAVEGAME_THUMBNAIL_WIDTH / App.FIXED_ASPECT_RATIO).toInt()
         private const val TAB_MARGIN_LEFT = 32.0f
-        private const val TAB_MARGIN_TOP = 18.0f
+        private const val TAB_MARGIN_TOP = 13.0f
         private const val TAB_SPACING = 24.0f
         private const val TOP_AREA_HEIGHT = 48
         private val topAreaBgColour = Colour(0.0f, 0.0f, 0.0f, 0.42f)

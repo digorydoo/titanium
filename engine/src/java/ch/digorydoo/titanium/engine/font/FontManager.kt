@@ -5,7 +5,7 @@ import ch.digorydoo.kutils.point.MutablePoint2f
 import java.nio.ByteBuffer
 
 interface FontManager {
-    enum class FontName { DIALOG_FONT, SNACKBAR_FONT, TOPIC_FONT, SMALL_UI_FONT }
+    enum class FontName { DIALOG_FONT, SNACKBAR_FONT, TOPIC_FONT, LARGE_HUD_FONT, SMALL_HUD_FONT }
 
     class FormattedText(
         val lines: List<String>,

@@ -84,6 +84,14 @@ class TextGel(text: String, alignment: Align.Alignment? = null): GraphicElement(
     fun rotate() = rotate.rotate()
     fun shake() = shake.shake()
 
+    fun show() {
+        setHiddenOnNextFrameTo = false
+    }
+
+    fun hide() {
+        setHiddenOnNextFrameTo = true
+    }
+
     override fun onRemoveZombie() {
         renderer.free()
         texture.freeRequireUnshared()
@@ -95,14 +103,14 @@ class TextGel(text: String, alignment: Align.Alignment? = null): GraphicElement(
         private const val CAPTION_PADDING = GreyscaleImageBuffer.OUTLINE_RANGE
         private val otlColour = Colour.grey900
 
-        fun makeTexture(text: String): Texture {
-            val size = App.fonts.measureText(text, FontName.SMALL_UI_FONT)
+        private fun makeTexture(text: String): Texture {
+            val size = App.fonts.measureText(text, FontName.SMALL_HUD_FONT)
             size.x += 2 * CAPTION_PADDING
             size.y += 2 * CAPTION_PADDING
             return App.textures.createTexture(size.x.toInt(), size.y.toInt()).apply {
                 drawInto {
                     clear(Colour.transparent)
-                    drawText(text, CAPTION_PADDING, CAPTION_PADDING, Colour.white, FontName.SMALL_UI_FONT, otlColour)
+                    drawText(text, CAPTION_PADDING, CAPTION_PADDING, Colour.white, FontName.SMALL_HUD_FONT, otlColour)
                 }
             }
         }

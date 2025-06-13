@@ -82,40 +82,44 @@ class Font private constructor(
             val fname = when (fontName) {
                 FontName.DIALOG_FONT,
                 FontName.SNACKBAR_FONT,
-                    -> "zakirahs-hand-bold-non-commercial.ttf"
+                -> "zakirahs-hand-bold-non-commercial.ttf"
 
-                FontName.SMALL_UI_FONT,
+                FontName.LARGE_HUD_FONT,
+                FontName.SMALL_HUD_FONT,
                 FontName.TOPIC_FONT,
-                    -> "xball-non-commercial.ttf"
+                -> "xball-non-commercial.ttf"
             }
 
             val pixelHeight = when (fontName) {
                 FontName.DIALOG_FONT -> 27.0f
                 FontName.SNACKBAR_FONT -> 23.0f
-                FontName.SMALL_UI_FONT -> 18.0f
-                FontName.TOPIC_FONT -> 22.0f
+                FontName.SMALL_HUD_FONT -> 18.0f
+                FontName.LARGE_HUD_FONT -> 32.0f
+                FontName.TOPIC_FONT -> 26.0f
             }
 
             val charGap = when (fontName) {
                 FontName.DIALOG_FONT -> -0.3f // slightly condensed
                 FontName.SNACKBAR_FONT -> -0.2f // slightly condensed
-                FontName.SMALL_UI_FONT -> 1.0f // slightly extended
-                FontName.TOPIC_FONT -> 0.5f
+                FontName.SMALL_HUD_FONT -> 1.0f // slightly extended
+                FontName.LARGE_HUD_FONT -> 0.6f
+                FontName.TOPIC_FONT -> 0.6f
             }
 
             val filter: (v: Float) -> Float = when (fontName) {
                 FontName.DIALOG_FONT,
                 FontName.SNACKBAR_FONT,
-                    -> { value ->
+                -> { value ->
                     // sharpen the anti-aliasing border slightly
                     val v = value.pow(2.0f)
                     val t = threshold(v, 0.2f)
                     lerp(v, t, 0.3f)
                 }
 
-                FontName.SMALL_UI_FONT,
+                FontName.SMALL_HUD_FONT,
+                FontName.LARGE_HUD_FONT,
                 FontName.TOPIC_FONT,
-                    -> { value -> value }
+                -> { value -> value }
             }
 
             val path = App.assets.pathToFont(fname)

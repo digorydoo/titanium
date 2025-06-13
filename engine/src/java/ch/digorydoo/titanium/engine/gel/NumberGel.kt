@@ -92,6 +92,14 @@ class NumberGel(alignment: Align.Alignment? = null): GraphicElement() {
         digitTextures.forEach { it.freeRequireUnshared() }
     }
 
+    fun show() {
+        setHiddenOnNextFrameTo = false
+    }
+
+    fun hide() {
+        setHiddenOnNextFrameTo = true
+    }
+
     companion object {
         private const val MAX_NUM_DIGITS = 10
         private const val DIGIT_WIDTH = 16
@@ -104,7 +112,7 @@ class NumberGel(alignment: Align.Alignment? = null): GraphicElement() {
             App.textures.createTexture(DIGIT_WIDTH, DIGIT_HEIGHT).apply {
                 drawInto {
                     clear(Colour.transparent)
-                    drawText("$digit", DIGIT_PADDING, DIGIT_PADDING, Colour.white, FontName.SMALL_UI_FONT, otlColour)
+                    drawText("$digit", DIGIT_PADDING, DIGIT_PADDING, Colour.white, FontName.SMALL_HUD_FONT, otlColour)
                 }
             }
     }

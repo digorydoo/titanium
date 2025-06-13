@@ -37,6 +37,14 @@ class CursorGel(kind: Kind): GraphicElement() {
         }
     }
 
+    fun show() {
+        setHiddenOnNextFrameTo = false
+    }
+
+    fun hide() {
+        setHiddenOnNextFrameTo = true
+    }
+
     override fun onRemoveZombie() {
         renderer.free()
     }

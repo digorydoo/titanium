@@ -22,8 +22,8 @@ import ch.digorydoo.titanium.engine.state.StateManager
 import ch.digorydoo.titanium.engine.state.StateManager.RestoredState
 import ch.digorydoo.titanium.engine.texture.TextureManager
 import ch.digorydoo.titanium.engine.ui.dialogue.DlgManager
+import ch.digorydoo.titanium.engine.ui.game_hud.GameHUD
 import ch.digorydoo.titanium.engine.ui.game_menu.GameMenu
-import ch.digorydoo.titanium.engine.ui.game_status.GameStatusBar
 import java.io.File
 
 /**
@@ -46,15 +46,16 @@ abstract class App {
     abstract val state: StateManager
     abstract val textureMgr: TextureManager
 
+    val actions = ActionManager()
     val camera = Camera()
     val collisions = CollisionManager()
     val dlgMgr = DlgManager()
     val editor = Editor()
+    val hud = GameHUD()
     val lamps = LampManager()
     val prefs = PrefsManager()
     val sceneLoader = SceneLoader()
     val sky = Sky()
-    val status = GameStatusBar()
     val time = GameTime()
 
     protected abstract val screenSizeDp: Point2i
@@ -136,6 +137,7 @@ abstract class App {
         val screenHeightDp get() = singleton!!.screenSizeDp.y
         val isAboutToTakeScreenshot get() = singleton!!.isAboutToTakeScreenshot
 
+        val actions get() = singleton!!.actions
         val assets get() = singleton!!.assets
         val bricks get() = singleton!!.content.bricks!!
         val camera get() = singleton!!.camera
@@ -146,6 +148,7 @@ abstract class App {
         val factory get() = singleton!!.factory
         val fonts get() = singleton!!.fontMgr
         val gameMenu get() = singleton!!.gameMenu
+        val hud get() = singleton!!.hud
         val i18n get() = singleton!!.i18n
         val input get() = singleton!!.inputMgr.accessor
         val inputMgr get() = singleton!!.inputMgr
@@ -162,7 +165,6 @@ abstract class App {
         val sound get() = singleton!!.soundMgr
         val spawnMgr get() = singleton!!.spawnMgr
         val state get() = singleton!!.state
-        val status get() = singleton!!.status
         val textures get() = singleton!!.textureMgr
         val time get() = singleton!!.time
 

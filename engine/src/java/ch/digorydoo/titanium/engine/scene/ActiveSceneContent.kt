@@ -3,14 +3,16 @@ package ch.digorydoo.titanium.engine.scene
 import ch.digorydoo.titanium.engine.brick.BrickVolume
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.core.FrameCounter
+import ch.digorydoo.titanium.engine.gel.AbstrPlayerGel
 import ch.digorydoo.titanium.engine.gel.GelLayer
 import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 
 class ActiveSceneContent(startScene: Scene) {
     var bricks: BrickVolume? = null
-    var player: GraphicElement? = null
+    var player: AbstrPlayerGel? = null
     var scene: Scene = startScene
+    var isLoading = false
 
     private val mainCollidableLayer = GelLayer()
     private val mainNonCollidableLayer = GelLayer()
@@ -41,14 +43,15 @@ class ActiveSceneContent(startScene: Scene) {
         App.gameMenu.animate()
         App.editor.animate()
         App.camera.animate()
-        stellarObjectsLayer.animate() // must be after camera
-        App.status.animate()
+        stellarObjectsLayer.animate() // must happen after camera.animate()
+        App.actions.maintain()
+        App.hud.animate() // must happen after actions.maintain()
 
-        if (scene.lightingFollowsStoryTime && adaptLightingCounter.next() == 0) {
-            scene.lighting.adaptToStoryTime()
-        }
+        if (!isLoading) {
+            if (scene.lightingFollowsStoryTime && adaptLightingCounter.next() == 0) {
+                scene.lighting.adaptToStoryTime()
+            }
 
-        if (!App.status.isLoadingScene) {
             App.spawnMgr.spawnGels()
         }
     }

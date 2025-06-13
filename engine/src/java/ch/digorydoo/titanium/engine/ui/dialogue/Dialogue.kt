@@ -8,19 +8,19 @@ import ch.digorydoo.titanium.engine.sound.EngineSampleId
 import ch.digorydoo.titanium.engine.ui.ITEM_MARGIN_BOTTOM
 import ch.digorydoo.titanium.engine.ui.ITEM_MARGIN_TOP
 import ch.digorydoo.titanium.engine.ui.ITEM_SPACING
-import ch.digorydoo.titanium.engine.ui.KeyBtnGel
 import ch.digorydoo.titanium.engine.ui.choice.BoolChoice
 import ch.digorydoo.titanium.engine.ui.choice.Choice
+import ch.digorydoo.titanium.engine.ui.icon.DlgInputIconGel
 import kotlin.math.max
 
 /**
  * Dialogues are created through DlgManager (showDlg, showChoice).
- * A message dialogue has dlgTextGel, buttons.
- * A choice dialogue has items, lastItemIsDismiss, buttons.
+ * A message dialogue has dlgTextGel, icons.
+ * A choice dialogue has items, lastItemIsDismiss, icons.
  */
 class Dialogue(
     private val dlgTextGel: DlgTextGel?, // may or may not be null if this is a choice dlg
-    private val buttons: List<KeyBtnGel>?, // key symbols either belonging to dlg frame or items
+    private val icon: DlgInputIconGel?, // either the dialogue's or an item's dismiss action
     private val choices: List<Choice>?, // items of a choice dialogue
     initHilitedIdx: Int = 0,
     private val lastItemIsDismiss: Boolean,
@@ -43,13 +43,13 @@ class Dialogue(
             updateScrollOffset()
         }
 
-        buttons?.forEach { App.content.add(it, LayerKind.UI_ABOVE_DLG) }
+        icon?.let { App.content.add(it, LayerKind.UI_ABOVE_DLG) }
     }
 
     // Called by DlgManager
     fun onDismiss() {
         dlgTextGel?.setZombie()
-        buttons?.forEach { it.setZombie() }
+        icon?.setZombie()
         choices?.forEach { it.gel?.setZombie() }
     }
 
@@ -192,7 +192,7 @@ class Dialogue(
             val scrollOffset = lerp(topOffset, 0.0f, hilitedIdx.toFloat() / (numChoices - 1))
 
             choices?.forEach { it.gel?.scrollOffset = scrollOffset }
-            buttons?.forEach { it.scrollOffset = scrollOffset }
+            icon?.scrollOffset = scrollOffset
         }
     }
 
@@ -208,7 +208,6 @@ class Dialogue(
         arrayOf(
             "dlgId=$dlgId",
             if (dlgTextGel == null) null else "dlgTextGel=$dlgTextGel",
-            if (buttons == null) null else "#buttons=${buttons.size}",
             if (choices == null) null else "#choices=${choices.size}",
         )
             .filterNotNull()

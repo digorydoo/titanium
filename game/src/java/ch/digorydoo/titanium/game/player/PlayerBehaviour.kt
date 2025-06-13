@@ -132,7 +132,7 @@ class PlayerBehaviour(
 
     companion object {
         private const val WALK_SPEED = 5.0f
-        private const val JUMP_Z_FORCE = 10100.0f
+        private const val JUMP_Z_FORCE = 18100.0f
         private const val JUMP_XY_FORCE = 4096.0f
         private const val WALK_FORCE = 1300.0f
         private const val TOUCHDOWN_MIN_SPEED = -2.77f // speed where touchdown sound has volume 0

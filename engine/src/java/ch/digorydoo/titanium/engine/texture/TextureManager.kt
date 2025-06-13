@@ -13,7 +13,7 @@ interface TextureManager {
         height: Int? = null,
         allowNewlines: Boolean = false,
         lineSpacing: Int = 4, // only applies when allowNewlines is true
-        font: FontName = FontName.SMALL_UI_FONT,
+        font: FontName = FontName.SMALL_HUD_FONT,
         padding: Int = GreyscaleImageBuffer.OUTLINE_RANGE,
         fgColour: Colour = Colour.white,
         bgColour: Colour = Colour.transparent,

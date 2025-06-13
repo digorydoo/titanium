@@ -7,7 +7,7 @@ import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.brick.BrickMaterial
 import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.physics.helper.HitArea
+import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.engine.shader.Renderer
 import kotlin.math.sqrt
@@ -38,26 +38,19 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
     protected var inDialog = Visibility.FROZEN_VISIBLE
     protected var inMenu = Visibility.INVISIBLE
     protected var inEditor = Visibility.FROZEN_VISIBLE
-    private var hidden = false // explicitly hidden gels neither animate nor render
-    private var setHiddenOnNextFrameTo: Boolean? = null // directly controlled by show() and hide()
+    var hidden = false; protected set // explicitly hidden gels neither animate nor render
+    protected var setHiddenOnNextFrameTo: Boolean? = null // sometimes better than directly modifying hidden
     protected var visible = false; private set // will be set during animPhase2() whether this gel will actually render
     protected var visibleOnScreenshots = true
     private var active = true // whether to call onAnimateActive() or onAnimateInactive()
 
     var zombie = false; private set // true=sprite will be removed in the next frame
     var sqrDistanceToCamera = 0.0; private set
+    var encounterRadius = 0.0f; protected set // encounter radius
     protected var allowNegativeZ = false
 
     protected abstract val renderer: Renderer
     internal val vicinity = MutableGelSet()
-
-    fun show() {
-        setHiddenOnNextFrameTo = false
-    }
-
-    fun hide() {
-        setHiddenOnNextFrameTo = true
-    }
 
     fun moveTo(newPos: Point3f) {
         moveTo(newPos.x, newPos.y, newPos.z)
@@ -186,7 +179,12 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
      * Subclasses overriding canCollideWithGels or canCollideWithBricks should always call this method to determine
      * whether the gel is actually able to receive collisions at all.
      */
-    protected fun canCollide(): Boolean = !zombie && !hidden && body != null && spawnPt?.canCollide != false
+    protected fun canCollide(): Boolean {
+        if (zombie || hidden || !active) return false
+        val body = body ?: return false // a body is required
+        val spawnPt = spawnPt ?: return body.gravity // a gel affected by gravity should usually collide
+        return spawnPt.canCollide // let the spawn pt decide
+    }
 
     /**
      * A sword currently held by a character is an example of a gel returning true here but returning false from
@@ -210,7 +208,7 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
     /**
      * Called by CollisionManager when the gel collides with another. The other gel will also get a callback.
      */
-    open fun didCollide(
+    open fun onCollide(
         other: GraphicElement,
         myHit: HitArea,
         otherHit: HitArea,
@@ -222,7 +220,7 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
     /**
      * Called by CollisionManager when the gel collides with a brick.
      */
-    open fun didCollide(
+    open fun onCollide(
         shape: BrickShape,
         material: BrickMaterial,
         myHit: HitArea,
@@ -231,6 +229,21 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
         normalTowardsMe: Point3f,
     ) {
     }
+
+    /**
+     * Both gels must return true here to allow an encounter. The encounter radius is checked separately, and the
+     * implementation of this function should not depend on it as it is irrelevant for other gels encountering this
+     * one. A gel that can be encountered but does not encounter any gels should return true here and have an encounter
+     * radius of 0.
+     */
+    open fun canEncounterOrBeFound(): Boolean = false
+
+    /**
+     * Called when the other gel gets inside this gel's encounter radius. The other gel's encounter radius is
+     * irrelevant. If the other gel has a body, its enclosing radius is taken into account, otherwise the gel's
+     * position is used as a point location. This gel's body and enclosing radius are irrelevant.
+     */
+    open fun onEncounter(other: GraphicElement) {}
 
     override fun toString() =
         zapPackageName(super.toString())

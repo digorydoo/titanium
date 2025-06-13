@@ -33,6 +33,14 @@ class CurrentLocationGel: GraphicElement() {
         antiAliasing = true
     )
 
+    fun show() {
+        setHiddenOnNextFrameTo = false
+    }
+
+    fun hide() {
+        setHiddenOnNextFrameTo = true
+    }
+
     override fun onRemoveZombie() {
         renderer.free()
     }
