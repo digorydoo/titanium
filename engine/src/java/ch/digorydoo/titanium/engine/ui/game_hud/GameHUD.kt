@@ -40,7 +40,7 @@ class GameHUD {
         progressBar = ProgressBarGel(
             posX = (App.screenWidthDp / 2.0f - ProgressBarGel.BAR_MAX_WIDTH / 2.0f).toInt(),
             posY = (App.screenHeightDp - PROGRESS_BAR_BOTTOM_MARGIN - ProgressBarGel.BAR_HEIGHT).toInt(),
-        ).also { App.content.add(it, LayerKind.UI_ABOVE_DLG) }
+        ).also { it.onCreate(LayerKind.UI_ABOVE_DLG) }
 
         // All other gels will be created once the scene has been loaded.
         fpsGel = null
@@ -71,25 +71,25 @@ class GameHUD {
                 alignment = Align.Alignment(anchor = Anchor.BOTTOM_CENTRE, marginBottom = 8, xOffset = 64)
             ).also {
                 it.hide()
-                App.content.add(it, LayerKind.UI_BELOW_DLG)
+                it.onCreate(LayerKind.UI_BELOW_DLG)
             }
         }
 
         compass = CompassGel().also {
             it.hide()
-            App.content.add(it, LayerKind.UI_BELOW_DLG)
+            it.onCreate(LayerKind.UI_BELOW_DLG)
         }
         timeDisplay = TimeDisplayGel().also {
             it.hide()
-            App.content.add(it, LayerKind.UI_BELOW_DLG)
+            it.onCreate(LayerKind.UI_BELOW_DLG)
         }
         actionInputIcon = ActionInputIconGel().also {
             it.hide()
-            App.content.add(it, LayerKind.UI_ABOVE_DLG)
+            it.onCreate(LayerKind.UI_ABOVE_DLG)
         }
         actionTargetArrow = ActionTargetArrowGel().also {
             it.hide()
-            App.content.add(it, LayerKind.UI_BELOW_DLG)
+            it.onCreate(LayerKind.UI_BELOW_DLG)
         }
 
         isShown = false
@@ -113,29 +113,14 @@ class GameHUD {
         isShown = true
     }
 
-    /**
-     * This function is repeatedly called by ActionManager, so make sure it's efficient, esp. when there's no change
-     */
     fun hideAction() {
-        actionInputIcon?.let { if (!it.hidden) it.hide() }
-        actionTargetArrow?.let { if (!it.hidden) it.hide() }
+        actionInputIcon?.hide()
+        actionTargetArrow?.hide()
     }
 
-    /**
-     * This function is repeatedly called by ActionManager, so make sure it's efficient, esp. when there's no change
-     */
     fun showAction(verb: ITextId, target: GraphicElement) {
-        actionInputIcon?.let { icon ->
-            if (icon.hidden || icon.verb != verb) {
-                icon.show(verb)
-            }
-        }
-
-        actionTargetArrow?.let { arrow ->
-            if (arrow.hidden || arrow.target != target) {
-                arrow.show(target)
-            }
-        }
+        actionInputIcon?.show(verb)
+        actionTargetArrow?.show(target)
     }
 
     fun animate() {

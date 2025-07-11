@@ -10,6 +10,7 @@ import ch.digorydoo.titanium.engine.font.FontManager
 import ch.digorydoo.titanium.engine.gel.SpawnManager
 import ch.digorydoo.titanium.engine.i18n.I18nManager
 import ch.digorydoo.titanium.engine.input.InputManager
+import ch.digorydoo.titanium.engine.mesh.MeshManager
 import ch.digorydoo.titanium.engine.physics.CollisionManager
 import ch.digorydoo.titanium.engine.prefs.PrefsManager
 import ch.digorydoo.titanium.engine.scene.ActiveSceneContent
@@ -53,7 +54,9 @@ abstract class App {
     val editor = Editor()
     val hud = GameHUD()
     val lamps = LampManager()
+    val meshes = MeshManager()
     val prefs = PrefsManager()
+    val process = ProcessManager()
     val sceneLoader = SceneLoader()
     val sky = Sky()
     val time = GameTime()
@@ -61,24 +64,7 @@ abstract class App {
     protected abstract val screenSizeDp: Point2i
     protected abstract val dpToGlFactor: Point2f
 
-    class EndOfFrameInfo(val lambda: () -> Unit, var skip: Int)
-
-    private val endOfFrameLambdas = mutableListOf<EndOfFrameInfo>()
     var isAboutToTakeScreenshot = false
-
-    protected fun runEndOfFrameLambdas() {
-        if (endOfFrameLambdas.isNotEmpty()) {
-            endOfFrameLambdas.removeAll {
-                if (it.skip > 0) {
-                    it.skip--
-                    false // don't remove yet
-                } else {
-                    it.lambda()
-                    true // remove
-                }
-            }
-        }
-    }
 
     protected fun detectCrashesAndPutLockFile(): Boolean {
         // The log file should not be set up yet. Anything we log from here should just go to the tty.
@@ -153,8 +139,10 @@ abstract class App {
         val input get() = singleton!!.inputMgr.accessor
         val inputMgr get() = singleton!!.inputMgr
         val lamps get() = singleton!!.lamps
+        val meshes get() = singleton!!.meshes
         val player get() = singleton!!.content.player
         val prefs get() = singleton!!.prefs
+        val process get() = singleton!!.process
         val resolutionMgr get() = singleton!!.resolutionMgr
         val scene get() = singleton!!.content.scene
         val sceneLoader get() = singleton!!.sceneLoader
@@ -176,21 +164,6 @@ abstract class App {
         fun load(scene: Scene, playSound: Boolean = true, restore: RestoredState? = null) {
             val singleton = singleton ?: return
             singleton.sceneLoader.load(scene, playSound, restore)
-        }
-
-        fun handleSceneLoading() {
-            val loader = singleton?.sceneLoader ?: return
-
-            if (loader.needCallback) {
-                loader.callback()
-            }
-        }
-
-        fun runAtEndOfFrame(lambda: () -> Unit) {
-            val singleton = singleton ?: return
-            // We set skip = 2 so that two frames will be skipped. After the scene has been loaded, spawn points will
-            // spawn new gels in the first frame, and we want to wait until all of them have been animated once.
-            singleton.endOfFrameLambdas.add(EndOfFrameInfo(lambda, skip = 2))
         }
 
         fun dpToGlX(dp: Float) = dp * singleton!!.dpToGlFactor.x

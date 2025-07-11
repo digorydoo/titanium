@@ -57,52 +57,6 @@ internal class BlitterRGBA8(
         }
     }
 
-    override fun blit(src: ImageData, dstX: Int, dstY: Int, colourMultiplier: Float) {
-        val dstBuf = imgRGBA8
-        val dstWidth = imgWidth
-        val dstHeight = imgHeight
-
-        require(src.type == ImageData.Type.RGB8) { "Unsupported type: ${src.type}" }
-        val srcBuf = src.buf
-        val srcWidth = src.width
-        val srcHeight = src.height
-
-        // TODO implement proper clipping
-        require(dstX in 0 ..< dstWidth)
-        require(dstX + srcWidth in 0 .. dstWidth)
-        require(dstY in 0 ..< dstHeight)
-        require(dstY + srcHeight in 0 .. dstHeight)
-
-        var dstIdx = (dstY * dstWidth + dstX) * 4
-        val dstRowOffset = dstWidth * 4
-
-        var srcIdx = 0
-        var srcRowOffset = srcWidth * 3
-
-        (dstY ..< dstY + srcHeight).forEach {
-            dstBuf.position(dstIdx)
-            srcBuf.position(srcIdx)
-
-            (dstX ..< dstX + srcWidth).forEach {
-                val r = srcBuf.get()
-                val g = srcBuf.get()
-                val b = srcBuf.get()
-
-                val newR = (r.toUByte().toFloat() * colourMultiplier).toInt().toByte()
-                val newG = (g.toUByte().toFloat() * colourMultiplier).toInt().toByte()
-                val newB = (b.toUByte().toFloat() * colourMultiplier).toInt().toByte()
-
-                dstBuf.put(newR)
-                dstBuf.put(newG)
-                dstBuf.put(newB)
-                dstBuf.put(0xFF.toByte())
-            }
-
-            dstIdx += dstRowOffset
-            srcIdx += srcRowOffset
-        }
-    }
-
     override fun blitScaled(
         src: ImageData,
         dstX: Int,

@@ -7,12 +7,14 @@ import ch.digorydoo.titanium.engine.gel.AbstrPlayerGel
 import ch.digorydoo.titanium.engine.gel.GelLayer
 import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.i18n.EngineTextId
 
 class ActiveSceneContent(startScene: Scene) {
     var bricks: BrickVolume? = null
     var player: AbstrPlayerGel? = null
     var scene: Scene = startScene
-    var isLoading = false
+    var sceneTicket = 0L; private set // incremented each time a scnene is loaded
+    var isLoading = false; private set
 
     private val mainCollidableLayer = GelLayer()
     private val mainNonCollidableLayer = GelLayer()
@@ -31,6 +33,31 @@ class ActiveSceneContent(startScene: Scene) {
     )
 
     private val adaptLightingCounter = FrameCounter.everyNthSecond(SECONDS_BETWEEN_ADAPT_LIGHTING)
+
+    fun beginLoading() {
+        isLoading = true
+        player = null
+        bricks?.free()
+        bricks = null
+        sceneTicket++
+
+        forEachGel { _, gel -> gel.setZombie() }
+
+        scene = object: Scene(
+            id = null,
+            EngineTextId.LOADING,
+            fileNameStem = "",
+            Lighting.fineDay1200,
+            lightingFollowsStoryTime = false,
+            hasSky = false,
+            hasShadows = false,
+        ) {}
+    }
+
+    fun finishLoading() {
+        require(isLoading)
+        isLoading = false
+    }
 
     fun animate() {
         App.dlg.handle()
@@ -100,22 +127,22 @@ class ActiveSceneContent(startScene: Scene) {
         layer(kind).add(gel)
     }
 
-    fun setAllGelsToZombie() {
+    fun forEachGel(lambda: (GelLayer, GraphicElement) -> Unit) {
         allLayers.forEach { layer ->
-            layer.forEachGel(includeNew = true) { it.setZombie() }
+            layer.forEachGel { lambda(layer, it) }
         }
     }
 
-    fun forEachGelInMainLayerIncludingNew(lambda: (gel: GraphicElement) -> Unit) {
-        mainCollidableLayer.forEachGel(includeNew = true, lambda)
-        mainNonCollidableLayer.forEachGel(includeNew = true, lambda)
+    fun forEachGelInMainLayer(lambda: (GraphicElement) -> Unit) {
+        mainCollidableLayer.forEachGel(lambda)
+        mainNonCollidableLayer.forEachGel(lambda)
     }
 
-    fun forEachIndexedGelInCollidableLayer(lambda: (i: Int, gel: GraphicElement) -> Unit) {
+    fun forEachIndexedGelInCollidableLayer(lambda: (Int, GraphicElement) -> Unit) {
         mainCollidableLayer.forEachGelIndexed(lambda)
     }
 
-    fun forEachIndexedGelInCollidableLayer(startIdx: Int, lambda: (i: Int, gel: GraphicElement) -> Unit) {
+    fun forEachIndexedGelInCollidableLayer(startIdx: Int, lambda: (Int, GraphicElement) -> Unit) {
         mainCollidableLayer.forEachGelIndexed(startIdx, lambda)
     }
 

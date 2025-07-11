@@ -1,7 +1,6 @@
 package ch.digorydoo.titanium.game.ui
 
 import ch.digorydoo.titanium.engine.behaviours.Align
-import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import ch.digorydoo.titanium.engine.gel.TextGel
 import ch.digorydoo.titanium.engine.ui.tab.MenuTabPage
@@ -15,7 +14,7 @@ class ProfilePage: MenuTabPage {
             "The ProfilePage",
             alignment = Align.Alignment(marginLeft = 100, marginTop = 110)
         ).also {
-            App.content.add(it, LayerKind.UI_BELOW_DLG)
+            it.onCreate(LayerKind.UI_BELOW_DLG)
             it.hide()
         }
     }

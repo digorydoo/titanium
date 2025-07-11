@@ -27,10 +27,9 @@ internal enum class BrickShapeGroup {
     RAMP_CORNERS,
     RAMP_RUNS,
     STAIRS,
-    STAIR_RUNS,
-    STRAIGHT_STAIRS,
     THICK_CEILING_V_CUTS,
     THICK_FLOOR_V_CUTS,
+    THICK_STAIRS,
     THICK_WALLS,
     THICK_WALLS_REGULAR,
     THICK_WALLS_TOP,
@@ -116,8 +115,7 @@ internal enum class BrickShapeGroup {
             RAMP_CORNERS,
         )
         STAIRS -> listOf(
-            STAIR_RUNS,
-            STRAIGHT_STAIRS,
+            THICK_STAIRS,
             WINDING_STAIRS,
         )
         THICK_WALLS -> listOf(
@@ -264,17 +262,19 @@ internal enum class BrickShapeGroup {
             RAMP_RUN_SOUTH,
             RAMP_RUN_WEST,
         )
-        STAIR_RUNS -> listOf(
-            STAIRS_RUN_EAST,
-            STAIRS_RUN_NORTH,
-            STAIRS_RUN_SOUTH,
-            STAIRS_RUN_WEST,
-        )
-        STRAIGHT_STAIRS -> listOf(
-            STRAIGHT_STAIRS_EAST,
-            STRAIGHT_STAIRS_NORTH,
-            STRAIGHT_STAIRS_SOUTH,
-            STRAIGHT_STAIRS_WEST,
+        THICK_STAIRS -> listOf(
+            THICK_STAIRS_11_EAST,
+            THICK_STAIRS_11_NORTH,
+            THICK_STAIRS_11_SOUTH,
+            THICK_STAIRS_11_WEST,
+            THICK_STAIRS_32_LOWER_EAST,
+            THICK_STAIRS_32_LOWER_NORTH,
+            THICK_STAIRS_32_LOWER_SOUTH,
+            THICK_STAIRS_32_LOWER_WEST,
+            THICK_STAIRS_32_UPPER_EAST,
+            THICK_STAIRS_32_UPPER_NORTH,
+            THICK_STAIRS_32_UPPER_SOUTH,
+            THICK_STAIRS_32_UPPER_WEST,
         )
         THICK_WALLS_REGULAR -> listOf(
             THICK_WALL_EAST,

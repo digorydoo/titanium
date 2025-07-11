@@ -20,6 +20,7 @@ class ActionManager {
     )
 
     private val actions = mutableListOf<Action>()
+    private var shownAction: Action? = null
 
     fun register(verb: ITextId, target: GraphicElement, delegate: ActionDelegate) {
         val oldAction = actions.find { it.target == target }
@@ -55,8 +56,6 @@ class ActionManager {
             val py = playerPos.y
             val pz = playerPos.z
 
-            // FIXME this currently does not work correctly, because player's rotationPhi is just camera...
-
             val playerPhi = player.rotationPhi
 
             var closestSqrDistToIdealSpot = Float.POSITIVE_INFINITY
@@ -81,9 +80,20 @@ class ActionManager {
         }
 
         if (closestAction == null) {
-            App.hud.hideAction()
-        } else {
+            if (shownAction != null) {
+                Log.info(TAG, "Hiding action")
+                shownAction = null
+                App.hud.hideAction()
+            }
+        } else if (closestAction != shownAction) {
+            Log.info(TAG, "Showing action ${closestAction.verb}")
             App.hud.showAction(closestAction.verb, closestAction.target)
+            shownAction = closestAction
+        } else if (App.input.selectBtn.pressedOnce) {
+            Log.info(TAG, "Action input button pressed")
+            App.hud.hideAction()
+            shownAction = null
+            closestAction.delegate.onSelect(closestAction)
         }
     }
 

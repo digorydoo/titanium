@@ -6,7 +6,7 @@ import ch.digorydoo.titanium.engine.i18n.ITextId
 class TextChoice(
     override val itemText: String,
     override val autoDismiss: Boolean,
-    private val onSelectLambda: () -> Unit,
+    val onSelect: () -> Unit,
 ): Choice() {
     constructor(itemText: String, onSelect: () -> Unit):
         this(itemText, true, onSelect)
@@ -16,10 +16,4 @@ class TextChoice(
 
     constructor(itemText: ITextId, autoDismiss: Boolean, onSelect: () -> Unit):
         this(App.i18n.getString(itemText), autoDismiss, onSelect)
-
-    override val canSelect = true
-
-    override fun onSelect() {
-        onSelectLambda()
-    }
 }

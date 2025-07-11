@@ -64,18 +64,14 @@ class BrickSubvolume(private val volume: BrickVolume, models: BrickModelHolder, 
     fun getShape(subRelativeCoords: Point3i, acrossBounds: Boolean = false) =
         getShape(subRelativeCoords.x, subRelativeCoords.y, subRelativeCoords.z, acrossBounds)
 
-    fun getShape(subRelX: Int, subRelY: Int, subRelZ: Int, acrossBounds: Boolean = false): BrickShape? =
+    fun getShape(subRelX: Int, subRelY: Int, subRelZ: Int, acrossBounds: Boolean = false): BrickShape =
         if (isInBounds(subRelX, subRelY, subRelZ)) {
-            buffer.getShape(subRelX, subRelY, subRelZ)
+            buffer.getShape(subRelX, subRelY, subRelZ) ?: BrickShape.NONE
         } else if (!acrossBounds) {
-            null
+            BrickShape.NONE
         } else {
             volume.getAtBrickCoord(box.x0 + subRelX, box.y0 + subRelY, box.z0 + subRelZ, tempBrick)
-            if (tempBrick.isValid()) {
-                tempBrick.shape
-            } else {
-                null
-            }
+            tempBrick.shape
         }
 
     fun getMaterial(subRelX: Int, subRelY: Int, subRelZ: Int, acrossBounds: Boolean = false): BrickMaterial? =

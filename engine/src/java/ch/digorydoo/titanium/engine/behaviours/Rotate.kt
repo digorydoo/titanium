@@ -3,6 +3,7 @@ package ch.digorydoo.titanium.engine.behaviours
 import ch.digorydoo.kutils.math.decel
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
+import kotlin.math.PI
 
 /**
  * This class implements a gel behaviour that rotates a gel once (with a given duration) or perpetually (when duration
@@ -43,7 +44,7 @@ class Rotate(
                 delegate.rotation = phase
                 isRotating = false
             } else {
-                delegate.rotation = phase + decel(relTime, 1.3f) * 2.0f * Math.PI.toFloat()
+                delegate.rotation = phase + decel(relTime, 1.3f) * 2.0f * PI.toFloat()
             }
         }
     }

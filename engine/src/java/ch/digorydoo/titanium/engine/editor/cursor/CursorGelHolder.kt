@@ -3,7 +3,6 @@ package ch.digorydoo.titanium.engine.editor.cursor
 import ch.digorydoo.kutils.box.Boxi
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.titanium.engine.brick.BrickVolume.Companion.brickToWorld
-import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.editor.cursor.CursorGel.Kind.*
 import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 
@@ -32,15 +31,15 @@ class CursorGelHolder {
         // The cursor is part of the scene and checks depth values. Hence, it cannot be in the UI_BELOW_DLG layer,
         // otherwise transparent objects (which render before UI) would hide the cursor when they're in front.
 
-        cursorUpperNW = CursorGel(UPPER_NW).also { App.content.add(it, LayerKind.MAIN_NON_COLLIDABLE) }
-        cursorUpperNE = CursorGel(UPPER_NE).also { App.content.add(it, LayerKind.MAIN_NON_COLLIDABLE) }
-        cursorUpperSW = CursorGel(UPPER_SW).also { App.content.add(it, LayerKind.MAIN_NON_COLLIDABLE) }
-        cursorUpperSE = CursorGel(UPPER_SE).also { App.content.add(it, LayerKind.MAIN_NON_COLLIDABLE) }
+        cursorUpperNW = CursorGel(UPPER_NW).also { it.onCreate(LayerKind.MAIN_NON_COLLIDABLE) }
+        cursorUpperNE = CursorGel(UPPER_NE).also { it.onCreate(LayerKind.MAIN_NON_COLLIDABLE) }
+        cursorUpperSW = CursorGel(UPPER_SW).also { it.onCreate(LayerKind.MAIN_NON_COLLIDABLE) }
+        cursorUpperSE = CursorGel(UPPER_SE).also { it.onCreate(LayerKind.MAIN_NON_COLLIDABLE) }
 
-        cursorLowerNW = CursorGel(LOWER_NW).also { App.content.add(it, LayerKind.MAIN_NON_COLLIDABLE) }
-        cursorLowerNE = CursorGel(LOWER_NE).also { App.content.add(it, LayerKind.MAIN_NON_COLLIDABLE) }
-        cursorLowerSW = CursorGel(LOWER_SW).also { App.content.add(it, LayerKind.MAIN_NON_COLLIDABLE) }
-        cursorLowerSE = CursorGel(LOWER_SE).also { App.content.add(it, LayerKind.MAIN_NON_COLLIDABLE) }
+        cursorLowerNW = CursorGel(LOWER_NW).also { it.onCreate(LayerKind.MAIN_NON_COLLIDABLE) }
+        cursorLowerNE = CursorGel(LOWER_NE).also { it.onCreate(LayerKind.MAIN_NON_COLLIDABLE) }
+        cursorLowerSW = CursorGel(LOWER_SW).also { it.onCreate(LayerKind.MAIN_NON_COLLIDABLE) }
+        cursorLowerSE = CursorGel(LOWER_SE).also { it.onCreate(LayerKind.MAIN_NON_COLLIDABLE) }
     }
 
     fun destroyGels() {

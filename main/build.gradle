@@ -35,6 +35,7 @@ dependencies {
     implementation project(':engine')
     implementation project(':game')
     implementation project(":kutils")
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$COROUTINES_VERSION"
 
     // To learn what libaries are available for LWJGL, see:
     // https://www.lwjgl.org/customize

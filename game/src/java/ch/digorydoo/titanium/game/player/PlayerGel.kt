@@ -11,12 +11,13 @@ import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCapsuleBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
-import ch.digorydoo.titanium.engine.texture.FrameCollection
+import ch.digorydoo.titanium.engine.sprite.FrameCollection
 import ch.digorydoo.titanium.engine.utils.Direction
 
 class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): AbstrPlayerGel(initialPos) {
     init {
         bodyPosOffset.set(0.0f, 0.0f, BODY_HEIGHT / 2.0f)
+        callOnCreateConcurrently = true
     }
 
     override val body = FixedCapsuleBody(
@@ -33,32 +34,45 @@ class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): AbstrPlayerGel(
     private val frames = FrameCollection()
     private val frameOrigin = MutablePoint2f()
     private val frameScaleFactor = MutablePoint2f()
-    private val frameMgr = PlayerFrameManager(frames)
+    private val frameCycles = PlayerFrameCycles(frames)
 
-    private val playerBehaviour = PlayerBehaviour(this, frameMgr)
+    private val playerBehaviour = PlayerBehaviour(this, frameCycles, initialRotationPhi)
 
     private val turnProps = object: TurnTowardsCamera.Delegate() {
-        override var rotationPhi = initialRotationPhi
+        override var rotationPhi = 0.0f // this is the rotation of the paper, not the player's orientation
     }
 
     private val turnTowardsCamera = TurnTowardsCamera(turnProps, keepUpright = true)
-    override val rotationPhi get() = turnProps.rotationPhi
+    override val rotationPhi get() = playerBehaviour.orientation
 
     override val allowActions = true
+
+    override suspend fun onCreateConcurrently(): () -> Unit {
+        // We're inside a coroutine.
+        val img = App.textures.getOrLoadImageDataAsync(TEX_FILENAME)
+        return {
+            // We're back in the main thread.
+            frames.setTexture(img, 22, 11) // also sets frameSize
+            frameScaleFactor.x = 1.1f / 32
+            frameScaleFactor.y = 1.5f / 32 // slightly larger, because camera usually is from above
+            frameOrigin.set(renderProps.frameSize.x / 2, renderProps.frameSize.y)
+            frameCycles.turn(Direction.SE)
+        }
+    }
 
     override fun onAnimateActive() {
         playerBehaviour.animate()
         turnTowardsCamera.animate()
-        frameMgr.cycle?.animate()
+        frameCycles.cycle?.animate()
     }
 
     private val renderProps = object: PaperRenderer.Delegate() {
-        override val renderPos get() = this@PlayerGel.pos
-        override val frameSize get() = frames.frameSize
+        override val renderPos = this@PlayerGel.pos // shared mutable object
+        override val frameSize = frames.frameSize // shared mutable object
         override val tex get() = frames.tex
-        override val texOffset get() = frames.texOffset
-        override val origin get() = this@PlayerGel.frameOrigin
-        override val scaleFactor get() = this@PlayerGel.frameScaleFactor
+        override val texOffset = frames.texOffset // shared mutable object
+        override val origin = this@PlayerGel.frameOrigin // shared mutable object
+        override val scaleFactor = this@PlayerGel.frameScaleFactor // shared mutable object
         override val rotationPhi get() = turnProps.rotationPhi
         override val rotationRho get() = turnProps.rotationRho
     }
@@ -82,14 +96,6 @@ class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): AbstrPlayerGel(
 
     override val renderer = App.factory.createPaperRenderer(renderProps)
 
-    init {
-        frames.setTexture("sprite-player.png", 22, 11) // sets frameSize
-        frameScaleFactor.x = 1.1f / 32
-        frameScaleFactor.y = 1.5f / 32 // slightly larger, because camera usually is from above
-        frameOrigin.set(renderProps.frameSize.x / 2, renderProps.frameSize.y)
-        frameMgr.turn(Direction.SE)
-    }
-
     override fun canEncounterOrBeFound() = true
 
     override fun onEncounter(other: GraphicElement) {
@@ -110,5 +116,6 @@ class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): AbstrPlayerGel(
 
     companion object {
         private const val BODY_HEIGHT = 1.6f
+        private const val TEX_FILENAME = "sprite-player.png"
     }
 }

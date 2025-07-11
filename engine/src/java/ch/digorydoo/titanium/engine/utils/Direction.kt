@@ -1,7 +1,9 @@
 package ch.digorydoo.titanium.engine.utils
 
+import ch.digorydoo.kutils.math.normAngle
 import ch.digorydoo.kutils.point.Point2f
 import ch.digorydoo.kutils.point.Point3f
+import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.max
@@ -23,11 +25,6 @@ enum class Direction {
         val upVector = Point3f(0.0f, 0.0f, 1.0f)
         val downVector = Point3f(0.0f, 0.0f, -1.0f)
 
-        val northVector2D = Point2f(-1.0f, 0.0f)
-        val eastVector2D = Point2f(0.0f, 1.0f)
-        val southVector2D = Point2f(1.0f, 0.0f)
-        val westVector2D = Point2f(0.0f, -1.0f)
-
         fun fromVector(pt: Point2f, offset: Float) =
             fromVector(pt.x, pt.y, offset)
 
@@ -41,26 +38,23 @@ enum class Direction {
             var rho = atan2(-y, x) // rho is -PI..+PI
 
             if (offset != 0.0f) {
-                rho += offset
-
-                while (rho > Math.PI) {
-                    rho -= 2.0f * Math.PI.toFloat()
-                }
-
-                while (rho < -Math.PI) {
-                    rho += 2.0f * Math.PI.toFloat()
-                }
+                rho = normAngle(rho + offset)
             }
 
+            return fromAngle(rho)
+        }
+
+        fun fromAngle(rho: Float): Direction {
+            require(rho in -PI .. PI) // callers are required to call normDir() if necessary
             return when {
-                rho >= Math.PI * (1 - 1 / 8.0) -> WEST
-                rho >= Math.PI * (1 / 2.0 + 1 / 8.0) -> NW
-                rho >= Math.PI * (1 / 4.0 + 1 / 8.0) -> NORTH
-                rho >= Math.PI * (1 / 8.0) -> NE
-                rho >= -Math.PI * (1 / 8.0) -> EAST
-                rho >= -Math.PI * (1 / 4.0 + 1 / 8.0) -> SE
-                rho >= -Math.PI * (1 / 2.0 + 1 / 8.0) -> SOUTH
-                rho >= -Math.PI * (1 - 1 / 8.0) -> SW
+                rho >= PI * (1 - 1 / 8.0) -> WEST
+                rho >= PI * (1 / 2.0 + 1 / 8.0) -> NW
+                rho >= PI * (1 / 4.0 + 1 / 8.0) -> NORTH
+                rho >= PI * (1 / 8.0) -> NE
+                rho >= -PI * (1 / 8.0) -> EAST
+                rho >= -PI * (1 / 4.0 + 1 / 8.0) -> SE
+                rho >= -PI * (1 / 2.0 + 1 / 8.0) -> SOUTH
+                rho >= -PI * (1 - 1 / 8.0) -> SW
                 else -> WEST
             }
         }

@@ -11,7 +11,7 @@ class Sky {
     // Called by SceneLoader asynchronously.
     fun load() {
         skydome = Skydome()
-        sun = SunGel()
+        sun = SunGel().also { it.onCreate(null) }
     }
 
     fun enable() {

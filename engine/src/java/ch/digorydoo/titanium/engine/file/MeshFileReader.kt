@@ -17,6 +17,9 @@ import ch.digorydoo.titanium.engine.texture.Texture
 import java.io.File
 import java.nio.FloatBuffer
 
+/**
+ * This class must be thread-safe!
+ */
 class MeshFileReader private constructor(private val input: MyDataInputStream) {
     private class IncompleteGeometry(private val owner: IncompleteMesh) {
         var positions: IntArray? = null
@@ -273,8 +276,11 @@ class MeshFileReader private constructor(private val input: MyDataInputStream) {
     companion object {
         private val TAG = Log.Tag("MeshFileReader")
 
-        fun readFile(fileName: String): Mesh {
-            val path = App.assets.pathToMesh(fileName)
+        /**
+         * This function is internal, because callers should generally go through App.meshes.
+         */
+        internal fun readFile(fileName: String): Mesh {
+            val path = App.assets.pathToMesh(fileName) // read-only access is thread-safe
             val file = File(path)
             val mesh = MyDataInputStream.use(file) {
                 MeshFileReader(it).read()

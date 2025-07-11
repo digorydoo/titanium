@@ -5,6 +5,7 @@ import ch.digorydoo.titanium.engine.i18n.EngineTextId
 import ch.digorydoo.titanium.engine.input.gamepad.GamepadBtn
 import ch.digorydoo.titanium.engine.prefs.PrefsMenu
 import ch.digorydoo.titanium.engine.ui.button.ButtonArea
+import ch.digorydoo.titanium.engine.ui.game_menu.GameMenu.Companion.TOP_AREA_HEIGHT
 import ch.digorydoo.titanium.engine.ui.tab.MenuTabPage
 import ch.digorydoo.titanium.game.i18n.GameTextId
 import ch.digorydoo.titanium.game.s000_start.StartScene
@@ -87,6 +88,6 @@ class OptionsPage: MenuTabPage {
 
     companion object {
         private const val BTN_AREA_LEFT = 64
-        private const val BTN_AREA_TOP = 128
+        private const val BTN_AREA_TOP = TOP_AREA_HEIGHT + 64
     }
 }

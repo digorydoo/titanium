@@ -15,6 +15,7 @@ abstract class Assets {
     abstract fun initialize()
     fun pathToFont(name: String) = joinPath(assetsDir, "fonts", name)
     fun pathToGelList(name: String) = joinPath(assetsDir, "gellists", name)
+    fun pathToHeightMap(name: String) = joinPath(assetsDir, "heightmaps", name)
     fun pathToMesh(name: String) = joinPath(assetsDir, "mesh", name)
     fun pathToPlayfield(name: String) = joinPath(assetsDir, "playfields", name)
     fun pathToPrefs(name: String) = joinPath(prefsDir, name)

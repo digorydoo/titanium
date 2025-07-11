@@ -1,5 +1,6 @@
 package ch.digorydoo.titanium.main.app
 
+import ch.digorydoo.kutils.point.Point2i
 import ch.digorydoo.kutils.string.toPrecision
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.core.App
@@ -16,8 +17,8 @@ class ScreenshotManagerImpl: ScreenshotManager() {
     fun takeIfNecessary(window: Long) {
         if (listeners.isNotEmpty()) {
             if (App.singleton?.isAboutToTakeScreenshot != true) {
-                // Skip this frame, take the screenshot on the next frame. We do this, because some UI gels may not have
-                // had the time for properly hide themselves.
+                // Skip this frame, take the screenshot on the next frame. We do this, because some UI gels may not
+                // have had the time for properly hide themselves.
                 App.singleton?.isAboutToTakeScreenshot = true
             } else {
                 App.singleton?.isAboutToTakeScreenshot = false
@@ -30,8 +31,21 @@ class ScreenshotManagerImpl: ScreenshotManager() {
 
     private fun getScreenshot(window: Long): ImageData {
         val raw = getRawScreenshot(window) // upside-down and may contain the black areas at the sides
-        val cropped = flipYAndCrop(raw) // may still have the wrong aspect-ratio if stretchViewport is enabled
-        return scaleAndStretch(cropped) // has our FIXED_ASPECT_RATIO
+        var ar = raw.width.toFloat() / raw.height
+        Log.info(TAG, "Took screenshot of size ${raw.width}x${raw.height} (16:${(16 / ar).toPrecision(1)})")
+
+        val result = if (App.prefs.stretchViewport) {
+            // There are no black stripes, but we still have to flip the image and ensure the correct aspect ratio.
+            val flipped = flipYAndCrop(raw, raw.width, raw.height)
+            stretchToAspectRatio(flipped)
+        } else {
+            val sz = getCropSize(raw.width, raw.height)
+            flipYAndCrop(raw, sz.x, sz.y)
+        }
+
+        ar = result.width.toFloat() / result.height
+        Log.info(TAG, "Returning ${result.width}x${result.height} (16:${(16 / ar).toPrecision(1)})")
+        return result
     }
 
     private fun getRawScreenshot(window: Long): ImageData {
@@ -40,8 +54,6 @@ class ScreenshotManagerImpl: ScreenshotManager() {
         glfwGetFramebufferSize(window, widthArr, heightArr)
         val rawWidth = widthArr[0]
         val rawHeight = heightArr[0]
-
-        Log.info(TAG, "Taking screenshot of size ${rawWidth}x${rawHeight}")
 
         val rawBuf = ByteBuffer.allocateDirect(rawWidth * rawHeight * 3).apply {
             order(ByteOrder.nativeOrder())
@@ -55,51 +67,37 @@ class ScreenshotManagerImpl: ScreenshotManager() {
         return ImageData(rawBuf, ImageData.Type.RGB8, rawWidth, rawHeight)
     }
 
-    private fun flipYAndCrop(raw: ImageData): ImageData {
+    private fun getCropSize(imgWidth: Int, imgHeight: Int): Point2i {
         val app = App.singleton as AppImpl
+        val resolutionMgr = app.resolutionMgr
+        val physicalAspectRatio = resolutionMgr.physicalAspectRatio
+        val imgAspectRatio = imgWidth.toFloat() / imgHeight
 
-        val croppedWidth: Int
-        val croppedHeight: Int
-
-        if (app.prefs.stretchViewport) {
-            // Nothing to crop.
-            croppedWidth = raw.width
-            croppedHeight = raw.height
-        } else {
-            val resolutionMgr = app.resolutionMgr
-            val physicalAspectRatio = resolutionMgr.physicalAspectRatio
-            val fbAspectRatio = raw.width.toFloat() / raw.height
-
-            val relAspectRatio =
-                if (fbAspectRatio < physicalAspectRatio) {
-                    physicalAspectRatio / fbAspectRatio
-                } else {
-                    fbAspectRatio / physicalAspectRatio
-                }
-
-            Log.info(TAG, "   framebuf aspect ratio 16:${(16 / fbAspectRatio).toPrecision(1)}")
-            Log.info(TAG, "   physical aspect ratio 16:${(16 / physicalAspectRatio).toPrecision(1)}")
-            Log.info(TAG, "   rel=$relAspectRatio")
-
-            val fitAspectRatio = fbAspectRatio * relAspectRatio
-
-            // The screenshot we took has the size of the framebuffer, which includes the black stripes that may appear
-            // when the aspect ratio is not our FIXED_ASPECT_RATIO. Clip away those stripes.
-
-            if (fitAspectRatio > FIXED_ASPECT_RATIO) {
-                // The window is too wide, i.e. there are black stripes to the left and right.
-                croppedWidth = (raw.height.toFloat() * FIXED_ASPECT_RATIO / relAspectRatio).toInt()
-                croppedHeight = raw.height
+        val relAspectRatio =
+            if (imgAspectRatio < physicalAspectRatio) {
+                physicalAspectRatio / imgAspectRatio
             } else {
-                // The window is too high, i.e. there are black stripes at the top and bottom.
-                croppedWidth = raw.width
-                croppedHeight = (raw.width.toFloat() / FIXED_ASPECT_RATIO / relAspectRatio).toInt()
+                imgAspectRatio / physicalAspectRatio
             }
+
+        val fitAspectRatio = imgAspectRatio * relAspectRatio
+
+        return if (fitAspectRatio > FIXED_ASPECT_RATIO) {
+            // The window is too wide, i.e. there are black stripes to the left and right.
+            Point2i(
+                (imgHeight.toFloat() * FIXED_ASPECT_RATIO / relAspectRatio).toInt(),
+                imgHeight
+            )
+        } else {
+            // The window is too high, i.e. there are black stripes at the top and bottom.
+            Point2i(
+                imgWidth,
+                (imgWidth.toFloat() / FIXED_ASPECT_RATIO / relAspectRatio).toInt()
+            )
         }
+    }
 
-        Log.info(TAG, "   cropping it to ${croppedWidth}x${croppedHeight}")
-        Log.info(TAG, "   croppedPixels is 16:${(16 / (croppedWidth.toFloat() / croppedHeight)).toPrecision(1)}")
-
+    private fun flipYAndCrop(raw: ImageData, croppedWidth: Int, croppedHeight: Int): ImageData {
         val croppedBuf = ByteBuffer.allocateDirect(croppedWidth * croppedHeight * 3).apply {
             order(ByteOrder.nativeOrder())
         }
@@ -116,8 +114,6 @@ class ScreenshotManagerImpl: ScreenshotManager() {
             Log.warn(TAG, "dy is negative: $dy")
             dy = 0
         }
-
-        // This also flips the image, because GL returns it upside-down.
 
         val srcBuf = raw.buf
         var srcIdx = ((raw.height - 1 - dy) * raw.width + dx) * 3
@@ -139,22 +135,19 @@ class ScreenshotManagerImpl: ScreenshotManager() {
         return ImageData(croppedBuf, ImageData.Type.RGB8, croppedWidth, croppedHeight)
     }
 
-    fun scaleAndStretch(src: ImageData): ImageData {
-        // The screenshot is currently used in two locations:
-        //    * by GameMenu as a background, and
-        //    * by ButtonBuilder as a thumbnail for SaveGameMenu.
-        // Both do not need the screenshot in full quality, so we can make the width quite small. The width affects
-        // performance of the blurring done by GameMenu.
+    fun stretchToAspectRatio(src: ImageData): ImageData {
+        val newHeight = (src.width.toFloat() / FIXED_ASPECT_RATIO).toInt()
 
-        val smallWidth = 640
-        val smallHeight = (smallWidth.toFloat() / FIXED_ASPECT_RATIO).toInt()
+        if (newHeight == src.height) {
+            return src
+        }
 
-        val smallerBuf = ByteBuffer.allocateDirect(smallWidth * smallHeight * 3).apply {
+        val newBuf = ByteBuffer.allocateDirect(src.width * newHeight * 3).apply {
             order(ByteOrder.nativeOrder())
         }
 
-        return ImageData(smallerBuf, ImageData.Type.RGB8, smallWidth, smallHeight).apply {
-            drawImageScaled(src, 0, 0, smallWidth, smallHeight, antiAliasing = false)
+        return ImageData(newBuf, ImageData.Type.RGB8, src.width, newHeight).apply {
+            drawImageScaled(src, 0, 0, src.width, newHeight, antiAliasing = false)
         }
     }
 

@@ -9,7 +9,7 @@ import ch.digorydoo.titanium.engine.i18n.EngineTextId
 import ch.digorydoo.titanium.engine.ui.choice.Choice
 import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 
-class BrickMaterialMenu(private val actions: EditorActions) {
+internal class BrickMaterialMenu(private val actions: EditorActions) {
     fun show(initial: BrickMaterial, isTopLevel: Boolean, onCancel: () -> Unit) {
         show(
             BrickMaterialGroup.ROOT,

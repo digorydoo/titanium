@@ -22,7 +22,8 @@ class BrickVolumeFileReader private constructor(
         val zsize = stream.readUInt16().toInt()
         stream.readExpected(END_HEADER)
 
-        val tex = App.textures.getOrCreateTexture(texFileName)!!
+        val img = App.textures.getOrLoadImageDataSync(texFileName)
+        val tex = App.textures.getOrCreateTexture(img)
         val volume = BrickVolume(xsize, ysize, zsize, brickVolumeFileName, tex)
         val brick = Brick()
 

@@ -2,15 +2,33 @@
 
 ## Backlog
 
-* Gel actions
-    * ActionManager: rotationPhi currently does not work correctly, because player's rotationPhi is just camera...
-
 * Bugs
+    * Height map cannot be loaded when first created, because they are created in the developer assets folder!
     * Log: "Unloading all 3450 of non-shared programmes..." BrickVolumeRendererImpl should be created by BrickVolume,
       not by BrickSubvolume!
     * Umlauts in German start menu suddenly work, why?!
     * Railing 2 has strange lighting issue across instances (see level)
     * Sometimes keyboard strokes get lost (when frame takes too long, or stroke is hit too quickly)
+    * Jumping (CMD) + Camera H hides the application... How is it when standalone?
+    * Haloes of street lamp behind street lamp get clipped, because transparent gels are not sorted
+    * Fix incorrect tex coords with ThickStairsModel
+
+* Height maps
+    * Implement tesselating height map as Mesh, and rendering it
+    * Implement editing height map via editor
+    * Save modified height maps along with gel list
+    * The editor should ensure that the height of the lowest grid point should always stay zero, and automatically
+      moving the spawn point accordingly if height values are moved accordingly. The reason for this is that the
+      height map could otherwise drift from its spawn point. Also, the height map's RigidBody will need a bounding
+      box, which can be computed slightly faster if it is known that the lowest point must have a height of 0.
+    * The spawn pt should have properties for rotating in all direction, scaling in x, y, z, and material
+    * Height maps need their own kind of RigidBody; physics needs new CollisionStrategies
+    * The underside of a height map is always culled, therefore they should always be LARGE_MASS
+    * Height maps should skip vertices when viewed from a distance (implies that height maps should never be used to
+      cover a very large area, because skipping vertices only in a portion would make the algorithm complicated to get
+      a seam without any holes)
+    * Add a mode to import-assets to check whether a height map was abandoned (not found in any gel list). Call this
+      from post-build.sh and make-proper.sh. It should only be a warning, not an error.
 
 * Materials
     * Ideally, MeshMaterial and BrickMaterial should be merged, and both should use the same shaders
@@ -29,35 +47,11 @@
     * Make editor menu a page in game menu, because it's confusing to have two menus. Allow entering edit mode from that
       menu.
     * Implement undo for spawn pt actions (serialize spawn pt, restore)
-    * Editor should delete neighouring bricks that get enclosed while drawing... or shouldn't it?
 
 * Physics
     * Sometimes a ball just stops on the floor with no rebound at all. It does not seem to be caused by hopping
       prevention, so what's the cause?
     * Implement angular momentum for spheres
-
-* Height maps
-    * Implement height maps as gels
-    * Requires a new editor mode that allows for
-        * changing the height of each grid point
-        * smoothing the height map around a grid point
-        * smoothing the entire height map uniformly
-        * adding a wave function
-    * The editor should ensure that the height of the lowest grid point should always stay zero, and automatically
-      moving the spawn point accordingly if height values are moved accordingly. The reason for this is that the
-      height map could otherwise drift from its spawn point. Also, the height map's RigidBody will need a bounding
-      box, which can be computed slightly faster if it is known that the lowest point must have a height of 0.
-    * The spawn pt should have properties for rotating in all direction, scaling in x, y, z, and material
-    * The grid size (XY) of a height map must be specified when creating it; the editor may implement resizing later by
-      either cropping or resampling the height map data
-    * The renderer of a height map should ideally be the same as MeshRenderer, using the same shaders
-    * Height maps need their own kind of RigidBody; physics needs new CollisionStrategies
-    * The underside of a height map is always culled, therefore the position should stay fixed. To ensure this, the
-      mass of a height map should always be LARGE_MASS (mass not even available in constructor of HeightMapBody). This
-      also means that height maps can never collide with bricks.
-    * Height maps should skip vertices when viewed from a distance (implies that height maps should never be used to
-      cover a very large area, because skipping vertices only in a portion would make the algorithm complicated to get
-      a seam without any holes)
 
 * Shadows
     * Optimise shadow implementation
@@ -73,10 +67,6 @@
         * Use geometry shader like in https://learnopengl.com/Guest-Articles/2021/CSM
 
     * Improve shadows by blurring it; but not all materials (requires four shadow texel lookups)
-
-* Game/town
-    * Design a male NPC
-    * Design a female NPC
 
 * Dialogues and fonts
     * The story time should be paused while the gameMenu or a dialog is active
@@ -124,17 +114,6 @@
 
 * Spawn points
     * Automatic spawning should be deactivated when a gel crashes during spawning, to prevent from flooding the log
-
-* Deferred gel initialisation
-    * Gels need to load textures, meshes and shaders when they are spawned. Doing this from the game loop creates a
-      frame drop, so this should always be done from a coroutine.
-    * Spawn pts should not immediately return the gel; instead, they should take a lambda onCreated(gel)
-    * Gels must override an abstract function initConcurrently(), which is called within a coroutine
-    * The spawn pt should not add the gel to the layer until it has finished loading
-    * Textures, meshes and renderer can be declared as lateinit, since the gel should not be known to anyone until it
-      finished loading and is added to the layer
-    * The lambda onCreated is always called from main thread, i.e. needs a place somewhere within the game loop
-    * This is similar to handleLoadingScene. Can this concept be generalised?
 
 * Apply bone transformations
     * Whole object is rendered at once; no matrix stack needed
@@ -217,10 +196,6 @@
     * Java ImageBuffer is bloated and complicated; my own routines are slow. Is there a good alternative? (Actually
       do some performance measurement first to check what part is slow. Mostly noticable when opening a dialogue with
       many items.)
-
-* Mesh gels
-    * Mesh files should be kept in a pool, because some meshes are reused by several gels, or several instances of a
-      gel. But is freeing them only at scene loading time enough?
 
 * Bricks
     * Add new brick shapes

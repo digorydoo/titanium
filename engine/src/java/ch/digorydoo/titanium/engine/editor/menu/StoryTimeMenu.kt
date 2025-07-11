@@ -6,7 +6,7 @@ import ch.digorydoo.titanium.engine.editor.action.EditorActions
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
 import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 
-class StoryTimeMenu(private val actions: EditorActions) {
+internal class StoryTimeMenu(private val actions: EditorActions) {
     fun show(isTopLevel: Boolean, onCancel: () -> Unit) {
         show(playSoundOnOpen = isTopLevel, playSoundOnDismiss = isTopLevel, onCancel)
     }

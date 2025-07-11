@@ -7,6 +7,7 @@ import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.shader.Renderer.BlendMode
+import ch.digorydoo.titanium.engine.texture.Texture
 
 class SunGel: GraphicElement() {
     init {
@@ -14,6 +15,7 @@ class SunGel: GraphicElement() {
         inMenu = Visibility.INVISIBLE
         inEditor = Visibility.ACTIVE
         allowNegativeZ = true
+        callOnCreateConcurrently = true
     }
 
     private val turnProps = object: TurnTowardsCamera.Delegate() {
@@ -23,8 +25,8 @@ class SunGel: GraphicElement() {
 
     private val turn = TurnTowardsCamera(turnProps, keepUpright = false)
 
-    private val tex = App.textures.getOrCreateTexture("sky-sun.png")
-    private val frameSize = MutablePoint2f(tex?.width ?: 0, tex?.height ?: 0)
+    private var tex: Texture? = null
+    private val frameSize = MutablePoint2f()
 
     private val renderProps = object: PaperRenderer.Delegate() {
         override val renderPos get() = this@SunGel.pos
@@ -55,6 +57,16 @@ class SunGel: GraphicElement() {
                 cam.y + dir.y * SUN_DISTANCE,
                 cam.z + dir.z * SUN_DISTANCE,
             )
+        }
+    }
+
+    override suspend fun onCreateConcurrently(): () -> Unit {
+        val img = App.textures.getOrLoadImageDataAsync("sky-sun.png")
+        return {
+            // Back in main thread
+            tex = App.textures.getOrCreateTexture(img).also {
+                frameSize.set(it.width, it.height)
+            }
         }
     }
 

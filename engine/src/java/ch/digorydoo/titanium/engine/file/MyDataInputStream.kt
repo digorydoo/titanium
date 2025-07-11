@@ -1,9 +1,11 @@
 package ch.digorydoo.titanium.engine.file
 
 import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.kutils.utils.newFloatBuffer
 import java.io.BufferedInputStream
 import java.io.DataInputStream
 import java.io.File
+import java.nio.FloatBuffer
 
 class MyDataInputStream private constructor(private val input: DataInputStream) {
     fun readMarker(): FileMarker {
@@ -93,6 +95,18 @@ class MyDataInputStream private constructor(private val input: DataInputStream) 
         }
 
         return arr
+    }
+
+    fun readFloatBuffer(): FloatBuffer {
+        val size = readInt32()
+        val buf = newFloatBuffer(size)
+        buf.position(0)
+
+        for (i in 0 ..< size) {
+            buf.put(input.readFloat())
+        }
+
+        return buf
     }
 
     fun readByteArray(): ByteArray {

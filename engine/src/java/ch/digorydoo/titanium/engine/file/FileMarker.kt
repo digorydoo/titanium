@@ -51,6 +51,15 @@ enum class FileMarker(val value: UShort) {
     INT_VALUES(0x2211u),
     POINT3F_VALUES(0x2212u),
     FLOAT_VALUES(0x2213u),
+
+    // Height map
+    BEGIN_HEIGHT_MAP(0x2301u),
+    END_HEIGHT_MAP(0x2302u),
+    NUM_SAMPLES_X(0x2303u),
+    NUM_SAMPLES_Y(0x2304u),
+    X_SIZE(0x2305u),
+    Y_SIZE(0x2306u),
+    Z_VALUES(0x2307u),
     ;
 
     companion object {

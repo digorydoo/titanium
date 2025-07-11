@@ -4,6 +4,7 @@ import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import ch.digorydoo.titanium.engine.texture.Texture
 
 class UIAreaGel(

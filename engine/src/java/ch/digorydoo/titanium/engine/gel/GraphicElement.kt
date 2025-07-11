@@ -7,9 +7,11 @@ import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.brick.BrickMaterial
 import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.core.App
+import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.engine.shader.Renderer
+import kotlinx.coroutines.Job
 import kotlin.math.sqrt
 
 /**
@@ -38,11 +40,17 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
     protected var inDialog = Visibility.FROZEN_VISIBLE
     protected var inMenu = Visibility.INVISIBLE
     protected var inEditor = Visibility.FROZEN_VISIBLE
+
     var hidden = false; protected set // explicitly hidden gels neither animate nor render
     protected var setHiddenOnNextFrameTo: Boolean? = null // sometimes better than directly modifying hidden
     protected var visible = false; private set // will be set during animPhase2() whether this gel will actually render
     protected var visibleOnScreenshots = true
     private var active = true // whether to call onAnimateActive() or onAnimateInactive()
+
+    protected var callOnCreateConcurrently = false
+    private var onCreateCalled = false
+    private var onCreateJob: Job? = null
+    val initialised get() = onCreateCalled && onCreateJob == null
 
     var zombie = false; private set // true=sprite will be removed in the next frame
     var sqrDistanceToCamera = 0.0; private set
@@ -73,6 +81,63 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
         body.nextPos.set(bx, by, bz)
     }
 
+    fun onCreate(layer: LayerKind?) {
+        require(!onCreateCalled)
+        onCreateCalled = true
+
+        if (!callOnCreateConcurrently) {
+            if (layer != null) {
+                App.content.add(this, layer)
+            }
+            return
+        }
+
+        val sceneTicket = App.content.sceneTicket
+
+        require(onCreateJob == null)
+        onCreateJob = App.process.runAsyncIO {
+            var caught: Exception? = null
+            var done: (() -> Unit)? = null
+
+            try {
+                done = onCreateConcurrently()
+            } catch (e: Exception) {
+                caught = e
+            }
+
+            App.process.runAtEndOfFrame {
+                // We're back in the main thread.
+                val gel = this@GraphicElement
+                onCreateJob = null // necessary before adding the gel to the layer
+
+                if (caught != null) {
+                    Log.error(TAG, "Gel $gel crashed in onCreateConcurrently: ${caught.message}")
+                    zombie = true
+                } else if (zombie) {
+                    // This is not necessarily a bug since it just means someone else must have set it to zombie.
+                    Log.info(TAG, "Not adding $gel to layer since it went zombie while loading concurrently")
+                } else if (sceneTicket != App.content.sceneTicket) {
+                    Log.info(TAG, "Not adding $gel to layer since the scene has changed")
+                    zombie = true
+                } else if (layer != null) {
+                    // FIXME we need a ticket to check if scene hasn't been unloaded in the meantime
+                    done?.invoke()
+                    App.content.add(gel, layer)
+                }
+            }
+        }
+    }
+
+    /**
+     * Called inside a coroutine when callOnCreateConcurrently is true. Do not call any GL functions from here. Avoid
+     * modifying the gel; apply the changes in the lambda instead.
+     * @return A lambda that will be called back on the main thread. Not called when there was an exception, or when
+     *    the gel went zombie in the meantime.
+     */
+    protected open suspend fun onCreateConcurrently(): () -> Unit {
+        throw NotImplementedError() // gels that set callOnCreateConcurrently must override this function
+    }
+
     protected open fun onAnimateActive() {}
     protected open fun onAnimateInactive() {}
     protected open fun onAboutToRender() {}
@@ -82,6 +147,7 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
 
     fun setZombie() {
         zombie = true
+        onCreateJob?.cancel()
     }
 
     // Here we will do most of the animation and compute the forces, but not move the body yet.

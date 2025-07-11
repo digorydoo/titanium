@@ -1,7 +1,6 @@
 package ch.digorydoo.titanium.engine.brick
 
 import ch.digorydoo.kutils.box.Boxi
-import ch.digorydoo.kutils.box.MutableBoxi
 import ch.digorydoo.kutils.math.clamp
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.MutablePoint3i
@@ -187,32 +186,18 @@ class BrickVolume(
         subs.forEach { it.update() }
     }
 
-    fun updateBricks(box: Boxi, updateRunsAcross: Boolean) {
+    fun updateBricks(box: Boxi, evenAdjacient: Boolean) {
+        // Adjacient subvolumes must be detected within a range of two bricks, because ThickStairsModel looks that far.
+        // No need to support longer runs, because they're deprecated anyway.
+
+        val area =
+            if (!evenAdjacient) box
+            else Boxi(box.x0 - 2, box.y0 - 2, box.z0 - 2, box.x1 + 2, box.y1 + 2, box.z1 + 2)
+
         subs.forEach { sub ->
-            if (sub.overlaps(box)) {
+            if (sub.overlaps(area)) {
                 sub.update()
             }
-        }
-
-        if (updateRunsAcross) {
-            val border = MutableBoxi(box)
-            border.x0 = box.x0 - 1
-            border.x1 = box.x0
-            updateBricks(border, false)
-
-            border.x0 = box.x1
-            border.x1 = box.x1 + 1
-            updateBricks(border, false)
-
-            border.x0 = box.x0
-            border.x1 = box.x1
-            border.y0 = box.y0 - 1
-            border.y1 = box.y0
-            updateBricks(border, false)
-
-            border.y0 = box.y1
-            border.y1 = box.y1 + 1
-            updateBricks(border, false)
         }
     }
 

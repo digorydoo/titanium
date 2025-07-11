@@ -1,8 +1,8 @@
 package ch.digorydoo.titanium.game.gel.static_mesh
 
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.file.MeshFileReader
 import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.mesh.Mesh
 import ch.digorydoo.titanium.engine.mesh.MeshRenderer
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
@@ -11,6 +11,7 @@ import ch.digorydoo.titanium.game.gel.static_mesh.StaticMeshSpawnPt.Kind.*
 class StaticMeshGel(override val spawnPt: StaticMeshSpawnPt): GraphicElement(spawnPt) {
     init {
         bodyPosOffset.set(0.0f, 0.0f, BODY_HEIGHT / 2.0f)
+        callOnCreateConcurrently = true
     }
 
     override val body = FixedCylinderBody(
@@ -24,20 +25,11 @@ class StaticMeshGel(override val spawnPt: StaticMeshSpawnPt): GraphicElement(spa
         height = BODY_HEIGHT,
     )
 
-    private val mesh = MeshFileReader.readFile(
-        when (spawnPt.kind) {
-            BENCH_1 -> "bench-01.msh"
-            STONE_1 -> "obj-stone-01.msh"
-            SIGN_1 -> "sign-01.msh"
-            ROBOT_POLICEMAN -> "robot-policeman.msh"
-            RAILING_1 -> "railing-01.msh"
-            RAILING_2 -> "railing-02.msh"
-        }
-    )
+    private var mesh: Mesh? = null
 
     override val renderer = App.factory.createMeshRenderer(
         object: MeshRenderer.Delegate() {
-            override val mesh = this@StaticMeshGel.mesh
+            override val mesh get() = this@StaticMeshGel.mesh
             override val renderPos = this@StaticMeshGel.pos
             override val rotationPhi = spawnPt.rotation
         },
@@ -45,6 +37,23 @@ class StaticMeshGel(override val spawnPt: StaticMeshSpawnPt): GraphicElement(spa
         cullFace = true,
         depthTest = true
     )
+
+    override suspend fun onCreateConcurrently(): () -> Unit {
+        val theMesh = App.meshes.getOrLoadMeshAsync(
+            when (spawnPt.kind) {
+                BENCH_1 -> "bench-01.msh"
+                STONE_1 -> "obj-stone-01.msh"
+                SIGN_1 -> "sign-01.msh"
+                ROBOT_POLICEMAN -> "robot-policeman.msh"
+                RAILING_1 -> "railing-01.msh"
+                RAILING_2 -> "railing-02.msh"
+            }
+        )
+        return {
+            // Back in main thread
+            mesh = theMesh
+        }
+    }
 
     override fun onRemoveZombie() {
         renderer.free()

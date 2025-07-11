@@ -12,17 +12,16 @@ class GelLayer {
     private val newGels = mutableListOf<GraphicElement>()
 
     fun add(gel: GraphicElement) {
+        require(gel.initialised) { "Gel $gel is not properly initialised, cannot add it to layer!" }
+
         // To make sure that newly added gels are rendered after their animate phases have run,
         // we add them to newGels first and move them to gels in animate().
         newGels.add(gel)
     }
 
-    fun forEachGel(includeNew: Boolean, lambda: (gel: GraphicElement) -> Unit) {
+    fun forEachGel(lambda: (gel: GraphicElement) -> Unit) {
         gels.forEach(lambda)
-
-        if (includeNew) {
-            newGels.forEach(lambda)
-        }
+        newGels.forEach(lambda)
     }
 
     fun forEachGelIndexed(lambda: (i: Int, gel: GraphicElement) -> Unit) {

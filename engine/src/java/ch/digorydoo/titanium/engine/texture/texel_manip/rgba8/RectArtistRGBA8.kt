@@ -50,4 +50,34 @@ internal class RectArtistRGBA8(
             scan += nextRow
         }
     }
+
+    override fun overlay(left: Int, top: Int, right: Int, bottom: Int, c: Colour) {
+        val cr = c.red * 255.0f
+        val cg = c.green * 255.0f
+        val cb = c.blue * 255.0f
+        val alpha = c.alpha
+        val beta = 1.0f - alpha
+
+        val buf = imgRGBA8
+        var scan = (top * imgWidth + left) * 4
+        val nextRow = (imgWidth - (right - left)) * 4
+        buf.position(scan)
+
+        (top ..< bottom).forEach {
+            (left ..< right).forEach {
+                val dr = buf.get().toUByte().toFloat()
+                val dg = buf.get().toUByte().toFloat()
+                val db = buf.get().toUByte().toFloat()
+
+                buf.position(scan)
+                buf.put(((dr * beta + cr * alpha).toInt() and 0xFF).toByte())
+                buf.put(((dg * beta + cg * alpha).toInt() and 0xFF).toByte())
+                buf.put(((db * beta + cb * alpha).toInt() and 0xFF).toByte())
+                buf.put(0xFF.toByte())
+                scan += 4
+            }
+            scan += nextRow
+            buf.position(scan)
+        }
+    }
 }

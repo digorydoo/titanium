@@ -86,7 +86,13 @@ class ImageData(val buf: ByteBuffer, val type: Type, val width: Int, val height:
 
     @Suppress("unused")
     fun fillRect(rect: Recti, c: Colour) {
+        // Sets dst.alpha to c.alpha if dst supports it
         rectArtist.fill(rect.left, rect.top, rect.right, rect.bottom, c)
+    }
+
+    fun overlayRect(rect: Recti, c: Colour) {
+        // Applies c according to c.alpha, and sets dst.alpha to opaque
+        rectArtist.overlay(rect.left, rect.top, rect.right, rect.bottom, c)
     }
 
     fun drawRoundRect(rect: Recti, xCornerSize: Int, yCornerSize: Int, c: Colour) {
@@ -136,10 +142,6 @@ class ImageData(val buf: ByteBuffer, val type: Type, val width: Int, val height:
 
     fun drawImage(src: ImageData, dstX: Int, dstY: Int) {
         blitter.blit(src, dstX, dstY)
-    }
-
-    fun drawImage(src: ImageData, dstX: Int, dstY: Int, colourMultiplier: Float) {
-        blitter.blit(src, dstX, dstY, colourMultiplier)
     }
 
     fun drawImageScaled(

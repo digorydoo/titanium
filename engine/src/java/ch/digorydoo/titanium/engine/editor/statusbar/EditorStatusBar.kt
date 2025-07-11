@@ -43,22 +43,22 @@ class EditorStatusBar {
         brickShapeGel = TextGel(
             shape.displayText,
             alignment = Align.Alignment(anchor = Anchor.TOP_LEFT, marginLeft = 24, marginTop = 16)
-        ).also { App.content.add(it, LayerKind.UI_BELOW_DLG) }
+        ).also { it.onCreate(LayerKind.UI_BELOW_DLG) }
 
         brickMaterialGel = TextGel(
             material.displayText,
             alignment = Align.Alignment(anchor = Anchor.TOP_LEFT, marginLeft = 216, marginTop = 16)
-        ).also { App.content.add(it, LayerKind.UI_BELOW_DLG) }
+        ).also { it.onCreate(LayerKind.UI_BELOW_DLG) }
 
         cameraModeGel = TextGel(
             App.camera.mode.displayText,
             alignment = Align.Alignment(anchor = Anchor.TOP_CENTRE, marginTop = 16)
-        ).also { App.content.add(it, LayerKind.UI_BELOW_DLG) }
+        ).also { it.onCreate(LayerKind.UI_BELOW_DLG) }
 
         statsGel = TextGel(
             "",
             alignment = Align.Alignment(anchor = Anchor.BOTTOM_LEFT, marginLeft = 24, marginBottom = 16)
-        ).also { App.content.add(it, LayerKind.UI_BELOW_DLG) }
+        ).also { it.onCreate(LayerKind.UI_BELOW_DLG) }
 
         updateStats()
     }
@@ -87,7 +87,7 @@ class EditorStatusBar {
 
     fun didSave() {
         // The first frame after save may take a bit longer for some reason, so we postpone the snackbar a bit.
-        App.runAtEndOfFrame {
+        App.process.runAtEndOfFrame {
             brickMaterialGel?.rotate()
             App.dlg.showSnackbar(EngineTextId.EDITOR_FILE_SAVED)
         }

@@ -14,9 +14,9 @@ import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
 import ch.digorydoo.titanium.engine.i18n.ITextId
 import ch.digorydoo.titanium.engine.shader.Renderer
+import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import ch.digorydoo.titanium.engine.texture.GreyscaleImageBuffer
 import ch.digorydoo.titanium.engine.texture.Texture
-import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 import kotlin.math.min
 
 class ActionInputIconGel: GraphicElement() {
@@ -25,6 +25,7 @@ class ActionInputIconGel: GraphicElement() {
         inMenu = Visibility.ACTIVE
         inEditor = Visibility.ACTIVE
         visibleOnScreenshots = false
+        callOnCreateConcurrently = true
         hidden = true // the gel is initially hidden, an explicit call to show() is needed to set the verb
     }
 
@@ -32,8 +33,8 @@ class ActionInputIconGel: GraphicElement() {
 
     var verb: ITextId = EngineTextId.CANCEL; private set
 
-    private val bgTex = App.textures.getOrCreateTexture("ui-action-input-bg.png")
-    private val bgFrameSize = MutablePoint2f(bgTex?.width?.toFloat() ?: 0.0f, bgTex?.height?.toFloat() ?: 0.0f)
+    private var bgTex: Texture? = null
+    private val bgFrameSize = MutablePoint2f()
     private val bgPos = MutablePoint3f()
     private var bgOpacity = 0.0f
 
@@ -102,6 +103,16 @@ class ActionInputIconGel: GraphicElement() {
                 bgRenderer.free()
                 iconRenderer.free()
                 textRenderer.free()
+            }
+        }
+    }
+
+    override suspend fun onCreateConcurrently(): () -> Unit {
+        val img = App.textures.getOrLoadImageDataAsync("ui-action-input-bg.png")
+        return {
+            // Back in main thread
+            bgTex = App.textures.getOrCreateTexture(img).also {
+                bgFrameSize.set(it.width, it.height)
             }
         }
     }

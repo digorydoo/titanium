@@ -44,6 +44,12 @@ enum class BrickMaterial(val value: Int) {
     DARK_GREY_CONCRETE(35),
     GREY_BRICK_WALL(36),
     DARK_RED_BRICK_WALL(37),
+    DARKER_GREY_CONCRETE(38),
+    GREY_TILED_ROAD(39),
+    ASPHALT_GREY(40),
+    DECORATIVE_WALL(41),
+    ROUGH_STONE_WALL(42),
+    YELLOW_CONCRETE(43),
     ZZ_TEST(9999);
 
     val displayText = initCap(toString().replace("_", " ").lowercase())
@@ -63,6 +69,7 @@ enum class BrickMaterial(val value: Int) {
             -> 0.8f
 
             ASPHALT_BLUE,
+            ASPHALT_GREY,
             ASPHALT_RED,
             BLUE_BRICK_WALL,
             CONCRETE_CELLAR_WINDOW,
@@ -72,19 +79,24 @@ enum class BrickMaterial(val value: Int) {
             CONCRETE_SMALL_VENTILATION,
             CONCRETE_SQUARE_WINDOW,
             CONCRETE_TALL_WINDOW,
+            DARKER_GREY_CONCRETE,
             DARK_GREY_CONCRETE,
             DARK_RED_BRICK_WALL,
+            DECORATIVE_WALL,
             GREEN_CONCRETE,
             GREY_BRICK_WALL,
             GREY_CONCRETE,
+            GREY_TILED_ROAD,
             ORANGE_CONCRETE,
             RED_BRICK_WALL,
             ROAD_PAVED,
+            ROUGH_STONE_WALL,
             STONE_WALL_YELLOW,
             TILED_STREET,
             WHITE_CONCRETE,
             WINDOW_DETAILS,
             WINDOW_INTERIOR,
+            YELLOW_CONCRETE,
             -> 0.75f
 
             CARPET_BLUE,
@@ -126,6 +138,7 @@ enum class BrickMaterial(val value: Int) {
             -> 0.8f
 
             ASPHALT_BLUE,
+            ASPHALT_GREY,
             ASPHALT_RED,
             BLUE_BRICK_WALL,
             CONCRETE_CELLAR_WINDOW,
@@ -135,19 +148,24 @@ enum class BrickMaterial(val value: Int) {
             CONCRETE_SMALL_VENTILATION,
             CONCRETE_SQUARE_WINDOW,
             CONCRETE_TALL_WINDOW,
+            DARKER_GREY_CONCRETE,
             DARK_GREY_CONCRETE,
             DARK_RED_BRICK_WALL,
+            DECORATIVE_WALL,
             GREEN_CONCRETE,
             GREY_BRICK_WALL,
             GREY_CONCRETE,
+            GREY_TILED_ROAD,
             ORANGE_CONCRETE,
             RED_BRICK_WALL,
             ROAD_PAVED,
+            ROUGH_STONE_WALL,
             STONE_WALL_YELLOW,
             TILED_STREET,
             WHITE_CONCRETE,
             WINDOW_DETAILS,
             WINDOW_INTERIOR,
+            YELLOW_CONCRETE,
             -> 0.96f
 
             CARPET_BLUE,

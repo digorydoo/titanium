@@ -56,8 +56,10 @@ internal enum class BrickMaterialGroup {
         BRICK_AND_STONE_WALLS -> listOf(
             BLUE_BRICK_WALL,
             DARK_RED_BRICK_WALL,
+            DECORATIVE_WALL,
             GREY_BRICK_WALL,
             RED_BRICK_WALL,
+            ROUGH_STONE_WALL,
             STONE_WALL_YELLOW,
         )
         CARPET -> listOf(
@@ -67,10 +69,12 @@ internal enum class BrickMaterialGroup {
         )
         CONCRETE -> listOf(
             DARK_GREY_CONCRETE,
+            DARKER_GREY_CONCRETE,
             GREEN_CONCRETE,
             GREY_CONCRETE,
             ORANGE_CONCRETE,
             WHITE_CONCRETE,
+            YELLOW_CONCRETE,
         )
         NATURE -> listOf(
             FOREST_GROUND,
@@ -79,10 +83,12 @@ internal enum class BrickMaterialGroup {
         )
         ROAD -> listOf(
             ASPHALT_BLUE,
+            ASPHALT_GREY,
             ASPHALT_RED,
             ROAD_PAVED,
             ROAD_PEBBLES,
             TILED_STREET,
+            GREY_TILED_ROAD,
         )
         WALL_DETAILS -> listOf(
             CONCRETE_CELLAR_WINDOW,

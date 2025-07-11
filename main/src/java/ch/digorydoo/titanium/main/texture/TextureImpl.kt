@@ -15,7 +15,6 @@ import java.nio.ByteOrder
 class TextureImpl(
     private val texId: Int,
     private val imgData: ImageData,
-    override val fileName: String,
     override val shared: Boolean,
 ): Texture {
     init {
@@ -118,7 +117,6 @@ class TextureImpl(
     override fun toString() =
         arrayOf(
             "texId=$texId",
-            "fileName=\"$fileName\"",
             "size=(${width}x$height)",
             "shared=$shared",
         ).joinToString(", ").let { "Texture($it)" }

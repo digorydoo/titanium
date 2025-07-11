@@ -2,6 +2,7 @@ package ch.digorydoo.titanium.engine.behaviours
 
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
+import kotlin.math.PI
 import kotlin.math.sin
 
 /**
@@ -34,7 +35,7 @@ class Shake(private val delegate: Delegate): GraphicElement.Behaviour {
                 delegate.shakeValue = startValue
                 isShaking = false
             } else {
-                val phi = relTime * count * Math.PI
+                val phi = relTime * count * PI
                 delegate.shakeValue = startValue + (1.0f - relTime) * distance * sin(phi).toFloat()
             }
         }

@@ -2,8 +2,8 @@ package ch.digorydoo.titanium.game.gel.ball
 
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.file.MeshFileReader
 import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.mesh.Mesh
 import ch.digorydoo.titanium.engine.mesh.MeshRenderer
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.game.gel.ball.BallSpawnPt.Kind
@@ -11,7 +11,7 @@ import ch.digorydoo.titanium.game.gel.ball.BallSpawnPt.Kind
 class BallGel private constructor(
     override val spawnPt: BallSpawnPt?,
     initialPos: Point3f,
-    kind: Kind,
+    private val kind: Kind,
 ): GraphicElement(spawnPt, initialPos) {
     constructor(spawnPt: BallSpawnPt): this(spawnPt, spawnPt.pos, spawnPt.kind)
     // constructor(kind: Kind, x: Float, y: Float, z: Float): this(null, Point3f(x, y, z), kind)
@@ -26,6 +26,7 @@ class BallGel private constructor(
         inDialog = Visibility.ACTIVE
         inMenu = Visibility.INVISIBLE
         inEditor = Visibility.FROZEN_VISIBLE
+        callOnCreateConcurrently = true
     }
 
     override val body = FixedSphereBody(
@@ -47,12 +48,7 @@ class BallGel private constructor(
         gravity = true,
     )
 
-    private val mesh = MeshFileReader.readFile(
-        when (kind) {
-            Kind.BALL_R25CM -> "ball-r25cm.msh"
-            Kind.BALL_R33CM -> "ball-r33cm.msh"
-        }
-    )
+    private var mesh: Mesh? = null
 
     override val renderer = App.factory.createMeshRenderer(
         object: MeshRenderer.Delegate() {
@@ -64,6 +60,19 @@ class BallGel private constructor(
         cullFace = true,
         depthTest = true
     )
+
+    override suspend fun onCreateConcurrently(): () -> Unit {
+        val theMesh = App.meshes.getOrLoadMeshAsync(
+            when (kind) {
+                Kind.BALL_R25CM -> "ball-r25cm.msh"
+                Kind.BALL_R33CM -> "ball-r33cm.msh"
+            }
+        )
+        return {
+            // Back in main thread
+            mesh = theMesh
+        }
+    }
 
     override fun onRemoveZombie() {
         renderer.free()

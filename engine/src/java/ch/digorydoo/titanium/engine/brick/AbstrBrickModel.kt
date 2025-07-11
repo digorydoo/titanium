@@ -38,12 +38,12 @@ abstract class AbstrBrickModel {
         // getShape and getMaterial are fast enough so we can always fetch all neighbours. If this is no longer true in
         // the future, we should remember ix, iy, iz and implement getShape lazily from shapeAbove, etc.
 
-        shapeAbove = subvolume.getShape(ix, iy, iz + 1, acrossBounds = true) ?: BrickShape.NONE
-        shapeBelow = subvolume.getShape(ix, iy, iz - 1, acrossBounds = true) ?: BrickShape.NONE
-        shapeToNorth = subvolume.getShape(ix - 1, iy, iz, acrossBounds = true) ?: BrickShape.NONE
-        shapeToEast = subvolume.getShape(ix, iy + 1, iz, acrossBounds = true) ?: BrickShape.NONE
-        shapeToSouth = subvolume.getShape(ix + 1, iy, iz, acrossBounds = true) ?: BrickShape.NONE
-        shapeToWest = subvolume.getShape(ix, iy - 1, iz, acrossBounds = true) ?: BrickShape.NONE
+        shapeAbove = subvolume.getShape(ix, iy, iz + 1, acrossBounds = true)
+        shapeBelow = subvolume.getShape(ix, iy, iz - 1, acrossBounds = true)
+        shapeToNorth = subvolume.getShape(ix - 1, iy, iz, acrossBounds = true)
+        shapeToEast = subvolume.getShape(ix, iy + 1, iz, acrossBounds = true)
+        shapeToSouth = subvolume.getShape(ix + 1, iy, iz, acrossBounds = true)
+        shapeToWest = subvolume.getShape(ix, iy - 1, iz, acrossBounds = true)
 
         matAbove = subvolume.getMaterial(ix, iy, iz + 1, acrossBounds = true) ?: BrickMaterial.GREY_CONCRETE
         matBelow = subvolume.getMaterial(ix, iy, iz - 1, acrossBounds = true) ?: BrickMaterial.GREY_CONCRETE

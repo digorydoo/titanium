@@ -3,8 +3,6 @@ package ch.digorydoo.titanium.engine.texture
 interface Texture {
     val width: Int
     val height: Int
-
-    val fileName: String
     val shared: Boolean
 
     fun apply()

@@ -7,12 +7,14 @@ import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
-import ch.digorydoo.titanium.engine.texture.FrameCollection
+import ch.digorydoo.titanium.engine.sprite.FrameCollection
+import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.game.gel.static_paper.StaticPaperSpawnPt.Kind.*
 
 class StaticPaperGel(override val spawnPt: StaticPaperSpawnPt): GraphicElement(spawnPt) {
     init {
         bodyPosOffset.set(0.0f, 0.0f, BODY_HEIGHT / 2.0f)
+        callOnCreateConcurrently = true
     }
 
     override val body = FixedCylinderBody(
@@ -32,10 +34,6 @@ class StaticPaperGel(override val spawnPt: StaticPaperSpawnPt): GraphicElement(s
 
     private val turn = TurnTowardsCamera(turnProps, keepUpright = true)
 
-    override fun onAnimateActive() {
-        turn.animate()
-    }
-
     private val frames = FrameCollection()
     private val frameOrigin = MutablePoint2f()
 
@@ -52,28 +50,38 @@ class StaticPaperGel(override val spawnPt: StaticPaperSpawnPt): GraphicElement(s
 
     override val renderer = App.factory.createPaperRenderer(renderProps)
 
-    init {
+    override suspend fun onCreateConcurrently(): () -> Unit {
+        val img: ImageData
         val off: Int
 
         when (spawnPt.kind) {
             GNARLED_TREE_LARGE -> {
-                frames.setTexture("sprite-static-gnarled-tree-large.png", 1, 1)
+                img = App.textures.getOrLoadImageDataAsync("sprite-static-gnarled-tree-large.png")
                 off = 3
             }
             GNARLED_TREE_MEDIUM -> {
-                frames.setTexture("sprite-static-gnarled-tree-medium.png", 1, 1)
+                img = App.textures.getOrLoadImageDataAsync("sprite-static-gnarled-tree-medium.png")
                 off = 2
             }
             GNARLED_TREE_SMALL -> {
-                frames.setTexture("sprite-static-gnarled-tree-small.png", 1, 1)
+                img = App.textures.getOrLoadImageDataAsync("sprite-static-gnarled-tree-small.png")
                 off = 1
             }
             ROUND_TREE -> {
-                frames.setTexture("sprite-static-round-tree.png", 1, 1)
+                img = App.textures.getOrLoadImageDataAsync("sprite-static-round-tree.png")
                 off = 2
             }
         }
-        frameOrigin.set(renderProps.frameSize.x / 2, renderProps.frameSize.y - off)
+
+        return {
+            // Back in main thread
+            frames.setTexture(img, 1, 1)
+            frameOrigin.set(renderProps.frameSize.x / 2, renderProps.frameSize.y - off)
+        }
+    }
+
+    override fun onAnimateActive() {
+        turn.animate()
     }
 
     override fun onRemoveZombie() {

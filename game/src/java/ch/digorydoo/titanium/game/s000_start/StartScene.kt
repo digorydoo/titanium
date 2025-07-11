@@ -29,16 +29,18 @@ class StartScene: Scene(
 
     override fun enter(restore: RestoredState?) {
         App.state.clearAllState()
-        App.time.setStoryTime(21, 15)
+        App.time.setStoryTime(5, 15)
 
         App.camera.apply {
-            setTarget(28.1f, 10.1f, 6.0f, jump = true)
-            setSourceRelativeToTarget(phi = -(0.75 * PI).toFloat(), rho = -0.9f, jump = true)
+            setTarget(27.0f, 27.0f, 6.0f, jump = true)
+            setSourceRelativeToTarget(phi = -(0.8 * PI).toFloat(), rho = -1.2f, jump = true)
             mode = FIXED_DISTANCE
         }
 
         // Show the menu later to give the gels time to animate once, e.g. StreetLampGel needs to move its halo.
-        App.runAtEndOfFrame {
+        // We set skip = 2 so that two frames will be skipped. After the scene has been loaded, spawn points will
+        // spawn new gels in the first frame, and we want to wait until all of them have been animated once.
+        App.process.runAtEndOfFrame(skip = 1) {
             showStartMenu()
         }
     }

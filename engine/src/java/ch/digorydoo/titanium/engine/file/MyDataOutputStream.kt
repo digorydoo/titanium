@@ -37,6 +37,11 @@ class MyDataOutputStream private constructor(private val output: DataOutputStrea
         writeInt16(value)
     }
 
+    fun write(marker: FileMarker, value: Float) {
+        writeUInt16(marker.value)
+        writeFloat(value)
+    }
+
     fun write(marker: FileMarker, value: Boolean) {
         writeUInt16(marker.value)
         writeUInt8(if (value) 1 else 0)

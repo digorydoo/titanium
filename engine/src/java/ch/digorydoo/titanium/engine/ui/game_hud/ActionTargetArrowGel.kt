@@ -4,8 +4,8 @@ import ch.digorydoo.kutils.point.MutablePoint4f
 import ch.digorydoo.kutils.point.Point2f
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
-import ch.digorydoo.titanium.engine.texture.FrameCollection
-import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
+import ch.digorydoo.titanium.engine.sprite.FrameCollection
+import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import ch.digorydoo.titanium.engine.ui.icon.Icon
 import kotlin.math.abs
 import kotlin.math.sin
@@ -16,15 +16,13 @@ class ActionTargetArrowGel: GraphicElement() {
         inMenu = Visibility.ACTIVE
         inEditor = Visibility.ACTIVE
         visibleOnScreenshots = false
+        callOnCreateConcurrently = true
     }
 
     var target: GraphicElement? = null; private set
     private val pos4f = MutablePoint4f()
 
-    private val frames = FrameCollection().apply {
-        setTexture("ui-icons.png", 5, 6) // shared
-        setFrame(Icon.FOCUS_TRIANGLE.frame)
-    }
+    private val frames = FrameCollection()
 
     private val props = object: UISpriteRenderer.Delegate() {
         override val renderPos get() = this@ActionTargetArrowGel.pos
@@ -36,6 +34,15 @@ class ActionTargetArrowGel: GraphicElement() {
     }
 
     override val renderer = App.factory.createUISpriteRenderer(props, antiAliasing = true)
+
+    override suspend fun onCreateConcurrently(): () -> Unit {
+        val img = App.textures.getOrLoadImageDataAsync("ui-icons.png")
+        return {
+            // Back in main thread
+            frames.setTexture(img, 5, 6)
+            frames.setFrame(Icon.FOCUS_TRIANGLE.frame)
+        }
+    }
 
     fun show(newTarget: GraphicElement) {
         target = newTarget

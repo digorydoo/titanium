@@ -32,6 +32,7 @@ class LightExtraTechnique {
     var areaSize: SidValue? = null
     var areaSizeY: SidValue? = null
     var areaSizeZ: SidValue? = null
+    var radius: SidValue? = null
 
     override fun toString() =
         indentLines(
@@ -66,6 +67,7 @@ class LightExtraTechnique {
                 "area_size = ${indentLines("$areaSize")}",
                 "area_sizey = ${indentLines("$areaSizeY")}",
                 "area_sizez = ${indentLines("$areaSizeZ")}",
+                "radius = ${indentLines("$radius")}",
                 "}",
             )
         )

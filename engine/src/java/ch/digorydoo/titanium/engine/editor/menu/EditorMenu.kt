@@ -5,15 +5,17 @@ import ch.digorydoo.titanium.engine.editor.Selection
 import ch.digorydoo.titanium.engine.editor.action.EditorActions
 import ch.digorydoo.titanium.engine.editor.statusbar.EditorStatusBar
 import ch.digorydoo.titanium.engine.editor.wizard.WizardMenu
+import ch.digorydoo.titanium.engine.gel.SpawnPt
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
 import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 
-class EditorMenu(
+internal class EditorMenu(
     private val status: EditorStatusBar,
     private val selection: Selection,
     actions: EditorActions,
 ) {
     private val cameraModeMenu = CameraModeMenu(actions)
+    private val heightMapMenu = HeightMapMenu(this, actions)
     private val lightingMenu = LightingMenu(actions)
     private val materialMenu = BrickMaterialMenu(actions)
     private val shapeMenu = BrickShapeMenu(actions)
@@ -27,6 +29,7 @@ class EditorMenu(
     fun showShapeMenu() = showShapeMenu(true)
     fun showSpawnPtMenu() = showSpawnPtMenu(true)
     fun showWizardMenu() = showWizardMenu(true)
+    fun showEditSpawnPtMenu(spawnPt: SpawnPt, onBack: () -> Unit) = spawnPtMenu.showEditSpawnPtMenu(spawnPt, onBack)
 
     private fun showMainMenu(playSoundOnOpen: Boolean) {
         val choices = listOf(
@@ -34,6 +37,7 @@ class EditorMenu(
             TextChoice("Brick material...") { showMaterialMenu(false) },
             TextChoice("Brick wizard...") { showWizardMenu(false) },
             TextChoice("Camera mode...") { showCameraModeMenu(false) },
+            TextChoice("Height maps...") { showHeightMapMenu() },
             TextChoice("Lighting...") { showLightingMenu() },
             TextChoice("Spawn points...") { showSpawnPtMenu(false) },
             TextChoice("Story time...") { showStoryTimeMenu() },
@@ -46,6 +50,14 @@ class EditorMenu(
         cameraModeMenu.show(
             isTopLevel = isTopLevel,
             onCancel = { if (!isTopLevel) showMainMenu(false) },
+        )
+    }
+
+    private fun showHeightMapMenu() {
+        heightMapMenu.show(
+            selection.getPosCentreInWorldCoords(),
+            isTopLevel = false,
+            onCancel = { showMainMenu(false) }
         )
     }
 

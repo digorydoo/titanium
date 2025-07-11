@@ -5,10 +5,10 @@ import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.shader.Renderer
+import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.engine.ui.DLG_TEXT_MARGIN_X
 import ch.digorydoo.titanium.engine.ui.DLG_TEXT_MARGIN_Y
-import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 
 class DlgTextGel(private val textTex: Texture, private val bgTex: Texture): GraphicElement() {
     init {

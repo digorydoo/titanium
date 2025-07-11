@@ -3,11 +3,12 @@ package ch.digorydoo.titanium.engine.ui.icon
 import ch.digorydoo.kutils.point.Point2f
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.input.InputManager.InputMode
-import ch.digorydoo.titanium.engine.texture.FrameCollection
+import ch.digorydoo.titanium.engine.sprite.FrameCollection
 
 class InputIconFrames(private val iconWhenGamepad: Icon, private val iconWhenKeyboard: Icon) {
     private val frames = FrameCollection().apply {
-        setTexture("ui-icons.png", 5, 6) // shared
+        val img = App.textures.getOrLoadImageDataSync("ui-icons.png")
+        setTexture(img, 5, 6) // shared
     }
 
     val frameSize: Point2f = frames.frameSize // shared mutable object

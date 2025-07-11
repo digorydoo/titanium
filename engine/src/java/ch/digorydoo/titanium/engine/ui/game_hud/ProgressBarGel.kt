@@ -5,7 +5,7 @@ import ch.digorydoo.kutils.math.lerp
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
-import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
+import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 
 class ProgressBarGel(posX: Int, posY: Int): GraphicElement(posX, posY, 0) {
     init {

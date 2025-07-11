@@ -241,7 +241,7 @@ class AppImpl: App() {
     }
 
     private fun tearDown(removeLock: Boolean) {
-        content.setAllGelsToZombie()
+        content.forEachGel { _, gel -> gel.setZombie() }
         content.animate() // zombies will free their resources here
 
         prefs.saveIfNeeded()
@@ -311,8 +311,7 @@ class AppImpl: App() {
             content.renderRegular()
 
             // Finishing frame
-            handleSceneLoading()
-            runEndOfFrameLambdas()
+            process.runEndOfFrameLambdas()
             screenshot.takeIfNecessary(window)
 
             glfwSwapBuffers(window)

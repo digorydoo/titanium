@@ -73,6 +73,7 @@ class BrickFaceAssigner {
     companion object {
         private fun getBrickFaceArrays(material: BrickMaterial) = when (material) {
             ASPHALT_BLUE -> asphaltBlueFaces
+            ASPHALT_GREY -> asphaltGreyFaces
             ASPHALT_RED -> asphaltRedFaces
             BLUE_BRICK_WALL -> blueBrickWallFaces
             CARPET_BLUE -> carpetBlueFaces
@@ -86,7 +87,9 @@ class BrickFaceAssigner {
             CONCRETE_SQUARE_WINDOW -> concreteSquareWindowFaces
             CONCRETE_TALL_WINDOW -> concreteTallWindowFaces
             DARK_GREY_CONCRETE -> darkGreyConcreteFaces
+            DARKER_GREY_CONCRETE -> darkerGreyConcreteFaces
             DARK_RED_BRICK_WALL -> darkRedBrickWallFaces
+            DECORATIVE_WALL -> decorativeWallFaces
             FOREST_GROUND -> forestGroundFaces
             GLASS -> glassFaces
             GRASSY_GROUND -> grassyGroundFaces
@@ -94,11 +97,13 @@ class BrickFaceAssigner {
             GREEN_CONCRETE -> greenConcreteFaces
             GREY_BRICK_WALL -> greyBrickWallFaces
             GREY_CONCRETE -> greyConcreteFaces
+            GREY_TILED_ROAD -> greyTiledRoadFaces
             METAL_RED -> metalRedFaces
             ORANGE_CONCRETE -> orangeConcreteFaces
             RED_BRICK_WALL -> redBrickWallFaces
             ROAD_PAVED -> roadPavedFaces
             ROAD_PEBBLES -> roadPebblesFaces
+            ROUGH_STONE_WALL -> roughStoneWallFaces
             STANDING_WATER -> glassFaces
             STONE_WALL_YELLOW -> stoneWallYellowFaces
             TILED_STREET -> tiledStreetFaces
@@ -110,23 +115,28 @@ class BrickFaceAssigner {
             WOODEN_PLANKS_V_DARK -> woodenPlanksVDarkFaces
             WOOD_DARK -> woodDarkFaces
             WOOD_RED -> woodRedFaces
+            YELLOW_CONCRETE -> yellowConcreteFaces
             ZZ_TEST -> zzTestFaces
         }
 
         private val asphaltBlueFaces = BrickFaceArrays(up = F3x3(9, 10, 11, 36, 37, 38, 63, 64, 65))
+        private val asphaltGreyFaces = BrickFaceArrays(up = F3x3(345, 346, 347, 372, 373, 374, 399, 400, 401))
         private val asphaltRedFaces = BrickFaceArrays(up = F3x3(12, 13, 14, 39, 40, 41, 66, 67, 68))
         private val blueBrickWallFaces = BrickFaceArrays(up = F3x3(84, 85, 86, 111, 112, 113, 138, 139, 140))
         private val carpetBlueFaces = BrickFaceArrays(up = F3x3(93, 94, 95, 120, 121, 122, 147, 148, 149))
         private val carpetBrownFaces = BrickFaceArrays(up = F3x3(96, 97, 98, 123, 124, 125, 150, 151, 152))
         private val carpetRedFaces = BrickFaceArrays(up = F3x3(90, 91, 92, 117, 118, 119, 144, 145, 146))
         private val darkRedBrickWallFaces = BrickFaceArrays(up = F3x3(333, 334, 335, 360, 361, 362, 387, 388, 389))
+        private val decorativeWallFaces = BrickFaceArrays(up = F3x3(348, 349, 350, 375, 376, 377, 402, 403, 404))
         private val glassFaces = BrickFaceArrays(up = F1x1(27))
         private val grassyPathFaces = BrickFaceArrays(up = F3x3(252, 253, 254, 279, 280, 281, 306, 307, 308))
         private val greyBrickWallFaces = BrickFaceArrays(up = F3x3(330, 331, 332, 357, 358, 359, 384, 385, 386))
+        private val greyTiledRoadFaces = BrickFaceArrays(up = F3x3(342, 343, 344, 369, 370, 371, 396, 397, 398))
         private val metalRedFaces = BrickFaceArrays(up = F3x3(261, 262, 263, 288, 289, 290, 315, 316, 317))
         private val redBrickWallFaces = BrickFaceArrays(up = F3x3(87, 88, 89, 114, 115, 116, 141, 142, 143))
         private val roadPavedFaces = BrickFaceArrays(up = F3x3(81, 82, 83, 108, 109, 110, 135, 136, 137))
         private val roadPebblesFaces = BrickFaceArrays(up = F3x3(18, 19, 20, 45, 46, 47, 72, 73, 74))
+        private val roughStoneWallFaces = BrickFaceArrays(up = F3x3(405, 406, 407, 432, 433, 434, 459, 460, 461))
         private val tiledStreetFaces = BrickFaceArrays(up = F3x3(249, 250, 251, 276, 277, 278, 303, 304, 305))
         private val windowDetailsFaces = BrickFaceArrays(up = F3x3(21, 22, 23, 48, 49, 50, 75, 76, 77))
         private val windowInteriorFaces = BrickFaceArrays(up = F2x2(28, 29, 55, 56))
@@ -135,6 +145,7 @@ class BrickFaceAssigner {
         private val woodenPlanksHFaces = BrickFaceArrays(up = F3x3(162, 163, 164, 189, 190, 191, 216, 217, 218))
         private val woodenPlanksVBriteFaces = BrickFaceArrays(up = F3x3(168, 169, 170, 195, 196, 197, 222, 223, 224))
         private val woodenPlanksVDarkFaces = BrickFaceArrays(up = F3x3(165, 166, 167, 192, 193, 194, 219, 220, 221))
+        private val yellowConcreteFaces = BrickFaceArrays(up = F3x3(408, 409, 410, 435, 436, 437, 462, 463, 464))
         private val zzTestFaces = BrickFaceArrays(up = F1x1(0), side = F1x1(1), down = F1x1(2))
 
         private val greyConcreteFaces = BrickFaceArrays(
@@ -146,6 +157,11 @@ class BrickFaceAssigner {
         private val darkGreyConcreteFaces = BrickFaceArrays(
             up = F3x3(264, 265, 266, 291, 292, 293, 318, 319, 320),
             side = F3x3(267, 268, 269, 294, 295, 296, 321, 322, 323),
+        )
+
+        private val darkerGreyConcreteFaces = BrickFaceArrays(
+            up = F3x3(336, 337, 338, 363, 364, 365, 390, 391, 392),
+            side = F3x3(339, 340, 341, 366, 367, 368, 393, 394, 395),
         )
 
         private val concreteCellarWindowFaces = BrickFaceArrays(

@@ -49,21 +49,15 @@ internal class BlitterRGB8(
         }
     }
 
-    override fun blit(src: ImageData, dstX: Int, dstY: Int, colourMultiplier: Float) {
-        throw NotImplementedError()
-    }
-
     override fun blitScaled(
         src: ImageData,
         dstX: Int,
         dstY: Int,
         dstDrawWidth: Int,
         dstDrawHeight: Int,
-        antiAliasing: Boolean,
+        antiAliasing: Boolean, // only implemented when scaling down; no effect when scaling up
     ) {
-        require(!antiAliasing) { "Anti-aliasing not implemented" }
-
-        val dstBuf = imgRGB8
+        val dst = imgRGB8
         val dstBufWidth = imgWidth
         val dstBufHeight = imgHeight
 
@@ -87,16 +81,39 @@ internal class BlitterRGB8(
         var prevSrcY = 0
 
         for (scanY in 0 ..< dstDrawHeight) {
-            dstBuf.position(dstIdx)
+            dst.position(dstIdx)
             val srcY = (scanY / scaleY).toInt()
+            var prevSrcX = 0
 
             for (scanX in 0 ..< dstDrawWidth) {
                 val srcX = (scanX / scaleX).toInt()
 
-                srcBuf.position((srcY * srcBufWidth + srcX) * 3)
-                dstBuf.put(srcBuf.get()) // R
-                dstBuf.put(srcBuf.get()) // G
-                dstBuf.put(srcBuf.get()) // B
+                if (!antiAliasing) {
+                    srcBuf.position((srcY * srcBufWidth + srcX) * 3)
+                    dst.put(srcBuf.get()) // R
+                    dst.put(srcBuf.get()) // G
+                    dst.put(srcBuf.get()) // B
+                } else {
+                    var rsum = 0.0f
+                    var gsum = 0.0f
+                    var bsum = 0.0f
+                    var weight = 0
+
+                    for (slurY in prevSrcY .. srcY) {
+                        for (slurX in prevSrcX .. srcX) {
+                            weight++
+                            srcBuf.position((slurY * srcBufWidth + slurX) * 3)
+                            rsum += srcBuf.get().toUByte().toFloat()
+                            gsum += srcBuf.get().toUByte().toFloat()
+                            bsum += srcBuf.get().toUByte().toFloat()
+                        }
+                    }
+
+                    dst.put((rsum / weight).toInt().toByte()) // R
+                    dst.put((gsum / weight).toInt().toByte()) // G
+                    dst.put((bsum / weight).toInt().toByte()) // B
+                    prevSrcX = srcX
+                }
             }
 
             prevSrcY = srcY

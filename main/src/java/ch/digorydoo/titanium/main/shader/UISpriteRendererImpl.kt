@@ -5,7 +5,7 @@ import ch.digorydoo.kutils.utils.toFloatBuffer
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.core.App.Companion.FIXED_ASPECT_RATIO
 import ch.digorydoo.titanium.engine.shader.ShaderProgram.ProgramType
-import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
+import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import ch.digorydoo.titanium.main.opengl.checkGLError
 import ch.digorydoo.titanium.main.shader.ShaderAttributes.Attribute
 import org.lwjgl.opengl.GL11.*

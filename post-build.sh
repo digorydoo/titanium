@@ -74,6 +74,7 @@ installAssets fonts fonts
 installAssets gellists gellists
 installAssets generated/mesh mesh
 installAssets generated/textures textures
+installAssets heightmaps heightmaps
 installAssets playfields playfields
 installAssets shaders shaders
 installAssets sounds sounds

@@ -3,14 +3,16 @@ package ch.digorydoo.titanium.main.app
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.brick.BrickModelData
 import ch.digorydoo.titanium.engine.core.Factory
+import ch.digorydoo.titanium.engine.heightmap.HeightMapSpawnPt
 import ch.digorydoo.titanium.engine.mesh.MeshRenderer
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.shader.Renderer.BlendMode
 import ch.digorydoo.titanium.engine.sky.SkydomeRenderer
+import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import ch.digorydoo.titanium.engine.texture.Texture
-import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 import ch.digorydoo.titanium.game.core.SpawnObjType
 import ch.digorydoo.titanium.game.gel.ball.BallSpawnPt
+import ch.digorydoo.titanium.game.gel.door.DoorSpawnPt
 import ch.digorydoo.titanium.game.gel.static_mesh.StaticMeshSpawnPt
 import ch.digorydoo.titanium.game.gel.static_paper.StaticPaperSpawnPt
 import ch.digorydoo.titanium.game.gel.street_lamp.StreetLampSpawnPt
@@ -82,6 +84,8 @@ class FactoryImpl: Factory {
             // other
             SpawnObjType.BALL_R25CM -> BallSpawnPt(raw, BallSpawnPt.Kind.BALL_R25CM)
             SpawnObjType.BALL_R33CM -> BallSpawnPt(raw, BallSpawnPt.Kind.BALL_R33CM)
+            SpawnObjType.DOOR_WITH_WOODEN_FRAME -> DoorSpawnPt(raw, DoorSpawnPt.Kind.DOOR_WITH_WOODEN_FRAME)
+            SpawnObjType.HEIGHT_MAP -> HeightMapSpawnPt(raw)
             SpawnObjType.STREET_LAMP_TRADITIONAL -> StreetLampSpawnPt(raw, StreetLampSpawnPt.Kind.TRADITIONAL)
             SpawnObjType.VASE_H1M -> VaseSpawnPt(raw, VaseSpawnPt.Kind.VASE_H1M)
             SpawnObjType.TEST_GEL -> TestSpawnPt(raw)

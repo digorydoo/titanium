@@ -4,8 +4,8 @@ import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.core.ActionManager
 import ch.digorydoo.titanium.engine.core.ActionManager.ActionDelegate
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.file.MeshFileReader
 import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.mesh.Mesh
 import ch.digorydoo.titanium.engine.mesh.MeshRenderer
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCapsuleBody
 import ch.digorydoo.titanium.game.gel.vase.VaseSpawnPt.Kind
@@ -16,7 +16,7 @@ import kotlin.random.Random
 class VaseGel private constructor(
     override val spawnPt: VaseSpawnPt?,
     initialPos: Point3f,
-    kind: Kind,
+    private val kind: Kind,
 ): GraphicElement(spawnPt, initialPos) {
     constructor(spawnPt: VaseSpawnPt): this(spawnPt, spawnPt.pos, spawnPt.kind)
 
@@ -26,6 +26,7 @@ class VaseGel private constructor(
         inMenu = Visibility.INVISIBLE
         inEditor = Visibility.ACTIVE
         encounterRadius = 0.5f // we're implementing onEncounter, not the PlayerGel!
+        callOnCreateConcurrently = true
     }
 
     override val body = FixedCapsuleBody(
@@ -39,11 +40,7 @@ class VaseGel private constructor(
         friction = 0.999f,
     )
 
-    private val mesh = MeshFileReader.readFile(
-        when (kind) {
-            Kind.VASE_H1M -> "vase-h1m.msh"
-        }
-    )
+    private var mesh: Mesh? = null
 
     override val renderer = App.factory.createMeshRenderer(
         object: MeshRenderer.Delegate() {
@@ -55,6 +52,18 @@ class VaseGel private constructor(
         cullFace = true,
         depthTest = true
     )
+
+    override suspend fun onCreateConcurrently(): () -> Unit {
+        val theMesh = App.meshes.getOrLoadMeshAsync(
+            when (kind) {
+                Kind.VASE_H1M -> "vase-h1m.msh"
+            }
+        )
+        return {
+            // Back in main thread
+            mesh = theMesh
+        }
+    }
 
     private val actionDelegate = object: ActionDelegate {
         override fun onSelect(action: ActionManager.Action) {

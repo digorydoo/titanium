@@ -28,6 +28,14 @@ internal class DrawingWizard {
     private val eastBrickAbove = Brick()
     private val southBrickAbove = Brick()
     private val westBrickAbove = Brick()
+    private val neAboveBrick = Brick()
+    private val nwAboveBrick = Brick()
+    private val seAboveBrick = Brick()
+    private val swAboveBrick = Brick()
+    private val neBelowBrick = Brick()
+    private val nwBelowBrick = Brick()
+    private val seBelowBrick = Brick()
+    private val swBelowBrick = Brick()
 
     internal class If(
         val north: BrickShape? = null,
@@ -58,6 +66,14 @@ internal class DrawingWizard {
         val eastAbove: BrickShape? = null,
         val southAbove: BrickShape? = null,
         val westAbove: BrickShape? = null,
+        val neAbove: BrickShape? = null,
+        val nwAbove: BrickShape? = null,
+        val seAbove: BrickShape? = null,
+        val swAbove: BrickShape? = null,
+        val neBelow: BrickShape? = null,
+        val nwBelow: BrickShape? = null,
+        val seBelow: BrickShape? = null,
+        val swBelow: BrickShape? = null,
         val then: BrickShape,
         val mat: BrickMaterial? = null,
     )
@@ -85,6 +101,14 @@ internal class DrawingWizard {
         App.bricks.getAtBrickCoord(x + 1, y, z + 1, southBrickAbove)
         App.bricks.getAtBrickCoord(x, y - 1, z + 1, westBrickAbove)
         App.bricks.getAtBrickCoord(x, y + 1, z + 1, eastBrickAbove)
+        App.bricks.getAtBrickCoord(x - 1, y + 1, z + 1, neAboveBrick)
+        App.bricks.getAtBrickCoord(x - 1, y - 1, z + 1, nwAboveBrick)
+        App.bricks.getAtBrickCoord(x + 1, y + 1, z + 1, seAboveBrick)
+        App.bricks.getAtBrickCoord(x + 1, y - 1, z + 1, swAboveBrick)
+        App.bricks.getAtBrickCoord(x - 1, y + 1, z - 1, neBelowBrick)
+        App.bricks.getAtBrickCoord(x - 1, y - 1, z - 1, nwBelowBrick)
+        App.bricks.getAtBrickCoord(x + 1, y + 1, z - 1, seBelowBrick)
+        App.bricks.getAtBrickCoord(x + 1, y - 1, z - 1, swBelowBrick)
 
         return wizardRules
             .filter { it.check() }
@@ -120,6 +144,14 @@ internal class DrawingWizard {
         eastAbove != null && eastBrickAbove.shape != eastAbove -> false
         southAbove != null && southBrickAbove.shape != southAbove -> false
         westAbove != null && westBrickAbove.shape != westAbove -> false
+        neAbove != null && neAboveBrick.shape != neAbove -> false
+        nwAbove != null && nwAboveBrick.shape != nwAbove -> false
+        seAbove != null && seAboveBrick.shape != seAbove -> false
+        swAbove != null && swAboveBrick.shape != swAbove -> false
+        neBelow != null && neBelowBrick.shape != neBelow -> false
+        nwBelow != null && nwBelowBrick.shape != nwBelow -> false
+        seBelow != null && seBelowBrick.shape != seBelow -> false
+        swBelow != null && swBelowBrick.shape != swBelow -> false
         else -> true
     }
 
@@ -137,6 +169,14 @@ internal class DrawingWizard {
                 ?: (sw?.takeIf { it != NONE }?.let { swBrick.material })
                 ?: (below?.takeIf { it != NONE }?.let { brickBelow.material })
                 ?: (above?.takeIf { it != NONE }?.let { brickAbove.material })
+                ?: (neAbove?.takeIf { it != NONE }?.let { neAboveBrick.material })
+                ?: (nwAbove?.takeIf { it != NONE }?.let { nwAboveBrick.material })
+                ?: (seAbove?.takeIf { it != NONE }?.let { seAboveBrick.material })
+                ?: (swAbove?.takeIf { it != NONE }?.let { swAboveBrick.material })
+                ?: (neBelow?.takeIf { it != NONE }?.let { neBelowBrick.material })
+                ?: (nwBelow?.takeIf { it != NONE }?.let { nwBelowBrick.material })
+                ?: (seBelow?.takeIf { it != NONE }?.let { seBelowBrick.material })
+                ?: (swBelow?.takeIf { it != NONE }?.let { swBelowBrick.material })
                 ?: GREY_CONCRETE
         )
 }

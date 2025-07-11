@@ -6,8 +6,8 @@ import ch.digorydoo.titanium.engine.behaviours.Align
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.shader.Renderer
+import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import ch.digorydoo.titanium.engine.texture.Texture
-import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 
 class TimeDisplayGel: GraphicElement() {
     init {

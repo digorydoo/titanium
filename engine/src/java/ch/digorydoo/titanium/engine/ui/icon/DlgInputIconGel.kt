@@ -5,7 +5,7 @@ import ch.digorydoo.kutils.point.Point2f
 import ch.digorydoo.titanium.engine.behaviours.Glow
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
-import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
+import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 
 class DlgInputIconGel(
     iconWhenGamepad: Icon,

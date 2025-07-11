@@ -169,8 +169,8 @@ Enter editor mode with CTRL+E. Key bindings are in KeyMappingInEditor.kt.
 
 ### Spawn points
    * T: Open spawn point menu
-   * CTRL+T: Jump to next spawn point (guaranteed to visit all spawn points once; order not defined)
-   * CTRL+SHIFT+T: Jump to previous spawn point
+   * TAB: Jump to next spawn point
+   * SHIFT+TAB: Jump to previous spawn point
    * SHIFT+Q: Add a new spawn point of the same type as a recently added one
 
 That's all, folks!

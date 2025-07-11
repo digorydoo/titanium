@@ -51,7 +51,7 @@ class Clipboard(
 
         if (cut) {
             undoStack.push(box, list)
-            App.bricks.updateBricks(box, updateRunsAcross = true)
+            App.bricks.updateBricks(box, evenAdjacient = true)
             status.updateStats()
         }
 
@@ -100,7 +100,7 @@ class Clipboard(
 
             val box = selection.getUnreversed()
             undoStack.push(box, undoList)
-            App.bricks.updateBricks(box, updateRunsAcross = true)
+            App.bricks.updateBricks(box, evenAdjacient = true)
             status.updateStats()
         }
     }

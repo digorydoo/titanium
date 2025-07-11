@@ -33,17 +33,15 @@ class Dialogue(
 
     // Called by DlgManager
     fun onShow() {
-        if (dlgTextGel != null) {
-            App.content.add(dlgTextGel, LayerKind.UI_ABOVE_DLG)
-        }
+        dlgTextGel?.onCreate(LayerKind.UI_ABOVE_DLG)
 
         if (choices != null) {
-            choices.forEach { App.content.add(it.gel!!, LayerKind.UI_ABOVE_DLG) }
+            choices.forEach { it.gel!!.onCreate(LayerKind.UI_ABOVE_DLG) }
             choices.getOrNull(hilitedIdx)?.gel?.hilited = true
             updateScrollOffset()
         }
 
-        icon?.let { App.content.add(it, LayerKind.UI_ABOVE_DLG) }
+        icon?.onCreate(LayerKind.UI_ABOVE_DLG)
     }
 
     // Called by DlgManager
@@ -89,12 +87,10 @@ class Dialogue(
         val choice = hilitedChoice ?: return
         val gel = choice.gel ?: return
 
-        if (!choice.canSelect) {
+        if (!gel.canSelect) {
             if (choice is BoolChoice) {
-                when {
-                    choice.canIncrement -> onIncrementBtnPressed()
-                    choice.canDecrement -> onDecrementBtnPressed()
-                }
+                if (!choice.curValue) onIncrementBtnPressed()
+                else onDecrementBtnPressed()
             }
             return
         }
@@ -108,37 +104,21 @@ class Dialogue(
             }
         }
 
-        gel.selectAndCall {
+        gel.select {
             if (isLastAndDismiss || choice.autoDismiss) {
                 dismiss()
-            } else {
-                gel.unselect()
             }
-
-            choice.onSelect()
         }
     }
 
     private fun onIncrementBtnPressed(smallStep: Boolean = false) {
         val choice = hilitedChoice ?: return
-
-        if (choice.canIncrement) {
-            App.sound.play(EngineSampleId.MENU_INC_DEC)
-            choice.onIncrement(smallStep)
-        } else {
-            App.sound.play(EngineSampleId.NO_ACTION)
-        }
+        choice.gel?.increment(smallStep)
     }
 
     private fun onDecrementBtnPressed(smallStep: Boolean = false) {
         val choice = hilitedChoice ?: return
-
-        if (choice.canDecrement) {
-            App.sound.play(EngineSampleId.MENU_INC_DEC)
-            choice.onDecrement(smallStep)
-        } else {
-            App.sound.play(EngineSampleId.NO_ACTION)
-        }
+        choice.gel?.decrement(smallStep)
     }
 
     private fun onDismissBtnPressed() {
@@ -157,9 +137,8 @@ class Dialogue(
                     it.gel?.fadeOut()
                 }
 
-                choice.gel?.selectAndCall {
+                choice.gel?.select {
                     dismiss()
-                    choice.onSelect()
                 }
             }
         }

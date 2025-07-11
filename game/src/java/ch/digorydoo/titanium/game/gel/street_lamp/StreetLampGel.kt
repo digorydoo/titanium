@@ -2,20 +2,22 @@ package ch.digorydoo.titanium.game.gel.street_lamp
 
 import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.math.lerp
+import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point2f
 import ch.digorydoo.titanium.engine.behaviours.TurnTowardsCamera
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.core.FrameCounter
 import ch.digorydoo.titanium.engine.core.LampManager.Lamp
-import ch.digorydoo.titanium.engine.file.MeshFileReader
 import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.mesh.Mesh
 import ch.digorydoo.titanium.engine.mesh.MeshRenderer
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.shader.Renderer
 import ch.digorydoo.titanium.engine.shader.Renderer.BlendMode
+import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.game.gel.street_lamp.StreetLampSpawnPt.Kind.TRADITIONAL
 import kotlin.math.abs
 
@@ -24,6 +26,7 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
         bodyPosOffset.set(0.0f, 0.0f, BODY_HEIGHT / 2.0f)
         inDialog = Visibility.ACTIVE // flickering should continue in dialogues
         inEditor = Visibility.ACTIVE // in order that halo gets properly turned
+        callOnCreateConcurrently = true
     }
 
     override val body = FixedCylinderBody(
@@ -37,24 +40,11 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
         height = BODY_HEIGHT,
     )
 
+    private var mesh: Mesh? = null
+    private var haloTex: Texture? = null
+    private val haloFrameSize = MutablePoint2f()
+    private val haloOrigin = MutablePoint2f()
     private val haloCentre = MutablePoint3f()
-
-    override fun onAboutToRender() {
-        haloCentre.set(pos.x, pos.y, pos.z + HALO_Z_OFFSET)
-    }
-
-    override fun onAnimateActive() {
-        turnHalo.animate()
-        adaptLightIntensity.animate()
-    }
-
-    private val mesh = MeshFileReader.readFile(
-        when (spawnPt.kind) {
-            TRADITIONAL -> "street-lamp-01.msh"
-        }
-    )
-
-    private val haloTex = App.textures.getOrCreateTexture("halo-lamp-yellow.png")
 
     private val turnHaloProps = object: TurnTowardsCamera.Delegate() {
         override val centre = this@StreetLampGel.haloCentre
@@ -109,7 +99,7 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
     private fun makeRenderer(): Renderer {
         val meshRenderer = App.factory.createMeshRenderer(
             object: MeshRenderer.Delegate() {
-                override val mesh = this@StreetLampGel.mesh
+                override val mesh get() = this@StreetLampGel.mesh
                 override val renderPos = this@StreetLampGel.pos
                 override val rotationPhi = spawnPt.rotation
                 override val emittingLight get() = lightIntensity * 0.1f
@@ -121,10 +111,10 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
 
         val haloRenderer = App.factory.createPaperRenderer(
             object: PaperRenderer.Delegate() {
-                override val tex = haloTex
-                override val frameSize = Point2f(haloTex?.width ?: 0, haloTex?.height ?: 0)
+                override val tex get() = haloTex
+                override val frameSize = haloFrameSize // shared mutable object
+                override val origin = haloOrigin // shared mutable object
                 override val scaleFactor = Point2f(HALO_SCALING, HALO_SCALING)
-                override val origin = Point2f(frameSize.x / 2, frameSize.y / 2)
                 override val renderPos = turnHaloProps.renderPos
                 override val rotationPhi get() = turnHaloProps.rotationPhi
                 override val rotationRho get() = turnHaloProps.rotationRho
@@ -159,8 +149,33 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
         override val radius = LAMP_RADIUS
     }
 
-    init {
-        App.lamps.add(lamp)
+    override suspend fun onCreateConcurrently(): () -> Unit {
+        val haloImg = App.textures.getOrLoadImageDataAsync("halo-lamp-yellow.png")
+
+        val theMesh = App.meshes.getOrLoadMeshAsync(
+            when (spawnPt.kind) {
+                TRADITIONAL -> "street-lamp-01.msh"
+            }
+        )
+
+        return {
+            // Back in main thread
+            haloTex = App.textures.getOrCreateTexture(haloImg).also {
+                haloFrameSize.set(it.width, it.height)
+                haloOrigin.set(it.width / 2, it.height / 2)
+            }
+            mesh = theMesh
+            App.lamps.add(lamp)
+        }
+    }
+
+    override fun onAboutToRender() {
+        haloCentre.set(pos.x, pos.y, pos.z + HALO_Z_OFFSET)
+    }
+
+    override fun onAnimateActive() {
+        turnHalo.animate()
+        adaptLightIntensity.animate()
     }
 
     override fun onRemoveZombie() {

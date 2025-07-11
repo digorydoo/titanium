@@ -113,7 +113,7 @@ class DlgManager {
         showSnackbar(App.i18n.getString(textId))
 
     fun showSnackbar(text: String) {
-        SnackbarGel.create(text).also { App.content.add(it, LayerKind.UI_ABOVE_DLG) }
+        SnackbarGel.create(text).also { it.onCreate(LayerKind.UI_ABOVE_DLG) }
     }
 
     fun handle() {

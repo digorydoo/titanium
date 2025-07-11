@@ -6,9 +6,9 @@ import ch.digorydoo.titanium.game.i18n.GameTextId
 
 enum class GameMenuTopic(override val textId: ITextId): IGameMenuTopic {
     MAP(GameTextId.MAP),
+    QUESTS(GameTextId.QUESTS),
     PROFILE(GameTextId.PROFILE),
     INVENTORY(GameTextId.INVENTORY),
-    QUESTS(GameTextId.QUESTS),
     ACHIEVEMENTS(GameTextId.ACHIEVEMENTS),
     OPTIONS(GameTextId.OPTIONS),
     ;

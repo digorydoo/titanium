@@ -85,6 +85,7 @@ abstract class SpawnPt private constructor(
                 initialValue = sqrt(maxCameraSqrDistForAutoSpawn).toFloat(),
                 step = 5.0f,
                 smallStep = 1.0f,
+                minValue = 0.0f,
             ) {
                 maxCameraSqrDistForAutoSpawn = it.toDouble() * it
                 onChange()
@@ -105,7 +106,7 @@ abstract class SpawnPt private constructor(
         val gel = createGel()
 
         val layer = if (canCollide) LayerKind.MAIN_COLLIDABLE else LayerKind.MAIN_NON_COLLIDABLE
-        App.content.add(gel, layer)
+        gel.onCreate(layer) // the gel adds itself to the layer, but possibly a little later (concurrently)
 
         // The spawnCount can become > 1 if spawnMgr.despawn is followed by a call to spawn. Despawn only marks the
         // gel as a zombie, and the spawnCount is decremented when didRemoveGel is called. Also, multiple calls to

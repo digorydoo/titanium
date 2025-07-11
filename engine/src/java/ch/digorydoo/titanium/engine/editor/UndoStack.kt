@@ -70,7 +70,7 @@ class UndoStack(private val status: EditorStatusBar, private val selection: Sele
             i++
         }
 
-        App.bricks.updateBricks(entry.sel, updateRunsAcross = true)
+        App.bricks.updateBricks(entry.sel, evenAdjacient = true)
         status.updateStats()
     }
 

@@ -4,7 +4,7 @@ import ch.digorydoo.titanium.engine.brick.AbstrBrickModel.Companion.BEVEL_CUT_SI
 import ch.digorydoo.titanium.engine.brick.AbstrBrickModel.Companion.THIN_INSET
 import ch.digorydoo.titanium.engine.brick.bar.BarFrameNSModel
 import ch.digorydoo.titanium.engine.brick.bar.BarFrameWEModel
-import ch.digorydoo.titanium.engine.brick.stairs.StraightStairsModel
+import ch.digorydoo.titanium.engine.brick.stairs.ThickStairsModel
 import ch.digorydoo.titanium.engine.brick.stairs.WindingStairsModel
 import ch.digorydoo.titanium.engine.brick.wall.*
 import ch.digorydoo.titanium.engine.brick.zz_various.BlockModel
@@ -19,8 +19,8 @@ private const val WINDOW_TOP_INSET = 0.7f
 private const val WINDOW_TOP_SLOPE = 0.1f
 private const val FULL_WINDING_STAIRS_NUM_STEPS = 6
 private const val HALF_WINDING_STAIRS_NUM_STEPS = 4
-private const val FULL_STRAIGHT_STAIRS_NUM_STEPS = 4
-private const val THICK_RELSIZE = 1.0f / FULL_STRAIGHT_STAIRS_NUM_STEPS // stair height must match thick ceiling
+private const val THICK_STAIRS_11_NUM_STEPS = 4
+const val THICK_RELSIZE = 1.0f / THICK_STAIRS_11_NUM_STEPS // stair height must match thick ceiling
 private const val THICK_INSET = 1.0f - THICK_RELSIZE
 
 internal fun makeBarFrameEast() = BarFrameWEModel(relInsetWestFace = THIN_INSET)
@@ -181,17 +181,110 @@ internal fun makeWindowTopRSouth() =
 internal fun makeWindowTopRWest() =
     BlockModel(relInsetUpFace = WINDOW_TOP_INSET, relInsetEastFace = THIN_INSET, upFaceNSSlope = -WINDOW_TOP_SLOPE)
 
-internal fun makeStraightStairsNorth() =
-    StraightStairsModel(lowEdge = Side.SOUTH, numSteps = FULL_STRAIGHT_STAIRS_NUM_STEPS)
+internal fun makeThickStairs11North() = ThickStairsModel(lowEdge = Side.SOUTH, numSteps = THICK_STAIRS_11_NUM_STEPS)
+internal fun makeThickStairs11East() = ThickStairsModel(lowEdge = Side.WEST, numSteps = THICK_STAIRS_11_NUM_STEPS)
+internal fun makeThickStairs11South() = ThickStairsModel(lowEdge = Side.NORTH, numSteps = THICK_STAIRS_11_NUM_STEPS)
+internal fun makeThickStairs11West() = ThickStairsModel(lowEdge = Side.EAST, numSteps = THICK_STAIRS_11_NUM_STEPS)
 
-internal fun makeStraightStairsEast() =
-    StraightStairsModel(lowEdge = Side.WEST, numSteps = FULL_STRAIGHT_STAIRS_NUM_STEPS)
+private const val THICK_STAIRS_32LO_REL_INSET_UPFACE = 0.3015f
+private const val THICK_STAIRS_32LO_REL_INSET_DOWNFACE = 0.1005f
+private const val THICK_STAIRS_32LO_STRETCH = 1.125f
+private const val THICK_STAIRS_32LO_FIRST_STEP_REL_HEIGHT = 1.1f
+private const val THICK_STAIRS_32LO_LAST_STEP_REL_HEIGHT = 1.41f
 
-internal fun makeStraightStairsSouth() =
-    StraightStairsModel(lowEdge = Side.NORTH, numSteps = FULL_STRAIGHT_STAIRS_NUM_STEPS)
+internal fun makeThckStairs32LoN() =
+    ThickStairsModel(
+        lowEdge = Side.SOUTH,
+        numSteps = 4,
+        relInsetUpFace = THICK_STAIRS_32LO_REL_INSET_UPFACE,
+        relInsetDownFace = THICK_STAIRS_32LO_REL_INSET_DOWNFACE,
+        stretch = THICK_STAIRS_32LO_STRETCH,
+        firstStepRelHeight = THICK_STAIRS_32LO_FIRST_STEP_REL_HEIGHT,
+        lastStepRelHeight = THICK_STAIRS_32LO_LAST_STEP_REL_HEIGHT,
+    )
 
-internal fun makeStraightStairsWest() =
-    StraightStairsModel(lowEdge = Side.EAST, numSteps = FULL_STRAIGHT_STAIRS_NUM_STEPS)
+internal fun makeThckStairs32LoE() =
+    ThickStairsModel(
+        lowEdge = Side.WEST,
+        numSteps = 4,
+        relInsetUpFace = THICK_STAIRS_32LO_REL_INSET_UPFACE,
+        relInsetDownFace = THICK_STAIRS_32LO_REL_INSET_DOWNFACE,
+        stretch = THICK_STAIRS_32LO_STRETCH,
+        firstStepRelHeight = THICK_STAIRS_32LO_FIRST_STEP_REL_HEIGHT,
+        lastStepRelHeight = THICK_STAIRS_32LO_LAST_STEP_REL_HEIGHT,
+    )
+
+internal fun makeThckStairs32LoS() =
+    ThickStairsModel(
+        lowEdge = Side.NORTH,
+        numSteps = 4,
+        relInsetUpFace = THICK_STAIRS_32LO_REL_INSET_UPFACE,
+        relInsetDownFace = THICK_STAIRS_32LO_REL_INSET_DOWNFACE,
+        stretch = THICK_STAIRS_32LO_STRETCH,
+        firstStepRelHeight = THICK_STAIRS_32LO_FIRST_STEP_REL_HEIGHT,
+        lastStepRelHeight = THICK_STAIRS_32LO_LAST_STEP_REL_HEIGHT,
+    )
+
+internal fun makeThckStairs32LoW() =
+    ThickStairsModel(
+        lowEdge = Side.EAST,
+        numSteps = 4,
+        relInsetUpFace = THICK_STAIRS_32LO_REL_INSET_UPFACE,
+        relInsetDownFace = THICK_STAIRS_32LO_REL_INSET_DOWNFACE,
+        stretch = THICK_STAIRS_32LO_STRETCH,
+        firstStepRelHeight = THICK_STAIRS_32LO_FIRST_STEP_REL_HEIGHT,
+        lastStepRelHeight = THICK_STAIRS_32LO_LAST_STEP_REL_HEIGHT,
+    )
+
+private const val THICK_STAIRS_32UP_REL_INSET_DOWNFACE = 0.5475f
+private const val THICK_STAIRS_32UP_STRETCH = 0.81f
+private const val THICK_STAIRS_32UP_FIRST_STEP_STRETCH = 0.5f
+private const val THICK_STAIRS_32UP_FIRST_STEP_REL_HEIGHT = 1.1f
+private const val THICK_STAIRS_32UP_LAST_STEP_REL_HEIGHT = 1.3f
+
+internal fun makeThckStairs32UpN() =
+    ThickStairsModel(
+        lowEdge = Side.SOUTH,
+        numSteps = 3,
+        relInsetDownFace = THICK_STAIRS_32UP_REL_INSET_DOWNFACE,
+        stretch = THICK_STAIRS_32UP_STRETCH,
+        firstStepStretch = THICK_STAIRS_32UP_FIRST_STEP_STRETCH,
+        firstStepRelHeight = THICK_STAIRS_32UP_FIRST_STEP_REL_HEIGHT,
+        lastStepRelHeight = THICK_STAIRS_32UP_LAST_STEP_REL_HEIGHT,
+    )
+
+internal fun makeThckStairs32UpE() =
+    ThickStairsModel(
+        lowEdge = Side.WEST,
+        numSteps = 3,
+        relInsetDownFace = THICK_STAIRS_32UP_REL_INSET_DOWNFACE,
+        stretch = THICK_STAIRS_32UP_STRETCH,
+        firstStepStretch = THICK_STAIRS_32UP_FIRST_STEP_STRETCH,
+        firstStepRelHeight = THICK_STAIRS_32UP_FIRST_STEP_REL_HEIGHT,
+        lastStepRelHeight = THICK_STAIRS_32UP_LAST_STEP_REL_HEIGHT,
+    )
+
+internal fun makeThckStairs32UpS() =
+    ThickStairsModel(
+        lowEdge = Side.NORTH,
+        numSteps = 3,
+        relInsetDownFace = THICK_STAIRS_32UP_REL_INSET_DOWNFACE,
+        stretch = THICK_STAIRS_32UP_STRETCH,
+        firstStepStretch = THICK_STAIRS_32UP_FIRST_STEP_STRETCH,
+        firstStepRelHeight = THICK_STAIRS_32UP_FIRST_STEP_REL_HEIGHT,
+        lastStepRelHeight = THICK_STAIRS_32UP_LAST_STEP_REL_HEIGHT,
+    )
+
+internal fun makeThckStairs32UpW() =
+    ThickStairsModel(
+        lowEdge = Side.EAST,
+        numSteps = 3,
+        relInsetDownFace = THICK_STAIRS_32UP_REL_INSET_DOWNFACE,
+        stretch = THICK_STAIRS_32UP_STRETCH,
+        firstStepStretch = THICK_STAIRS_32UP_FIRST_STEP_STRETCH,
+        firstStepRelHeight = THICK_STAIRS_32UP_FIRST_STEP_REL_HEIGHT,
+        lastStepRelHeight = THICK_STAIRS_32UP_LAST_STEP_REL_HEIGHT,
+    )
 
 internal fun makeWindingStairsEN() =
     WindingStairsModel(lowEdge = Side.EAST, numSteps = FULL_WINDING_STAIRS_NUM_STEPS, ccw = false)

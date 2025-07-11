@@ -5,7 +5,7 @@ import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.font.FontManager.FontName
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.i18n.ITextId
-import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
+import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 
 class MenuTabGel(private val textId: ITextId, posX: Int, posY: Int): GraphicElement(posX, posY, 0) {
     init {

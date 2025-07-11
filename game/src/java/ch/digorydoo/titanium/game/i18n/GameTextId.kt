@@ -32,6 +32,9 @@ internal enum class GameTextId(
     // Scene titles
     SCENE_AASTART("SCENE_AASTART"),
     SCENE_TOWN("SCENE_TOWN"),
+
+    // Gel actions
+    OPEN("OPEN"),
     ;
 
     override val bundle get() = (App.i18n as I18nManagerImpl).game

@@ -12,9 +12,10 @@ import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCapsuleBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
-import ch.digorydoo.titanium.engine.texture.FrameCollection
+import ch.digorydoo.titanium.engine.sprite.FrameCollection
 import ch.digorydoo.titanium.engine.utils.EPSILON
 import ch.digorydoo.titanium.engine.utils.SmoothFloat
+import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
@@ -27,6 +28,7 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
         inDialog = Visibility.ACTIVE
         inMenu = Visibility.INVISIBLE
         inEditor = Visibility.FROZEN_VISIBLE
+        callOnCreateConcurrently = true
     }
 
     override val body = FixedCylinderBody(
@@ -43,7 +45,7 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
     private val frames = FrameCollection()
     private val frameOrigin = MutablePoint2f()
     private val rotationPhi = SmoothFloat(initVal = spawnPt.rotation)
-    private var jumpInFrames: Int
+    private var jumpInFrames = JUMP_IN_FRAMES_MIN + (Random.nextFloat() * JUMP_IN_FRAMES_RANGE).toInt()
     private var didCollideWithFloor = true
     private var hasGroundContact = true
     private var timeOfChangeDir = 0.0f
@@ -61,6 +63,17 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
 
     override val renderer = App.factory.createPaperRenderer(renderProps)
 
+    override suspend fun onCreateConcurrently(): () -> Unit {
+        val img = App.textures.getOrLoadImageDataAsync("test32x32.png")
+
+        return {
+            // Back in main thread
+            frames.setTexture(img)
+            frameOrigin.set(renderProps.frameSize.x / 2, renderProps.frameSize.y)
+            changeDirection()
+        }
+    }
+
     override fun onCollide(
         other: GraphicElement,
         myHit: HitArea,
@@ -77,7 +90,7 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
                     // This is an unstable configuration. Add some random instability force.
                     // print("U")
                     jumpInFrames = JUMP_IN_FRAMES_MIN // don't jump as long as this happens
-                    val a = Random.nextFloat() * Math.PI * 2.0f
+                    val a = Random.nextFloat() * PI * 2.0f
                     val fx = INSTABILITY_FORCE * cos(a).toFloat()
                     val fy = INSTABILITY_FORCE * sin(a).toFloat()
                     body.addForce(fx * body.mass, fy * body.mass, INSTABILITY_FORCE * body.mass)
@@ -177,7 +190,7 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
     }
 
     private fun changeDirection() {
-        val a = (Random.nextFloat() * Math.PI * 2.0).toFloat()
+        val a = (Random.nextFloat() * PI * 2.0).toFloat()
         rotationPhi.desired = a
         timeOfChangeDir = App.time.sessionTime
     }
@@ -187,14 +200,6 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
         val a = atan2(normalTowardsMe.y, normalTowardsMe.x) + rnd
         rotationPhi.desired = a
         timeOfChangeDir = App.time.sessionTime
-    }
-
-    init {
-        frames.setTexture("test32x32.png")
-        frameOrigin.set(renderProps.frameSize.x / 2, renderProps.frameSize.y)
-
-        changeDirection()
-        jumpInFrames = JUMP_IN_FRAMES_MIN + (Random.nextFloat() * JUMP_IN_FRAMES_RANGE).toInt()
     }
 
     override fun onRemoveZombie() {

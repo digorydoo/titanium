@@ -24,7 +24,7 @@ class TownScene: Scene(
         val restoredState = restore as? RestoredStateImpl?
         val playerPos = restoredState?.playerPos ?: Point3f(175.0f, 156.0f, 7.75f)
         val player = PlayerGel(initialPos = playerPos, initialRotationPhi = 0.0f)
-        App.content.add(player, LayerKind.MAIN_COLLIDABLE)
+        player.onCreate(LayerKind.MAIN_COLLIDABLE)
 
         App.content.player = player
         App.camera.setTarget(player, jump = true)

@@ -41,6 +41,8 @@ class BrickShaderHoldersMap {
         CONCRETE_SMALL_VENTILATION to concreteShaderHolder,
         CONCRETE_SQUARE_WINDOW to concreteShaderHolder,
         CONCRETE_TALL_WINDOW to concreteShaderHolder,
+        DARKER_GREY_CONCRETE to concreteShaderHolder,
+        DARK_GREY_CONCRETE to concreteShaderHolder,
         GREEN_CONCRETE to concreteShaderHolder,
         GREY_CONCRETE to concreteShaderHolder,
         METAL_RED to metalShaderHolder,

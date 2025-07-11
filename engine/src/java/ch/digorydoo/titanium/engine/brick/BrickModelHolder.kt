@@ -8,7 +8,8 @@ import ch.digorydoo.titanium.engine.brick.inverse_ramp.InverseRampRunNorthModel
 import ch.digorydoo.titanium.engine.brick.inverse_ramp.InverseRampRunSouthModel
 import ch.digorydoo.titanium.engine.brick.inverse_ramp.InverseRampRunWestModel
 import ch.digorydoo.titanium.engine.brick.ramp.*
-import ch.digorydoo.titanium.engine.brick.stairs.*
+import ch.digorydoo.titanium.engine.brick.stairs.ThickStairsModel
+import ch.digorydoo.titanium.engine.brick.stairs.WindingStairsModel
 import ch.digorydoo.titanium.engine.brick.wall.*
 import ch.digorydoo.titanium.engine.brick.zz_various.BlockModel
 import ch.digorydoo.titanium.engine.brick.zz_various.CutModel
@@ -106,14 +107,6 @@ class BrickModelHolder {
     private var rampRunNorth: RampRunNorthModel? = null
     private var rampRunSouth: RampRunSouthModel? = null
     private var rampRunWest: RampRunWestModel? = null
-    private var stairsRunEast: StairsRunEastModel? = null
-    private var stairsRunNorth: StairsRunNorthModel? = null
-    private var stairsRunSouth: StairsRunSouthModel? = null
-    private var stairsRunWest: StairsRunWestModel? = null
-    private var straightStairsEast: StraightStairsModel? = null
-    private var straightStairsNorth: StraightStairsModel? = null
-    private var straightStairsSouth: StraightStairsModel? = null
-    private var straightStairsWest: StraightStairsModel? = null
     private var thckHalfHHighBarE: BlockModel? = null
     private var thckHalfHHighBarN: BlockModel? = null
     private var thckHalfHHighBarS: BlockModel? = null
@@ -140,6 +133,18 @@ class BrickModelHolder {
     private var thickHighBarN: BlockModel? = null
     private var thickHighBarS: BlockModel? = null
     private var thickHighBarW: BlockModel? = null
+    private var thckStairs11East: ThickStairsModel? = null
+    private var thckStairs11North: ThickStairsModel? = null
+    private var thckStairs11South: ThickStairsModel? = null
+    private var thckStairs11West: ThickStairsModel? = null
+    private var thckStairs32LoE: ThickStairsModel? = null
+    private var thckStairs32LoN: ThickStairsModel? = null
+    private var thckStairs32LoS: ThickStairsModel? = null
+    private var thckStairs32LoW: ThickStairsModel? = null
+    private var thckStairs32UpE: ThickStairsModel? = null
+    private var thckStairs32UpN: ThickStairsModel? = null
+    private var thckStairs32UpS: ThickStairsModel? = null
+    private var thckStairs32UpW: ThickStairsModel? = null
     private var thickWallCornerNE: WallCornerNEModel? = null
     private var thickWallCornerNW: WallCornerNWModel? = null
     private var thickWallCornerSE: WallCornerSEModel? = null
@@ -316,14 +321,6 @@ class BrickModelHolder {
             RAMP_RUN_NORTH -> rampRunNorth ?: RampRunNorthModel().also { rampRunNorth = it }
             RAMP_RUN_SOUTH -> rampRunSouth ?: RampRunSouthModel().also { rampRunSouth = it }
             RAMP_RUN_WEST -> rampRunWest ?: RampRunWestModel().also { rampRunWest = it }
-            STAIRS_RUN_EAST -> stairsRunEast ?: StairsRunEastModel().also { stairsRunEast = it }
-            STAIRS_RUN_NORTH -> stairsRunNorth ?: StairsRunNorthModel().also { stairsRunNorth = it }
-            STAIRS_RUN_SOUTH -> stairsRunSouth ?: StairsRunSouthModel().also { stairsRunSouth = it }
-            STAIRS_RUN_WEST -> stairsRunWest ?: StairsRunWestModel().also { stairsRunWest = it }
-            STRAIGHT_STAIRS_EAST -> straightStairsEast ?: makeStraightStairsEast().also { straightStairsEast = it }
-            STRAIGHT_STAIRS_NORTH -> straightStairsNorth ?: makeStraightStairsNorth().also { straightStairsNorth = it }
-            STRAIGHT_STAIRS_SOUTH -> straightStairsSouth ?: makeStraightStairsSouth().also { straightStairsSouth = it }
-            STRAIGHT_STAIRS_WEST -> straightStairsWest ?: makeStraightStairsWest().also { straightStairsWest = it }
             THICK_CEILING -> thickCeiling ?: makeThickCeiling().also { thickCeiling = it }
             THICK_CEILING_V_CUT_NE -> thickCeilingVCutNE ?: makeThickCeilingVCutNE().also { thickCeilingVCutNE = it }
             THICK_CEILING_V_CUT_NW -> thickCeilingVCutNW ?: makeThickCeilingVCutNW().also { thickCeilingVCutNW = it }
@@ -342,10 +339,22 @@ class BrickModelHolder {
             THICK_HALFH_LOW_BAR_NORTH -> thckHalfHLowBarN ?: makeThickHalfHLowBarN().also { thckHalfHLowBarN = it }
             THICK_HALFH_LOW_BAR_SOUTH -> thckHalfHLowBarS ?: makeThickHalfHLowBarS().also { thckHalfHLowBarS = it }
             THICK_HALFH_LOW_BAR_WEST -> thckHalfHLowBarW ?: makeThickHalfHLowBarW().also { thckHalfHLowBarW = it }
-            THICK_HIGH_BAR_NORTH -> thickHighBarN ?: makeThickHighBarN().also { thickHighBarN = it }
             THICK_HIGH_BAR_EAST -> thickHighBarE ?: makeThickHighBarE().also { thickHighBarE = it }
+            THICK_HIGH_BAR_NORTH -> thickHighBarN ?: makeThickHighBarN().also { thickHighBarN = it }
             THICK_HIGH_BAR_SOUTH -> thickHighBarS ?: makeThickHighBarS().also { thickHighBarS = it }
             THICK_HIGH_BAR_WEST -> thickHighBarW ?: makeThickHighBarW().also { thickHighBarW = it }
+            THICK_STAIRS_11_EAST -> thckStairs11East ?: makeThickStairs11East().also { thckStairs11East = it }
+            THICK_STAIRS_11_NORTH -> thckStairs11North ?: makeThickStairs11North().also { thckStairs11North = it }
+            THICK_STAIRS_11_SOUTH -> thckStairs11South ?: makeThickStairs11South().also { thckStairs11South = it }
+            THICK_STAIRS_11_WEST -> thckStairs11West ?: makeThickStairs11West().also { thckStairs11West = it }
+            THICK_STAIRS_32_LOWER_EAST -> thckStairs32LoE ?: makeThckStairs32LoE().also { thckStairs32LoE = it }
+            THICK_STAIRS_32_LOWER_NORTH -> thckStairs32LoN ?: makeThckStairs32LoN().also { thckStairs32LoN = it }
+            THICK_STAIRS_32_LOWER_SOUTH -> thckStairs32LoS ?: makeThckStairs32LoS().also { thckStairs32LoS = it }
+            THICK_STAIRS_32_LOWER_WEST -> thckStairs32LoW ?: makeThckStairs32LoW().also { thckStairs32LoW = it }
+            THICK_STAIRS_32_UPPER_EAST -> thckStairs32UpE ?: makeThckStairs32UpE().also { thckStairs32UpE = it }
+            THICK_STAIRS_32_UPPER_NORTH -> thckStairs32UpN ?: makeThckStairs32UpN().also { thckStairs32UpN = it }
+            THICK_STAIRS_32_UPPER_SOUTH -> thckStairs32UpS ?: makeThckStairs32UpS().also { thckStairs32UpS = it }
+            THICK_STAIRS_32_UPPER_WEST -> thckStairs32UpW ?: makeThckStairs32UpW().also { thckStairs32UpW = it }
             THICK_WALL_CORNER_NE -> thickWallCornerNE ?: makeThickWallCornerNE().also { thickWallCornerNE = it }
             THICK_WALL_CORNER_NW -> thickWallCornerNW ?: makeThickWallCornerNW().also { thickWallCornerNW = it }
             THICK_WALL_CORNER_SE -> thickWallCornerSE ?: makeThickWallCornerSE().also { thickWallCornerSE = it }

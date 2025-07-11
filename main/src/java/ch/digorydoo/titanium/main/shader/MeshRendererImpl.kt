@@ -58,7 +58,6 @@ class MeshRendererImpl(
         }
     }
 
-    @Suppress("removal")
     protected fun finalize() {
         // Check that free has been called. We can't throw from finalize, so log only.
         if (valid) Log.error(TAG, "still valid at finalize")
@@ -71,6 +70,7 @@ class MeshRendererImpl(
 
     override fun renderSolid() {
         require(valid)
+        val mesh = delegate.mesh ?: return
 
         checkGLError()
         glDisable(GL_BLEND)
@@ -113,7 +113,8 @@ class MeshRendererImpl(
         rotationMatrix.setRotationZ(delegate.rotationPhi, clear = false)
         rootTransform.multiply(rotationMatrix)
 
-        delegate.mesh.divisions.forEach { division ->
+        // FIXME inefficient: we pass down the mesh every time even though it generally won't change
+        mesh.divisions.forEach { division ->
             division.nodes.forEach { render(it, division.material, rootTransform) }
         }
 
@@ -224,19 +225,21 @@ class MeshRendererImpl(
 
         private fun MeshMaterial.props(): MaterialProps = when (this) {
             MeshMaterial.DEFAULT -> greyStoneProps
-            MeshMaterial.RED_CLOTH -> redClothProps
-            MeshMaterial.GREY_STONE -> greyStoneProps
-            MeshMaterial.WOOD -> woodProps
-            MeshMaterial.SILVER_METAL -> silverMetalProps
-            MeshMaterial.RED_METAL -> redMetalProps
-            MeshMaterial.GOLD -> goldProps
             MeshMaterial.BLACK_CLOTH -> blackClothProps
-            MeshMaterial.WHITE_CLOTH -> whiteClothProps
             MeshMaterial.BLUE_METAL -> blueMetalProps
+            MeshMaterial.CLAY -> clayProps
             MeshMaterial.GLOSSY_WHITE -> glossyWhiteProps
+            MeshMaterial.GOLD -> goldProps
+            MeshMaterial.GREY_STONE -> greyStoneProps
             MeshMaterial.MILITARY_DKGREEN_METAL -> militaryDkGreenMetalProps
             MeshMaterial.MILITARY_GREEN_METAL -> militaryGreenMetalProps
-            MeshMaterial.CLAY -> clayProps
+            MeshMaterial.RED_CLOTH -> redClothProps
+            MeshMaterial.RED_METAL -> redMetalProps
+            MeshMaterial.SILVER_METAL -> silverMetalProps
+            MeshMaterial.WHITE_CLOTH -> whiteClothProps
+            MeshMaterial.WHITE_PLASTIC -> whitePlasticProps
+            MeshMaterial.WOOD -> woodProps
+            MeshMaterial.WOOD_DARK -> woodDarkProps
         }
 
         private val blackClothProps = MaterialProps(
@@ -314,8 +317,18 @@ class MeshRendererImpl(
         private val whiteClothProps = MaterialProps(
             ambientLightAmount = 0.3f,
             diffuseLightAmount = 0.2f,
-            emittingLight = Colour.grey900,
             shininess = 0.0f,
+            contourIntensity = 0.0f,
+            contourRamp = 6.0f,
+            contourTopReflectsSky = 0.0f,
+            contourWidth = 0.2f,
+            tintAmount = 0.0f,
+            tintColour = Colour.white,
+        )
+        private val whitePlasticProps = MaterialProps(
+            ambientLightAmount = 0.3f,
+            diffuseLightAmount = 0.2f,
+            shininess = 0.42f,
             contourIntensity = 0.0f,
             contourRamp = 6.0f,
             contourTopReflectsSky = 0.0f,
@@ -333,6 +346,17 @@ class MeshRendererImpl(
             shininess = 0.1f,
             tintAmount = 0.3f,
             tintColour = Colour(1.0f, 0.42f, 0.0f),
+        )
+        private val woodDarkProps = MaterialProps(
+            ambientLightAmount = 0.39f,
+            diffuseLightAmount = 0.39f,
+            contourIntensity = 0.1f,
+            contourRamp = 6.0f,
+            contourTopReflectsSky = 0.8f,
+            contourWidth = 0.2f,
+            shininess = 0.1f,
+            tintAmount = 0.3f,
+            tintColour = Colour(0.8f, 0.39f, 0.0f),
         )
         private val glossyWhiteProps = MaterialProps(
             ambientLightAmount = 0.5f,

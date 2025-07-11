@@ -8,7 +8,7 @@ import ch.digorydoo.titanium.engine.scene.Lighting
 import ch.digorydoo.titanium.engine.scene.MutableLighting
 import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 
-class LightingMenu(private val actions: EditorActions) {
+internal class LightingMenu(private val actions: EditorActions) {
     fun show(isTopLevel: Boolean, onCancel: () -> Unit) {
         show(playSoundOnOpen = isTopLevel, playSoundOnDismiss = isTopLevel, onCancel)
     }

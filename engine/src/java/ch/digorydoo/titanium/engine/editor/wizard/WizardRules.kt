@@ -1,5 +1,6 @@
 package ch.digorydoo.titanium.engine.editor.wizard
 
+import ch.digorydoo.titanium.engine.brick.BrickMaterial.DARK_GREY_CONCRETE
 import ch.digorydoo.titanium.engine.brick.BrickMaterial.METAL_RED
 import ch.digorydoo.titanium.engine.brick.BrickShape.*
 import ch.digorydoo.titanium.engine.editor.wizard.DrawingWizard.If
@@ -245,37 +246,105 @@ internal val wizardRules = arrayOf(
     If(above = UPRIGHT_BAR_NE, northIsnt = NONE, then = HIGH_BAR_NORTH, mat = METAL_RED),
     If(above = UPRIGHT_BAR_NW, northIsnt = NONE, then = HIGH_BAR_NORTH, mat = METAL_RED),
     If(above = UPRIGHT_DBL_BAR_NORTH, then = HIGH_BAR_NORTH, mat = METAL_RED),
+    If(
+        below = NONE,
+        above = NONE,
+        northIsnt = NONE,
+        northAbove = NONE,
+        neAbove = BASIC_BLOCK,
+        then = HIGH_BAR_NORTH,
+        mat = DARK_GREY_CONCRETE
+    ),
+    If(
+        below = NONE,
+        above = NONE,
+        northIsnt = NONE,
+        northAbove = NONE,
+        nwAbove = BASIC_BLOCK,
+        then = HIGH_BAR_NORTH,
+        mat = DARK_GREY_CONCRETE
+    ),
 
     // then = HIGH_BAR_EAST
     If(above = UPRIGHT_BAR_NE, eastIsnt = NONE, then = HIGH_BAR_EAST, mat = METAL_RED),
     If(above = UPRIGHT_BAR_SE, eastIsnt = NONE, then = HIGH_BAR_EAST, mat = METAL_RED),
     If(above = UPRIGHT_DBL_BAR_EAST, then = HIGH_BAR_EAST, mat = METAL_RED),
+    If(
+        below = NONE,
+        above = NONE,
+        eastIsnt = NONE,
+        eastAbove = NONE,
+        neAbove = BASIC_BLOCK,
+        then = HIGH_BAR_EAST,
+        mat = DARK_GREY_CONCRETE
+    ),
+    If(
+        below = NONE,
+        above = NONE,
+        eastIsnt = NONE,
+        eastAbove = NONE,
+        seAbove = BASIC_BLOCK,
+        then = HIGH_BAR_EAST,
+        mat = DARK_GREY_CONCRETE
+    ),
 
     // then = HIGH_BAR_SOUTH
     If(above = UPRIGHT_BAR_SE, southIsnt = NONE, then = HIGH_BAR_SOUTH, mat = METAL_RED),
     If(above = UPRIGHT_BAR_SW, southIsnt = NONE, then = HIGH_BAR_SOUTH, mat = METAL_RED),
     If(above = UPRIGHT_DBL_BAR_SOUTH, then = HIGH_BAR_SOUTH, mat = METAL_RED),
+    If(
+        below = NONE,
+        above = NONE,
+        southIsnt = NONE,
+        southAbove = NONE,
+        seAbove = BASIC_BLOCK,
+        then = HIGH_BAR_SOUTH,
+        mat = DARK_GREY_CONCRETE
+    ),
+    If(
+        below = NONE,
+        above = NONE,
+        southIsnt = NONE,
+        southAbove = NONE,
+        swAbove = BASIC_BLOCK,
+        then = HIGH_BAR_SOUTH,
+        mat = DARK_GREY_CONCRETE
+    ),
 
     // then = HIGH_BAR_WEST
     If(above = UPRIGHT_BAR_NW, westIsnt = NONE, then = HIGH_BAR_WEST, mat = METAL_RED),
     If(above = UPRIGHT_BAR_SW, westIsnt = NONE, then = HIGH_BAR_WEST, mat = METAL_RED),
     If(above = UPRIGHT_DBL_BAR_WEST, then = HIGH_BAR_WEST, mat = METAL_RED),
+    If(
+        below = NONE,
+        above = NONE,
+        westIsnt = NONE,
+        westAbove = NONE,
+        nwAbove = BASIC_BLOCK,
+        then = HIGH_BAR_WEST,
+        mat = DARK_GREY_CONCRETE
+    ),
+    If(
+        below = NONE,
+        above = NONE,
+        westIsnt = NONE,
+        westAbove = NONE,
+        swAbove = BASIC_BLOCK,
+        then = HIGH_BAR_WEST,
+        mat = DARK_GREY_CONCRETE
+    ),
 
     // then = INVERSE_RAMP_RUN_EAST
     If(above = RAMP_RUN_EAST, then = INVERSE_RAMP_RUN_EAST),
-    If(above = STAIRS_RUN_EAST, then = INVERSE_RAMP_RUN_EAST),
 
     // then = INVERSE_RAMP_RUN_NORTH
     If(above = RAMP_RUN_NORTH, then = INVERSE_RAMP_RUN_NORTH),
-    If(above = STAIRS_RUN_NORTH, then = INVERSE_RAMP_RUN_NORTH),
 
     // then = INVERSE_RAMP_RUN_SOUTH
     If(above = RAMP_RUN_SOUTH, then = INVERSE_RAMP_RUN_SOUTH),
-    If(above = STAIRS_RUN_SOUTH, then = INVERSE_RAMP_RUN_SOUTH),
 
     // then = INVERSE_RAMP_RUN_WEST
     If(above = RAMP_RUN_WEST, then = INVERSE_RAMP_RUN_WEST),
-    If(above = STAIRS_RUN_WEST, then = INVERSE_RAMP_RUN_WEST),
 
     // then = LOW_BAR_NORTH
     If(below = BASIC_BLOCK, above = NONE, north = NONE, northBelow = NONE, then = LOW_BAR_NORTH),
@@ -418,43 +487,63 @@ internal val wizardRules = arrayOf(
     // then = RAMP_RUN_WEST
     If(below = INVERSE_RAMP_RUN_WEST, then = RAMP_RUN_WEST),
 
-    // then = STAIRS_RUN_EAST
-    If(east = BASIC_BLOCK, below = BASIC_BLOCK, above = NONE, then = STAIRS_RUN_EAST),
+    // then = THICK_STAIRS_11_NORTH
+    If(north = THICK_CEILING, below = NONE, above = NONE, then = THICK_STAIRS_11_NORTH),
+    If(south = THICK_FLOOR, below = NONE, above = NONE, then = THICK_STAIRS_11_NORTH),
 
-    // then = STAIRS_RUN_NORTH
-    If(north = BASIC_BLOCK, below = BASIC_BLOCK, above = NONE, then = STAIRS_RUN_NORTH),
+    // then = THICK_STAIRS_11_EAST
+    If(east = THICK_CEILING, below = NONE, above = NONE, then = THICK_STAIRS_11_EAST),
+    If(west = THICK_FLOOR, below = NONE, above = NONE, then = THICK_STAIRS_11_EAST),
 
-    // then = STAIRS_RUN_SOUTH
-    If(south = BASIC_BLOCK, below = BASIC_BLOCK, above = NONE, then = STAIRS_RUN_SOUTH),
+    // then = THICK_STAIRS_11_SOUTH
+    If(south = THICK_CEILING, below = NONE, above = NONE, then = THICK_STAIRS_11_SOUTH),
+    If(north = THICK_FLOOR, below = NONE, above = NONE, then = THICK_STAIRS_11_SOUTH),
 
-    // then = STAIRS_RUN_WEST
-    If(west = BASIC_BLOCK, below = BASIC_BLOCK, above = NONE, then = STAIRS_RUN_WEST),
+    // then = THICK_STAIRS_11_WEST
+    If(west = THICK_CEILING, below = NONE, above = NONE, then = THICK_STAIRS_11_WEST),
+    If(east = THICK_FLOOR, below = NONE, above = NONE, then = THICK_STAIRS_11_WEST),
 
-    // then = STRAIGHT_STAIRS_NORTH
-    If(north = THICK_CEILING, below = NONE, above = NONE, then = STRAIGHT_STAIRS_NORTH),
-    If(south = THICK_FLOOR, below = NONE, above = NONE, then = STRAIGHT_STAIRS_NORTH),
+    // then = THICK_STAIRS_32_LOWER_NORTH
+    If(south = THICK_FLOOR, below = NONE, above = NONE, then = THICK_STAIRS_32_LOWER_NORTH),
+    If(north = THICK_STAIRS_32_UPPER_NORTH, below = NONE, above = NONE, then = THICK_STAIRS_32_LOWER_NORTH),
 
-    // then = STRAIGHT_STAIRS_EAST
-    If(east = THICK_CEILING, below = NONE, above = NONE, then = STRAIGHT_STAIRS_EAST),
-    If(west = THICK_FLOOR, below = NONE, above = NONE, then = STRAIGHT_STAIRS_EAST),
+    // then = THICK_STAIRS_32_LOWER_EAST
+    If(west = THICK_FLOOR, below = NONE, above = NONE, then = THICK_STAIRS_32_LOWER_EAST),
+    If(east = THICK_STAIRS_32_UPPER_EAST, below = NONE, above = NONE, then = THICK_STAIRS_32_LOWER_EAST),
 
-    // then = STRAIGHT_STAIRS_SOUTH
-    If(south = THICK_CEILING, below = NONE, above = NONE, then = STRAIGHT_STAIRS_SOUTH),
-    If(north = THICK_FLOOR, below = NONE, above = NONE, then = STRAIGHT_STAIRS_SOUTH),
+    // then = THICK_STAIRS_32_LOWER_SOUTH
+    If(north = THICK_FLOOR, below = NONE, above = NONE, then = THICK_STAIRS_32_LOWER_SOUTH),
+    If(south = THICK_STAIRS_32_UPPER_SOUTH, below = NONE, above = NONE, then = THICK_STAIRS_32_LOWER_SOUTH),
 
-    // then = STRAIGHT_STAIRS_WEST
-    If(west = THICK_CEILING, below = NONE, above = NONE, then = STRAIGHT_STAIRS_WEST),
-    If(east = THICK_FLOOR, below = NONE, above = NONE, then = STRAIGHT_STAIRS_WEST),
+    // then = THICK_STAIRS_32_LOWER_WEST
+    If(east = THICK_FLOOR, below = NONE, above = NONE, then = THICK_STAIRS_32_LOWER_WEST),
+    If(west = THICK_STAIRS_32_UPPER_WEST, below = NONE, above = NONE, then = THICK_STAIRS_32_LOWER_WEST),
+
+    // then = THICK_STAIRS_32_UPPER_NORTH
+    If(north = THICK_CEILING, below = NONE, above = NONE, then = THICK_STAIRS_32_UPPER_NORTH),
+    If(south = THICK_STAIRS_32_LOWER_NORTH, below = NONE, above = NONE, then = THICK_STAIRS_32_UPPER_NORTH),
+
+    // then = THICK_STAIRS_32_UPPER_EAST
+    If(east = THICK_CEILING, below = NONE, above = NONE, then = THICK_STAIRS_32_UPPER_EAST),
+    If(west = THICK_STAIRS_32_LOWER_EAST, below = NONE, above = NONE, then = THICK_STAIRS_32_UPPER_EAST),
+
+    // then = THICK_STAIRS_32_UPPER_SOUTH
+    If(south = THICK_CEILING, below = NONE, above = NONE, then = THICK_STAIRS_32_UPPER_SOUTH),
+    If(north = THICK_STAIRS_32_LOWER_SOUTH, below = NONE, above = NONE, then = THICK_STAIRS_32_UPPER_SOUTH),
+
+    // then = THICK_STAIRS_32_UPPER_WEST
+    If(west = THICK_CEILING, below = NONE, above = NONE, then = THICK_STAIRS_32_UPPER_WEST),
+    If(east = THICK_STAIRS_32_LOWER_WEST, below = NONE, above = NONE, then = THICK_STAIRS_32_UPPER_WEST),
 
     // then = THICK_CEILING
     If(north = THICK_WALL_TOP_NORTH, belowIsnt = THICK_CEILING, then = THICK_CEILING),
     If(east = THICK_WALL_TOP_EAST, belowIsnt = THICK_CEILING, then = THICK_CEILING),
     If(south = THICK_WALL_TOP_SOUTH, belowIsnt = THICK_CEILING, then = THICK_CEILING),
     If(west = THICK_WALL_TOP_WEST, belowIsnt = THICK_CEILING, then = THICK_CEILING),
-    If(north = STRAIGHT_STAIRS_SOUTH, belowIsnt = THICK_CEILING, then = THICK_CEILING),
-    If(east = STRAIGHT_STAIRS_WEST, belowIsnt = THICK_CEILING, then = THICK_CEILING),
-    If(south = STRAIGHT_STAIRS_NORTH, belowIsnt = THICK_CEILING, then = THICK_CEILING),
-    If(west = STRAIGHT_STAIRS_EAST, belowIsnt = THICK_CEILING, then = THICK_CEILING),
+    If(north = THICK_STAIRS_11_SOUTH, belowIsnt = THICK_CEILING, then = THICK_CEILING),
+    If(east = THICK_STAIRS_11_WEST, belowIsnt = THICK_CEILING, then = THICK_CEILING),
+    If(south = THICK_STAIRS_11_NORTH, belowIsnt = THICK_CEILING, then = THICK_CEILING),
+    If(west = THICK_STAIRS_11_EAST, belowIsnt = THICK_CEILING, then = THICK_CEILING),
     If(north = THICK_CEILING_V_CUT_NE, belowIsnt = THICK_CEILING, then = THICK_CEILING),
     If(east = THICK_CEILING_V_CUT_NE, belowIsnt = THICK_CEILING, then = THICK_CEILING),
     If(north = THICK_CEILING_V_CUT_NW, belowIsnt = THICK_CEILING, then = THICK_CEILING),
@@ -463,6 +552,10 @@ internal val wizardRules = arrayOf(
     If(east = THICK_CEILING_V_CUT_SE, belowIsnt = THICK_CEILING, then = THICK_CEILING),
     If(south = THICK_CEILING_V_CUT_SW, belowIsnt = THICK_CEILING, then = THICK_CEILING),
     If(west = THICK_CEILING_V_CUT_SW, belowIsnt = THICK_CEILING, then = THICK_CEILING),
+    If(south = THICK_STAIRS_32_UPPER_NORTH, below = NONE, then = THICK_CEILING),
+    If(west = THICK_STAIRS_32_UPPER_EAST, below = NONE, then = THICK_CEILING),
+    If(north = THICK_STAIRS_32_UPPER_SOUTH, below = NONE, then = THICK_CEILING),
+    If(east = THICK_STAIRS_32_UPPER_WEST, below = NONE, then = THICK_CEILING),
 
     // then = THICK_CEILING_V_CUT_NE
     If(south = THICK_CEILING, then = THICK_CEILING_V_CUT_NE),
@@ -485,10 +578,10 @@ internal val wizardRules = arrayOf(
     If(above = VERTICAL_CUT_SW, then = THICK_CEILING_V_CUT_SW),
 
     // then = THICK_FLOOR
-    If(north = STRAIGHT_STAIRS_NORTH, then = THICK_FLOOR),
-    If(east = STRAIGHT_STAIRS_EAST, then = THICK_FLOOR),
-    If(south = STRAIGHT_STAIRS_SOUTH, then = THICK_FLOOR),
-    If(west = STRAIGHT_STAIRS_WEST, then = THICK_FLOOR),
+    If(north = THICK_STAIRS_11_NORTH, then = THICK_FLOOR),
+    If(east = THICK_STAIRS_11_EAST, then = THICK_FLOOR),
+    If(south = THICK_STAIRS_11_SOUTH, then = THICK_FLOOR),
+    If(west = THICK_STAIRS_11_WEST, then = THICK_FLOOR),
     If(north = THICK_FLOOR_V_CUT_NE, then = THICK_FLOOR),
     If(east = THICK_FLOOR_V_CUT_NE, then = THICK_FLOOR),
     If(north = THICK_FLOOR_V_CUT_NW, then = THICK_FLOOR),
@@ -497,6 +590,10 @@ internal val wizardRules = arrayOf(
     If(east = THICK_FLOOR_V_CUT_SE, then = THICK_FLOOR),
     If(south = THICK_FLOOR_V_CUT_SW, then = THICK_FLOOR),
     If(west = THICK_FLOOR_V_CUT_SW, then = THICK_FLOOR),
+    If(north = THICK_STAIRS_32_LOWER_NORTH, below = NONE, then = THICK_FLOOR),
+    If(east = THICK_STAIRS_32_LOWER_EAST, below = NONE, then = THICK_FLOOR),
+    If(south = THICK_STAIRS_32_LOWER_SOUTH, below = NONE, then = THICK_FLOOR),
+    If(west = THICK_STAIRS_32_LOWER_WEST, below = NONE, then = THICK_FLOOR),
 
     // then = THICK_FLOOR_V_CUT_NE
     If(south = THICK_FLOOR, then = THICK_FLOOR_V_CUT_NE),
@@ -552,19 +649,19 @@ internal val wizardRules = arrayOf(
 
     // then = THICK_HIGH_BAR_NORTH
     If(north = THICK_CEILING, then = THICK_HIGH_BAR_NORTH),
-    If(above = STRAIGHT_STAIRS_SOUTH, then = THICK_HIGH_BAR_NORTH),
+    If(above = THICK_STAIRS_11_SOUTH, then = THICK_HIGH_BAR_NORTH),
 
     // then = THICK_HIGH_BAR_EAST
     If(east = THICK_CEILING, then = THICK_HIGH_BAR_EAST),
-    If(above = STRAIGHT_STAIRS_WEST, then = THICK_HIGH_BAR_EAST),
+    If(above = THICK_STAIRS_11_WEST, then = THICK_HIGH_BAR_EAST),
 
     // then = THICK_HIGH_BAR_SOUTH
     If(south = THICK_CEILING, then = THICK_HIGH_BAR_SOUTH),
-    If(above = STRAIGHT_STAIRS_NORTH, then = THICK_HIGH_BAR_SOUTH),
+    If(above = THICK_STAIRS_11_NORTH, then = THICK_HIGH_BAR_SOUTH),
 
     // then = THICK_HIGH_BAR_WEST
     If(west = THICK_CEILING, then = THICK_HIGH_BAR_WEST),
-    If(above = STRAIGHT_STAIRS_EAST, then = THICK_HIGH_BAR_WEST),
+    If(above = THICK_STAIRS_11_EAST, then = THICK_HIGH_BAR_WEST),
 
     // then = THICK_WALL_NORTH
     If(west = BASIC_BLOCK, below = BASIC_BLOCK, then = THICK_WALL_NORTH),
@@ -785,16 +882,16 @@ internal val wizardRules = arrayOf(
     If(below = HALFH_CEILING, north = NONE, east = NONE, south = NONE, west = NONE, then = VERTICAL_BEVEL_FULL_ALT),
 
     // then = VERTICAL_BEVEL_NORTH
-    If(north = NONE, south = BASIC_BLOCK, then = VERTICAL_BEVEL_NORTH),
+    If(north = NONE, south = BASIC_BLOCK, east = NONE, west = NONE, se = NONE, sw = NONE, then = VERTICAL_BEVEL_NORTH),
 
     // then = VERTICAL_BEVEL_EAST
-    If(east = NONE, west = BASIC_BLOCK, then = VERTICAL_BEVEL_EAST),
+    If(east = NONE, west = BASIC_BLOCK, north = NONE, south = NONE, nw = NONE, sw = NONE, then = VERTICAL_BEVEL_EAST),
 
     // then = VERTICAL_BEVEL_SOUTH
-    If(south = NONE, north = BASIC_BLOCK, then = VERTICAL_BEVEL_SOUTH),
+    If(south = NONE, north = BASIC_BLOCK, east = NONE, west = NONE, ne = NONE, nw = NONE, then = VERTICAL_BEVEL_SOUTH),
 
     // then = VERTICAL_BEVEL_WEST
-    If(west = NONE, east = BASIC_BLOCK, then = VERTICAL_BEVEL_WEST),
+    If(west = NONE, east = BASIC_BLOCK, north = NONE, south = NONE, ne = NONE, se = NONE, then = VERTICAL_BEVEL_WEST),
 
     // then = VERTICAL_BEVEL_NE
     If(south = BASIC_BLOCK, west = BASIC_BLOCK, north = NONE, east = NONE, then = VERTICAL_BEVEL_NE),
@@ -952,39 +1049,111 @@ internal val wizardRules = arrayOf(
     If(east = WINDOW_TOP_R_NORTH, westIsnt = WINDOW_TOP_L_NORTH, then = WINDOW_TOP_L_NORTH),
     If(west = WINDOW_TOP_R_NORTH, eastIsnt = WINDOW_TOP_L_NORTH, then = WINDOW_TOP_L_NORTH),
     If(below = THIN_WALL_NORTH, eastIsnt = WINDOW_TOP_L_NORTH, then = WINDOW_TOP_L_NORTH),
+    If(
+        below = NONE,
+        above = NONE,
+        northIsnt = NONE,
+        northBelow = NONE,
+        nwBelow = BASIC_BLOCK,
+        then = WINDOW_TOP_L_NORTH,
+        mat = DARK_GREY_CONCRETE
+    ),
 
     // then = WINDOW_TOP_L_EAST
     If(north = WINDOW_TOP_R_EAST, southIsnt = WINDOW_TOP_L_EAST, then = WINDOW_TOP_L_EAST),
     If(south = WINDOW_TOP_R_EAST, northIsnt = WINDOW_TOP_L_EAST, then = WINDOW_TOP_L_EAST),
     If(below = THIN_WALL_EAST, northIsnt = WINDOW_TOP_L_EAST, then = WINDOW_TOP_L_EAST),
+    If(
+        below = NONE,
+        above = NONE,
+        eastIsnt = NONE,
+        eastBelow = NONE,
+        neBelow = BASIC_BLOCK,
+        then = WINDOW_TOP_L_EAST,
+        mat = DARK_GREY_CONCRETE
+    ),
 
     // then = WINDOW_TOP_L_SOUTH
     If(east = WINDOW_TOP_R_SOUTH, westIsnt = WINDOW_TOP_L_SOUTH, then = WINDOW_TOP_L_SOUTH),
     If(west = WINDOW_TOP_R_SOUTH, eastIsnt = WINDOW_TOP_L_SOUTH, then = WINDOW_TOP_L_SOUTH),
     If(below = THIN_WALL_SOUTH, westIsnt = WINDOW_TOP_L_SOUTH, then = WINDOW_TOP_L_SOUTH),
+    If(
+        below = NONE,
+        above = NONE,
+        southIsnt = NONE,
+        southBelow = NONE,
+        seBelow = BASIC_BLOCK,
+        then = WINDOW_TOP_L_SOUTH,
+        mat = DARK_GREY_CONCRETE
+    ),
 
     // then = WINDOW_TOP_L_WEST
     If(north = WINDOW_TOP_R_WEST, southIsnt = WINDOW_TOP_L_WEST, then = WINDOW_TOP_L_WEST),
     If(south = WINDOW_TOP_R_WEST, northIsnt = WINDOW_TOP_L_WEST, then = WINDOW_TOP_L_WEST),
     If(below = THIN_WALL_WEST, southIsnt = WINDOW_TOP_L_WEST, then = WINDOW_TOP_L_WEST),
+    If(
+        below = NONE,
+        above = NONE,
+        westIsnt = NONE,
+        westBelow = NONE,
+        swBelow = BASIC_BLOCK,
+        then = WINDOW_TOP_L_WEST,
+        mat = DARK_GREY_CONCRETE
+    ),
 
     // then = WINDOW_TOP_R_NORTH
     If(east = WINDOW_TOP_L_NORTH, westIsnt = WINDOW_TOP_R_NORTH, then = WINDOW_TOP_R_NORTH),
     If(west = WINDOW_TOP_L_NORTH, eastIsnt = WINDOW_TOP_R_NORTH, then = WINDOW_TOP_R_NORTH),
     If(below = THIN_WALL_NORTH, eastIsnt = WINDOW_TOP_R_NORTH, then = WINDOW_TOP_R_NORTH),
+    If(
+        below = NONE,
+        above = NONE,
+        northIsnt = NONE,
+        northBelow = NONE,
+        neBelow = BASIC_BLOCK,
+        then = WINDOW_TOP_R_NORTH,
+        mat = DARK_GREY_CONCRETE
+    ),
 
     // then = WINDOW_TOP_R_EAST
     If(north = WINDOW_TOP_L_EAST, southIsnt = WINDOW_TOP_R_EAST, then = WINDOW_TOP_R_EAST),
     If(south = WINDOW_TOP_L_EAST, northIsnt = WINDOW_TOP_R_EAST, then = WINDOW_TOP_R_EAST),
     If(below = THIN_WALL_EAST, northIsnt = WINDOW_TOP_R_EAST, then = WINDOW_TOP_R_EAST),
+    If(
+        below = NONE,
+        above = NONE,
+        eastIsnt = NONE,
+        eastBelow = NONE,
+        seBelow = BASIC_BLOCK,
+        then = WINDOW_TOP_R_EAST,
+        mat = DARK_GREY_CONCRETE
+    ),
 
     // then = WINDOW_TOP_R_SOUTH
     If(east = WINDOW_TOP_L_SOUTH, westIsnt = WINDOW_TOP_R_SOUTH, then = WINDOW_TOP_R_SOUTH),
     If(west = WINDOW_TOP_L_SOUTH, eastIsnt = WINDOW_TOP_R_SOUTH, then = WINDOW_TOP_R_SOUTH),
     If(below = THIN_WALL_SOUTH, westIsnt = WINDOW_TOP_R_SOUTH, then = WINDOW_TOP_R_SOUTH),
+    If(
+        below = NONE,
+        above = NONE,
+        southIsnt = NONE,
+        southBelow = NONE,
+        swBelow = BASIC_BLOCK,
+        then = WINDOW_TOP_R_SOUTH,
+        mat = DARK_GREY_CONCRETE
+    ),
 
     // then = WINDOW_TOP_R_WEST
     If(north = WINDOW_TOP_L_WEST, southIsnt = WINDOW_TOP_R_WEST, then = WINDOW_TOP_R_WEST),
     If(south = WINDOW_TOP_L_WEST, northIsnt = WINDOW_TOP_R_WEST, then = WINDOW_TOP_R_WEST),
     If(below = THIN_WALL_WEST, southIsnt = WINDOW_TOP_R_WEST, then = WINDOW_TOP_R_WEST),
+    If(
+        below = NONE,
+        above = NONE,
+        westIsnt = NONE,
+        westBelow = NONE,
+        nwBelow = BASIC_BLOCK,
+        then = WINDOW_TOP_R_WEST,
+        mat = DARK_GREY_CONCRETE
+    ),
 )

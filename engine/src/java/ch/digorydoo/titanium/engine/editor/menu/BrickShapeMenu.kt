@@ -9,7 +9,7 @@ import ch.digorydoo.titanium.engine.i18n.EngineTextId
 import ch.digorydoo.titanium.engine.ui.choice.Choice
 import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 
-class BrickShapeMenu(private val actions: EditorActions) {
+internal class BrickShapeMenu(private val actions: EditorActions) {
     fun show(initialShape: BrickShape, isTopLevel: Boolean, onCancel: () -> Unit) {
         show(
             BrickShapeGroup.ROOT,

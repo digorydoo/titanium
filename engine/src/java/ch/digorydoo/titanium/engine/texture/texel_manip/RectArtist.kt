@@ -6,4 +6,5 @@ internal interface RectArtist {
     fun clear(c: Colour)
     fun draw(left: Int, top: Int, right: Int, bottom: Int, c: Colour)
     fun fill(left: Int, top: Int, right: Int, bottom: Int, c: Colour)
+    fun overlay(left: Int, top: Int, right: Int, bottom: Int, c: Colour)
 }

@@ -6,6 +6,7 @@ import ch.digorydoo.kutils.point.MutablePoint4f
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
+import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
@@ -52,8 +53,8 @@ class TurnTowardsCamera(
                 rho = atan2(dz, rx)
             }
         } else {
-            phi = -App.camera.currentPhi + 0.5f * Math.PI.toFloat()
-            rho = if (keepUpright) 0.0f else -App.camera.currentRho + 0.5f * Math.PI.toFloat()
+            phi = -App.camera.currentPhi + 0.5f * PI.toFloat()
+            rho = if (keepUpright) 0.0f else -App.camera.currentRho + 0.5f * PI.toFloat()
         }
 
         delegate.rotationPhi = phi

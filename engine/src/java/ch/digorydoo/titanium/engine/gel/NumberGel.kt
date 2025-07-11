@@ -7,15 +7,16 @@ import ch.digorydoo.titanium.engine.behaviours.Align
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.font.FontManager.FontName
 import ch.digorydoo.titanium.engine.shader.Renderer
+import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import ch.digorydoo.titanium.engine.texture.GreyscaleImageBuffer
 import ch.digorydoo.titanium.engine.texture.Texture
-import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 
 class NumberGel(alignment: Align.Alignment? = null): GraphicElement() {
     init {
         inDialog = Visibility.ACTIVE
         inMenu = Visibility.ACTIVE
         inEditor = Visibility.ACTIVE
+        visibleOnScreenshots = false
     }
 
     var numberValue = 0

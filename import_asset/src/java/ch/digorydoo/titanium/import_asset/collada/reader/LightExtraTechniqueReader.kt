@@ -41,6 +41,7 @@ class LightExtraTechniqueReader(node: Element): XMLTreeReader(node) {
                 "area_size" -> tech.areaSize = SidValueReader(child).read()
                 "area_sizey" -> tech.areaSizeY = SidValueReader(child).read()
                 "area_sizez" -> tech.areaSizeZ = SidValueReader(child).read()
+                "radius" -> tech.radius = SidValueReader(child).read()
                 else -> throw Exception("Unexpected tag: ${child.nodeName}")
             }
         }

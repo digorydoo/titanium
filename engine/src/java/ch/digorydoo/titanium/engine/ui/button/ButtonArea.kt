@@ -1,24 +1,32 @@
 package ch.digorydoo.titanium.engine.ui.button
 
 import ch.digorydoo.kutils.point.MutablePoint2f
+import ch.digorydoo.titanium.engine.behaviours.Align
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import ch.digorydoo.titanium.engine.i18n.ITextId
+import ch.digorydoo.titanium.engine.ui.ITEM_DEFAULT_HEIGHT
+import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 
 class ButtonArea(marginLeft: Int, marginTop: Int) {
-    private val buttons = mutableListOf<ButtonGel>()
+    private val buttons = mutableListOf<IButtonGel>()
     private val willAddAt = MutablePoint2f(marginLeft, marginTop)
     private var hilitedIdx = -1
 
     fun addButton(textId: ITextId, onSelect: () -> Unit) {
-        val btn = ButtonBuilder.create(
-            textId,
-            posX = willAddAt.x.toInt(),
-            posY = willAddAt.y.toInt(),
-            onSelect,
-            BTN_WIDTH,
+        val text = App.i18n.getString(textId)
+        val choice = TextChoice(text, autoDismiss = false, onSelect)
+        val alignment = Align.Alignment(marginLeft = willAddAt.x.toInt(), marginTop = willAddAt.y.toInt())
+
+        val btn = TextChoiceBtnGel(
+            choice = choice,
+            alignment = alignment,
+            btnWidth = BTN_WIDTH,
+            btnHeight = ITEM_DEFAULT_HEIGHT,
+            precomputedTextTex = null,
         )
-        App.content.add(btn, LayerKind.UI_BELOW_DLG)
+
+        btn.onCreate(LayerKind.UI_BELOW_DLG)
         btn.hide()
         buttons.add(btn)
         willAddAt.y += btn.height + BTN_SPACING

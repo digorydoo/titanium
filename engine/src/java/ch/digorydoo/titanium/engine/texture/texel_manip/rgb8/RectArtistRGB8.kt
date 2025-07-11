@@ -28,4 +28,8 @@ internal class RectArtistRGB8(
     override fun fill(left: Int, top: Int, right: Int, bottom: Int, c: Colour) {
         throw NotImplementedError()
     }
+
+    override fun overlay(left: Int, top: Int, right: Int, bottom: Int, c: Colour) {
+        throw NotImplementedError()
+    }
 }

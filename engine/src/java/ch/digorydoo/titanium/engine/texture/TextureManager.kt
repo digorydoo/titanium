@@ -4,8 +4,11 @@ import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.titanium.engine.font.FontManager.FontName
 
 interface TextureManager {
-    fun getOrCreateTexture(fname: String): Texture?
+    suspend fun getOrLoadImageDataAsync(fname: String): ImageData
+    fun getOrLoadImageDataSync(fname: String): ImageData
+    fun getOrCreateTexture(img: ImageData): Texture
     fun createTexture(width: Int, height: Int): Texture
+    fun createTexture(img: ImageData): Texture
 
     fun createTexture(
         text: String,

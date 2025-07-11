@@ -12,6 +12,7 @@ import ch.digorydoo.titanium.engine.editor.menu.EditorMenu
 import ch.digorydoo.titanium.engine.editor.statusbar.EditorStatusBar
 import ch.digorydoo.titanium.engine.input.keyboard.KeyboardKey
 import ch.digorydoo.titanium.engine.sound.EngineSampleId
+import kotlin.math.PI
 
 class Editor {
     private val cursor = CursorGelHolder()
@@ -60,7 +61,6 @@ class Editor {
                 ctrlPressed -> when {
                     shiftPressed -> when {
                         // CTRL+SHIFT
-                        isPressedOnce('t') -> actions.jumpToPrevNextSpawnPt(false)
                         isPressedOnce('z') -> undoStack.redo()
                     }
                     else -> when {
@@ -71,7 +71,6 @@ class Editor {
                         isPressedOnce('n') -> actions.applyShapeToSelectedBricks()
                         isPressedOnce('r') -> actions.rotateSelection()
                         isPressedOnce('s') -> actions.saveToFile()
-                        isPressedOnce('t') -> actions.jumpToPrevNextSpawnPt(true)
                         isPressedOnce('v') -> clipboard.paste()
                         isPressedOnce('x') -> clipboard.cut()
                         isPressedOnce('z') -> undoStack.undo()
@@ -82,6 +81,7 @@ class Editor {
                         // SHIFT
                         isPressedOnce('q') -> actions.addAnotherSpawnPt()
                         isPressedOnce('y') -> actions.switchCameraTarget(true)
+                        isPressedOnce(KeyboardKey.TAB) -> actions.jumpToPrevSpawnPt()
                         isPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> extendSelection(0, -1, 0)
                         isPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> extendSelection(0, 1, 0)
                         isPressedWithRepeat(KeyboardKey.ARROW_UP) -> extendSelection(-1, 0, 0)
@@ -99,6 +99,7 @@ class Editor {
                         isPressedOnce(KeyboardKey.ENTER) -> actions.movePlayerToCursorPos()
                         isPressedOnce(KeyboardKey.ESCAPE) -> menu.showMainMenu()
                         isPressedOnce(KeyboardKey.FWDDEL) -> actions.removeSelectedBricks()
+                        isPressedOnce(KeyboardKey.TAB) -> actions.jumpToNextSpawnPt()
                         isPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> collapseSelectionAndMove(0, -1, 0)
                         isPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> collapseSelectionAndMove(0, 1, 0)
                         isPressedWithRepeat(KeyboardKey.ARROW_UP) -> collapseSelectionAndMove(-1, 0, 0)
@@ -146,10 +147,10 @@ class Editor {
         val phi = normAngle(App.camera.currentPhi) // -PI..+PI
 
         when {
-            phi >= Math.PI * (3.0 / 4.0) -> dir.set(-dy, dx)
-            phi >= Math.PI * (1 / 4.0) -> dir.set(-dx, -dy)
-            phi >= -Math.PI * (1 / 4.0) -> dir.set(dy, -dx)
-            phi >= -Math.PI * (3.0 / 4.0) -> dir.set(dx, dy)
+            phi >= PI * (3.0 / 4.0) -> dir.set(-dy, dx)
+            phi >= PI * (1 / 4.0) -> dir.set(-dx, -dy)
+            phi >= -PI * (1 / 4.0) -> dir.set(dy, -dx)
+            phi >= -PI * (3.0 / 4.0) -> dir.set(dx, dy)
             else -> dir.set(-dy, dx)
         }
         return dir

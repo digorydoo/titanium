@@ -28,6 +28,7 @@ abstract class GameMenu {
     private var indicator: MenuTabIndicatorGel? = null
     private var topArea: UIAreaGel? = null
     private var contentArea: UIAreaGel? = null
+    private var aboutToShow = false
 
     fun animate() {
         if (App.dlg.hasActiveDlg || App.editor.isShown || App.isAboutToTakeScreenshot) return
@@ -61,22 +62,25 @@ abstract class GameMenu {
     }
 
     private fun show(initialTopic: IGameMenuTopic) {
-        if (isShown) return
-
-        // FIXME make sure show is not called again while waiting for the screenshot!
+        if (isShown || aboutToShow || App.isAboutToTakeScreenshot) return
+        aboutToShow = true
 
         App.screenshot.take { screenshot ->
-            isShown = true
-            screenshotWhenOpened = screenshot
-            makeGels()
-            topic = initialTopic
-            indicator?.selectedIdx = indexOf(initialTopic)
-            val newTab = tabs[indexOf(initialTopic)]
-            newTab.page.show()
+            if (aboutToShow) {
+                isShown = true
+                aboutToShow = false
+                screenshotWhenOpened = screenshot
+                makeGels()
+                topic = initialTopic
+                indicator?.selectedIdx = indexOf(initialTopic)
+                val newTab = tabs[indexOf(initialTopic)]
+                newTab.page.show()
+            }
         }
     }
 
     fun dismiss() {
+        aboutToShow = false // if a screenshot is being taken, we will ignore it
         if (!isShown) return
         removeGels()
         System.gc() // now seems a good time
@@ -127,10 +131,11 @@ abstract class GameMenu {
 
         val bgTex = screenshotWhenOpened
             ?.let { screenshot ->
-                App.textures.createTexture(screenshot.width, screenshot.height).apply {
+                App.textures.createTexture(MENU_BG_WIDTH, MENU_BG_HEIGHT).apply {
                     drawInto {
-                        drawImage(screenshot, dstX = 0, dstY = 0, colourMultiplier = 0.5f)
+                        drawImageScaled(screenshot, 0, 0, MENU_BG_WIDTH, MENU_BG_HEIGHT, antiAliasing = true)
                         blur3x3()
+                        overlayRect(Recti(0, 0, MENU_BG_WIDTH, MENU_BG_HEIGHT), menuBgColour)
                     }
                 }
             }
@@ -142,7 +147,7 @@ abstract class GameMenu {
             marginTop = -1,
             marginBottom = -1,
             scaleTexToFrameSize = true,
-        ).also { App.content.add(it, LayerKind.MENU_BACKDROP) }
+        ).also { it.onCreate(LayerKind.MENU_BACKDROP) }
 
         require(topArea == null)
         topArea = UIAreaGel(
@@ -151,27 +156,39 @@ abstract class GameMenu {
             marginRight = 0,
             marginTop = 0,
             height = TOP_AREA_HEIGHT,
-        ).also { App.content.add(it, LayerKind.MENU_BACKDROP) }
+        ).also { it.onCreate(LayerKind.MENU_BACKDROP) }
 
         require(indicator == null)
-        indicator = MenuTabIndicatorGel(tabs).also { App.content.add(it, LayerKind.UI_BELOW_DLG) }
+        indicator = MenuTabIndicatorGel(tabs).also { it.onCreate(LayerKind.UI_BELOW_DLG) }
 
         require(tabs.isEmpty())
-        var left = TAB_MARGIN_LEFT
+
+        val menuTabGels = mutableMapOf<IGameMenuTopic, MenuTabGel>()
+        var left = 0
+        var maxRight = left
 
         forEachTopic { topic ->
-            val gel = MenuTabGel(topic.textId, posX = left.toInt(), posY = TAB_MARGIN_TOP.toInt())
-                .also { App.content.add(it, LayerKind.UI_BELOW_DLG) }
+            val gel = MenuTabGel(topic.textId, posX = left, posY = TAB_MARGIN_TOP.toInt())
+            menuTabGels[topic] = gel
+            val right = left + gel.width
+            if (right > maxRight) maxRight = right
+            left = right + TAB_SPACING
+        }
+
+        left = App.screenWidthDp / 2 - maxRight / 2
+
+        forEachTopic { topic ->
+            val gel = menuTabGels[topic]!!
+            gel.moveTo(left.toFloat(), gel.pos.y, gel.pos.z)
+            gel.onCreate(LayerKind.UI_BELOW_DLG)
 
             val page = makePage(topic)
 
-            val x = gel.pos.x.toInt()
             val y = gel.pos.y.toInt()
-            val bounds = Recti(left = x, top = y, right = x + gel.width, bottom = y + gel.height)
-
+            val bounds = Recti(left = left, top = y, right = left + gel.width, bottom = y + gel.height)
             tabs.add(MenuTabDescriptor(topic.textId, gel, bounds, page))
 
-            left = bounds.right.toFloat() + TAB_SPACING
+            left = bounds.right + TAB_SPACING
         }
     }
 
@@ -199,12 +216,12 @@ abstract class GameMenu {
     }
 
     companion object {
-        const val SAVEGAME_THUMBNAIL_WIDTH = 128
-        const val SAVEGAME_THUMBNAIL_HEIGHT = (SAVEGAME_THUMBNAIL_WIDTH / App.FIXED_ASPECT_RATIO).toInt()
-        private const val TAB_MARGIN_LEFT = 32.0f
-        private const val TAB_MARGIN_TOP = 13.0f
-        private const val TAB_SPACING = 24.0f
-        private const val TOP_AREA_HEIGHT = 48
-        private val topAreaBgColour = Colour(0.0f, 0.0f, 0.0f, 0.42f)
+        private const val MENU_BG_WIDTH = 256
+        private const val MENU_BG_HEIGHT = (MENU_BG_WIDTH / App.FIXED_ASPECT_RATIO).toInt()
+        const val TOP_AREA_HEIGHT = 96
+        private const val TAB_MARGIN_TOP = TOP_AREA_HEIGHT - 35.0f
+        private const val TAB_SPACING = 32
+        private val menuBgColour = Colour(0.19f, 0.16f, 0.11f, 0.64f)
+        private val topAreaBgColour = Colour(0.0f, 0.0f, 0.0f, 0.24f)
     }
 }

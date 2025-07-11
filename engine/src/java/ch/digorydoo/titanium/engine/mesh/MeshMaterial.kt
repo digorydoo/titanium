@@ -16,6 +16,8 @@ enum class MeshMaterial(val value: Int) {
     MILITARY_DKGREEN_METAL(11),
     MILITARY_GREEN_METAL(12),
     CLAY(13),
+    WOOD_DARK(14),
+    WHITE_PLASTIC(15),
     ;
 
     companion object {

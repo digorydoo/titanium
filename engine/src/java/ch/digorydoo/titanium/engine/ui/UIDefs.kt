@@ -1,8 +1,7 @@
 package ch.digorydoo.titanium.engine.ui
 
 import ch.digorydoo.kutils.colour.Colour
-import ch.digorydoo.titanium.engine.ui.game_menu.GameMenu.Companion.SAVEGAME_THUMBNAIL_HEIGHT
-import ch.digorydoo.titanium.engine.ui.game_menu.GameMenu.Companion.SAVEGAME_THUMBNAIL_WIDTH
+import ch.digorydoo.titanium.engine.core.App
 
 // Dialogue
 
@@ -41,6 +40,8 @@ val itemOtlColour = Colour.grey300
 
 // ButtonGel when used as a save game summary button
 
+const val SAVEGAME_THUMBNAIL_WIDTH = 128
+const val SAVEGAME_THUMBNAIL_HEIGHT = (SAVEGAME_THUMBNAIL_WIDTH / App.FIXED_ASPECT_RATIO).toInt()
 const val SUMMARY_LINE_SPACING = 12
 const val SUMMARY_BTN_MARGIN_TOP = 192
 const val SUMMARY_BTN_WIDTH = SAVEGAME_THUMBNAIL_WIDTH + 512

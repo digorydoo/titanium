@@ -10,20 +10,17 @@ import ch.digorydoo.titanium.engine.file.GelListFileWriter
 import kotlin.math.max
 
 abstract class SpawnManager {
-    class SpawnPtAndDistance(val spawnPt: SpawnPt, val spawnPtIdx: Int, val distance: Double)
+    class SpawnPtAndDistance(val spawnPt: SpawnPt, val distance: Double)
 
     abstract val spawnObjTypeList: List<String>
 
     private val spawnPts = mutableListOf<SpawnPt>()
 
-    val numSpawnPts get() = spawnPts.size
-
-    fun add(rawSpawnPt: Map<String, String>) {
-        spawnPts.add(App.factory.createSpawnPt(rawSpawnPt))
+    fun add(rawSpawnPt: Map<String, String>): SpawnPt {
+        val spawnPt = App.factory.createSpawnPt(rawSpawnPt)
+        spawnPts.add(spawnPt)
+        return spawnPt
     }
-
-    fun spawnPtAt(index: Int) =
-        spawnPts.getOrNull(index)
 
     fun findSpawnPt(id: String) = when {
         id.isEmpty() -> null // there may be ad-hoc spawn pts with empty id, and we disallow finding them like this
@@ -52,7 +49,7 @@ abstract class SpawnManager {
     }
 
     fun despawn(pt: SpawnPt) {
-        App.content.forEachGelInMainLayerIncludingNew { gel ->
+        App.content.forEachGelInMainLayer { gel ->
             if (gel.spawnPt == pt) {
                 gel.setZombie()
             }
@@ -95,38 +92,44 @@ abstract class SpawnManager {
         }
     }
 
-    fun indexOfClosestSpawnPt(pt: Point3f): Int {
-        var resultIdx = -1
+    fun findClosestSpawnPt(pt: Point3f, predicate: (SpawnPt) -> Boolean): SpawnPt? {
+        var result: SpawnPt? = null
         var closestSqrDist = Double.MAX_VALUE
 
-        spawnPts.forEachIndexed { i, spawnPt ->
+        spawnPts.forEach { spawnPt ->
             val sd = spawnPt.pos.sqrDistanceTo(pt)
 
-            if (sd < closestSqrDist) {
-                resultIdx = i
+            if (sd <= closestSqrDist && predicate(spawnPt)) {
+                result = spawnPt
                 closestSqrDist = sd
             }
         }
 
-        return resultIdx
+        return result
     }
 
-    fun findClosestSpawnPts(fromPt: Point3f, maxCount: Int = Int.MAX_VALUE): List<SpawnPtAndDistance> {
+    fun findClosestSpawnPts(
+        fromPt: Point3f,
+        maxCount: Int = Int.MAX_VALUE,
+        predicate: (SpawnPt) -> Boolean,
+    ): List<SpawnPtAndDistance> {
         val result = mutableListOf<SpawnPtAndDistance>()
 
-        for ((spawnPtIdx, pt) in spawnPts.withIndex()) {
+        spawnPts.forEach { pt ->
             val d = fromPt.distanceTo(pt.pos)
             val idx = result.indexOfFirst { it.distance > d }
 
             // If result has a size of maxCount already, add the element only if its index is smaller
 
             if (result.size < maxCount || idx < maxCount - 1) {
-                val spad = SpawnPtAndDistance(pt, spawnPtIdx, d)
+                if (predicate(pt)) {
+                    val spad = SpawnPtAndDistance(pt, d)
 
-                if (idx < 0) {
-                    result.add(spad)
-                } else {
-                    result.add(idx, spad)
+                    if (idx < 0) {
+                        result.add(spad)
+                    } else {
+                        result.add(idx, spad)
+                    }
                 }
             }
         }

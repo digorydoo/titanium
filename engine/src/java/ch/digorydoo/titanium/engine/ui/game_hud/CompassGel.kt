@@ -5,7 +5,8 @@ import ch.digorydoo.kutils.point.Point2f
 import ch.digorydoo.titanium.engine.behaviours.Align
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
-import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
+import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
+import ch.digorydoo.titanium.engine.texture.Texture
 import kotlin.math.PI
 
 class CompassGel: GraphicElement() {
@@ -14,14 +15,17 @@ class CompassGel: GraphicElement() {
         inMenu = Visibility.INVISIBLE
         inEditor = Visibility.ACTIVE
         visibleOnScreenshots = false
+        callOnCreateConcurrently = true
     }
+
+    private var tex: Texture? = null
 
     private val props = object: UISpriteRenderer.Delegate() {
         override val renderPos get() = this@CompassGel.pos
         override val frameSize = Point2f(TEX_WIDTH, TEX_HEIGHT)
         override val rotation get() = App.camera.currentPhi + (PI / 2).toFloat()
         override val scaleFactor = MutablePoint2f(0.33f, 0.33f)
-        override var tex = App.textures.getOrCreateTexture("ui-compass.png")
+        override val tex get() = this@CompassGel.tex
     }
 
     override val renderer = App.factory.createUISpriteRenderer(props, antiAliasing = true)
@@ -38,6 +42,17 @@ class CompassGel: GraphicElement() {
             }
         }
     )
+
+    override suspend fun onCreateConcurrently(): () -> Unit {
+        val img = App.textures.getOrLoadImageDataAsync("ui-compass.png")
+        require(img.width == TEX_WIDTH)
+        require(img.height == TEX_HEIGHT)
+
+        return {
+            // Back in main thread
+            tex = App.textures.getOrCreateTexture(img)
+        }
+    }
 
     fun show() {
         setHiddenOnNextFrameTo = false
@@ -56,8 +71,8 @@ class CompassGel: GraphicElement() {
     }
 
     companion object {
-        private const val TEX_WIDTH = 64.0f // dp
-        private const val TEX_HEIGHT = 64.0f // dp
+        private const val TEX_WIDTH = 64 // texels
+        private const val TEX_HEIGHT = 64 // texels
         private const val MARGIN_RIGHT = 48 // dp
         private const val MARGIN_TOP = 64 // dp
     }

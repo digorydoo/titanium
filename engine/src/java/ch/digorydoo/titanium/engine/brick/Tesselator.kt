@@ -537,7 +537,7 @@ class Tesselator(
         private const val TEX_BRICK_WIDTH = 64
         private const val TEX_BRICK_HEIGHT = 64
         private const val NUM_GROUPS_IN_TEX_X = 9
-        private const val NUM_GROUPS_IN_TEX_Y = 5
+        private const val NUM_GROUPS_IN_TEX_Y = 6
         private const val NUM_BRICKS_IN_GROUP_XY = 3 // 3x3 bricks make up a group
         private const val TEX_GROUP_PADDING = 2 // each group is padded so that inaccuracies don't lead to a seam
         private const val GROUP_WIDTH_IN_TEXELS = (2 * TEX_GROUP_PADDING + NUM_BRICKS_IN_GROUP_XY * TEX_BRICK_WIDTH)

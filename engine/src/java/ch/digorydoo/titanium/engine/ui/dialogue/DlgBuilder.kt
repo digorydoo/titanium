@@ -8,11 +8,9 @@ import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.font.FontManager.FontName.DIALOG_FONT
 import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.engine.ui.*
-import ch.digorydoo.titanium.engine.ui.button.ButtonBuilder
-import ch.digorydoo.titanium.engine.ui.choice.BoolChoice
-import ch.digorydoo.titanium.engine.ui.choice.Choice
-import ch.digorydoo.titanium.engine.ui.choice.FloatChoice
-import ch.digorydoo.titanium.engine.ui.choice.SavegameChoice
+import ch.digorydoo.titanium.engine.ui.button.*
+import ch.digorydoo.titanium.engine.ui.button.helper.ButtonTextureFactory
+import ch.digorydoo.titanium.engine.ui.choice.*
 import ch.digorydoo.titanium.engine.ui.icon.DlgInputIconGel
 import ch.digorydoo.titanium.engine.ui.icon.Icon.*
 import kotlin.math.ceil
@@ -34,7 +32,7 @@ internal object DlgBuilder {
             itemWidth = ITEM_MIN_WIDTH
 
             val textTextures = choices.map { choice ->
-                val tex = ButtonBuilder.makeTextTexture(choice)
+                val tex = ButtonTextureFactory.makeTextTexture(choice)
                 var requiredWidth: Int
 
                 if (choice is SavegameChoice) {
@@ -42,7 +40,7 @@ internal object DlgBuilder {
                 } else {
                     requiredWidth = tex.width + 2 * ITEM_TEXT_OUTER_PADDING
 
-                    if (choice is FloatChoice || choice is BoolChoice) {
+                    if (choice is FloatChoice || choice is BoolChoice || choice is IntChoice) {
                         requiredWidth += ITEM_VALUE_MAX_WIDTH + ITEM_INCDEC_MARGIN_LR
                     }
                 }
@@ -58,7 +56,7 @@ internal object DlgBuilder {
                 val choice = choices[idx]
                 val textTex = textTextures[idx]
 
-                choice.gel = ButtonBuilder.create(
+                choice.gel = createButtonGel(
                     choice,
                     alignment = Align.Alignment(
                         anchor = Anchor.BOTTOM_RIGHT,
@@ -66,7 +64,7 @@ internal object DlgBuilder {
                         marginRight = ITEM_MARGIN_RIGHT,
                         marginBottom = ITEM_MARGIN_BOTTOM,
                     ),
-                    textTex = textTex,
+                    precomputedTextTex = textTex,
                     itemWidth
                 )
 
@@ -139,6 +137,50 @@ internal object DlgBuilder {
             initHilitedIdx = initHilitedIdx,
             lastItemIsDismiss = lastItemIsDismiss,
             playSoundOnDismiss = playSoundOnDismiss,
+        )
+    }
+
+    private fun createButtonGel(
+        choice: Choice,
+        alignment: Align.Alignment,
+        precomputedTextTex: Texture? = null, // null = create from choice
+        btnWidth: Int? = null, // null = automatic
+        btnHeight: Int? = null, // null = automatic
+    ): IButtonGel = when (choice) {
+        is TextChoice -> TextChoiceBtnGel(
+            choice = choice,
+            alignment = alignment,
+            btnWidth = btnWidth ?: ITEM_MIN_WIDTH,
+            btnHeight = btnHeight ?: ITEM_DEFAULT_HEIGHT,
+            precomputedTextTex = precomputedTextTex,
+        )
+        is BoolChoice -> BoolChoiceBtnGel(
+            choice = choice,
+            alignment = alignment,
+            btnWidth = btnWidth ?: ITEM_MIN_WIDTH,
+            btnHeight = btnHeight ?: ITEM_DEFAULT_HEIGHT,
+            precomputedTextTex = precomputedTextTex,
+        )
+        is IntChoice -> IntChoiceBtnGel(
+            choice = choice,
+            alignment = alignment,
+            btnWidth = btnWidth ?: ITEM_MIN_WIDTH,
+            btnHeight = btnHeight ?: ITEM_DEFAULT_HEIGHT,
+            precomputedTextTex = precomputedTextTex,
+        )
+        is FloatChoice -> FloatChoiceBtnGel(
+            choice = choice,
+            alignment = alignment,
+            btnWidth = btnWidth ?: ITEM_MIN_WIDTH,
+            btnHeight = btnHeight ?: ITEM_DEFAULT_HEIGHT,
+            precomputedTextTex = precomputedTextTex,
+        )
+        is SavegameChoice -> SavegameChoiceBtnGel(
+            choice = choice,
+            alignment = alignment,
+            btnWidth = btnWidth ?: SUMMARY_BTN_WIDTH,
+            btnHeight = btnHeight ?: SUMMARY_BTN_HEIGHT,
+            precomputedTextTex = precomputedTextTex,
         )
     }
 

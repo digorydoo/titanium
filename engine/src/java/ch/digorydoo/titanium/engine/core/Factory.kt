@@ -10,8 +10,8 @@ import ch.digorydoo.titanium.engine.mesh.MeshRenderer
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.shader.Renderer.BlendMode
 import ch.digorydoo.titanium.engine.sky.SkydomeRenderer
+import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import ch.digorydoo.titanium.engine.texture.Texture
-import ch.digorydoo.titanium.engine.ui.UISpriteRenderer
 
 /**
  * The factory is accessible through App.factory, and is used to instantiate various objects, whose implementation are

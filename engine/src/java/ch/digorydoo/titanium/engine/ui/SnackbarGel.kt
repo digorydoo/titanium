@@ -8,6 +8,7 @@ import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.font.FontManager.FontName.SNACKBAR_FONT
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.shader.Renderer
+import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import ch.digorydoo.titanium.engine.texture.Texture
 import kotlin.math.ceil
 
