@@ -1,16 +1,19 @@
 package ch.digorydoo.titanium.engine.file
 
+import ch.digorydoo.kutils.file.KDataOutputStream
 import ch.digorydoo.kutils.utils.Log
+import ch.digorydoo.titanium.BuildConfig
 import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.brick.BrickVolume
+import ch.digorydoo.titanium.engine.core.App
+import ch.digorydoo.titanium.engine.utils.NotForProductionError
+import java.io.BufferedOutputStream
+import java.io.DataOutputStream
 import java.io.File
 
-class BrickVolumeFileWriter private constructor(
-    private val stream: MyDataOutputStream,
-    private val bricks: BrickVolume,
-) {
-    private fun write() {
+class BrickVolumeFileWriter private constructor(private val stream: KDataOutputStream<FileMarker>) {
+    private fun write(bricks: BrickVolume) {
         stream.write(FileMarker.BEGIN_BRICK_VOLUME)
         stream.write(FileMarker.BEGIN_HEADER)
         stream.writeUInt16(bricks.xsize)
@@ -47,14 +50,21 @@ class BrickVolumeFileWriter private constructor(
         private val TAG = Log.Tag("BrickVolumeFileWriter")
 
         fun writeFile(bricks: BrickVolume) {
-            Log.info(TAG, "Writing ${bricks.fileName}")
-
-            // val path = Assets.pathToPlayfield(pf.fileName) -- NO, not into the build folder!
-            val path = "/Users/pamberg/Develop/titanium/assets/playfields/${bricks.fileName}" // FIXME
-
-            val file = File(path)
-            MyDataOutputStream.use(file) {
-                BrickVolumeFileWriter(it, bricks).write()
+            when {
+                BuildConfig.isProduction -> throw NotForProductionError()
+                bricks.filename.isEmpty() -> throw Exception("File name is empty!")
+                else -> {
+                    arrayOf(
+                        App.assets.pathToPlayfield(bricks.filename),
+                        App.assets.pathToDeveloperPlayfield(bricks.filename),
+                    ).forEach { path ->
+                        Log.info(TAG, "Writing $path")
+                        File(path).outputStream()
+                            .let { BufferedOutputStream(it) }
+                            .let { DataOutputStream(it) }
+                            .use { BrickVolumeFileWriter(KDataOutputStream(it)).write(bricks) }
+                    }
+                }
             }
         }
     }

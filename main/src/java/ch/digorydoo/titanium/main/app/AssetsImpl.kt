@@ -17,6 +17,7 @@ class AssetsImpl: Assets() {
         val localAppDataDir = determineLocalAppDataDir(appDataDir)
         val userHomeDir = determineUserHomeDir()
         val documentsDir = determineDocumentsDir(userHomeDir)
+        developerAssetsDir = joinPath(userHomeDir ?: "", "Develop", "titanium", "assets")
         prefsDir = determinePrefsDir(localAppDataDir, documentsDir, userHomeDir)
         pathToSaveGames = prefsDir
         pathToLogFile = joinPath(prefsDir, "${PROJECT_NAME}.log")
@@ -95,7 +96,7 @@ class AssetsImpl: Assets() {
             // Java encodes special characters in URLs, so we need to decode them.
             path = URLDecoder.decode(path, "UTF-8")
 
-            if (BuildConfig.isWindows()) {
+            if (BuildConfig.isWindows) {
                 // The path we got from the URL is standardised, but we need a Windows file path.
                 path = path.replace("//", "/").replace("/", "\\")
 
@@ -124,12 +125,12 @@ class AssetsImpl: Assets() {
         }
 
         private fun determineAppDataDir(): String? {
-            return if (!BuildConfig.isWindows()) null
+            return if (!BuildConfig.isWindows) null
             else System.getenv("AppData")?.takeIf { it.isNotEmpty() && File(it).exists() }
         }
 
         private fun determineLocalAppDataDir(appDataDir: String?): String? {
-            if (!BuildConfig.isWindows()) return null
+            if (!BuildConfig.isWindows) return null
             var path = System.getenv("LocalAppData")
             if (path != null && path.isNotEmpty() && File(path).exists()) return path
             path = "$appDataDir${File.separator}..${File.separator}Local"
@@ -152,7 +153,7 @@ class AssetsImpl: Assets() {
 
         private fun determinePrefsDir(localAppDataDir: String?, documentsDir: String?, userHomeDir: String?): String =
             when {
-                BuildConfig.isWindows() -> {
+                BuildConfig.isWindows -> {
                     localAppDataDir?.let { mkdirOrNull(joinPath(it, FULLY_QUALIFIED_NAME)) }
                         ?: documentsDir?.let { mkdirOrNull(joinPath(it, PROJECT_NAME)) }
                         ?: mkdirOrNull("C:\\$PROJECT_NAME")

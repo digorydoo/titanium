@@ -35,7 +35,12 @@ class GamepadImpl: Gamepad() {
 
     override fun bind(gamepadId: Int) {
         this.gamepadId = gamepadId
-        name = glfwGetGamepadName(gamepadId)?.takeIf { it.isNotEmpty() } ?: "Controller #${gamepadId}"
+
+        // Kotlin 2.3.0 complains about inaccessible @Nullable with glfwGetGamepadName here, but storing the result
+        // in a temporary nullable variable makes the warning go away.
+        val theName: String? = glfwGetGamepadName(gamepadId)
+
+        name = theName?.takeIf { it.isNotEmpty() } ?: "Controller #${gamepadId}"
         hasMapping = glfwJoystickIsGamepad(gamepadId)
         guid = glfwGetJoystickGUID(gamepadId) ?: ""
         state.reset()

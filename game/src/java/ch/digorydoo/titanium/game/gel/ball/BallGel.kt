@@ -3,8 +3,8 @@ package ch.digorydoo.titanium.game.gel.ball
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
-import ch.digorydoo.titanium.engine.mesh.Mesh
-import ch.digorydoo.titanium.engine.mesh.MeshRenderer
+import ch.digorydoo.titanium.engine.mesh.ComplexMesh
+import ch.digorydoo.titanium.engine.mesh.ComplexMeshRenderer
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.game.gel.ball.BallSpawnPt.Kind
 
@@ -48,10 +48,10 @@ class BallGel private constructor(
         gravity = true,
     )
 
-    private var mesh: Mesh? = null
+    private var mesh: ComplexMesh? = null
 
-    override val renderer = App.factory.createMeshRenderer(
-        object: MeshRenderer.Delegate() {
+    override val renderer = App.factory.createComplexMeshRenderer(
+        object: ComplexMeshRenderer.Delegate() {
             override val mesh get() = this@BallGel.mesh
             override val renderPos = this@BallGel.pos
             override val rotationPhi = spawnPt?.rotation ?: 0.0f

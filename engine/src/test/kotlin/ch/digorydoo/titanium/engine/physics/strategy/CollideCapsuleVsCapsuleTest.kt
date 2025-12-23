@@ -554,8 +554,8 @@ internal class CollideCapsuleVsCapsuleTest {
         assertEquals(0.0f, b2.speed.z, "b2.speed.z")
 
         // Since it was SIDE, separation is expected to happen in the XY plane
-        assertTrue(b1.nextPos.z == b1.pos.z, "should not have changed b1.nextPos.z")
-        assertTrue(b2.nextPos.z == b2.pos.z, "should not have changed b2.nextPos.z")
+        assertEquals(b1.pos.z, b1.nextPos.z, "should not have changed b1.nextPos.z")
+        assertEquals(b2.pos.z, b2.nextPos.z, "should not have changed b2.nextPos.z")
 
         // The bodies should now be separated in XY
         val dx = b1.nextPos.x - b2.nextPos.x

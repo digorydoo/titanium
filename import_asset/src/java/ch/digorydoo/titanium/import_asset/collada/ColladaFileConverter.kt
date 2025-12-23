@@ -2,7 +2,6 @@ package ch.digorydoo.titanium.import_asset.collada
 
 import ch.digorydoo.kutils.tty.Kokuban
 import ch.digorydoo.kutils.tty.ShellCommandError
-import ch.digorydoo.titanium.engine.file.MyDataOutputStream
 import ch.digorydoo.titanium.import_asset.Options
 import ch.digorydoo.titanium.import_asset.Options.Verbosity
 import ch.digorydoo.titanium.import_asset.WriterStats
@@ -93,14 +92,10 @@ class ColladaFileConverter(private val options: Options) {
         }
 
         val accessor = ColladaDataAccessor(data)
-        var stats: WriterStats? = null
+        var stats: WriterStats
 
         try {
-            MyDataOutputStream.use(outFile) { stream ->
-                val writer = MeshFileWriter(stream, accessor)
-                writer.write()
-                stats = writer.stats
-            }
+            stats = MeshFileWriter.write(accessor, outFile)
         } catch (e: Exception) {
             kokuban.red.bold.text("FAILED").plain.println()
             throw e
@@ -114,7 +109,7 @@ class ColladaFileConverter(private val options: Options) {
                 printGeometryInfo(accessor)
             }
 
-            stats?.let { printStats(it) }
+            stats.let { printStats(it) }
         }
     }
 

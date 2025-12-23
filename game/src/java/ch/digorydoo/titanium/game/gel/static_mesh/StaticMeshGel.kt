@@ -2,8 +2,8 @@ package ch.digorydoo.titanium.game.gel.static_mesh
 
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
-import ch.digorydoo.titanium.engine.mesh.Mesh
-import ch.digorydoo.titanium.engine.mesh.MeshRenderer
+import ch.digorydoo.titanium.engine.mesh.ComplexMesh
+import ch.digorydoo.titanium.engine.mesh.ComplexMeshRenderer
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.game.gel.static_mesh.StaticMeshSpawnPt.Kind.*
@@ -25,10 +25,10 @@ class StaticMeshGel(override val spawnPt: StaticMeshSpawnPt): GraphicElement(spa
         height = BODY_HEIGHT,
     )
 
-    private var mesh: Mesh? = null
+    private var mesh: ComplexMesh? = null
 
-    override val renderer = App.factory.createMeshRenderer(
-        object: MeshRenderer.Delegate() {
+    override val renderer = App.factory.createComplexMeshRenderer(
+        object: ComplexMeshRenderer.Delegate() {
             override val mesh get() = this@StaticMeshGel.mesh
             override val renderPos = this@StaticMeshGel.pos
             override val rotationPhi = spawnPt.rotation

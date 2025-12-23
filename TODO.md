@@ -3,7 +3,6 @@
 ## Backlog
 
 * Bugs
-    * Height map cannot be loaded when first created, because they are created in the developer assets folder!
     * Log: "Unloading all 3450 of non-shared programmes..." BrickVolumeRendererImpl should be created by BrickVolume,
       not by BrickSubvolume!
     * Umlauts in German start menu suddenly work, why?!
@@ -12,11 +11,12 @@
     * Jumping (CMD) + Camera H hides the application... How is it when standalone?
     * Haloes of street lamp behind street lamp get clipped, because transparent gels are not sorted
     * Fix incorrect tex coords with ThickStairsModel
+    * Sun seems broken, is nowhere to be seen
+    * Umlautprobleme with "Beenden ääh" reappeared, no change...
 
 * Height maps
-    * Implement tesselating height map as Mesh, and rendering it
-    * Implement editing height map via editor
-    * Save modified height maps along with gel list
+    * Implement texture mapping in SimpleMeshRendererImpl
+    * Key Y should change the head of the height map cursor
     * The editor should ensure that the height of the lowest grid point should always stay zero, and automatically
       moving the spawn point accordingly if height values are moved accordingly. The reason for this is that the
       height map could otherwise drift from its spawn point. Also, the height map's RigidBody will need a bounding

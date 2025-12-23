@@ -2,7 +2,7 @@ package ch.digorydoo.titanium.engine.physics.strategy.cylinder_vs_capsule
 
 import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.HitResult
-import ch.digorydoo.titanium.engine.physics.UnexpectedHitAreaError
+import ch.digorydoo.titanium.engine.physics.UnexpectedHitArea
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCapsuleBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.strategy.CollisionBounceStrategy
@@ -36,7 +36,7 @@ internal class BounceCylinderVsCapsule: CollisionBounceStrategy<FixedCylinderBod
                 applyFriction(body1, body2, normDir12X, normDir12Y, 0.0f)
                 bounceAtVerticalPlane(body1, body2, normDir12X, normDir12Y)
             }
-            else -> throw UnexpectedHitAreaError(hit.area1)
+            else -> throw UnexpectedHitArea(hit.area1)
         }
     }
 }

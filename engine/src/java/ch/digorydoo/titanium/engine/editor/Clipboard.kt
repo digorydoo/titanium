@@ -4,13 +4,12 @@ import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.brick.BrickFaceAssigner
 import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.editor.statusbar.EditorStatusBar
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
 import kotlin.math.min
 
-class Clipboard(
-    private val status: EditorStatusBar,
-    private val selection: Selection,
+internal class Clipboard(
+    private val hud: EditorHUD,
+    private val brickSelection: BrickSelection,
     private val undoStack: UndoStack,
 ) {
     private var copiedXsize = 0
@@ -26,7 +25,7 @@ class Clipboard(
         val empty = Brick()
         var anyCopied = false
 
-        selection.forEachBrick { x, y, z ->
+        brickSelection.forEachBrick { x, y, z ->
             val brick = Brick().also { App.bricks.getAtBrickCoord(x, y, z, it) }
             list.add(brick)
             anyCopied = anyCopied || brick.shape != BrickShape.NONE
@@ -43,7 +42,7 @@ class Clipboard(
             return
         }
 
-        val box = selection.getUnreversed()
+        val box = brickSelection.getUnreversed()
         copiedXsize = box.xsize
         copiedYsize = box.ysize
         copiedZsize = box.zsize
@@ -52,7 +51,7 @@ class Clipboard(
         if (cut) {
             undoStack.push(box, list)
             App.bricks.updateBricks(box, evenAdjacient = true)
-            status.updateStats()
+            hud.updateStats()
         }
 
         App.dlg.showSnackbar(App.i18n.choose(textId, list.size))
@@ -60,18 +59,18 @@ class Clipboard(
 
     fun paste() {
         if (copiedXsize <= 0 || copiedYsize <= 0 || copiedZsize <= 0) {
-            status.didFailToPaste()
+            hud.didFailToPaste()
             return
         }
 
-        val sel = selection.getUnreversed()
+        val sel = brickSelection.getUnreversed()
 
         val x1 = min(sel.x0 + copiedXsize, App.bricks.xsize)
         val y1 = min(sel.y0 + copiedYsize, App.bricks.ysize)
         val z1 = min(sel.z0 + copiedZsize, App.bricks.zsize)
 
         if (sel.xsize != x1 - sel.x0 || sel.ysize != y1 - sel.y0 || sel.zsize != z1 - sel.z0) {
-            selection.set(sel.x0, sel.y0, sel.z0, x1, y1, z1)
+            brickSelection.set(sel.x0, sel.y0, sel.z0, x1, y1, z1)
         } else {
             val undoList = mutableListOf<Brick>()
             var i = 0
@@ -98,10 +97,10 @@ class Clipboard(
                 }
             }
 
-            val box = selection.getUnreversed()
+            val box = brickSelection.getUnreversed()
             undoStack.push(box, undoList)
             App.bricks.updateBricks(box, evenAdjacient = true)
-            status.updateStats()
+            hud.updateStats()
         }
     }
 }

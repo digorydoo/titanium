@@ -2,7 +2,7 @@ package ch.digorydoo.titanium.import_asset
 
 import ch.digorydoo.kutils.tty.OptionsBuilder
 import ch.digorydoo.kutils.tty.OptionsParser
-import ch.digorydoo.kutils.tty.OptionsParserError
+import ch.digorydoo.kutils.tty.OptionsParserException
 import ch.digorydoo.kutils.tty.ShellCommandError
 import ch.digorydoo.titanium.import_asset.Options.Action.BRICK_TEXTURES
 import ch.digorydoo.titanium.import_asset.Options.Action.COLLADA
@@ -16,8 +16,8 @@ class Options {
 
     enum class Verbosity { NORMAL, QUIET, VERBOSE }
 
-    class OptionNotForThisActionError(action: Action):
-        OptionsParserError("Option is not meant for action ${action.cmd}")
+    class OptionNotForThisActionException(action: Action):
+        OptionsParserException("Option is not meant for action ${action.cmd}")
 
     var action = COLLADA; private set
     var arrangeAcross = 1; private set
@@ -54,7 +54,7 @@ class Options {
         }
 
         fun only(a: Action) {
-            if (action != a) throw OptionNotForThisActionError(action)
+            if (action != a) throw OptionNotForThisActionException(action)
         }
 
         val defs = OptionsBuilder.build {

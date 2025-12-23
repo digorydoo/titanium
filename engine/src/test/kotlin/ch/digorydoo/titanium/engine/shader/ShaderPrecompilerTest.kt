@@ -3,17 +3,16 @@ package ch.digorydoo.titanium.engine.shader
 import ch.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags.CONTOUR
 import ch.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags.SHADOWS
 import ch.digorydoo.titanium.engine.shader.ShaderPrecompiler.*
-import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.assertFailsWith
 
 internal class ShaderPrecompilerTest {
     @Test
     fun `should return an empty string if given an empty string`() {
         val precompiler = ShaderPrecompiler()
-        assertTrue(precompiler.precompile("", setOf()) == "")
-        assertTrue(precompiler.precompile("", setOf(SHADOWS)) == "")
+        assertEquals("", precompiler.precompile("", setOf()))
+        assertEquals("", precompiler.precompile("", setOf(SHADOWS)))
     }
 
     @Test
@@ -76,7 +75,7 @@ internal class ShaderPrecompilerTest {
             int /* x = 42;
             int y = 43;
         """
-        assertThrows<BlockCommentNotClosedError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<BlockCommentNotClosedException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -122,7 +121,7 @@ internal class ShaderPrecompilerTest {
             #define YOUCÄNNOT
             after
         """
-        assertThrows<BadNameForDefineError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<BadNameForDefineException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -154,7 +153,7 @@ internal class ShaderPrecompilerTest {
             #define
             after
         """
-        assertThrows<MissingKeyInDefineError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<MissingKeyInDefineException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -166,7 +165,7 @@ internal class ShaderPrecompilerTest {
             #define SOMETHING 2
             after
         """
-        assertThrows<DuplicateDefineError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<DuplicateDefineException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -189,7 +188,7 @@ internal class ShaderPrecompilerTest {
             #undef // what
             after
         """
-        assertThrows<MissingKeyInUndefError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<MissingKeyInUndefException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -199,7 +198,7 @@ internal class ShaderPrecompilerTest {
             #undef THIS THAT
             after
         """
-        assertThrows<TooManyArgumentsError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<TooManyArgumentsException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -209,7 +208,7 @@ internal class ShaderPrecompilerTest {
             #define SHADOWS
             after
         """
-        assertThrows<DuplicateDefineError> { ShaderPrecompiler().precompile(input, setOf(SHADOWS)) }
+        assertFailsWith<DuplicateDefineException> { ShaderPrecompiler().precompile(input, setOf(SHADOWS)) }
     }
 
     @Test
@@ -231,7 +230,7 @@ internal class ShaderPrecompilerTest {
             #endif
             after
         """
-        assertThrows<EndifWithoutIfError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<EndifWithoutIfException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -241,7 +240,7 @@ internal class ShaderPrecompilerTest {
             #ifdef SHADOWS
             shadow
         """
-        assertThrows<MissingEndifError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<MissingEndifException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -253,7 +252,7 @@ internal class ShaderPrecompilerTest {
             #endif
             after
         """
-        assertThrows<MissingKeyInIfdefError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<MissingKeyInIfdefException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -265,7 +264,7 @@ internal class ShaderPrecompilerTest {
             #endif
             after
         """
-        assertThrows<TooManyArgumentsError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<TooManyArgumentsException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -277,7 +276,7 @@ internal class ShaderPrecompilerTest {
             #endif
             after
         """
-        assertThrows<MissingKeyInIfndefError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<MissingKeyInIfndefException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -289,7 +288,7 @@ internal class ShaderPrecompilerTest {
             #endif
             after
         """
-        assertThrows<TooManyArgumentsError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<TooManyArgumentsException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -429,7 +428,7 @@ internal class ShaderPrecompilerTest {
             #endif
             after
         """
-        assertThrows<DirectiveCannotHaveArgsError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<DirectiveCannotHaveArgsException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -441,7 +440,7 @@ internal class ShaderPrecompilerTest {
             #endif
             after
         """
-        assertThrows<ElseWithoutIfError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<ElseWithoutIfException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -513,7 +512,7 @@ internal class ShaderPrecompilerTest {
             #endif
             after
         """
-        assertThrows<ElifdefWithoutIfError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<ElifdefWithoutIfException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -525,7 +524,7 @@ internal class ShaderPrecompilerTest {
             #endif
             after
         """
-        assertThrows<TooManyArgumentsError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<TooManyArgumentsException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -605,7 +604,7 @@ internal class ShaderPrecompilerTest {
             #endif
             after
         """
-        assertThrows<BadNameForDefineError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<BadNameForDefineException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -617,7 +616,7 @@ internal class ShaderPrecompilerTest {
             #endif
             after
         """
-        assertThrows<BadNameForDefineError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<BadNameForDefineException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -627,7 +626,7 @@ internal class ShaderPrecompilerTest {
             #whatever BLAH
             after
         """
-        assertThrows<DirectiveNotImplementedError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<DirectiveNotImplementedException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test
@@ -885,7 +884,7 @@ internal class ShaderPrecompilerTest {
             #endif
             after
         """
-        assertThrows<InvalidCondExprError> { ShaderPrecompiler().precompile(input, setOf(SHADOWS, CONTOUR)) }
+        assertFailsWith<InvalidCondExprException> { ShaderPrecompiler().precompile(input, setOf(SHADOWS, CONTOUR)) }
     }
 
     @Test
@@ -899,7 +898,7 @@ internal class ShaderPrecompilerTest {
             #endif
             after
         """
-        assertThrows<InvalidCondExprError> { ShaderPrecompiler().precompile(input, setOf()) }
+        assertFailsWith<InvalidCondExprException> { ShaderPrecompiler().precompile(input, setOf()) }
     }
 
     @Test

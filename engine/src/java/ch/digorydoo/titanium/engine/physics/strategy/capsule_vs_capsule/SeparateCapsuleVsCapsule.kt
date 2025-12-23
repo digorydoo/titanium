@@ -4,7 +4,7 @@ import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.HitResult
-import ch.digorydoo.titanium.engine.physics.UnexpectedHitAreaError
+import ch.digorydoo.titanium.engine.physics.UnexpectedHitArea
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCapsuleBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.physics.strategy.CollisionSeparateStrategy
@@ -32,7 +32,7 @@ internal class SeparateCapsuleVsCapsule: CollisionSeparateStrategy<FixedCapsuleB
                 val normDir12Y = hit.hitNormal12.y
                 separateInXY(body1, body2, normDir12X, normDir12Y)
             }
-            else -> throw UnexpectedHitAreaError(hit.area1)
+            else -> throw UnexpectedHitArea(hit.area1)
         }
     }
 

@@ -85,7 +85,7 @@ class CollisionManager {
                         }
 
                         if (gel1CanCollide && gel2CanCollide) {
-                            if (!BuildConfig.isProduction()) {
+                            if (!BuildConfig.isProduction) {
                                 require(gel1.body != null) { "Gel without body returned true from canCollide: $gel1" }
                                 require(gel2.body != null) { "Gel without body returned true from canCollide: $gel2" }
                             }
@@ -104,7 +104,7 @@ class CollisionManager {
                                         involvedGels.add(gel1)
                                         involvedGels.add(gel2)
                                     }
-                                } catch (e: CollisionError) {
+                                } catch (e: CollisionException) {
                                     Log.info(TAG, "The following problem was caught during primary collision phase")
                                     recoverFrom(e)
                                     involvedGels.add(gel1)
@@ -121,7 +121,7 @@ class CollisionManager {
                     if (handler.checkAndSeparate(gel1, bricks, collisions, hit)) {
                         involvedGels.add(gel1)
                     }
-                } catch (e: CollisionError) {
+                } catch (e: CollisionException) {
                     Log.info(TAG, "The following problem was caught during primary collision phase")
                     recoverFrom(e)
                     involvedGels.add(gel1)
@@ -150,7 +150,7 @@ class CollisionManager {
                             var speedOfFastest = body1?.speedBeforeCollisions?.maxAbsComponent() ?: 0.0f
 
                             gel1.vicinity.forEach { gel2 ->
-                                if (!BuildConfig.isProduction()) {
+                                if (!BuildConfig.isProduction) {
                                     // Since gel2 is in the vicinity of gel1, we have already decided that both of them
                                     // can take part in a collision, and so calling canCollideWithGels again is not
                                     // necessary. I check this in development to make sure this is actually true.
@@ -194,7 +194,7 @@ class CollisionManager {
                             }
 
                             if (!anyCollisions) break
-                            rndRange = rndRange * 2.0f
+                            rndRange *= 2.0f
                         } while (++innerIteration <= MAX_NUM_INNER_ITERATIONS)
 
                         if (innerIteration > MAX_NUM_INNER_ITERATIONS) {
@@ -203,12 +203,12 @@ class CollisionManager {
                         } else if (innerIteration > MAX_NUM_INNER_ITERATIONS_WITHOUT_WARNING) {
                             Log.warn(TAG, "Took $innerIteration inner iterations: $gel1, ${body1?.nextPos}")
                         }
-                    } catch (e: CollisionError) {
+                    } catch (e: CollisionException) {
                         // Pass this on to the outer loop.
                         throw e
                     } catch (e: Exception) {
                         // Wrap this in a kind of AbortIterationException so that it's caught from the outer loop.
-                        throw GelCrashedInInnerLoopError(gel1, e)
+                        throw GelCrashedInInnerLoop(gel1, e)
                     }
                 }
 
@@ -217,7 +217,7 @@ class CollisionManager {
                     moreInvolvedGels.clear()
                     needsOuterRetry = true
                 }
-            } catch (e: CollisionError) {
+            } catch (e: CollisionException) {
                 Log.info(TAG, "Iteration #$outerIteration aborted")
                 needsOuterRetry = true
                 recoverFrom(e)
@@ -244,9 +244,9 @@ class CollisionManager {
         }
     }
 
-    private fun recoverFrom(e: CollisionError) {
+    private fun recoverFrom(e: CollisionException) {
         when (e) {
-            is GelCrashedInInnerLoopError -> {
+            is GelCrashedInInnerLoop -> {
                 val error = e.wrappedError
                 val gel = e.gel
                 Log.error(TAG, "Gel $gel crash in inner loop: ${error.message}\n${error.stackTraceToString()}")

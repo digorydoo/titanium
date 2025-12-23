@@ -10,23 +10,37 @@ class ShaderPrecompiler {
     // FIXME: lineIdx can be wrong, because removeComments and handleIfDefs may remove lines.
     // Could be fixed by replacing the lines with empty strings before finally removing them.
 
-    open class PrecompilerError(lineIdx: Int, msg: String): Exception("Line ${lineIdx + 1}: $msg")
-    class BadNameForDefineError(lineIdx: Int, name: String): PrecompilerError(lineIdx, "Bad name for define: $name")
-    class BlockCommentNotClosedError(lineIdx: Int): PrecompilerError(lineIdx, "Block comment not closed")
-    class DirectiveCannotHaveArgsError(lineIdx: Int): PrecompilerError(lineIdx, "This directive cannot have any args")
-    class DirectiveNotImplementedError(lineIdx: Int): PrecompilerError(lineIdx, "Directive not implemented")
-    class DuplicateDefineError(lineIdx: Int, key: String): PrecompilerError(lineIdx, "Key $key duplicated by #define")
-    class ElifdefWithoutIfError(lineIdx: Int): PrecompilerError(lineIdx, "#elifdef without corresponding #ifdef")
-    class ElseWithoutIfError(lineIdx: Int): PrecompilerError(lineIdx, "#else without corresponding #ifdef")
-    class EndifWithoutIfError(lineIdx: Int): PrecompilerError(lineIdx, "#endif without corresponding #ifdef")
-    class InvalidCondExprError(lineIdx: Int, expr: String): PrecompilerError(lineIdx, "Invalid condition expr: $expr")
-    class MissingEndifError(lineIdx: Int): PrecompilerError(lineIdx, "#ifdef is missing its #endif")
-    class MissingKeyInDefineError(lineIdx: Int): PrecompilerError(lineIdx, "The #define is missing its key")
-    class MissingKeyInIfError(lineIdx: Int): PrecompilerError(lineIdx, "The #if is missing its key")
-    class MissingKeyInIfdefError(lineIdx: Int): PrecompilerError(lineIdx, "The #ifdef is missing its key")
-    class MissingKeyInIfndefError(lineIdx: Int): PrecompilerError(lineIdx, "The #ifndef is missing its key")
-    class MissingKeyInUndefError(lineIdx: Int): PrecompilerError(lineIdx, "The #undef is missing its key")
-    class TooManyArgumentsError(lineIdx: Int): PrecompilerError(lineIdx, "The directive has too many arguments")
+    open class PrecompilerException(lineIdx: Int, msg: String): Exception("Line ${lineIdx + 1}: $msg")
+
+    class BadNameForDefineException(lineIdx: Int, name: String):
+        PrecompilerException(lineIdx, "Bad name for define: $name")
+
+    class BlockCommentNotClosedException(lineIdx: Int): PrecompilerException(lineIdx, "Block comment not closed")
+
+    class DirectiveCannotHaveArgsException(lineIdx: Int):
+        PrecompilerException(lineIdx, "This directive cannot have any args")
+
+    class DirectiveNotImplementedException(lineIdx: Int): PrecompilerException(lineIdx, "Directive not implemented")
+
+    class DuplicateDefineException(lineIdx: Int, key: String):
+        PrecompilerException(lineIdx, "Key $key duplicated by #define")
+
+    class ElifdefWithoutIfException(lineIdx: Int):
+        PrecompilerException(lineIdx, "#elifdef without corresponding #ifdef")
+
+    class ElseWithoutIfException(lineIdx: Int): PrecompilerException(lineIdx, "#else without corresponding #ifdef")
+    class EndifWithoutIfException(lineIdx: Int): PrecompilerException(lineIdx, "#endif without corresponding #ifdef")
+
+    class InvalidCondExprException(lineIdx: Int, expr: String):
+        PrecompilerException(lineIdx, "Invalid condition expr: $expr")
+
+    class MissingEndifException(lineIdx: Int): PrecompilerException(lineIdx, "#ifdef is missing its #endif")
+    class MissingKeyInDefineException(lineIdx: Int): PrecompilerException(lineIdx, "The #define is missing its key")
+    class MissingKeyInIfException(lineIdx: Int): PrecompilerException(lineIdx, "The #if is missing its key")
+    class MissingKeyInIfdefException(lineIdx: Int): PrecompilerException(lineIdx, "The #ifdef is missing its key")
+    class MissingKeyInIfndefException(lineIdx: Int): PrecompilerException(lineIdx, "The #ifndef is missing its key")
+    class MissingKeyInUndefException(lineIdx: Int): PrecompilerException(lineIdx, "The #undef is missing its key")
+    class TooManyArgumentsException(lineIdx: Int): PrecompilerException(lineIdx, "The directive has too many arguments")
 
     private class If(val lineIdx: Int, val condition: Boolean, val isElif: Boolean) {
         var elseSeen = false
@@ -91,7 +105,7 @@ class ShaderPrecompiler {
         }
 
         if (inBlockComment) {
-            throw BlockCommentNotClosedError(blockCommentLineIdx)
+            throw BlockCommentNotClosedException(blockCommentLineIdx)
         }
 
         return result
@@ -136,8 +150,8 @@ class ShaderPrecompiler {
                 when {
                     // These directives must be handled even when combinedCondition is false.
                     line.startsWith("#ifdef") -> {
-                        if (firstArg.isEmpty()) throw MissingKeyInIfdefError(lineIdx)
-                        if (secondArg.isNotEmpty()) throw TooManyArgumentsError(lineIdx)
+                        if (firstArg.isEmpty()) throw MissingKeyInIfdefException(lineIdx)
+                        if (secondArg.isNotEmpty()) throw TooManyArgumentsException(lineIdx)
                         checkNameIsValidForDefine(firstArg, lineIdx)
                         val condition = defines.contains(firstArg)
                         ifStack.add(If(lineIdx, condition = condition, isElif = false))
@@ -145,8 +159,8 @@ class ShaderPrecompiler {
                         keepLine = false
                     }
                     line.startsWith("#ifndef") -> {
-                        if (firstArg.isEmpty()) throw MissingKeyInIfndefError(lineIdx)
-                        if (secondArg.isNotEmpty()) throw TooManyArgumentsError(lineIdx)
+                        if (firstArg.isEmpty()) throw MissingKeyInIfndefException(lineIdx)
+                        if (secondArg.isNotEmpty()) throw TooManyArgumentsException(lineIdx)
                         checkNameIsValidForDefine(firstArg, lineIdx)
                         val condition = !defines.contains(firstArg)
                         ifStack.add(If(lineIdx, condition = condition, isElif = false))
@@ -154,29 +168,29 @@ class ShaderPrecompiler {
                         keepLine = false
                     }
                     line.startsWith("#if") -> { // must be after ifdef and ifndef
-                        if (startOfFirstArg == null) throw MissingKeyInIfError(lineIdx)
+                        if (startOfFirstArg == null) throw MissingKeyInIfException(lineIdx)
                         val condition = evalCondition(line.substring(startOfFirstArg).trim(), lineIdx)
                         ifStack.add(If(lineIdx, condition = condition, isElif = false))
                         combinedCondition = reevaluate(ifStack)
                         keepLine = false
                     }
                     line.startsWith("#else") -> {
-                        if (firstArg.isNotEmpty()) throw DirectiveCannotHaveArgsError(lineIdx)
-                        if (ifStack.isEmpty()) throw ElseWithoutIfError(lineIdx)
+                        if (firstArg.isNotEmpty()) throw DirectiveCannotHaveArgsException(lineIdx)
+                        if (ifStack.isEmpty()) throw ElseWithoutIfException(lineIdx)
 
                         val top = ifStack.last()
-                        if (top.elseSeen) throw MissingEndifError(lineIdx)
+                        if (top.elseSeen) throw MissingEndifException(lineIdx)
                         top.elseSeen = true
                         combinedCondition = reevaluate(ifStack)
                         keepLine = false
                     }
                     line.startsWith("#elifdef") -> {
-                        if (firstArg.isEmpty()) throw MissingKeyInIfdefError(lineIdx)
-                        if (secondArg.isNotEmpty()) throw TooManyArgumentsError(lineIdx)
-                        if (ifStack.isEmpty()) throw ElifdefWithoutIfError(lineIdx)
+                        if (firstArg.isEmpty()) throw MissingKeyInIfdefException(lineIdx)
+                        if (secondArg.isNotEmpty()) throw TooManyArgumentsException(lineIdx)
+                        if (ifStack.isEmpty()) throw ElifdefWithoutIfException(lineIdx)
 
                         val top = ifStack.last()
-                        if (top.elseSeen) throw MissingEndifError(lineIdx)
+                        if (top.elseSeen) throw MissingEndifException(lineIdx)
                         top.elseSeen = true
                         checkNameIsValidForDefine(firstArg, lineIdx)
                         ifStack.add(If(lineIdx, condition = defines.contains(firstArg), isElif = true))
@@ -184,8 +198,8 @@ class ShaderPrecompiler {
                         keepLine = false
                     }
                     line.startsWith("#endif") -> {
-                        if (firstArg.isNotEmpty()) throw DirectiveCannotHaveArgsError(lineIdx)
-                        if (ifStack.isEmpty()) throw EndifWithoutIfError(lineIdx)
+                        if (firstArg.isNotEmpty()) throw DirectiveCannotHaveArgsException(lineIdx)
+                        if (ifStack.isEmpty()) throw EndifWithoutIfException(lineIdx)
 
                         do {
                             val last = ifStack.removeLast()
@@ -202,21 +216,21 @@ class ShaderPrecompiler {
                             .takeIf { it >= 0 }
                             ?.let { firstArg.slice(0 ..< it) }
                             ?: firstArg
-                        if (name.isEmpty()) throw MissingKeyInDefineError(lineIdx)
+                        if (name.isEmpty()) throw MissingKeyInDefineException(lineIdx)
                         checkNameIsValidForDefine(name, lineIdx)
-                        if (defines.contains(name)) throw DuplicateDefineError(lineIdx, name)
+                        if (defines.contains(name)) throw DuplicateDefineException(lineIdx, name)
                         defines.add(name)
                         keepLine = true
                     }
                     line.startsWith("#undef") -> {
-                        if (firstArg.isEmpty()) throw MissingKeyInUndefError(lineIdx)
-                        if (secondArg.isNotEmpty()) throw TooManyArgumentsError(lineIdx)
+                        if (firstArg.isEmpty()) throw MissingKeyInUndefException(lineIdx)
+                        if (secondArg.isNotEmpty()) throw TooManyArgumentsException(lineIdx)
                         checkNameIsValidForDefine(firstArg, lineIdx)
                         defines.remove(firstArg)
                         keepLine = true // we keep this in, even though GLSL appears to ignore it
                     }
                     line.startsWith("#version") -> keepLine = true
-                    else -> throw DirectiveNotImplementedError(lineIdx)
+                    else -> throw DirectiveNotImplementedException(lineIdx)
                 }
             }
 
@@ -224,7 +238,7 @@ class ShaderPrecompiler {
         }
 
         if (ifStack.isNotEmpty()) {
-            throw MissingEndifError(ifStack.last().lineIdx)
+            throw MissingEndifException(ifStack.last().lineIdx)
         }
 
         return result
@@ -243,7 +257,7 @@ class ShaderPrecompiler {
 
     private fun checkNameIsValidForDefine(name: String, lineIdx: Int) {
         if (!Regex("[a-zA-Z_][a-zA-Z0-9_]*").matches(name)) {
-            throw BadNameForDefineError(lineIdx, name)
+            throw BadNameForDefineException(lineIdx, name)
         }
     }
 
@@ -260,9 +274,9 @@ class ShaderPrecompiler {
                 .trim()
                 .takeIf { it.isNotEmpty() }
                 ?.let { defines.contains(it) }
-                ?: throw InvalidCondExprError(lineIdx, expr)
+                ?: throw InvalidCondExprException(lineIdx, expr)
             expr.startsWith("!defined(") && expr.endsWith(")") -> !evalCondition(expr.substring(1), lineIdx)
             Regex("[0-9]*").matches(expr) -> expr.toIntOrNull() != 0
-            else -> throw InvalidCondExprError(lineIdx, expr)
+            else -> throw InvalidCondExprException(lineIdx, expr)
         }
 }

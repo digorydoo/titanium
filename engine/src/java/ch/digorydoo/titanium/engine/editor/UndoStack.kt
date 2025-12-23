@@ -3,9 +3,8 @@ package ch.digorydoo.titanium.engine.editor
 import ch.digorydoo.kutils.box.Boxi
 import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.editor.statusbar.EditorStatusBar
 
-class UndoStack(private val status: EditorStatusBar, private val selection: Selection) {
+internal class UndoStack(private val hud: EditorHUD, private val brickSelection: BrickSelection) {
     class Entry(val sel: Boxi, val bricks: List<Brick>)
 
     private val stack = mutableListOf<Entry>()
@@ -26,15 +25,15 @@ class UndoStack(private val status: EditorStatusBar, private val selection: Sele
 
     fun undo() {
         if (nextIdx <= 0) {
-            status.didFailToUndo()
+            hud.didFailToUndo()
             return
         }
 
         val entry = stack[nextIdx - 1]
-        val sel = selection.getUnreversed()
+        val sel = brickSelection.getUnreversed()
 
         if (!sel.hasSameValues(entry.sel)) {
-            selection.set(entry.sel)
+            brickSelection.set(entry.sel)
         } else {
             nextIdx--
             restore(entry)
@@ -43,15 +42,15 @@ class UndoStack(private val status: EditorStatusBar, private val selection: Sele
 
     fun redo() {
         if (nextIdx >= stack.size) {
-            status.didFailToRedo()
+            hud.didFailToRedo()
             return
         }
 
         val entry = stack[nextIdx]
-        val sel = selection.getUnreversed()
+        val sel = brickSelection.getUnreversed()
 
         if (!sel.hasSameValues(entry.sel)) {
-            selection.set(entry.sel)
+            brickSelection.set(entry.sel)
         } else {
             nextIdx++
             restore(entry)
@@ -61,9 +60,9 @@ class UndoStack(private val status: EditorStatusBar, private val selection: Sele
     private fun restore(entry: Entry) {
         var i = 0
 
-        selection.set(entry.sel)
+        brickSelection.set(entry.sel)
 
-        selection.forEachBrick { x, y, z ->
+        brickSelection.forEachBrick { x, y, z ->
             val cur = Brick().also { App.bricks.getAtBrickCoord(x, y, z, it) }
             App.bricks.setAtBrickCoord(x, y, z, entry.bricks[i])
             entry.bricks[i].set(cur) // replace the brick in the entry with the one we've overwritten
@@ -71,7 +70,7 @@ class UndoStack(private val status: EditorStatusBar, private val selection: Sele
         }
 
         App.bricks.updateBricks(entry.sel, evenAdjacient = true)
-        status.updateStats()
+        hud.updateStats()
     }
 
     companion object {

@@ -111,7 +111,10 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
                 onCreateJob = null // necessary before adding the gel to the layer
 
                 if (caught != null) {
-                    Log.error(TAG, "Gel $gel crashed in onCreateConcurrently: ${caught.message}")
+                    Log.error(
+                        TAG,
+                        "Gel $gel crashed in onCreateConcurrently: ${caught.message}\n${caught.stackTraceToString()}"
+                    )
                     zombie = true
                 } else if (zombie) {
                     // This is not necessarily a bug since it just means someone else must have set it to zombie.

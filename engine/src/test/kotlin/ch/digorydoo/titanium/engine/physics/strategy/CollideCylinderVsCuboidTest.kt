@@ -9,7 +9,7 @@ import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE
 import ch.digorydoo.titanium.engine.physics.strategy.cylinder_vs_cuboid.BounceCylinderVsCuboid
 import ch.digorydoo.titanium.engine.physics.strategy.cylinder_vs_cuboid.CheckCylinderVsCuboid
 import ch.digorydoo.titanium.engine.physics.strategy.cylinder_vs_cuboid.SeparateCylinderVsCuboid
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

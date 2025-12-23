@@ -4,24 +4,30 @@ import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.brick.BrickMaterial
 import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.camera.CameraProps.Mode
-import ch.digorydoo.titanium.engine.editor.Selection
+import ch.digorydoo.titanium.engine.editor.BrickSelection
+import ch.digorydoo.titanium.engine.editor.EditorHUD
+import ch.digorydoo.titanium.engine.editor.EditorState
+import ch.digorydoo.titanium.engine.editor.HeightMapSelection
 import ch.digorydoo.titanium.engine.editor.UndoStack
 import ch.digorydoo.titanium.engine.editor.cursor.CursorGelHolder
-import ch.digorydoo.titanium.engine.editor.statusbar.EditorStatusBar
 import ch.digorydoo.titanium.engine.gel.SpawnPt
+import ch.digorydoo.titanium.engine.heightmap.HeightMap
+import ch.digorydoo.titanium.engine.heightmap.HeightMapGel
 import ch.digorydoo.titanium.engine.heightmap.HeightMapSpawnPt
 import ch.digorydoo.titanium.engine.scene.Lighting
 
 internal class EditorActions(
     cursor: CursorGelHolder,
-    selection: Selection,
-    status: EditorStatusBar,
+    hud: EditorHUD,
+    brickSelection: BrickSelection,
+    heightMapSelection: HeightMapSelection,
+    state: EditorState,
     undoStack: UndoStack,
 ) {
-    private val bricks = EditBrickActions(selection, status, undoStack)
-    private val general = EditGeneralActions(cursor, selection, status)
-    private val spawnPts = EditSpawnPtActions(selection)
-    private val heightMaps = EditHeightMapActions(this, selection)
+    private val bricks = EditBrickActions(hud, brickSelection, state, undoStack)
+    private val general = EditGeneralActions(cursor, hud, brickSelection)
+    private val spawnPts = EditSpawnPtActions(brickSelection)
+    private val heightMaps = EditHeightMapActions(this, brickSelection, cursor, heightMapSelection, state)
 
     fun setActiveShape(shape: BrickShape) {
         bricks.setActiveShape(shape)
@@ -125,5 +131,21 @@ internal class EditorActions(
 
     fun didAddNewHeightMap(spawnPt: HeightMapSpawnPt) {
         spawnPts.didAddNewHeightMap(spawnPt)
+    }
+
+    fun setHeightMapEditMode(heightMap: HeightMap, spawnPt: HeightMapSpawnPt) {
+        heightMaps.setHeightMapEditMode(heightMap, spawnPt)
+    }
+
+    fun setBricksEditMode() {
+        heightMaps.setBricksEditMode()
+    }
+
+    fun modifyHeightOfSelectedSamples(deltaZ: Float) {
+        heightMaps.modifyHeightOfSelectedSamples(deltaZ)
+    }
+
+    fun resampleHeightMap(heightMap: HeightMap, gel: HeightMapGel, numSamplesX: Int, numSamplesY: Int) {
+        heightMaps.resampleHeightMap(heightMap, gel, numSamplesX, numSamplesY)
     }
 }

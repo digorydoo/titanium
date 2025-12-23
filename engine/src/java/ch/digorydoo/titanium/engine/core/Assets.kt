@@ -7,12 +7,14 @@ import java.io.File
  */
 abstract class Assets {
     protected lateinit var assetsDir: String
+    protected lateinit var developerAssetsDir: String
     protected lateinit var prefsDir: String
     lateinit var pathToSaveGames: String; protected set
     lateinit var pathToLogFile: String; protected set
     lateinit var pathToCrashLockFile: String; protected set
 
     abstract fun initialize()
+
     fun pathToFont(name: String) = joinPath(assetsDir, "fonts", name)
     fun pathToGelList(name: String) = joinPath(assetsDir, "gellists", name)
     fun pathToHeightMap(name: String) = joinPath(assetsDir, "heightmaps", name)
@@ -23,6 +25,10 @@ abstract class Assets {
     fun pathToShader(name: String) = joinPath(assetsDir, "shaders", name)
     fun pathToSound(name: String) = joinPath(assetsDir, "sounds", name)
     fun pathToTexture(name: String) = joinPath(assetsDir, "textures", name)
+
+    fun pathToDeveloperGelList(name: String) = joinPath(developerAssetsDir, "gellists", name)
+    fun pathToDeveloperHeightMap(name: String) = joinPath(developerAssetsDir, "heightmaps", name)
+    fun pathToDeveloperPlayfield(name: String) = joinPath(developerAssetsDir, "playfields", name)
 
     companion object {
         @JvmStatic

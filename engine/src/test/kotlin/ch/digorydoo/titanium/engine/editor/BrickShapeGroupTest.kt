@@ -1,8 +1,8 @@
 package ch.digorydoo.titanium.engine.editor
 
 import ch.digorydoo.titanium.engine.brick.BrickShape
-import ch.digorydoo.titanium.engine.editor.items.BrickShapeGroup
-import org.junit.jupiter.api.Test
+import ch.digorydoo.titanium.engine.editor.menu.shape.BrickShapeGroup
+import kotlin.test.Test
 import kotlin.test.assertTrue
 
 internal class BrickShapeGroupTest {

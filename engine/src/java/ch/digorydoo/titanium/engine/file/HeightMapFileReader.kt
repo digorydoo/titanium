@@ -1,13 +1,20 @@
 package ch.digorydoo.titanium.engine.file
 
+import ch.digorydoo.kutils.file.KDataInputStream
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.file.FileMarker.*
 import ch.digorydoo.titanium.engine.heightmap.HeightMap
+import ch.digorydoo.titanium.engine.mesh.MeshMaterial
+import java.io.BufferedInputStream
+import java.io.DataInputStream
 import java.io.File
 import java.nio.FloatBuffer
 
-class HeightMapFileReader private constructor(private val stream: MyDataInputStream, private val filename: String) {
+class HeightMapFileReader private constructor(
+    private val stream: KDataInputStream<FileMarker>,
+    private val filename: String,
+) {
     private fun read(): HeightMap {
         stream.readExpected(BEGIN_HEIGHT_MAP)
         var finished = false
@@ -38,7 +45,7 @@ class HeightMapFileReader private constructor(private val stream: MyDataInputStr
         require(ysize > 0.0f)
         require(zvalues != null)
 
-        return HeightMap(filename, numSamplesX, numSamplesY, xsize, ysize, zvalues)
+        return HeightMap(filename, numSamplesX, numSamplesY, xsize, ysize, zvalues, MeshMaterial.DEFAULT)
     }
 
     companion object {
@@ -48,9 +55,10 @@ class HeightMapFileReader private constructor(private val stream: MyDataInputStr
             val path = App.assets.pathToHeightMap(filename)
             Log.info(TAG, "Reading $path")
 
-            return MyDataInputStream.use(File(path)) {
-                HeightMapFileReader(it, filename).read()
-            }
+            return File(path).inputStream()
+                .let { BufferedInputStream(it) }
+                .let { DataInputStream(it) }
+                .use { HeightMapFileReader(KDataInputStream(it, FileMarker::fromUShort), filename).read() }
         }
     }
 }

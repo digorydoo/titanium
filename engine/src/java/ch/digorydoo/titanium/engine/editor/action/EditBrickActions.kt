@@ -7,26 +7,28 @@ import ch.digorydoo.titanium.engine.brick.BrickMaterial
 import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.brick.BrickShape.*
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.editor.Selection
+import ch.digorydoo.titanium.engine.editor.BrickSelection
+import ch.digorydoo.titanium.engine.editor.EditorHUD
+import ch.digorydoo.titanium.engine.editor.EditorState
 import ch.digorydoo.titanium.engine.editor.UndoStack
-import ch.digorydoo.titanium.engine.editor.statusbar.EditorStatusBar
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
 
 internal class EditBrickActions(
-    private val selection: Selection,
-    private val status: EditorStatusBar,
+    private val hud: EditorHUD,
+    private val brickSelection: BrickSelection,
+    private val state: EditorState,
     private val undoStack: UndoStack,
 ) {
     fun setActiveShape(shape: BrickShape) {
-        status.setActiveShape(shape)
+        state.setShape(shape)
     }
 
     fun setActiveMaterial(mat: BrickMaterial) {
-        status.setActiveMaterial(mat)
+        state.setMaterial(mat)
     }
 
     fun setShapeAndMaterialOfSelectedBricks() {
-        applyToAllSelectedBricks(status.shape, status.material)
+        applyToAllSelectedBricks(state.shape, state.material)
     }
 
     fun removeSelectedBricks() {
@@ -34,31 +36,31 @@ internal class EditBrickActions(
     }
 
     fun applyShapeToSelectedBricks() {
-        applyToAllSelectedBricks(status.shape, null)
+        applyToAllSelectedBricks(state.shape, null)
     }
 
     fun applyMaterialToSelectedBricks() {
-        applyToAllSelectedBricks(null, status.material)
+        applyToAllSelectedBricks(null, state.material)
     }
 
     fun pickShapeMaterial() {
-        val pos = MutablePoint3i().also { selection.getPosCentreInBrickCoords(it) }
+        val pos = MutablePoint3i().also { brickSelection.getTipPosInBrickCoords(it) }
         val brick = Brick().also { App.bricks.getAtBrickCoord(pos.x, pos.y, pos.z, it) }
 
         if (brick.shape == NONE) {
             App.dlg.showSnackbar(EngineTextId.EDITOR_CANNOT_PICK_UP)
         } else {
-            status.setActiveShape(brick.shape)
-            status.setActiveMaterial(brick.material)
+            state.setShape(brick.shape)
+            state.setMaterial(brick.material)
             App.dlg.showSnackbar(App.i18n.format(EngineTextId.EDITOR_PICKED_UP, brick.shape, brick.material))
         }
     }
 
     fun rotateSelection() {
-        val sel = selection.getUnreversed().takeIf { it.xsize > 0 && it.ysize > 0 && it.zsize > 0 } ?: return
+        val sel = brickSelection.getUnreversed().takeIf { it.xsize > 0 && it.ysize > 0 && it.zsize > 0 } ?: return
         val before = Array(sel.xsize) { Array(sel.ysize) { Array(sel.zsize) { Brick() } } }
 
-        selection.forEachBrick { x, y, z ->
+        brickSelection.forEachBrick { x, y, z ->
             val ax = x - sel.x0
             val ay = y - sel.y0
             val az = z - sel.z0
@@ -66,7 +68,7 @@ internal class EditBrickActions(
             App.bricks.getAtBrickCoord(x, y, z, brick)
         }
 
-        selection.set(sel.x0, sel.y0, sel.z0, sel.x0 + sel.ysize, sel.y0 + sel.xsize, sel.z0 + sel.zsize)
+        brickSelection.set(sel.x0, sel.y0, sel.z0, sel.x0 + sel.ysize, sel.y0 + sel.xsize, sel.z0 + sel.zsize)
 
         applyToAllSelectedBricks { x, y, z, brick ->
             val ax = y - sel.y0
@@ -104,7 +106,7 @@ internal class EditBrickActions(
         val undoList = mutableListOf<Brick>()
         var numChanged = 0
 
-        selection.forEachBrick { x, y, z ->
+        brickSelection.forEachBrick { x, y, z ->
             val before = Brick().also { App.bricks.getAtBrickCoord(x, y, z, it) }
             undoList.add(before)
             val newBrick = Brick(before)
@@ -116,10 +118,10 @@ internal class EditBrickActions(
         }
 
         if (numChanged > 0) {
-            val sel = selection.getUnreversed()
+            val sel = brickSelection.getUnreversed()
             undoStack.push(sel, undoList)
             App.bricks.updateBricks(sel, evenAdjacient = true)
-            status.updateStats()
+            hud.updateStats()
         }
 
         return numChanged

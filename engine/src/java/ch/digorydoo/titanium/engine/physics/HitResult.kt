@@ -21,7 +21,7 @@ enum class HitArea {
     WEST_FACE, // cuboids
 }
 
-class UnexpectedHitAreaError(area: HitArea): Exception("Unexpected hit area: $area")
+class UnexpectedHitArea(area: HitArea): Exception("Unexpected hit area: $area")
 
 internal interface HitResult {
     val hitPt: Point3f

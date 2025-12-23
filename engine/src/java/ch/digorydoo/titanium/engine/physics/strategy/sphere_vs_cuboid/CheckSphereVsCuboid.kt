@@ -9,7 +9,7 @@ import ch.digorydoo.titanium.engine.brick.IBrickFaceCoveringRetriever
 import ch.digorydoo.titanium.engine.physics.CuboidCheckHelper.*
 import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.MutableHitResult
-import ch.digorydoo.titanium.engine.physics.UnexpectedHitAreaError
+import ch.digorydoo.titanium.engine.physics.UnexpectedHitArea
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCuboidBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.engine.physics.strategy.CollisionCheckStrategy
@@ -240,7 +240,7 @@ internal class CheckSphereVsCuboid: CollisionCheckStrategy<FixedSphereBody, Fixe
             HitArea.WEST_FACE -> Direction.westVector
             HitArea.TOP_FACE -> Direction.upVector
             HitArea.BOTTOM_FACE -> Direction.downVector
-            else -> throw UnexpectedHitAreaError(bestMatchArea)
+            else -> throw UnexpectedHitArea(bestMatchArea)
         }
 
         outHit?.apply {

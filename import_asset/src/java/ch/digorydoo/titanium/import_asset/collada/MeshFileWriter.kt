@@ -1,17 +1,23 @@
 package ch.digorydoo.titanium.import_asset.collada
 
+import ch.digorydoo.kutils.file.KDataOutputStream
 import ch.digorydoo.kutils.matrix.Matrix4f
 import ch.digorydoo.kutils.point.Point2fSet
 import ch.digorydoo.kutils.point.Point3fSet
 import ch.digorydoo.titanium.engine.file.FileMarker
-import ch.digorydoo.titanium.engine.file.MyDataOutputStream
 import ch.digorydoo.titanium.engine.mesh.MeshMaterial
 import ch.digorydoo.titanium.import_asset.WriterStats
 import ch.digorydoo.titanium.import_asset.collada.data.Geometry
 import ch.digorydoo.titanium.import_asset.collada.data.VisualScene
 import ch.digorydoo.titanium.import_asset.collada.data.VisualSceneNode
+import java.io.BufferedOutputStream
+import java.io.DataOutputStream
+import java.io.File
 
-class MeshFileWriter(private val stream: MyDataOutputStream, private val accessor: ColladaDataAccessor) {
+class MeshFileWriter private constructor(
+    private val stream: KDataOutputStream<FileMarker>,
+    private val accessor: ColladaDataAccessor,
+) {
     private val pt3fSet = Point3fSet()
     private val pt2fSet = Point2fSet()
     private val geometriesActuallyUsed = mutableSetOf<Geometry>()
@@ -243,5 +249,17 @@ class MeshFileWriter(private val stream: MyDataOutputStream, private val accesso
         stream.write(FileMarker.MATRIX)
         stream.write(matrix.buffer)
         stats.numMatrices++
+    }
+
+    companion object {
+        fun write(accessor: ColladaDataAccessor, file: File): WriterStats =
+            file.outputStream()
+                .let { BufferedOutputStream(it) }
+                .let { DataOutputStream(it) }
+                .use {
+                    val writer = MeshFileWriter(KDataOutputStream(it), accessor)
+                    writer.write()
+                    writer.stats
+                }
     }
 }

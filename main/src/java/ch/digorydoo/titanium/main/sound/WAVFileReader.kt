@@ -1,11 +1,14 @@
 package ch.digorydoo.titanium.main.sound
 
+import ch.digorydoo.kutils.file.KDataInputStream
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.file.MyDataInputStream
+import ch.digorydoo.titanium.engine.file.FileMarker
+import java.io.BufferedInputStream
+import java.io.DataInputStream
 import java.io.File
 
-class WAVFileReader private constructor(private val stream: MyDataInputStream) {
+class WAVFileReader private constructor(private val stream: KDataInputStream<FileMarker>) {
     class WAVData(val arr: ByteArray, val samplingFreq: Int, val numChannels: Int, val bytesPerSample: Int)
 
     fun read(): WAVData {
@@ -62,17 +65,17 @@ class WAVFileReader private constructor(private val stream: MyDataInputStream) {
     companion object {
         private val TAG = Log.Tag("WAVFileReader")
         private const val WAV_PCM = 0x0001
-        //        private const val WAV_IEEE_FLOAT = 0x0003
-        //        private const val WAV_ALAW = 0x0006
-        //        private const val WAV_MULAW = 0x0007
-        //        private const val WAV_EXTENDED = 0xFFFE
+        // private const val WAV_IEEE_FLOAT = 0x0003
+        // private const val WAV_ALAW = 0x0006
+        // private const val WAV_MULAW = 0x0007
+        // private const val WAV_EXTENDED = 0xFFFE
 
         fun read(fname: String): WAVData {
             val path = App.assets.pathToSound(fname)
-            val file = File(path)
-            return MyDataInputStream.use(file) { stream ->
-                WAVFileReader(stream).read()
-            }
+            return File(path).inputStream()
+                .let { BufferedInputStream(it) }
+                .let { DataInputStream(it) }
+                .use { WAVFileReader(KDataInputStream(it, FileMarker::fromUShort)).read() }
         }
     }
 }

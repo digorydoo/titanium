@@ -3,12 +3,12 @@ package ch.digorydoo.titanium.engine.editor.action
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.editor.Selection
+import ch.digorydoo.titanium.engine.editor.BrickSelection
 import ch.digorydoo.titanium.engine.gel.SpawnPt
 import ch.digorydoo.titanium.engine.heightmap.HeightMapSpawnPt
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
 
-internal class EditSpawnPtActions(private val selection: Selection) {
+internal class EditSpawnPtActions(private val brickSelection: BrickSelection) {
     private val history = mutableListOf<SpawnPt>()
     private var historyIdx = -1
     private var typeOfLastAdd = ""
@@ -17,7 +17,7 @@ internal class EditSpawnPtActions(private val selection: Selection) {
     fun jumpToNextSpawnPt() {
         if (history.isNotEmpty()) {
             val posOfSpawnPt = history[historyIdx].pos
-            val posOfCursor = selection.getPosCentreInWorldCoords()
+            val posOfCursor = brickSelection.getTipPosInWorldCoords()
 
             if (posOfCursor.distanceTo(posOfSpawnPt) > MAX_DISTANCE_BEFORE_CLEAR_HISTORY) {
                 // The cursor has moved too far from the spawn pt. The history may no longer be relevant.
@@ -30,7 +30,7 @@ internal class EditSpawnPtActions(private val selection: Selection) {
             historyIdx++
             jumpToSpawnPt(history[historyIdx])
         } else {
-            val spawnPt = App.spawnMgr.findClosestSpawnPt(selection.getPosCentreInWorldCoords()) {
+            val spawnPt = App.spawnMgr.findClosestSpawnPt(brickSelection.getTipPosInWorldCoords()) {
                 !history.contains(it)
             }
 
@@ -59,7 +59,7 @@ internal class EditSpawnPtActions(private val selection: Selection) {
 
     fun addNewSpawnPt(spawnObjType: String, rotation: Float = 0.0f) {
         val id = App.spawnMgr.generateUniqueId(spawnObjType)
-        val pt = selection.getPosCentreInWorldCoords().apply { z -= 0.5f }
+        val pt = brickSelection.getTipPosInWorldCoords().apply { z -= 0.5f }
 
         val raw = mutableMapOf<String, String>()
         raw["id"] = id
@@ -91,7 +91,7 @@ internal class EditSpawnPtActions(private val selection: Selection) {
     }
 
     fun jumpToSpawnPt(pt: SpawnPt) {
-        selection.set(pt.pos.x.toInt(), pt.pos.y.toInt(), pt.pos.z.toInt())
+        brickSelection.set(pt.pos.x.toInt(), pt.pos.y.toInt(), pt.pos.z.toInt())
     }
 
     fun deleteSpawnPt(pt: SpawnPt) {

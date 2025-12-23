@@ -9,7 +9,7 @@ import kotlin.properties.Delegates
 
 class PrefsManager: Preferences {
     private var changed = false
-    private fun <T> watch(initial: T) = Delegates.observable<T>(initial) { _, _, _ -> changed = true }
+    private fun <T> watch(initial: T) = Delegates.observable(initial) { _, _, _ -> changed = true }
 
     override var fullscreen: Boolean by watch(initial = true)
     override var nameOfMonitor: String by watch(initial = "")

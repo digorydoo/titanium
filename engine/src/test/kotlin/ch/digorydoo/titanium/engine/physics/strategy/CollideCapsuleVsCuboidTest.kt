@@ -9,7 +9,7 @@ import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE
 import ch.digorydoo.titanium.engine.physics.strategy.capsule_vs_cuboid.BounceCapsuleVsCuboid
 import ch.digorydoo.titanium.engine.physics.strategy.capsule_vs_cuboid.CheckCapsuleVsCuboid
 import ch.digorydoo.titanium.engine.physics.strategy.capsule_vs_cuboid.SeparateCapsuleVsCuboid
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

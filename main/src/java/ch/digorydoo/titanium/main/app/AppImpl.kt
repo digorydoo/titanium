@@ -88,7 +88,7 @@ class AppImpl: App() {
 
         prefs.loadFromFile()
 
-        Log.info(TAG, "BuildConfig: isWindows=${BuildConfig.isWindows()}, isProduction=${BuildConfig.isProduction()}")
+        Log.info(TAG, "BuildConfig: isWindows=${BuildConfig.isWindows}, isProduction=${BuildConfig.isProduction}")
         Log.info(TAG, "LWJGL version: ${Version.getVersion()}")
         GLFWErrorCallback.createThrow().set()
 
@@ -159,7 +159,7 @@ class AppImpl: App() {
         }
 
         glfwMakeContextCurrent(window)
-        glfwSwapInterval(1) // enable v-sync
+        // glfwSwapInterval(1) // enable v-sync; needs restart when changed; unclear if this is useful nowadays
         GL.createCapabilities() // attach LWJGL to GLFW's OpenGL context
         glfwShowWindow(window) // make the window visible
 
@@ -223,7 +223,11 @@ class AppImpl: App() {
                 // GLFW does not call onChar() when the control key is down, so we simulate it. This is needed so we
                 // can base the editor shortcuts on the char code rather than the raw key codes.
 
-                val charCode = glfwGetKeyName(key, glfwGetKeyScancode(key))
+                // Kotlin 2.3.0 complains about inaccessible @Nullable with glfwGetKeyName here, but storing the result
+                // in a temporary nullable variable makes the warning go away.
+                val keyName: String? = glfwGetKeyName(key, glfwGetKeyScancode(key))
+
+                val charCode = keyName
                     ?.takeIf { it.isNotEmpty() }
                     ?.let { it[0].code }
                     ?: 0

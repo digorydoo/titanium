@@ -6,8 +6,8 @@ import ch.digorydoo.titanium.engine.core.ActionManager
 import ch.digorydoo.titanium.engine.core.ActionManager.ActionDelegate
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
-import ch.digorydoo.titanium.engine.mesh.Mesh
-import ch.digorydoo.titanium.engine.mesh.MeshRenderer
+import ch.digorydoo.titanium.engine.mesh.ComplexMesh
+import ch.digorydoo.titanium.engine.mesh.ComplexMeshRenderer
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCuboidBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
 import ch.digorydoo.titanium.engine.shader.Renderer
@@ -47,8 +47,8 @@ class DoorGel private constructor(
     private val slabPos = MutablePoint3f()
     private var slabRotation = 0.0f
 
-    private var frameMesh: Mesh? = null
-    private var slabMesh: Mesh? = null
+    private var frameMesh: ComplexMesh? = null
+    private var slabMesh: ComplexMesh? = null
 
     override val renderer = makeCombinedRenderer(this)
 
@@ -93,8 +93,8 @@ class DoorGel private constructor(
 
         private fun makeCombinedRenderer(gel: DoorGel): Renderer {
             val frameRotation = gel.spawnPt?.rotation ?: 0.0f
-            val frameRenderer = App.factory.createMeshRenderer(
-                object: MeshRenderer.Delegate() {
+            val frameRenderer = App.factory.createComplexMeshRenderer(
+                object: ComplexMeshRenderer.Delegate() {
                     override val mesh get() = gel.frameMesh
                     override val renderPos = gel.pos // shared mutable object
                     override val rotationPhi = frameRotation
@@ -103,8 +103,8 @@ class DoorGel private constructor(
                 cullFace = true,
                 depthTest = true
             )
-            val slabRenderer = App.factory.createMeshRenderer(
-                object: MeshRenderer.Delegate() {
+            val slabRenderer = App.factory.createComplexMeshRenderer(
+                object: ComplexMeshRenderer.Delegate() {
                     override val mesh get() = gel.slabMesh
                     override val renderPos = gel.slabPos // shared mutable object
                     override val rotationPhi get() = frameRotation + gel.slabRotation

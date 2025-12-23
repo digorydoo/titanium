@@ -59,7 +59,7 @@ internal class CollisionHandler {
             if (strategies.check(body1, body1.nextPos, body2, body2.nextPos, hit)) {
                 strategies.separate(body1, body2, hit)
 
-                if (!BuildConfig.isProduction()) {
+                if (!BuildConfig.isProduction) {
                     // Check that bodies no longer collide
                     if (strategies.check(body1, body1.nextPos, body2, body2.nextPos)) {
                         throw SeparationFailed(body1, Point3f(tmpPos1), body2, Point3f(tmpPos2))
@@ -100,7 +100,7 @@ internal class CollisionHandler {
             if (strategies.check(gelBody, gelBody.nextPos, brickBody, brickBody.nextPos, bfcr, brickCoords, hit)) {
                 strategies.separate(gelBody, brickBody, hit)
 
-                if (!BuildConfig.isProduction()) {
+                if (!BuildConfig.isProduction) {
                     val stillCollide =
                         strategies.check(gelBody, gelBody.nextPos, brickBody, brickBody.nextPos, bfcr, brickCoords)
 

@@ -18,7 +18,7 @@ class BrickVolume(
     val xsize: Int,
     val ysize: Int,
     val zsize: Int,
-    val fileName: String,
+    val filename: String,
     tex: Texture,
 ) {
     private val models = BrickModelHolder()
@@ -229,14 +229,6 @@ class BrickVolume(
                 brickX.toFloat() * WORLD_BRICK_SIZE,
                 brickY.toFloat() * WORLD_BRICK_SIZE,
                 brickZ.toFloat() * WORLD_BRICK_SIZE,
-            )
-        }
-
-        fun brickToWorld(brickX: Float, brickY: Float, brickZ: Float, result: MutablePoint3f) {
-            result.set(
-                brickX * WORLD_BRICK_SIZE,
-                brickY * WORLD_BRICK_SIZE,
-                brickZ * WORLD_BRICK_SIZE,
             )
         }
 

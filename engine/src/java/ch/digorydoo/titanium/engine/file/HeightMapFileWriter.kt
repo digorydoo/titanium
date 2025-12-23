@@ -1,15 +1,18 @@
 package ch.digorydoo.titanium.engine.file
 
+import ch.digorydoo.kutils.file.KDataOutputStream
 import ch.digorydoo.kutils.utils.Log
+import ch.digorydoo.titanium.BuildConfig
+import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.file.FileMarker.*
 import ch.digorydoo.titanium.engine.heightmap.HeightMap
+import ch.digorydoo.titanium.engine.utils.NotForProductionError
+import java.io.BufferedOutputStream
+import java.io.DataOutputStream
 import java.io.File
 
-class HeightMapFileWriter private constructor(
-    private val stream: MyDataOutputStream,
-    private val heightMap: HeightMap,
-) {
-    private fun write() {
+class HeightMapFileWriter private constructor(private val stream: KDataOutputStream<FileMarker>) {
+    private fun write(heightMap: HeightMap) {
         stream.write(BEGIN_HEIGHT_MAP)
         stream.writeInt16(NUM_SAMPLES_X, heightMap.numSamplesX)
         stream.writeInt16(NUM_SAMPLES_Y, heightMap.numSamplesY)
@@ -26,13 +29,21 @@ class HeightMapFileWriter private constructor(
         private val TAG = Log.Tag("HeightMapFileWriter")
 
         fun write(heightMap: HeightMap) {
-            // val path = Assets.pathToHeightMap(heightMap.filename) -- NO, not into the build folder!
-            val path = "/Users/pamberg/Develop/titanium/assets/heightmaps/${heightMap.filename}" // FIXME
-
-            Log.info(TAG, "Writing $path")
-
-            MyDataOutputStream.use(File(path)) {
-                HeightMapFileWriter(it, heightMap).write()
+            when {
+                BuildConfig.isProduction -> throw NotForProductionError()
+                heightMap.filename.isEmpty() -> throw Exception("File name is empty!")
+                else -> {
+                    arrayOf(
+                        App.assets.pathToHeightMap(heightMap.filename),
+                        App.assets.pathToDeveloperHeightMap(heightMap.filename),
+                    ).forEach { path ->
+                        Log.info(TAG, "Writing $path")
+                        File(path).outputStream()
+                            .let { BufferedOutputStream(it) }
+                            .let { DataOutputStream(it) }
+                            .use { HeightMapFileWriter(KDataOutputStream(it)).write(heightMap) }
+                    }
+                }
             }
         }
     }

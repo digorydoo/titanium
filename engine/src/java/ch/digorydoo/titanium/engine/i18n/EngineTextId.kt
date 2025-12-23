@@ -5,7 +5,7 @@ import org.jetbrains.annotations.PropertyKey
 
 enum class EngineTextId(
     // The annotation helps the IDE to understand which keys are being used.
-    @PropertyKey(resourceBundle = BUNDLE_NAME)
+    @param:PropertyKey(resourceBundle = BUNDLE_NAME)
     override val resId: String,
 ): ITextId {
     // Editor

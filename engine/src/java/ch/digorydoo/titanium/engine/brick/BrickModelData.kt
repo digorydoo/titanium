@@ -133,7 +133,7 @@ class BrickModelData(private val subvolume: BrickSubvolume, private val models: 
     }
 
     fun heightAt(relWorldX: Float, relWorldY: Float, relBrickCoords: Point3i): Float? {
-        val shape = subvolume.getShape(relBrickCoords) ?: return null
+        val shape = subvolume.getShape(relBrickCoords)
         val model = models.get(shape) ?: return null // returns null when shape is NONE
         model.prepare(relBrickCoords.x, relBrickCoords.y, relBrickCoords.z, subvolume)
         return model.heightAt(relWorldX, relWorldY) // returns null when brick is empty at this xy

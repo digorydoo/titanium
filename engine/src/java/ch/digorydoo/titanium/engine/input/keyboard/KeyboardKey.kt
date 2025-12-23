@@ -26,10 +26,11 @@ enum class KeyboardKey {
     KEYPAD_MINUS,
     LEFT_BRACKET, // ü in DE-CH layout
     APOSTROPHE, // ä in DE-CH layout
+    F1,
+    F2,
     RAW_COMMA,
     RAW_PERIOD,
     RAW_MINUS,
-
     RAW_A,
     RAW_B,
     RAW_C,

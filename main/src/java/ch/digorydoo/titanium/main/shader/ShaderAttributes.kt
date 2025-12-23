@@ -36,6 +36,7 @@ class ShaderAttributes {
 
         val stride = numComponents * Float.SIZE_BYTES
 
+        // FIXME: shouldn't normalised be set to true when Attribute.Normal?
         glVertexAttribPointer(loc, numComponents, GL_FLOAT, false, stride, 0L)
         checkGLError()
 

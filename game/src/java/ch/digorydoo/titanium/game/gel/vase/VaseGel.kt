@@ -5,8 +5,8 @@ import ch.digorydoo.titanium.engine.core.ActionManager
 import ch.digorydoo.titanium.engine.core.ActionManager.ActionDelegate
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
-import ch.digorydoo.titanium.engine.mesh.Mesh
-import ch.digorydoo.titanium.engine.mesh.MeshRenderer
+import ch.digorydoo.titanium.engine.mesh.ComplexMesh
+import ch.digorydoo.titanium.engine.mesh.ComplexMeshRenderer
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCapsuleBody
 import ch.digorydoo.titanium.game.gel.vase.VaseSpawnPt.Kind
 import ch.digorydoo.titanium.game.i18n.GameTextId
@@ -40,10 +40,10 @@ class VaseGel private constructor(
         friction = 0.999f,
     )
 
-    private var mesh: Mesh? = null
+    private var mesh: ComplexMesh? = null
 
-    override val renderer = App.factory.createMeshRenderer(
-        object: MeshRenderer.Delegate() {
+    override val renderer = App.factory.createComplexMeshRenderer(
+        object: ComplexMeshRenderer.Delegate() {
             override val mesh get() = this@VaseGel.mesh
             override val renderPos = this@VaseGel.pos
             override val rotationPhi = spawnPt?.rotation ?: 0.0f

@@ -249,7 +249,7 @@ class ActionInputIconGel: GraphicElement() {
     override fun onRemoveZombie() {
         renderer.free()
 
-        cachedTextTextures.forEach { _, texture ->
+        cachedTextTextures.forEach { (_, texture) ->
             texture.freeRequireUnshared()
             if (textTex == texture) textTex = null
         }

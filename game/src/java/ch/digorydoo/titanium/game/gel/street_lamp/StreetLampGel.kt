@@ -10,8 +10,8 @@ import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.core.FrameCounter
 import ch.digorydoo.titanium.engine.core.LampManager.Lamp
 import ch.digorydoo.titanium.engine.gel.GraphicElement
-import ch.digorydoo.titanium.engine.mesh.Mesh
-import ch.digorydoo.titanium.engine.mesh.MeshRenderer
+import ch.digorydoo.titanium.engine.mesh.ComplexMesh
+import ch.digorydoo.titanium.engine.mesh.ComplexMeshRenderer
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
@@ -40,7 +40,7 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
         height = BODY_HEIGHT,
     )
 
-    private var mesh: Mesh? = null
+    private var mesh: ComplexMesh? = null
     private var haloTex: Texture? = null
     private val haloFrameSize = MutablePoint2f()
     private val haloOrigin = MutablePoint2f()
@@ -97,8 +97,8 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
     override val renderer = makeRenderer()
 
     private fun makeRenderer(): Renderer {
-        val meshRenderer = App.factory.createMeshRenderer(
-            object: MeshRenderer.Delegate() {
+        val meshRenderer = App.factory.createComplexMeshRenderer(
+            object: ComplexMeshRenderer.Delegate() {
                 override val mesh get() = this@StreetLampGel.mesh
                 override val renderPos = this@StreetLampGel.pos
                 override val rotationPhi = spawnPt.rotation

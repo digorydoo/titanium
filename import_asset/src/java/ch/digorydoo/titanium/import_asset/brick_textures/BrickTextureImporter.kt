@@ -147,7 +147,7 @@ class BrickTextureImporter(private val options: Options) {
 
         parts.forEachIndexed { i, part ->
             val x = padding + (i % arrangeAcross) * (partWidth + 2 * padding)
-            val y = padding + (i / arrangeAcross).toInt() * (partHeight + 2 * padding)
+            val y = padding + (i / arrangeAcross) * (partHeight + 2 * padding)
             dst.drawImage(part, x, y)
 
             if (padding > 0) {

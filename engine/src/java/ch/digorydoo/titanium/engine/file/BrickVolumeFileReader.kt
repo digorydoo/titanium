@@ -1,5 +1,6 @@
 package ch.digorydoo.titanium.engine.file
 
+import ch.digorydoo.kutils.file.KDataInputStream
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.brick.Brick
 import ch.digorydoo.titanium.engine.brick.BrickMaterial
@@ -7,10 +8,12 @@ import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.brick.BrickVolume
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.file.FileMarker.*
+import java.io.BufferedInputStream
+import java.io.DataInputStream
 import java.io.File
 
 class BrickVolumeFileReader private constructor(
-    private val stream: MyDataInputStream,
+    private val stream: KDataInputStream<FileMarker>,
     private val brickVolumeFileName: String,
     private val texFileName: String,
 ) {
@@ -69,9 +72,18 @@ class BrickVolumeFileReader private constructor(
         fun readFile(brickVolumeFileName: String, texFileName: String): BrickVolume {
             val path = App.assets.pathToPlayfield(brickVolumeFileName)
             val file = File(path)
-            val brickVolume = MyDataInputStream.use(file) {
-                BrickVolumeFileReader(it, brickVolumeFileName, texFileName).read()
-            }
+
+            val brickVolume = file.inputStream()
+                .let { BufferedInputStream(it) }
+                .let { DataInputStream(it) }
+                .use {
+                    BrickVolumeFileReader(
+                        KDataInputStream(it, FileMarker::fromUShort),
+                        brickVolumeFileName,
+                        texFileName
+                    ).read()
+                }
+
             val size = "${brickVolume.xsize}x${brickVolume.ysize}x${brickVolume.zsize}"
             Log.info(TAG, "$brickVolumeFileName: $size")
             return brickVolume

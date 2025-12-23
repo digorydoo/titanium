@@ -3,10 +3,27 @@ package ch.digorydoo.titanium.engine.editor.cursor
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.mesh.MeshMaterial
-import ch.digorydoo.titanium.engine.mesh.MeshRenderer
+import ch.digorydoo.titanium.engine.mesh.SimpleMeshRenderer
 
 class CursorGel(kind: Kind): GraphicElement() {
-    enum class Kind { UPPER_NW, UPPER_NE, UPPER_SW, UPPER_SE, LOWER_NW, LOWER_NE, LOWER_SW, LOWER_SE }
+    enum class Kind {
+        BIG_UPPER_NW,
+        BIG_UPPER_NE,
+        BIG_UPPER_SW,
+        BIG_UPPER_SE,
+        BIG_LOWER_NW,
+        BIG_LOWER_NE,
+        BIG_LOWER_SW,
+        BIG_LOWER_SE,
+        SMALL_UPPER_NW,
+        SMALL_UPPER_NE,
+        SMALL_UPPER_SW,
+        SMALL_UPPER_SE,
+        SMALL_LOWER_NW,
+        SMALL_LOWER_NE,
+        SMALL_LOWER_SW,
+        SMALL_LOWER_SE,
+    }
 
     init {
         inDialog = Visibility.FROZEN_VISIBLE
@@ -16,25 +33,20 @@ class CursorGel(kind: Kind): GraphicElement() {
 
     private val mesh = CursorMeshBuilder(kind).build()
 
-    private val renderProps = object: MeshRenderer.Delegate() {
+    private val renderProps = object: SimpleMeshRenderer.Delegate() {
         override val mesh get() = this@CursorGel.mesh
         override val renderPos get() = this@CursorGel.pos
     }
 
-    override val renderer = App.factory.createMeshRenderer(
+    override val renderer = App.factory.createSimpleMeshRenderer(
         renderProps,
         antiAliasing = false,
-        cullFace = true,
+        cullFace = false,
         depthTest = true,
     )
 
     fun setHead(head: Boolean) {
-        val division = mesh.divisions.firstOrNull() ?: return
-        if (head) {
-            division.material = MeshMaterial.WHITE_CLOTH
-        } else {
-            division.material = MeshMaterial.BLACK_CLOTH
-        }
+        mesh.material = if (head) MeshMaterial.WHITE_CLOTH else MeshMaterial.BLACK_CLOTH
     }
 
     fun show() {

@@ -2,7 +2,10 @@ package ch.digorydoo.titanium.engine.file
 
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.kutils.utils.Moment
+import ch.digorydoo.titanium.BuildConfig
+import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.SpawnPt
+import ch.digorydoo.titanium.engine.utils.NotForProductionError
 import java.io.BufferedWriter
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -26,15 +29,21 @@ class GelListFileWriter private constructor(private val writer: BufferedWriter) 
     companion object {
         private val TAG = Log.Tag("GelListFileWriter")
 
-        fun writeFile(fileName: String, spawnPts: List<SpawnPt>) {
-            if (fileName.isEmpty()) throw Exception("File name is empty!")
-            Log.info(TAG, "Writing $fileName")
-
-            // val path = Assets.pathToGelList(fileName) -- NO, not into the build folder!
-            val path = "/Users/pamberg/Develop/titanium/assets/gellists/${fileName}" // FIXME
-
-            File(path).bufferedWriter(StandardCharsets.UTF_8).use { writer ->
-                GelListFileWriter(writer).write(spawnPts)
+        fun writeFile(filename: String, spawnPts: List<SpawnPt>) {
+            when {
+                BuildConfig.isProduction -> throw NotForProductionError()
+                filename.isEmpty() -> throw Exception("File name is empty!")
+                else -> {
+                    arrayOf(
+                        App.assets.pathToGelList(filename),
+                        App.assets.pathToDeveloperGelList(filename),
+                    ).forEach { path ->
+                        Log.info(TAG, "Writing $path")
+                        File(path).bufferedWriter(StandardCharsets.UTF_8).use { writer ->
+                            GelListFileWriter(writer).write(spawnPts)
+                        }
+                    }
+                }
             }
         }
     }

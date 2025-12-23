@@ -63,6 +63,13 @@ class KeyboardImpl: Keyboard() {
             GLFW.GLFW_KEY_LEFT_BRACKET -> KeyboardKey.LEFT_BRACKET
             GLFW.GLFW_KEY_APOSTROPHE -> KeyboardKey.APOSTROPHE
 
+            GLFW.GLFW_KEY_F1 -> KeyboardKey.F1
+            GLFW.GLFW_KEY_F2 -> KeyboardKey.F2
+
+            GLFW.GLFW_KEY_COMMA -> KeyboardKey.RAW_COMMA
+            GLFW.GLFW_KEY_PERIOD -> KeyboardKey.RAW_PERIOD
+            GLFW.GLFW_KEY_MINUS -> KeyboardKey.RAW_MINUS
+
             GLFW.GLFW_KEY_A -> KeyboardKey.RAW_A
             GLFW.GLFW_KEY_B -> KeyboardKey.RAW_B
             GLFW.GLFW_KEY_C -> KeyboardKey.RAW_C

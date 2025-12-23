@@ -51,6 +51,7 @@ The assets folder is divided into the following subdirectories:
     generated/               assets below this subdirectory are generated through import_asset
         mesh/*.msh           mesh data imported via import_asset (custom binary format)
         textures/*.png       brick textures combined into a single PNG file through import_asset
+    heightmaps/*.hmp         height map data used by height map spawn points
     playfields/*.pf          brick playfield data per scene (custom binary format)
     private/                 assets below this subdirectory will NOT be copied into the final product
         bundle/              assets used by make-bundle.sh

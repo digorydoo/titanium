@@ -108,11 +108,7 @@ abstract class SpawnManager {
         return result
     }
 
-    fun findClosestSpawnPts(
-        fromPt: Point3f,
-        maxCount: Int = Int.MAX_VALUE,
-        predicate: (SpawnPt) -> Boolean,
-    ): List<SpawnPtAndDistance> {
+    fun findClosestSpawnPts(fromPt: Point3f, maxCount: Int = Int.MAX_VALUE): List<SpawnPtAndDistance> {
         val result = mutableListOf<SpawnPtAndDistance>()
 
         spawnPts.forEach { pt ->
@@ -122,14 +118,12 @@ abstract class SpawnManager {
             // If result has a size of maxCount already, add the element only if its index is smaller
 
             if (result.size < maxCount || idx < maxCount - 1) {
-                if (predicate(pt)) {
-                    val spad = SpawnPtAndDistance(pt, d)
+                val spad = SpawnPtAndDistance(pt, d)
 
-                    if (idx < 0) {
-                        result.add(spad)
-                    } else {
-                        result.add(idx, spad)
-                    }
+                if (idx < 0) {
+                    result.add(spad)
+                } else {
+                    result.add(idx, spad)
                 }
             }
         }

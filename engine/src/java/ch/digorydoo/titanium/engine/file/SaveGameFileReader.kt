@@ -1,5 +1,6 @@
 package ch.digorydoo.titanium.engine.file
 
+import ch.digorydoo.kutils.file.KDataInputStream
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.kutils.utils.toByteBuffer
 import ch.digorydoo.titanium.engine.core.App
@@ -10,10 +11,12 @@ import ch.digorydoo.titanium.engine.file.SaveGameFileWriter.Summary
 import ch.digorydoo.titanium.engine.state.StateManager.MutableSerializedState
 import ch.digorydoo.titanium.engine.state.StateManager.SerializedState
 import ch.digorydoo.titanium.engine.texture.ImageData
+import java.io.BufferedInputStream
+import java.io.DataInputStream
 import java.io.File
 
 class SaveGameFileReader private constructor(
-    private val stream: MyDataInputStream,
+    private val stream: KDataInputStream<FileMarker>,
     private val state: MutableSerializedState,
 ) {
     private var sceneTitle = ""
@@ -124,31 +127,37 @@ class SaveGameFileReader private constructor(
             val path = App.assets.pathToSaveGame(fileName)
             Log.info(TAG, "Reading summary from $path")
 
-            val file = File(path)
-            return MyDataInputStream.use(file) {
-                val state = MutableSerializedState()
-                val reader = SaveGameFileReader(it, state)
-                reader.read(summaryOnly = true)
-                object: Summary() {
-                    override val fileName = fileName
-                    override val sceneTitle = reader.sceneTitle
-                    override val saveDate = reader.saveDate
-                    override val screenshot = reader.screenshot
+            return File(path).inputStream()
+                .let { BufferedInputStream(it) }
+                .let { DataInputStream(it) }
+                .use {
+                    val stream = KDataInputStream(it, FileMarker::fromUShort)
+                    val state = MutableSerializedState()
+                    val reader = SaveGameFileReader(stream, state)
+                    reader.read(summaryOnly = true)
+                    object: Summary() {
+                        override val fileName = fileName
+                        override val sceneTitle = reader.sceneTitle
+                        override val saveDate = reader.saveDate
+                        override val screenshot = reader.screenshot
+                    }
                 }
-            }
         }
 
         fun readContent(fileName: String): SerializedState {
             val path = App.assets.pathToSaveGame(fileName)
             Log.info(TAG, "Reading content from $path")
 
-            val file = File(path)
-            return MyDataInputStream.use(file) {
-                val state = MutableSerializedState()
-                val reader = SaveGameFileReader(it, state)
-                reader.read(summaryOnly = false)
-                state
-            }
+            return File(path).inputStream()
+                .let { BufferedInputStream(it) }
+                .let { DataInputStream(it) }
+                .use {
+                    val stream = KDataInputStream(it, FileMarker::fromUShort)
+                    val state = MutableSerializedState()
+                    val reader = SaveGameFileReader(stream, state)
+                    reader.read(summaryOnly = false)
+                    state
+                }
         }
     }
 }

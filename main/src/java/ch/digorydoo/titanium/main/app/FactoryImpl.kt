@@ -4,7 +4,8 @@ import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.brick.BrickModelData
 import ch.digorydoo.titanium.engine.core.Factory
 import ch.digorydoo.titanium.engine.heightmap.HeightMapSpawnPt
-import ch.digorydoo.titanium.engine.mesh.MeshRenderer
+import ch.digorydoo.titanium.engine.mesh.ComplexMeshRenderer
+import ch.digorydoo.titanium.engine.mesh.SimpleMeshRenderer
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.shader.Renderer.BlendMode
 import ch.digorydoo.titanium.engine.sky.SkydomeRenderer
@@ -18,13 +19,14 @@ import ch.digorydoo.titanium.game.gel.static_paper.StaticPaperSpawnPt
 import ch.digorydoo.titanium.game.gel.street_lamp.StreetLampSpawnPt
 import ch.digorydoo.titanium.game.gel.test.TestSpawnPt
 import ch.digorydoo.titanium.game.gel.vase.VaseSpawnPt
+import ch.digorydoo.titanium.main.brick.BrickVolumeRendererImpl
 import ch.digorydoo.titanium.main.input.GamepadImpl
 import ch.digorydoo.titanium.main.input.KeyboardImpl
-import ch.digorydoo.titanium.main.shader.MeshRendererImpl
+import ch.digorydoo.titanium.main.mesh.ComplexMeshRendererImpl
+import ch.digorydoo.titanium.main.mesh.SimpleMeshRendererImpl
 import ch.digorydoo.titanium.main.shader.PaperRendererImpl
 import ch.digorydoo.titanium.main.shader.SkydomeRendererImpl
 import ch.digorydoo.titanium.main.shader.UISpriteRendererImpl
-import ch.digorydoo.titanium.main.shader.bricks.BrickVolumeRendererImpl
 
 class FactoryImpl: Factory {
     override fun createGamepad() = GamepadImpl()
@@ -36,12 +38,24 @@ class FactoryImpl: Factory {
     override fun createSkydomeRenderer(props: SkydomeRenderer.Delegate) =
         SkydomeRendererImpl(props)
 
-    override fun createMeshRenderer(
-        props: MeshRenderer.Delegate,
+    override fun createSimpleMeshRenderer(
+        props: SimpleMeshRenderer.Delegate,
         antiAliasing: Boolean,
         cullFace: Boolean,
         depthTest: Boolean,
-    ) = MeshRendererImpl(
+    ) = SimpleMeshRendererImpl(
+        props,
+        antiAliasing = antiAliasing,
+        cullFace = cullFace,
+        depthTest = depthTest,
+    )
+
+    override fun createComplexMeshRenderer(
+        props: ComplexMeshRenderer.Delegate,
+        antiAliasing: Boolean,
+        cullFace: Boolean,
+        depthTest: Boolean,
+    ) = ComplexMeshRendererImpl(
         props,
         antiAliasing = antiAliasing,
         cullFace = cullFace,

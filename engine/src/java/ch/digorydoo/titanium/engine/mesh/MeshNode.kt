@@ -10,7 +10,7 @@ class MeshNode(
     val id: String,
     val tex: Texture?,
     val transform: Matrix4f?, // transformation as loaded from mesh file
-    val geometry: Geometry?, // multiple nodes may point to the same geometry
+    val geometry: MeshGeometry?, // multiple nodes may point to the same geometry
     val children: List<MeshNode>?,
 ) {
     val combinedTransform = MutableMatrix4f() // written during rendering

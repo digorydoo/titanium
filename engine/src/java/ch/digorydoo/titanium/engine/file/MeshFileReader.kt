@@ -1,5 +1,6 @@
 package ch.digorydoo.titanium.engine.file
 
+import ch.digorydoo.kutils.file.KDataInputStream
 import ch.digorydoo.kutils.matrix.Matrix4f
 import ch.digorydoo.kutils.point.Point2f
 import ch.digorydoo.kutils.point.Point3f
@@ -8,30 +9,32 @@ import ch.digorydoo.kutils.utils.newFloatBuffer
 import ch.digorydoo.kutils.utils.requireNotNull
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.file.FileMarker.*
-import ch.digorydoo.titanium.engine.mesh.Geometry
-import ch.digorydoo.titanium.engine.mesh.Mesh
+import ch.digorydoo.titanium.engine.mesh.ComplexMesh
 import ch.digorydoo.titanium.engine.mesh.MeshDivision
+import ch.digorydoo.titanium.engine.mesh.MeshGeometry
 import ch.digorydoo.titanium.engine.mesh.MeshMaterial
 import ch.digorydoo.titanium.engine.mesh.MeshNode
 import ch.digorydoo.titanium.engine.texture.Texture
+import java.io.BufferedInputStream
+import java.io.DataInputStream
 import java.io.File
 import java.nio.FloatBuffer
 
 /**
  * This class must be thread-safe!
  */
-class MeshFileReader private constructor(private val input: MyDataInputStream) {
+class MeshFileReader private constructor(private val input: KDataInputStream<FileMarker>) {
     private class IncompleteGeometry(private val owner: IncompleteMesh) {
         var positions: IntArray? = null
         var normals: IntArray? = null
         var texCoords: IntArray? = null
 
-        fun toGeometry(): Geometry? {
+        fun toGeometry(): MeshGeometry? {
             // If positions and normals are still null at this point, this means that the geometry is empty.
             // This usually happens when a dummy mesh serves as a parent for nested meshes.
             val positions = positions ?: return null
             val normals = normals ?: return null
-            return Geometry(
+            return MeshGeometry(
                 positions = owner.lookUpPoint3f(positions),
                 normals = owner.lookUpPoint3f(normals),
                 texCoords = texCoords?.let { owner.lookUpPoint2f(it) },
@@ -70,7 +73,7 @@ class MeshFileReader private constructor(private val input: MyDataInputStream) {
         val pt3fList = mutableListOf<Point3f>()
         val pt2fList = mutableListOf<Point2f>()
 
-        fun toMesh() = Mesh(
+        fun toMesh() = ComplexMesh(
             divisions = divisions.map { it.toDivision() }
         )
 
@@ -108,7 +111,7 @@ class MeshFileReader private constructor(private val input: MyDataInputStream) {
     private val geometries = mutableListOf<IncompleteGeometry?>()
     private val nodeStack = mutableListOf<IncompleteNode>()
 
-    fun read(): Mesh {
+    fun read(): ComplexMesh {
         mesh = IncompleteMesh()
 
         input.readExpected(BEGIN_MESH_FILE)
@@ -279,12 +282,15 @@ class MeshFileReader private constructor(private val input: MyDataInputStream) {
         /**
          * This function is internal, because callers should generally go through App.meshes.
          */
-        internal fun readFile(fileName: String): Mesh {
+        internal fun readFile(fileName: String): ComplexMesh {
             val path = App.assets.pathToMesh(fileName) // read-only access is thread-safe
             val file = File(path)
-            val mesh = MyDataInputStream.use(file) {
-                MeshFileReader(it).read()
-            }
+
+            val mesh = file.inputStream()
+                .let { BufferedInputStream(it) }
+                .let { DataInputStream(it) }
+                .use { MeshFileReader(KDataInputStream(it, FileMarker::fromUShort)).read() }
+
             Log.info(TAG, "$fileName: ${mesh.divisions.size} divisions(s)")
             return mesh
         }

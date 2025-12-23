@@ -127,6 +127,22 @@ class ActiveSceneContent(startScene: Scene) {
         layer(kind).add(gel)
     }
 
+    fun find(predicate: (GraphicElement) -> Boolean): GraphicElement? {
+        var result: GraphicElement? = null
+
+        allLayers.forEach { layer ->
+            if (result == null) {
+                layer.forEachGel {
+                    if (result == null && predicate(it)) {
+                        result = it
+                    }
+                }
+            }
+        }
+
+        return result
+    }
+
     fun forEachGel(lambda: (GelLayer, GraphicElement) -> Unit) {
         allLayers.forEach { layer ->
             layer.forEachGel { lambda(layer, it) }

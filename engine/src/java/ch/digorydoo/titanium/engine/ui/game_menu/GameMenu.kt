@@ -165,7 +165,7 @@ abstract class GameMenu {
 
         val menuTabGels = mutableMapOf<IGameMenuTopic, MenuTabGel>()
         var left = 0
-        var maxRight = left
+        var maxRight = 0
 
         forEachTopic { topic ->
             val gel = MenuTabGel(topic.textId, posX = left, posY = TAB_MARGIN_TOP.toInt())

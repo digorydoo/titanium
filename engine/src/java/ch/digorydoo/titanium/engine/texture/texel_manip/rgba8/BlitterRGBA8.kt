@@ -30,7 +30,7 @@ internal class BlitterRGBA8(
         val dstRowOffset = dstWidth * 4
 
         var srcIdx = 0
-        var srcRowOffset = srcWidth * 3
+        val srcRowOffset = srcWidth * 3
 
         (dstY ..< dstY + srcHeight).forEach {
             dstBuf.position(dstIdx)

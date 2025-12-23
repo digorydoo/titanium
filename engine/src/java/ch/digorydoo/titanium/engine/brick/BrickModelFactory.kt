@@ -12,7 +12,7 @@ import ch.digorydoo.titanium.engine.brick.zz_various.CutModel
 import ch.digorydoo.titanium.engine.brick.zz_various.UprightTubeModel
 import ch.digorydoo.titanium.engine.utils.Side
 
-// Constants shared with other components are in AbstrBrickModel.Companion
+// Constants shared with other components are in AbstrBrickModel's companion object
 private const val BEVEL_CUT_ALT_SIZE = 0.37f // length of cut diagonal should look identical to side of a regular cut
 private const val OCTA_PILLAR_RADIUS = 0.42f
 private const val WINDOW_TOP_INSET = 0.7f

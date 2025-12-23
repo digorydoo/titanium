@@ -1,25 +1,26 @@
 package ch.digorydoo.titanium.engine.editor.menu
 
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.editor.Selection
+import ch.digorydoo.titanium.engine.editor.BrickSelection
+import ch.digorydoo.titanium.engine.editor.EditorState
 import ch.digorydoo.titanium.engine.editor.action.EditorActions
-import ch.digorydoo.titanium.engine.editor.statusbar.EditorStatusBar
+import ch.digorydoo.titanium.engine.editor.menu.material.BrickMaterialMenu
+import ch.digorydoo.titanium.engine.editor.menu.shape.BrickShapeMenu
 import ch.digorydoo.titanium.engine.editor.wizard.WizardMenu
 import ch.digorydoo.titanium.engine.gel.SpawnPt
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
 import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 
 internal class EditorMenu(
-    private val status: EditorStatusBar,
-    private val selection: Selection,
+    private val state: EditorState,
+    private val brickSelection: BrickSelection,
     actions: EditorActions,
 ) {
     private val cameraModeMenu = CameraModeMenu(actions)
-    private val heightMapMenu = HeightMapMenu(this, actions)
     private val lightingMenu = LightingMenu(actions)
     private val materialMenu = BrickMaterialMenu(actions)
     private val shapeMenu = BrickShapeMenu(actions)
-    private val spawnPtMenu = SpawnPtMenu(actions)
+    private val spawnPtMenu = SpawnPtMenu(state, actions)
     private val storyTimeMenu = StoryTimeMenu(actions)
     private val wizardMenu = WizardMenu(actions)
 
@@ -27,9 +28,9 @@ internal class EditorMenu(
     fun showCameraModeMenu() = showCameraModeMenu(true)
     fun showMaterialMenu() = showMaterialMenu(true)
     fun showShapeMenu() = showShapeMenu(true)
-    fun showSpawnPtMenu() = showSpawnPtMenu(true)
     fun showWizardMenu() = showWizardMenu(true)
-    fun showEditSpawnPtMenu(spawnPt: SpawnPt, onBack: () -> Unit) = spawnPtMenu.showEditSpawnPtMenu(spawnPt, onBack)
+    fun showSpawnPtMenu() = showSpawnPtMenu(true)
+    fun showEditSpawnPtMenu(spawnPt: SpawnPt) = spawnPtMenu.showEditSpawnPtMenu(spawnPt) {}
 
     private fun showMainMenu(playSoundOnOpen: Boolean) {
         val choices = listOf(
@@ -37,7 +38,6 @@ internal class EditorMenu(
             TextChoice("Brick material...") { showMaterialMenu(false) },
             TextChoice("Brick wizard...") { showWizardMenu(false) },
             TextChoice("Camera mode...") { showCameraModeMenu(false) },
-            TextChoice("Height maps...") { showHeightMapMenu() },
             TextChoice("Lighting...") { showLightingMenu() },
             TextChoice("Spawn points...") { showSpawnPtMenu(false) },
             TextChoice("Story time...") { showStoryTimeMenu() },
@@ -53,17 +53,9 @@ internal class EditorMenu(
         )
     }
 
-    private fun showHeightMapMenu() {
-        heightMapMenu.show(
-            selection.getPosCentreInWorldCoords(),
-            isTopLevel = false,
-            onCancel = { showMainMenu(false) }
-        )
-    }
-
     private fun showShapeMenu(isTopLevel: Boolean) {
         shapeMenu.show(
-            status.shape,
+            state.shape,
             isTopLevel = isTopLevel,
             onCancel = { if (!isTopLevel) showMainMenu(false) },
         )
@@ -71,7 +63,7 @@ internal class EditorMenu(
 
     private fun showMaterialMenu(isTopLevel: Boolean) {
         materialMenu.show(
-            status.material,
+            state.material,
             isTopLevel = isTopLevel,
             onCancel = { if (!isTopLevel) showMainMenu(false) },
         )
@@ -79,7 +71,7 @@ internal class EditorMenu(
 
     private fun showWizardMenu(isTopLevel: Boolean) {
         wizardMenu.show(
-            selection.getUnreversed(),
+            brickSelection.getUnreversed(),
             isTopLevel = isTopLevel,
             onCancel = { if (!isTopLevel) showMainMenu(false) }
         )
@@ -87,7 +79,7 @@ internal class EditorMenu(
 
     private fun showSpawnPtMenu(isTopLevel: Boolean) {
         spawnPtMenu.show(
-            selection.getPosCentreInWorldCoords(),
+            brickSelection.getTipPosInWorldCoords(),
             isTopLevel = isTopLevel,
             onCancel = { if (!isTopLevel) showMainMenu(false) },
         )

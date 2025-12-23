@@ -1,6 +1,8 @@
 package ch.digorydoo.titanium.engine.file
 
-enum class FileMarker(val value: UShort) {
+import ch.digorydoo.kutils.file.KDataInputStream
+
+enum class FileMarker(override val value: UShort): KDataInputStream.FileMarker {
     // Brick volume files
     BEGIN_BRICK_VOLUME(0x1BE6u),
     END_BRICK_VOLUME(0x1E0Fu),

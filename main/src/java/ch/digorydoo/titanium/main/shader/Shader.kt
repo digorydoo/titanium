@@ -30,7 +30,6 @@ class Shader(type: ProgramType, flags: Set<ShaderFlags>? = null) {
         }
     }
 
-    @Suppress("removal")
     protected fun finalize() {
         // Check that unload has been called. We can't throw from finalize, so log only.
         if (valid) Log.error(TAG, "Wrapper of ${program.type} still valid at finalize")

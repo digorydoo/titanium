@@ -6,7 +6,8 @@ import ch.digorydoo.titanium.engine.brick.BrickVolumeRenderer
 import ch.digorydoo.titanium.engine.gel.SpawnPt
 import ch.digorydoo.titanium.engine.input.gamepad.Gamepad
 import ch.digorydoo.titanium.engine.input.keyboard.Keyboard
-import ch.digorydoo.titanium.engine.mesh.MeshRenderer
+import ch.digorydoo.titanium.engine.mesh.ComplexMeshRenderer
+import ch.digorydoo.titanium.engine.mesh.SimpleMeshRenderer
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.shader.Renderer.BlendMode
 import ch.digorydoo.titanium.engine.sky.SkydomeRenderer
@@ -24,12 +25,19 @@ interface Factory {
     fun createBrickVolumeRenderer(translation: Point3f, tex: Texture, modelData: BrickModelData): BrickVolumeRenderer
     fun createSkydomeRenderer(props: SkydomeRenderer.Delegate): SkydomeRenderer
 
-    fun createMeshRenderer(
-        props: MeshRenderer.Delegate,
+    fun createSimpleMeshRenderer(
+        props: SimpleMeshRenderer.Delegate,
         antiAliasing: Boolean = false,
         cullFace: Boolean = true,
         depthTest: Boolean = true,
-    ): MeshRenderer
+    ): SimpleMeshRenderer
+
+    fun createComplexMeshRenderer(
+        props: ComplexMeshRenderer.Delegate,
+        antiAliasing: Boolean = false,
+        cullFace: Boolean = true,
+        depthTest: Boolean = true,
+    ): ComplexMeshRenderer
 
     fun createPaperRenderer(
         props: PaperRenderer.Delegate,

@@ -66,7 +66,7 @@ class GameHUD {
         require(compass == null)
         require(timeDisplay == null)
 
-        if (!BuildConfig.isProduction()) {
+        if (!BuildConfig.isProduction) {
             fpsGel = NumberGel(
                 alignment = Align.Alignment(anchor = Anchor.BOTTOM_CENTRE, marginBottom = 8, xOffset = 64)
             ).also {

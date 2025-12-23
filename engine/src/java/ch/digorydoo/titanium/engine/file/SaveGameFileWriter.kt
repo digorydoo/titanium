@@ -1,17 +1,17 @@
 package ch.digorydoo.titanium.engine.file
 
+import ch.digorydoo.kutils.file.KDataOutputStream
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.kutils.utils.Moment
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.file.FileMarker.*
 import ch.digorydoo.titanium.engine.state.StateManager.SerializedState
 import ch.digorydoo.titanium.engine.texture.ImageData
+import java.io.BufferedOutputStream
+import java.io.DataOutputStream
 import java.io.File
 
-class SaveGameFileWriter private constructor(
-    private val stream: MyDataOutputStream,
-    private val state: SerializedState,
-) {
+class SaveGameFileWriter private constructor(private val stream: KDataOutputStream<FileMarker>) {
     abstract class Summary {
         abstract val fileName: String
         abstract val sceneTitle: String
@@ -20,7 +20,7 @@ class SaveGameFileWriter private constructor(
         abstract val screenshot: ImageData?
     }
 
-    private fun write(summary: Summary) {
+    private fun write(summary: Summary, state: SerializedState) {
         stream.write(BEGIN_SAVE_GAME)
         stream.write(SCENE_TITLE, summary.sceneTitle)
         stream.write(SAVE_DATE, summary.saveDate)
@@ -74,12 +74,15 @@ class SaveGameFileWriter private constructor(
             val path = App.assets.pathToSaveGame(summary.fileName)
             Log.info(TAG, "Writing $path")
 
-            val file = File(path)
-            MyDataOutputStream.use(file) {
-                SaveGameFileWriter(it, state).write(summary)
-            }
+            File(path).outputStream()
+                .let { BufferedOutputStream(it) }
+                .let { DataOutputStream(it) }
+                .use { SaveGameFileWriter(KDataOutputStream(it)).write(summary, state) }
 
-            // Also delete the oldest savegame when the list becomes too long
+            deleteOldSavegames()
+        }
+
+        private fun deleteOldSavegames() {
             try {
                 SaveGameFileReader.listFiles()
                     .sorted()

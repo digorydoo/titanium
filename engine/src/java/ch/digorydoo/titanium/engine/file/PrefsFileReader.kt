@@ -1,5 +1,6 @@
 package ch.digorydoo.titanium.engine.file
 
+import ch.digorydoo.kutils.file.KDataInputStream
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.camera.CameraSpeed
 import ch.digorydoo.titanium.engine.core.App
@@ -7,10 +8,12 @@ import ch.digorydoo.titanium.engine.file.FileMarker.*
 import ch.digorydoo.titanium.engine.file.PrefsFileWriter.Companion.FILENAME
 import ch.digorydoo.titanium.engine.i18n.TextLanguage
 import ch.digorydoo.titanium.engine.prefs.Preferences
+import java.io.BufferedInputStream
+import java.io.DataInputStream
 import java.io.File
 
 class PrefsFileReader private constructor(
-    private val stream: MyDataInputStream,
+    private val stream: KDataInputStream<FileMarker>,
     private val prefs: Preferences,
 ) {
     private fun read() {
@@ -51,9 +54,11 @@ class PrefsFileReader private constructor(
                 Log.info(TAG, "Not reading any prefs, because file does not exist: $path")
             } else {
                 Log.info(TAG, "Reading $path")
-                MyDataInputStream.use(file) {
-                    PrefsFileReader(it, prefs).read()
-                }
+
+                file.inputStream()
+                    .let { BufferedInputStream(it) }
+                    .let { DataInputStream(it) }
+                    .use { PrefsFileReader(KDataInputStream(it, FileMarker::fromUShort), prefs).read() }
             }
         }
     }
