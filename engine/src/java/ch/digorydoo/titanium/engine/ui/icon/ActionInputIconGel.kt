@@ -7,6 +7,7 @@ import ch.digorydoo.kutils.math.lerp
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point2f
+import ch.digorydoo.titanium.engine.behaviours.CreateConcurrently
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.core.FrameCounter
 import ch.digorydoo.titanium.engine.font.FontManager.FontName
@@ -16,8 +17,10 @@ import ch.digorydoo.titanium.engine.i18n.ITextId
 import ch.digorydoo.titanium.engine.shader.Renderer
 import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import ch.digorydoo.titanium.engine.texture.GreyscaleImageBuffer
+import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.engine.texture.Texture
 import kotlin.math.min
+import kotlin.reflect.KClass
 
 class ActionInputIconGel: GraphicElement() {
     init {
@@ -25,7 +28,6 @@ class ActionInputIconGel: GraphicElement() {
         inMenu = Visibility.ACTIVE
         inEditor = Visibility.ACTIVE
         visibleOnScreenshots = false
-        callOnCreateConcurrently = true
         hidden = true // the gel is initially hidden, an explicit call to show() is needed to set the verb
     }
 
@@ -53,6 +55,7 @@ class ActionInputIconGel: GraphicElement() {
     private var fadeStartTime = 0.0f
     private val refreshCounter = FrameCounter.everyNthSecond(REFRESH_INTERVAL)
     private var forceRefresh = true
+    private val screenSizeDp = App.resolutionMgr.screenSizeDp
 
     override val renderer = makeRenderer()
 
@@ -107,14 +110,28 @@ class ActionInputIconGel: GraphicElement() {
         }
     }
 
-    override suspend fun onCreateConcurrently(): () -> Unit {
-        val img = App.textures.getOrLoadImageDataAsync("ui-action-input-bg.png")
-        return {
-            // Back in main thread
-            bgTex = App.textures.getOrCreateTexture(img).also {
-                bgFrameSize.set(it.width, it.height)
+    private val createConcurrently = CreateConcurrently(
+        this,
+        object: CreateConcurrently.Delegate {
+            private lateinit var tmpImg: ImageData
+
+            override suspend fun onJobStart() {
+                // Do not modify gel here! Store everything in temporary variables!
+                tmpImg = App.textures.getOrLoadImageDataAsync("ui-action-input-bg.png")
+            }
+
+            override fun onJobDone() {
+                // Back in the main thread
+                bgTex = App.textures.getOrCreateTexture(tmpImg).also {
+                    bgFrameSize.set(it.width, it.height)
+                }
             }
         }
+    )
+
+    override fun getBehaviour(klass: KClass<*>) = when (klass) {
+        CreateConcurrently::class -> createConcurrently
+        else -> null
     }
 
     /**
@@ -228,12 +245,9 @@ class ActionInputIconGel: GraphicElement() {
             iconFrames.update()
 
             // Watch screen size and realign
-            val screenWidth = App.screenWidthDp
-            val screenHeight = App.screenHeightDp
-
             bgPos.apply {
-                x = screenWidth - PROMINENT_ACTION_DELTA_X
-                y = screenHeight - PROMINENT_ACTION_DELTA_Y
+                x = screenSizeDp.x - PROMINENT_ACTION_DELTA_X
+                y = screenSizeDp.y - PROMINENT_ACTION_DELTA_Y
             }
             iconPos.apply {
                 x = bgPos.x + ICON_POS_X_OFFSET + iconOffsetX

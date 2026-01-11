@@ -2,7 +2,7 @@ package ch.digorydoo.titanium.engine.behaviours
 
 import ch.digorydoo.kutils.waveforms.triang
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.gel.Behaviour
 
 /**
  * This class implements a gel behaviour that adapt's the gel's brightness for a "glow" effect. Use this for active UI
@@ -14,7 +14,7 @@ class Glow(
     var minBrite: Float = 0.8f,
     var maxBrite: Float = 1.2f,
     private var phase: Float = 0.0f,
-): GraphicElement.Behaviour {
+): Behaviour {
     interface Delegate {
         var brightness: Float
     }
@@ -30,7 +30,7 @@ class Glow(
         startTime = App.time.sessionTime
     }
 
-    override fun animate() {
+    fun animate() {
         if (!enabled) {
             return
         }

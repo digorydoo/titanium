@@ -5,7 +5,7 @@ import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.MutablePoint4f
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.gel.Behaviour
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -20,7 +20,7 @@ class TurnTowardsCamera(
     private val usePosition: Boolean = false, // false=just turn with camera phi and rho; true=more accurate
     private val keepUpright: Boolean = false,
     private val keepBehind: Float = 0.0f, // a value > 0 will move the gel behind the "centre"
-): GraphicElement.Behaviour {
+): Behaviour {
     abstract class Delegate {
         open var rotationPhi = 0.0f
         open var rotationRho = 0.0f // will be set when keepUpright is false
@@ -33,7 +33,7 @@ class TurnTowardsCamera(
     private val tmpPt1 = MutablePoint4f()
     private val tmpPt2 = MutablePoint4f()
 
-    override fun animate() {
+    fun animate() {
         val centre = delegate.centre
         val phi: Float
         val rho: Float

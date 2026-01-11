@@ -9,7 +9,6 @@ import ch.digorydoo.titanium.engine.editor.menu.shape.BrickShapeMenu
 import ch.digorydoo.titanium.engine.editor.wizard.WizardMenu
 import ch.digorydoo.titanium.engine.gel.SpawnPt
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
-import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 
 internal class EditorMenu(
     private val state: EditorState,
@@ -24,78 +23,57 @@ internal class EditorMenu(
     private val storyTimeMenu = StoryTimeMenu(actions)
     private val wizardMenu = WizardMenu(actions)
 
-    fun showMainMenu() = showMainMenu(true)
-    fun showCameraModeMenu() = showCameraModeMenu(true)
-    fun showMaterialMenu() = showMaterialMenu(true)
-    fun showShapeMenu() = showShapeMenu(true)
-    fun showWizardMenu() = showWizardMenu(true)
-    fun showSpawnPtMenu() = showSpawnPtMenu(true)
-    fun showEditSpawnPtMenu(spawnPt: SpawnPt) = spawnPtMenu.showEditSpawnPtMenu(spawnPt) {}
+    fun showMainMenu() = showMainMenu(null)
+    fun showEditSpawnPtMenu(spawnPt: SpawnPt) = spawnPtMenu.showEditSpawnPtMenu(spawnPt, null)
+    fun showCameraModeMenu() = cameraModeMenu.show(null)
+    fun showShapeMenu() = shapeMenu.show(state.shape, null)
+    fun showMaterialMenu() = materialMenu.show(state.material, null)
+    fun showWizardMenu() = wizardMenu.show(brickSelection.getUnreversed(), null)
+    fun showSpawnPtMenu() = spawnPtMenu.show(brickSelection.getTipPosInWorldCoords(), null)
 
-    private fun showMainMenu(playSoundOnOpen: Boolean) {
-        val choices = listOf(
-            TextChoice("Brick shape...") { showShapeMenu(false) },
-            TextChoice("Brick material...") { showMaterialMenu(false) },
-            TextChoice("Brick wizard...") { showWizardMenu(false) },
-            TextChoice("Camera mode...") { showCameraModeMenu(false) },
-            TextChoice("Lighting...") { showLightingMenu() },
-            TextChoice("Spawn points...") { showSpawnPtMenu(false) },
-            TextChoice("Story time...") { showStoryTimeMenu() },
-            TextChoice(EngineTextId.DONE) {},
-        )
-        App.dlg.showChoices(choices, 0, lastItemIsDismiss = true, playSoundOnOpen = playSoundOnOpen)
-    }
-
-    private fun showCameraModeMenu(isTopLevel: Boolean) {
-        cameraModeMenu.show(
-            isTopLevel = isTopLevel,
-            onCancel = { if (!isTopLevel) showMainMenu(false) },
-        )
-    }
-
-    private fun showShapeMenu(isTopLevel: Boolean) {
-        shapeMenu.show(
-            state.shape,
-            isTopLevel = isTopLevel,
-            onCancel = { if (!isTopLevel) showMainMenu(false) },
-        )
-    }
-
-    private fun showMaterialMenu(isTopLevel: Boolean) {
-        materialMenu.show(
-            state.material,
-            isTopLevel = isTopLevel,
-            onCancel = { if (!isTopLevel) showMainMenu(false) },
-        )
-    }
-
-    private fun showWizardMenu(isTopLevel: Boolean) {
-        wizardMenu.show(
-            brickSelection.getUnreversed(),
-            isTopLevel = isTopLevel,
-            onCancel = { if (!isTopLevel) showMainMenu(false) }
-        )
-    }
-
-    private fun showSpawnPtMenu(isTopLevel: Boolean) {
-        spawnPtMenu.show(
-            brickSelection.getTipPosInWorldCoords(),
-            isTopLevel = isTopLevel,
-            onCancel = { if (!isTopLevel) showMainMenu(false) },
-        )
-    }
-
-    private fun showStoryTimeMenu() {
-        storyTimeMenu.show(
-            isTopLevel = false,
-            onCancel = { showMainMenu(false) },
-        )
-    }
-
-    private fun showLightingMenu() {
-        lightingMenu.show(
-            isTopLevel = false,
-            onCancel = { showMainMenu(false) }
-        )
+    fun showMainMenu(focusText: String?) {
+        App.dlg.showDlg<Unit> {
+            val dlgDef = this
+            item {
+                text = "Brick shape..."
+                if (text == focusText) dlgDef.focus = this
+                onSelect = { shapeMenu.show(state.shape, onBack = { showMainMenu(text) }) }
+            }
+            item {
+                text = "Brick material..."
+                if (text == focusText) dlgDef.focus = this
+                onSelect = { materialMenu.show(state.material, onBack = { showMainMenu(text) }) }
+            }
+            item {
+                text = "Brick wizard..."
+                if (text == focusText) dlgDef.focus = this
+                onSelect = { wizardMenu.show(brickSelection.getUnreversed(), onBack = { showMainMenu(text) }) }
+            }
+            item {
+                text = "Camera mode..."
+                if (text == focusText) dlgDef.focus = this
+                onSelect = { cameraModeMenu.show(onBack = { showMainMenu(text) }) }
+            }
+            item {
+                text = "Lighting..."
+                if (text == focusText) dlgDef.focus = this
+                onSelect = { lightingMenu.show(onBack = { showMainMenu(text) }) }
+            }
+            item {
+                text = "Spawn points..."
+                if (text == focusText) dlgDef.focus = this
+                onSelect = {
+                    spawnPtMenu.show(brickSelection.getTipPosInWorldCoords(), onBack = { showMainMenu(text) })
+                }
+            }
+            item {
+                text = "Story time..."
+                if (text == focusText) dlgDef.focus = this
+                onSelect = { storyTimeMenu.show(onBack = { showMainMenu(text) }) }
+            }
+            dismiss = item {
+                textId = EngineTextId.DONE
+            }
+        }
     }
 }

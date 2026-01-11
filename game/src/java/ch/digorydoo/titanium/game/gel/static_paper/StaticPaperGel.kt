@@ -1,6 +1,7 @@
 package ch.digorydoo.titanium.game.gel.static_paper
 
 import ch.digorydoo.kutils.point.MutablePoint2f
+import ch.digorydoo.titanium.engine.behaviours.CreateConcurrently
 import ch.digorydoo.titanium.engine.behaviours.TurnTowardsCamera
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
@@ -10,11 +11,11 @@ import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.sprite.FrameCollection
 import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.game.gel.static_paper.StaticPaperSpawnPt.Kind.*
+import kotlin.reflect.KClass
 
 class StaticPaperGel(override val spawnPt: StaticPaperSpawnPt): GraphicElement(spawnPt) {
     init {
         bodyPosOffset.set(0.0f, 0.0f, BODY_HEIGHT / 2.0f)
-        callOnCreateConcurrently = true
     }
 
     override val body = FixedCylinderBody(
@@ -50,34 +51,45 @@ class StaticPaperGel(override val spawnPt: StaticPaperSpawnPt): GraphicElement(s
 
     override val renderer = App.factory.createPaperRenderer(renderProps)
 
-    override suspend fun onCreateConcurrently(): () -> Unit {
-        val img: ImageData
-        val off: Int
+    private val createConcurrently = CreateConcurrently(
+        this,
+        object: CreateConcurrently.Delegate {
+            private lateinit var tmpImg: ImageData
+            private var offset = 0
 
-        when (spawnPt.kind) {
-            GNARLED_TREE_LARGE -> {
-                img = App.textures.getOrLoadImageDataAsync("sprite-static-gnarled-tree-large.png")
-                off = 3
+            override suspend fun onJobStart() {
+                // Do not modify gel here! Store everything in temporary variables!
+                when (spawnPt.kind) {
+                    GNARLED_TREE_LARGE -> {
+                        tmpImg = App.textures.getOrLoadImageDataAsync("sprite-static-gnarled-tree-large.png")
+                        offset = 3
+                    }
+                    GNARLED_TREE_MEDIUM -> {
+                        tmpImg = App.textures.getOrLoadImageDataAsync("sprite-static-gnarled-tree-medium.png")
+                        offset = 2
+                    }
+                    GNARLED_TREE_SMALL -> {
+                        tmpImg = App.textures.getOrLoadImageDataAsync("sprite-static-gnarled-tree-small.png")
+                        offset = 1
+                    }
+                    ROUND_TREE -> {
+                        tmpImg = App.textures.getOrLoadImageDataAsync("sprite-static-round-tree.png")
+                        offset = 2
+                    }
+                }
             }
-            GNARLED_TREE_MEDIUM -> {
-                img = App.textures.getOrLoadImageDataAsync("sprite-static-gnarled-tree-medium.png")
-                off = 2
-            }
-            GNARLED_TREE_SMALL -> {
-                img = App.textures.getOrLoadImageDataAsync("sprite-static-gnarled-tree-small.png")
-                off = 1
-            }
-            ROUND_TREE -> {
-                img = App.textures.getOrLoadImageDataAsync("sprite-static-round-tree.png")
-                off = 2
+
+            override fun onJobDone() {
+                // Back in main thread
+                frames.setTexture(tmpImg, 1, 1)
+                frameOrigin.set(renderProps.frameSize.x / 2, renderProps.frameSize.y - offset)
             }
         }
+    )
 
-        return {
-            // Back in main thread
-            frames.setTexture(img, 1, 1)
-            frameOrigin.set(renderProps.frameSize.x / 2, renderProps.frameSize.y - off)
-        }
+    override fun getBehaviour(klass: KClass<*>) = when (klass) {
+        CreateConcurrently::class -> createConcurrently
+        else -> null
     }
 
     override fun onAnimateActive() {

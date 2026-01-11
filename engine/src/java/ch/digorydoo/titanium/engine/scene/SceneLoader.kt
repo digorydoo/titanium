@@ -153,7 +153,7 @@ class SceneLoader {
                 App.camera.setSourceRelativeToTarget(
                     phi = cameraPhi,
                     rho = cameraRho,
-                    dist = cameraSource.distanceTo(cameraTarget).toFloat(),
+                    distance = cameraSource.distanceTo(cameraTarget).toFloat(),
                     jump = true,
                 )
             }

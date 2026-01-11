@@ -1,8 +1,7 @@
 package ch.digorydoo.titanium.engine.heightmap
 
 import ch.digorydoo.titanium.engine.gel.SpawnPt
-import ch.digorydoo.titanium.engine.ui.choice.BoolChoice
-import ch.digorydoo.titanium.engine.ui.choice.Choice
+import ch.digorydoo.titanium.engine.ui.dialogue.DlgDef
 
 class HeightMapSpawnPt(raw: Map<String, String>): SpawnPt(raw) {
     var filename = raw["f"] ?: ""; private set
@@ -15,15 +14,18 @@ class HeightMapSpawnPt(raw: Map<String, String>): SpawnPt(raw) {
         return result
     }
 
-    override fun getEditorChoices(onChange: () -> Unit): MutableList<Choice> {
-        val result = super.getEditorChoices(onChange)
-        result.add(
-            BoolChoice("Smooth", initialValue = smooth) {
-                smooth = it
-                onChange()
+    override fun buildEditorItems(dlgDef: DlgDef<Unit>, onChange: () -> Unit) {
+        super.buildEditorItems(dlgDef, onChange)
+        dlgDef.apply {
+            itemWithBooleanValue {
+                text = "Smooth"
+                initialValue = smooth
+                this.onChange = {
+                    smooth = it
+                    onChange()
+                }
             }
-        )
-        return result
+        }
     }
 
     override fun createGel() = HeightMapGel(this)

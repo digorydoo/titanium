@@ -8,51 +8,49 @@ import ch.digorydoo.titanium.engine.sound.EngineSampleId
 import ch.digorydoo.titanium.engine.ui.ITEM_MARGIN_BOTTOM
 import ch.digorydoo.titanium.engine.ui.ITEM_MARGIN_TOP
 import ch.digorydoo.titanium.engine.ui.ITEM_SPACING
-import ch.digorydoo.titanium.engine.ui.choice.BoolChoice
-import ch.digorydoo.titanium.engine.ui.choice.Choice
+import ch.digorydoo.titanium.engine.ui.dlg_item.DlgItemGel
 import ch.digorydoo.titanium.engine.ui.icon.DlgInputIconGel
 import kotlin.math.max
 
 /**
- * Dialogues are created through DlgManager (showDlg, showChoice).
- * A message dialogue has dlgTextGel, icons.
- * A choice dialogue has items, lastItemIsDismiss, icons.
+ * Dialogues can be a dismissable message or a list of items to choose from. Create them through App.dlg.show().
  */
-class Dialogue(
-    private val dlgTextGel: DlgTextGel?, // may or may not be null if this is a choice dlg
-    private val icon: DlgInputIconGel?, // either the dialogue's or an item's dismiss action
-    private val choices: List<Choice>?, // items of a choice dialogue
+internal class Dialogue<Id>(
+    private val dlgTextGel: DlgTextGel?, // must not be null if items is empty, otherwise we'd show nothing
+    private val dismissIcon: DlgInputIconGel?, // the icon sticks either to dismissItem or to the dlg
+    private val items: List<DlgItemGel<Id>>,
+    private val dismissItem: DlgItemGel<Id>?,
+    private val onClose: ((DlgItemDef<Id>?) -> Unit)?,
     initHilitedIdx: Int = 0,
-    private val lastItemIsDismiss: Boolean,
-    private val playSoundOnDismiss: Boolean,
 ) {
     private val dlgId = nextDlgId++ // for debugging purposes only
     private var hilitedIdx = initHilitedIdx
-    private val hilitedChoice get() = choices?.getOrNull(hilitedIdx)
-    private val numChoices get() = choices?.size ?: 0
+    private val hilitedGel get() = items.getOrNull(hilitedIdx)
+    private val screenSizeDp = App.resolutionMgr.screenSizeDp
 
     // Called by DlgManager
     fun onShow() {
         dlgTextGel?.onCreate(LayerKind.UI_ABOVE_DLG)
 
-        if (choices != null) {
-            choices.forEach { it.gel!!.onCreate(LayerKind.UI_ABOVE_DLG) }
-            choices.getOrNull(hilitedIdx)?.gel?.hilited = true
+        if (items.isNotEmpty()) {
+            items.forEach { it.onCreate(LayerKind.UI_ABOVE_DLG) }
+            items.getOrNull(hilitedIdx)?.hilited = true
             updateScrollOffset()
         }
 
-        icon?.onCreate(LayerKind.UI_ABOVE_DLG)
+        dismissIcon?.onCreate(LayerKind.UI_ABOVE_DLG)
     }
 
-    // Called by DlgManager
-    fun onDismiss() {
+    private fun close(selectedItem: DlgItemDef<Id>?) {
         dlgTextGel?.setZombie()
-        icon?.setZombie()
-        choices?.forEach { it.gel?.setZombie() }
+        dismissIcon?.setZombie()
+        items.forEach { it.setZombie() }
+        App.dlg.onClose(this)
+        onClose?.invoke(selectedItem)
     }
 
-    private fun dismiss() {
-        App.dlg.dismiss(this)
+    fun abort() {
+        close(null)
     }
 
     fun handle() {
@@ -60,7 +58,7 @@ class Dialogue(
             when {
                 selectBtn.pressedOnce -> onSelectBtnPressed()
                 dismissBtn.pressedOnce -> onDismissBtnPressed()
-                choices != null -> when {
+                items.isNotEmpty() -> when {
                     hatOrArrowUp.pressedWithRepeat -> hilitePrevItem()
                     hatOrArrowDown.pressedWithRepeat -> hiliteNextItem()
                     ljoyUp.pressedWithRepeat -> hilitePrevItem()
@@ -78,68 +76,57 @@ class Dialogue(
     }
 
     private fun onSelectBtnPressed() {
-        if (choices == null) {
-            playBtnSound(isDismiss = true)
-            dismiss()
+        if (items.isEmpty()) {
+            App.sound.play(EngineSampleId.BUTTON1)
+            close(null)
             return
         }
 
-        val choice = hilitedChoice ?: return
-        val gel = choice.gel ?: return
+        val gel = hilitedGel ?: return
+        if (!gel.canSelect) return
 
-        if (!gel.canSelect) {
-            if (choice is BoolChoice) {
-                if (!choice.curValue) onIncrementBtnPressed()
-                else onDecrementBtnPressed()
-            }
-            return
-        }
+        App.sound.play(EngineSampleId.BUTTON1)
 
-        val isLastAndDismiss = choice == choices.lastOrNull() && lastItemIsDismiss
-        playBtnSound(isLastAndDismiss)
-
-        if (isLastAndDismiss || choice.autoDismiss) {
-            choices.forEach {
-                it.gel?.fadeOut()
+        if (gel == dismissItem || gel.autoDismiss) {
+            items.forEach {
+                it.fadeOut()
             }
         }
 
         gel.select {
-            if (isLastAndDismiss || choice.autoDismiss) {
-                dismiss()
+            if (gel == dismissItem || gel.autoDismiss) {
+                close(gel.def)
             }
         }
     }
 
     private fun onIncrementBtnPressed(smallStep: Boolean = false) {
-        val choice = hilitedChoice ?: return
-        choice.gel?.increment(smallStep)
+        val gel = hilitedGel ?: return
+        gel.increment(smallStep)
     }
 
     private fun onDecrementBtnPressed(smallStep: Boolean = false) {
-        val choice = hilitedChoice ?: return
-        choice.gel?.decrement(smallStep)
+        val gel = hilitedGel ?: return
+        gel.decrement(smallStep)
     }
 
     private fun onDismissBtnPressed() {
-        if (choices == null) {
-            playBtnSound(isDismiss = true)
-            dismiss()
+        if (items.isEmpty()) {
+            App.sound.play(EngineSampleId.BUTTON1)
+            close(null)
             return
         }
 
-        if (lastItemIsDismiss && choices.isNotEmpty()) {
-            choices.last().let { choice ->
-                playBtnSound(isDismiss = true)
-                hilitedChoice?.gel?.hilited = false
+        if (dismissItem != null) {
+            App.sound.play(EngineSampleId.BUTTON1)
+            hilitedGel?.hilited = false
 
-                choices.forEach {
-                    it.gel?.fadeOut()
-                }
+            items.forEach {
+                it.fadeOut()
+            }
 
-                choice.gel?.select {
-                    dismiss()
-                }
+            dismissItem.select {
+                close(dismissItem.def)
             }
         }
     }
@@ -150,9 +137,9 @@ class Dialogue(
     private fun hiliteItemBy(step: Int) {
         val prevIdx = hilitedIdx
 
-        hilitedChoice?.gel?.hilited = false
-        hilitedIdx = (hilitedIdx + numChoices + step) % numChoices
-        hilitedChoice?.gel?.hilited = true
+        hilitedGel?.hilited = false
+        hilitedIdx = (hilitedIdx + items.size + step) % items.size
+        hilitedGel?.hilited = true
 
         if (hilitedIdx != prevIdx) {
             App.sound.play(EngineSampleId.HILITE1)
@@ -161,25 +148,17 @@ class Dialogue(
     }
 
     private fun updateScrollOffset() {
-        if (numChoices > 1) {
-            val menuHeight = choices?.fold(0) { result, item ->
-                result + (item.gel?.height ?: 0) + ITEM_SPACING
-            } ?: 0
+        if (items.size > 1) {
+            val menuHeight = items.fold(0) { result, item ->
+                result + item.height + ITEM_SPACING
+            }
 
-            val viewHeight = App.screenHeightDp - ITEM_MARGIN_TOP - ITEM_MARGIN_BOTTOM
+            val viewHeight = screenSizeDp.y - ITEM_MARGIN_TOP - ITEM_MARGIN_BOTTOM
             val topOffset = max(0, menuHeight - viewHeight).toFloat()
-            val scrollOffset = lerp(topOffset, 0.0f, hilitedIdx.toFloat() / (numChoices - 1))
+            val scrollOffset = lerp(topOffset, 0.0f, hilitedIdx.toFloat() / (items.size - 1))
 
-            choices?.forEach { it.gel?.scrollOffset = scrollOffset }
-            icon?.scrollOffset = scrollOffset
-        }
-    }
-
-    private fun playBtnSound(isDismiss: Boolean) {
-        when {
-            choices == null -> App.sound.play(EngineSampleId.MSG_DISMISS)
-            isDismiss && playSoundOnDismiss -> App.sound.play(EngineSampleId.CHOICES_DISMISS)
-            else -> App.sound.play(EngineSampleId.BUTTON1)
+            items.forEach { it.scrollOffset = scrollOffset }
+            dismissIcon?.scrollOffset = scrollOffset
         }
     }
 
@@ -187,7 +166,7 @@ class Dialogue(
         arrayOf(
             "dlgId=$dlgId",
             if (dlgTextGel == null) null else "dlgTextGel=$dlgTextGel",
-            if (choices == null) null else "#choices=${choices.size}",
+            if (items.isEmpty()) null else "#items=${items.size}",
         )
             .filterNotNull()
             .joinToString(", ")

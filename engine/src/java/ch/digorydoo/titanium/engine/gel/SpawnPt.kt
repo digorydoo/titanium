@@ -6,9 +6,7 @@ import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
-import ch.digorydoo.titanium.engine.ui.choice.BoolChoice
-import ch.digorydoo.titanium.engine.ui.choice.Choice
-import ch.digorydoo.titanium.engine.ui.choice.FloatChoice
+import ch.digorydoo.titanium.engine.ui.dialogue.DlgDef
 import kotlin.math.sqrt
 
 abstract class SpawnPt private constructor(
@@ -60,45 +58,64 @@ abstract class SpawnPt private constructor(
     }
 
     // The position is treated especially (see SpawnPtMenu)
-    open fun getEditorChoices(onChange: () -> Unit): MutableList<Choice> =
-        mutableListOf(
-            FloatChoice(
-                "Rotation",
-                initialValue = rotation.toDegrees(),
-                step = 45.0f,
-                smallStep = 5.0f,
+    open fun buildEditorItems(dlgDef: DlgDef<Unit>, onChange: () -> Unit) {
+        dlgDef.apply {
+            itemWithFloatValue {
+                text = "Rotation"
+                initialValue = rotation.toDegrees()
+                step = 45.0f
+                smallStep = 5.0f
                 modulo = 360f
-            ) {
-                rotation = it.toRadians()
-                onChange()
-            },
-            BoolChoice("Auto spawn", initialValue = autoSpawn) {
-                autoSpawn = it
-                onChange()
-            },
-            BoolChoice("Auto despawn", initialValue = autoDespawn) {
-                autoDespawn = it
-                onChange()
-            },
-            FloatChoice(
-                "Camera distance for spawn/despawn",
-                initialValue = sqrt(maxCameraSqrDistForAutoSpawn).toFloat(),
-                step = 5.0f,
-                smallStep = 1.0f,
-                minValue = 0.0f,
-            ) {
-                maxCameraSqrDistForAutoSpawn = it.toDouble() * it
-                onChange()
-            },
-            BoolChoice("Prevent respawn when close", initialValue = preventRespawnWhenClose) {
-                preventRespawnWhenClose = it
-                onChange()
-            },
-            BoolChoice("Can collide", initialValue = canCollide) {
-                canCollide = it
-                onChange()
+                this.onChange = {
+                    rotation = it.toRadians()
+                    onChange()
+                }
             }
-        )
+            itemWithBooleanValue {
+                text = "Auto spawn"
+                initialValue = autoSpawn
+                this.onChange = {
+                    autoSpawn = it
+                    onChange()
+                }
+            }
+            itemWithBooleanValue {
+                text = "Auto despawn"
+                initialValue = autoDespawn
+                this.onChange = {
+                    autoDespawn = it
+                    onChange()
+                }
+            }
+            itemWithFloatValue {
+                text = "Camera distance for spawn/despawn"
+                initialValue = sqrt(maxCameraSqrDistForAutoSpawn).toFloat()
+                step = 5.0f
+                smallStep = 1.0f
+                minValue = 0.0f
+                this.onChange = {
+                    maxCameraSqrDistForAutoSpawn = it.toDouble() * it
+                    onChange()
+                }
+            }
+            itemWithBooleanValue {
+                text = "Prevent respawn when close"
+                initialValue = preventRespawnWhenClose
+                this.onChange = {
+                    preventRespawnWhenClose = it
+                    onChange()
+                }
+            }
+            itemWithBooleanValue {
+                text = "Can collide"
+                initialValue = canCollide
+                this.onChange = {
+                    canCollide = it
+                    onChange()
+                }
+            }
+        }
+    }
 
     protected abstract fun createGel(): GraphicElement
 

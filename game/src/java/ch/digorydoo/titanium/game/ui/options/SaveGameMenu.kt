@@ -14,8 +14,8 @@ import ch.digorydoo.titanium.engine.ui.SAVEGAME_THUMBNAIL_WIDTH
 import ch.digorydoo.titanium.engine.ui.SUMMARY_BTN_HEIGHT
 import ch.digorydoo.titanium.engine.ui.SUMMARY_BTN_MARGIN_TOP
 import ch.digorydoo.titanium.engine.ui.SUMMARY_BTN_WIDTH
-import ch.digorydoo.titanium.engine.ui.button.SavegameChoiceBtnGel
-import ch.digorydoo.titanium.engine.ui.choice.SavegameChoice
+import ch.digorydoo.titanium.engine.ui.dialogue.DlgSavegameItemDef
+import ch.digorydoo.titanium.engine.ui.dlg_item.DlgSavegameItemGel
 import ch.digorydoo.titanium.game.i18n.GameTextId
 
 class SaveGameMenu {
@@ -33,15 +33,11 @@ class SaveGameMenu {
             override val screenshot = thumbnail
         }
 
-        val choice = SavegameChoice(summary) {
-            // Inside the SaveGameMenu, the summaryBtn is just a visual item with no action.
-        }
-
-        val alignment = Align.Alignment(anchor = TOP_CENTRE, marginTop = SUMMARY_BTN_MARGIN_TOP)
-
-        val summaryBtn = SavegameChoiceBtnGel(
-            choice = choice,
-            alignment = alignment,
+        val summaryBtn = DlgSavegameItemGel<Unit>(
+            def = DlgSavegameItemDef.build {
+                this.summary = summary
+            },
+            alignment = Align.Alignment(anchor = TOP_CENTRE, marginTop = SUMMARY_BTN_MARGIN_TOP),
             btnWidth = SUMMARY_BTN_WIDTH,
             btnHeight = SUMMARY_BTN_HEIGHT,
             precomputedTextTex = null,
@@ -56,7 +52,7 @@ class SaveGameMenu {
             playSoundOnDismiss = false,
             onConfirm = {
                 if (App.state.saveToFile(summary)) {
-                    App.dlg.showSnackbar("Game saved successfully") // TODO translate
+                    App.dlg.showSnackbar(EngineTextId.GAME_SAVED)
                 }
                 summaryBtn.setZombie()
                 onDidSave()

@@ -10,6 +10,7 @@ abstract class ScreenshotManager {
         fun onScreenshot(screenshot: ImageData)
     }
 
+    var isAboutToTakeScreenshot = false; protected set
     protected val listeners = mutableListOf<Listener>()
 
     fun take(lambda: (screenshot: ImageData) -> Unit) {

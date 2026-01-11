@@ -58,7 +58,7 @@ APP_VERSION="1.0.0"
 COPYRIGHT="Copyright 2025 by Digory Doolittle"
 DESCRIPTION="Game"
 EXE_NAME="Titanium"
-MAIN_CLASS="ch.digorydoo.titanium.main.app.MainKt"
+MAIN_CLASS="ch.digorydoo.titanium.main.core.MainKt"
 VENDOR="Digory Doolittle"
 
 if [[ "$OS_TYPE" == "Darwin" ]]; then

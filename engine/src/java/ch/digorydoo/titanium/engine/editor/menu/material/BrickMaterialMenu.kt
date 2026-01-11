@@ -5,31 +5,14 @@ import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.editor.action.EditorActions
 import ch.digorydoo.titanium.engine.editor.menu.material.BrickMaterialGroup.Companion.findFirstInnermostGroup
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
-import ch.digorydoo.titanium.engine.ui.choice.Choice
-import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 
 internal class BrickMaterialMenu(private val actions: EditorActions) {
-    fun show(initial: BrickMaterial, isTopLevel: Boolean, onCancel: () -> Unit) {
-        show(
-            BrickMaterialGroup.ROOT,
-            initial,
-            playSoundOnOpen = isTopLevel,
-            playSoundOnDismiss = isTopLevel,
-            onCancel
-        )
+    fun show(initial: BrickMaterial, onBack: (() -> Unit)?) {
+        show(BrickMaterialGroup.ROOT, initial, onBack)
     }
 
-    private fun show(
-        group: BrickMaterialGroup,
-        initialMat: BrickMaterial?,
-        playSoundOnOpen: Boolean,
-        playSoundOnDismiss: Boolean,
-        onCancel: () -> Unit,
-    ) {
-        val reopen = {
-            show(group, null, playSoundOnOpen = false, playSoundOnDismiss, onCancel)
-        }
-
+    private fun show(group: BrickMaterialGroup, initialMat: BrickMaterial?, onBack: (() -> Unit)?) {
+        val reopen = { show(group, null, onBack) }
         val groupsOfInitialMat = mutableListOf<BrickMaterialGroup>()
 
         if (initialMat != null) {
@@ -41,54 +24,37 @@ internal class BrickMaterialMenu(private val actions: EditorActions) {
             }
         }
 
-        var textOfInitiallySelected = ""
+        App.dlg.showDlg<Unit> {
+            val dlgDef = this
 
-        val groupChoices = BrickMaterialGroup.entries
-            .filter { it.findParent() == group }
-            .map { grp ->
-                val choiceText = grp.displayText + " >"
+            BrickMaterialGroup.entries
+                .filter { it.findParent() == group }
+                .sortedBy { it.displayText }
+                .forEach { grp ->
+                    item {
+                        text = grp.displayText + " >"
+                        onSelect = { show(grp, initialMat, onBack = reopen) }
 
-                if (groupsOfInitialMat.contains(grp)) {
-                    textOfInitiallySelected = choiceText
+                        if (groupsOfInitialMat.contains(grp)) {
+                            dlgDef.focus = this
+                        }
+                    }
                 }
 
-                TextChoice(choiceText) {
-                    show(
-                        grp,
-                        initialMat,
-                        playSoundOnOpen = false,
-                        playSoundOnDismiss = false,
-                        onCancel = reopen
-                    )
+            group.materials()
+                .sortedBy { it.displayText }
+                .forEach { mat ->
+                    item {
+                        text = mat.displayText
+                        onSelect = { actions.setActiveMaterial(mat) }
+                        if (mat == initialMat) dlgDef.focus = this
+                    }
                 }
+
+            dismiss = item {
+                textId = if (onBack == null) EngineTextId.DONE else EngineTextId.BACK
+                onSelect = onBack
             }
-            .sortedBy { it.itemText }
-
-        val matChoices = group.materials()
-            .map { mat ->
-                val choiceText = mat.displayText
-                if (mat == initialMat) textOfInitiallySelected = choiceText
-
-                TextChoice(choiceText) {
-                    actions.setActiveMaterial(mat)
-                }
-            }
-            .sortedBy { it.itemText }
-
-        val choices = mutableListOf<Choice>().apply {
-            addAll(groupChoices)
-            addAll(matChoices)
         }
-
-        val curIdx = choices.indexOfFirst { it.itemText == textOfInitiallySelected }
-        choices.add(TextChoice(EngineTextId.BACK) { onCancel() })
-
-        App.dlg.showChoices(
-            choices,
-            curIdx,
-            lastItemIsDismiss = true,
-            playSoundOnOpen = playSoundOnOpen,
-            playSoundOnDismiss = playSoundOnDismiss,
-        )
     }
 }

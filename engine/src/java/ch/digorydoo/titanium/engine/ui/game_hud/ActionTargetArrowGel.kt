@@ -2,13 +2,16 @@ package ch.digorydoo.titanium.engine.ui.game_hud
 
 import ch.digorydoo.kutils.point.MutablePoint4f
 import ch.digorydoo.kutils.point.Point2f
+import ch.digorydoo.titanium.engine.behaviours.CreateConcurrently
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.sprite.FrameCollection
 import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
+import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.engine.ui.icon.Icon
 import kotlin.math.abs
 import kotlin.math.sin
+import kotlin.reflect.KClass
 
 class ActionTargetArrowGel: GraphicElement() {
     init {
@@ -16,7 +19,6 @@ class ActionTargetArrowGel: GraphicElement() {
         inMenu = Visibility.ACTIVE
         inEditor = Visibility.ACTIVE
         visibleOnScreenshots = false
-        callOnCreateConcurrently = true
     }
 
     var target: GraphicElement? = null; private set
@@ -35,13 +37,27 @@ class ActionTargetArrowGel: GraphicElement() {
 
     override val renderer = App.factory.createUISpriteRenderer(props, antiAliasing = true)
 
-    override suspend fun onCreateConcurrently(): () -> Unit {
-        val img = App.textures.getOrLoadImageDataAsync("ui-icons.png")
-        return {
-            // Back in main thread
-            frames.setTexture(img, 5, 6)
-            frames.setFrame(Icon.FOCUS_TRIANGLE.frame)
+    private val createConcurrently = CreateConcurrently(
+        this,
+        object: CreateConcurrently.Delegate {
+            private lateinit var tmpImg: ImageData
+
+            override suspend fun onJobStart() {
+                // Do not modify gel here! Store everything in temporary variables!
+                tmpImg = App.textures.getOrLoadImageDataAsync("ui-icons.png")
+            }
+
+            override fun onJobDone() {
+                // Back in main thread
+                frames.setTexture(tmpImg, 5, 6)
+                frames.setFrame(Icon.FOCUS_TRIANGLE.frame)
+            }
         }
+    )
+
+    override fun getBehaviour(klass: KClass<*>) = when (klass) {
+        CreateConcurrently::class -> createConcurrently
+        else -> null
     }
 
     fun show(newTarget: GraphicElement) {
@@ -63,9 +79,10 @@ class ActionTargetArrowGel: GraphicElement() {
         pos4f.setMultiplied(App.camera.projMatrix, pos4f)
         val pulsating = PULSATING_DISTANCE * abs(sin(App.time.sessionTime * PULSATING_FREQ))
 
+        val resolutionMgr = App.resolutionMgr
         moveTo(
-            pos4f.x / pos4f.w - App.dpToGlX(SCALE_FACTOR * frames.frameSize.x / 2.0f),
-            pos4f.y / pos4f.w + App.dpToGlY(SCALE_FACTOR * frames.frameSize.y / 2.0f - pulsating),
+            pos4f.x / pos4f.w - resolutionMgr.dpToGlX(SCALE_FACTOR * frames.frameSize.x / 2.0f),
+            pos4f.y / pos4f.w + resolutionMgr.dpToGlY(SCALE_FACTOR * frames.frameSize.y / 2.0f - pulsating),
             0.0f
         )
     }

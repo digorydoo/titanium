@@ -2,6 +2,8 @@ package ch.digorydoo.titanium.game.gel.door
 
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.titanium.engine.behaviours.CreateConcurrently
+import ch.digorydoo.titanium.engine.camera.CameraProps
 import ch.digorydoo.titanium.engine.core.ActionManager
 import ch.digorydoo.titanium.engine.core.ActionManager.ActionDelegate
 import ch.digorydoo.titanium.engine.core.App
@@ -14,7 +16,9 @@ import ch.digorydoo.titanium.engine.shader.Renderer
 import ch.digorydoo.titanium.game.gel.door.DoorSpawnPt.Kind
 import ch.digorydoo.titanium.game.i18n.GameTextId
 import ch.digorydoo.titanium.game.player.PlayerGel
+import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.reflect.KClass
 
 class DoorGel private constructor(
     override val spawnPt: DoorSpawnPt?,
@@ -29,7 +33,6 @@ class DoorGel private constructor(
         inMenu = Visibility.INVISIBLE
         inEditor = Visibility.FROZEN_VISIBLE
         encounterRadius = 0.5f
-        callOnCreateConcurrently = true
     }
 
     override val body = FixedCuboidBody(
@@ -52,14 +55,29 @@ class DoorGel private constructor(
 
     override val renderer = makeCombinedRenderer(this)
 
-    override suspend fun onCreateConcurrently(): () -> Unit {
-        val theFrameMesh = App.meshes.getOrLoadMeshAsync("door-01-frame.msh")
-        val theSlabMesh = App.meshes.getOrLoadMeshAsync("door-01-slab.msh")
-        return {
-            // Back in main thread
-            frameMesh = theFrameMesh
-            slabMesh = theSlabMesh
+    private val createConcurrently = CreateConcurrently(
+        this,
+        object: CreateConcurrently.Delegate {
+            private lateinit var tmpFrameMesh: ComplexMesh
+            private lateinit var tmpSlabMesh: ComplexMesh
+
+            override suspend fun onJobStart() {
+                // Do not modify gel here! Store everything in temporary variables!
+                tmpFrameMesh = App.meshes.getOrLoadMeshAsync("door-01-frame.msh")
+                tmpSlabMesh = App.meshes.getOrLoadMeshAsync("door-01-slab.msh")
+            }
+
+            override fun onJobDone() {
+                // Back in main thread
+                frameMesh = tmpFrameMesh
+                slabMesh = tmpSlabMesh
+            }
         }
+    )
+
+    override fun getBehaviour(klass: KClass<*>) = when (klass) {
+        CreateConcurrently::class -> createConcurrently
+        else -> null
     }
 
     override fun onAnimateActive() {
@@ -69,7 +87,51 @@ class DoorGel private constructor(
 
     private val actionDelegate = object: ActionDelegate {
         override fun onSelect(action: ActionManager.Action) {
-            println("TODO: Open door") // TODO
+            val camera = App.camera
+            val origTargetGel = camera.targetGel
+            val origCameraMode = camera.mode
+
+            App.intermissions.begin {
+                showDlg<Unit> {
+                    text = "This is a test of intermission. Sleeping for 5 seconds..."
+                }
+            }.then {
+                sleep(5.0f)
+            }.then {
+                camera.mode = CameraProps.Mode.FIXED_DISTANCE
+                camera.setTarget(this@DoorGel)
+
+                camera.setSourceRelativeToTarget(
+                    phi = (3 * PI / 2.0).toFloat() + 0.1f,
+                    rho = (spawnPt?.rotation ?: 0.0f) - (PI / 2.0).toFloat(),
+                    distance = 2.0f
+                )
+                showDlg<Unit> {
+                    text = "Now we're moving the camera while the text is being shown. " +
+                        "If you quickly dismiss this dialogue, we'll wait until the camera slows down."
+                }
+            }.then {
+                waitFor { camera.currentSpeedApprox < 0.0001f }
+            }.then {
+                showDlg {
+                    text = "Is everything in order?"
+
+                    item {
+                        text = "Yes, perfect"
+                        id = true
+                    }
+                    item {
+                        text = "Not quite"
+                        id = false
+                    }
+                }
+            }.then {
+                camera.mode = origCameraMode
+                camera.setTarget(origTargetGel)
+                showDlg<Unit> {
+                    text = "You responded with $it"
+                }
+            }
         }
     }
 

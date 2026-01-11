@@ -5,10 +5,6 @@
 .gradle/
 .google/
 .idea/
-!.idea/codeStyleSettings.xml
-!.idea/inspectionProfiles/
-!.idea/codeStyles/
-!.idea/saveactions_settings.xml  
 .kotlin/
 local.properties
 build/

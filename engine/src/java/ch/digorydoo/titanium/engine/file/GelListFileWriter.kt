@@ -5,7 +5,7 @@ import ch.digorydoo.kutils.utils.Moment
 import ch.digorydoo.titanium.BuildConfig
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.SpawnPt
-import ch.digorydoo.titanium.engine.utils.NotForProductionError
+import ch.digorydoo.titanium.engine.utils.NotForProductionException
 import java.io.BufferedWriter
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -31,7 +31,7 @@ class GelListFileWriter private constructor(private val writer: BufferedWriter) 
 
         fun writeFile(filename: String, spawnPts: List<SpawnPt>) {
             when {
-                BuildConfig.isProduction -> throw NotForProductionError()
+                BuildConfig.isProduction -> throw NotForProductionException()
                 filename.isEmpty() -> throw Exception("File name is empty!")
                 else -> {
                     arrayOf(

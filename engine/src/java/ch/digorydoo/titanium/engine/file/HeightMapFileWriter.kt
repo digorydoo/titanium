@@ -6,7 +6,7 @@ import ch.digorydoo.titanium.BuildConfig
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.file.FileMarker.*
 import ch.digorydoo.titanium.engine.heightmap.HeightMap
-import ch.digorydoo.titanium.engine.utils.NotForProductionError
+import ch.digorydoo.titanium.engine.utils.NotForProductionException
 import java.io.BufferedOutputStream
 import java.io.DataOutputStream
 import java.io.File
@@ -30,7 +30,7 @@ class HeightMapFileWriter private constructor(private val stream: KDataOutputStr
 
         fun write(heightMap: HeightMap) {
             when {
-                BuildConfig.isProduction -> throw NotForProductionError()
+                BuildConfig.isProduction -> throw NotForProductionException()
                 heightMap.filename.isEmpty() -> throw Exception("File name is empty!")
                 else -> {
                     arrayOf(

@@ -1,6 +1,7 @@
 package ch.digorydoo.titanium.game.gel.vase
 
 import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.titanium.engine.behaviours.CreateConcurrently
 import ch.digorydoo.titanium.engine.core.ActionManager
 import ch.digorydoo.titanium.engine.core.ActionManager.ActionDelegate
 import ch.digorydoo.titanium.engine.core.App
@@ -12,6 +13,7 @@ import ch.digorydoo.titanium.game.gel.vase.VaseSpawnPt.Kind
 import ch.digorydoo.titanium.game.i18n.GameTextId
 import ch.digorydoo.titanium.game.player.PlayerGel
 import kotlin.random.Random
+import kotlin.reflect.KClass
 
 class VaseGel private constructor(
     override val spawnPt: VaseSpawnPt?,
@@ -26,7 +28,6 @@ class VaseGel private constructor(
         inMenu = Visibility.INVISIBLE
         inEditor = Visibility.ACTIVE
         encounterRadius = 0.5f // we're implementing onEncounter, not the PlayerGel!
-        callOnCreateConcurrently = true
     }
 
     override val body = FixedCapsuleBody(
@@ -53,16 +54,30 @@ class VaseGel private constructor(
         depthTest = true
     )
 
-    override suspend fun onCreateConcurrently(): () -> Unit {
-        val theMesh = App.meshes.getOrLoadMeshAsync(
-            when (kind) {
-                Kind.VASE_H1M -> "vase-h1m.msh"
+    private val createConcurrently = CreateConcurrently(
+        this,
+        object: CreateConcurrently.Delegate {
+            private lateinit var tmpMesh: ComplexMesh
+
+            override suspend fun onJobStart() {
+                // Do not modify gel here! Store everything in temporary variables!
+                tmpMesh = App.meshes.getOrLoadMeshAsync(
+                    when (kind) {
+                        Kind.VASE_H1M -> "vase-h1m.msh"
+                    }
+                )
             }
-        )
-        return {
-            // Back in main thread
-            mesh = theMesh
+
+            override fun onJobDone() {
+                // Back in main thread
+                mesh = tmpMesh
+            }
         }
+    )
+
+    override fun getBehaviour(klass: KClass<*>) = when (klass) {
+        CreateConcurrently::class -> createConcurrently
+        else -> null
     }
 
     private val actionDelegate = object: ActionDelegate {

@@ -3,11 +3,14 @@ package ch.digorydoo.titanium.engine.ui.game_hud
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.Point2f
 import ch.digorydoo.titanium.engine.behaviours.Align
+import ch.digorydoo.titanium.engine.behaviours.CreateConcurrently
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
+import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.engine.texture.Texture
 import kotlin.math.PI
+import kotlin.reflect.KClass
 
 class CompassGel: GraphicElement() {
     init {
@@ -15,7 +18,6 @@ class CompassGel: GraphicElement() {
         inMenu = Visibility.INVISIBLE
         inEditor = Visibility.ACTIVE
         visibleOnScreenshots = false
-        callOnCreateConcurrently = true
     }
 
     private var tex: Texture? = null
@@ -43,15 +45,28 @@ class CompassGel: GraphicElement() {
         }
     )
 
-    override suspend fun onCreateConcurrently(): () -> Unit {
-        val img = App.textures.getOrLoadImageDataAsync("ui-compass.png")
-        require(img.width == TEX_WIDTH)
-        require(img.height == TEX_HEIGHT)
+    private val createConcurrently = CreateConcurrently(
+        this,
+        object: CreateConcurrently.Delegate {
+            private lateinit var tmpImg: ImageData
 
-        return {
-            // Back in main thread
-            tex = App.textures.getOrCreateTexture(img)
+            override suspend fun onJobStart() {
+                // Do not modify gel here! Store everything in temporary variables!
+                tmpImg = App.textures.getOrLoadImageDataAsync("ui-compass.png")
+                require(tmpImg.width == TEX_WIDTH)
+                require(tmpImg.height == TEX_HEIGHT)
+            }
+
+            override fun onJobDone() {
+                // Back in the main thread
+                tex = App.textures.getOrCreateTexture(tmpImg)
+            }
         }
+    )
+
+    override fun getBehaviour(klass: KClass<*>) = when (klass) {
+        CreateConcurrently::class -> createConcurrently
+        else -> null
     }
 
     fun show() {

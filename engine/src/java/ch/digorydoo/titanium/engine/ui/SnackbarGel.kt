@@ -23,10 +23,11 @@ class SnackbarGel private constructor(val textTex: Texture, val bgTex: Texture):
 
     private val creationTime = App.time.sessionTime
     private var opacity = 0.0f
+    private val screenSizeDp = App.resolutionMgr.screenSizeDp
 
     override fun onAnimateActive() {
         moveTo(
-            App.screenWidthDp.toFloat() / 2 - bgTex.width / 2,
+            screenSizeDp.x.toFloat() / 2 - bgTex.width / 2,
             SNACKBAR_MARGIN_TOP.toFloat(),
             pos.z,
         )

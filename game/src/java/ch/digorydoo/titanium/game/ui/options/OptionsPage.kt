@@ -11,7 +11,7 @@ import ch.digorydoo.titanium.game.i18n.GameTextId
 import ch.digorydoo.titanium.game.s000_start.StartScene
 
 class OptionsPage: MenuTabPage {
-    private val btnArea = ButtonArea(marginLeft = BTN_AREA_LEFT, marginTop = BTN_AREA_TOP)
+    private val btnArea = ButtonArea<Unit>(marginLeft = BTN_AREA_LEFT, marginTop = BTN_AREA_TOP)
     private val prefsMenu = PrefsMenu()
     private val saveGameMenu = SaveGameMenu()
     private val loadGameMenu = LoadGameMenu()
@@ -56,7 +56,7 @@ class OptionsPage: MenuTabPage {
             deny = EngineTextId.CANCEL,
             onConfirm = {
                 App.gameMenu.dismiss()
-                App.load(StartScene())
+                App.sceneLoader.load(StartScene())
             },
             onDeny = {
                 btnArea.showAll()
@@ -73,7 +73,7 @@ class OptionsPage: MenuTabPage {
     }
 
     override fun animate() {
-        if (App.dlg.hasActiveDlg) return
+        if (App.dlg.isInDlgMode) return
 
         val input = App.input
 

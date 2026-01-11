@@ -2,12 +2,15 @@ package ch.digorydoo.titanium.engine.sky
 
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.Point2f
+import ch.digorydoo.titanium.engine.behaviours.CreateConcurrently
 import ch.digorydoo.titanium.engine.behaviours.TurnTowardsCamera
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.shader.Renderer.BlendMode
+import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.engine.texture.Texture
+import kotlin.reflect.KClass
 
 class SunGel: GraphicElement() {
     init {
@@ -15,7 +18,6 @@ class SunGel: GraphicElement() {
         inMenu = Visibility.INVISIBLE
         inEditor = Visibility.ACTIVE
         allowNegativeZ = true
-        callOnCreateConcurrently = true
     }
 
     private val turnProps = object: TurnTowardsCamera.Delegate() {
@@ -48,30 +50,40 @@ class SunGel: GraphicElement() {
         stellarObject = true
     )
 
-    private val move = object: Behaviour {
-        override fun animate() {
-            val cam = App.camera.sourcePos
-            val dir = App.scene.lighting.sunDir.vector
-            moveTo(
-                cam.x + dir.x * SUN_DISTANCE,
-                cam.y + dir.y * SUN_DISTANCE,
-                cam.z + dir.z * SUN_DISTANCE,
-            )
-        }
-    }
+    private val createConcurrently = CreateConcurrently(
+        this,
+        object: CreateConcurrently.Delegate {
+            private lateinit var tmpImg: ImageData
 
-    override suspend fun onCreateConcurrently(): () -> Unit {
-        val img = App.textures.getOrLoadImageDataAsync("sky-sun.png")
-        return {
-            // Back in main thread
-            tex = App.textures.getOrCreateTexture(img).also {
-                frameSize.set(it.width, it.height)
+            override suspend fun onJobStart() {
+                // Do not modify gel here! Store everything in temporary variables!
+                tmpImg = App.textures.getOrLoadImageDataAsync("sky-sun.png")
+            }
+
+            override fun onJobDone() {
+                // Back in the main thread
+                tex = App.textures.getOrCreateTexture(tmpImg).also {
+                    frameSize.set(it.width, it.height)
+                }
             }
         }
+    )
+
+    override fun getBehaviour(klass: KClass<*>) = when (klass) {
+        CreateConcurrently::class -> createConcurrently
+        else -> null
     }
 
     override fun onAnimateActive() {
-        move.animate()
+        val cam = App.camera.sourcePos
+        val dir = App.scene.lighting.sunDir.vector
+
+        moveTo(
+            cam.x + dir.x * SUN_DISTANCE,
+            cam.y + dir.y * SUN_DISTANCE,
+            cam.z + dir.z * SUN_DISTANCE,
+        )
+
         turn.animate()
     }
 

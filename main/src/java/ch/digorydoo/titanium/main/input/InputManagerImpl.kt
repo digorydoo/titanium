@@ -2,7 +2,7 @@ package ch.digorydoo.titanium.main.input
 
 import ch.digorydoo.titanium.engine.input.InputManager
 
-class InputManagerImpl: InputManager() {
+class InputManagerImpl(gamepad: GamepadImpl, keyboard: KeyboardImpl): InputManager(gamepad, keyboard) {
     enum class KeyAction { PRESS, RELEASE }
 
     fun onGLFWKeyEvent(glfwKey: Int, action: KeyAction) {

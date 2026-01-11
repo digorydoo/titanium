@@ -5,22 +5,28 @@ import ch.digorydoo.titanium.engine.behaviours.Align
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import ch.digorydoo.titanium.engine.i18n.ITextId
+import ch.digorydoo.titanium.engine.sound.EngineSampleId
 import ch.digorydoo.titanium.engine.ui.ITEM_DEFAULT_HEIGHT
-import ch.digorydoo.titanium.engine.ui.choice.TextChoice
+import ch.digorydoo.titanium.engine.ui.dialogue.DlgTextItemDef
+import ch.digorydoo.titanium.engine.ui.dlg_item.DlgItemGel
+import ch.digorydoo.titanium.engine.ui.dlg_item.DlgTextItemGel
 
-class ButtonArea(marginLeft: Int, marginTop: Int) {
-    private val buttons = mutableListOf<IButtonGel>()
+class ButtonArea<Id>(marginLeft: Int, marginTop: Int) {
+    private val buttons = mutableListOf<DlgItemGel<Id>>()
     private val willAddAt = MutablePoint2f(marginLeft, marginTop)
     private var hilitedIdx = -1
 
     fun addButton(textId: ITextId, onSelect: () -> Unit) {
-        val text = App.i18n.getString(textId)
-        val choice = TextChoice(text, autoDismiss = false, onSelect)
-        val alignment = Align.Alignment(marginLeft = willAddAt.x.toInt(), marginTop = willAddAt.y.toInt())
-
-        val btn = TextChoiceBtnGel(
-            choice = choice,
-            alignment = alignment,
+        val btn = DlgTextItemGel(
+            def = DlgTextItemDef.build<Id> {
+                text = App.i18n.getString(textId)
+                autoDismiss = false
+                this.onSelect = onSelect
+            },
+            alignment = Align.Alignment(
+                marginLeft = willAddAt.x.toInt(),
+                marginTop = willAddAt.y.toInt()
+            ),
             btnWidth = BTN_WIDTH,
             btnHeight = ITEM_DEFAULT_HEIGHT,
             precomputedTextTex = null,
@@ -53,10 +59,16 @@ class ButtonArea(marginLeft: Int, marginTop: Int) {
     }
 
     fun hiliteNext() {
+        val prevIdx = hilitedIdx
+
         when {
             buttons.isEmpty() -> return
             hilitedIdx < 0 -> hilite(0)
             else -> hilite((hilitedIdx + 1) % buttons.size)
+        }
+
+        if (hilitedIdx != prevIdx) {
+            App.sound.play(EngineSampleId.HILITE1)
         }
     }
 
@@ -70,6 +82,7 @@ class ButtonArea(marginLeft: Int, marginTop: Int) {
 
     fun selectHilited() {
         if (hilitedIdx in buttons.indices) {
+            App.sound.play(EngineSampleId.BUTTON1)
             buttons[hilitedIdx].select()
         }
     }

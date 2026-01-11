@@ -2,7 +2,7 @@ package ch.digorydoo.titanium.engine.behaviours
 
 import ch.digorydoo.kutils.math.decel
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.gel.Behaviour
 import kotlin.math.PI
 
 /**
@@ -16,7 +16,7 @@ class Rotate(
     val speed: Float = 1.0f, // ignored when duration > 0
     val phase: Float = 0.0f,
     var isRotating: Boolean = true,
-): GraphicElement.Behaviour {
+): Behaviour {
     interface Delegate {
         var rotation: Float
     }
@@ -28,7 +28,7 @@ class Rotate(
         isRotating = true
     }
 
-    override fun animate() {
+    fun animate() {
         if (!isRotating) {
             return
         }

@@ -1,7 +1,7 @@
 package ch.digorydoo.titanium.engine.ui
 
 import ch.digorydoo.kutils.colour.Colour
-import ch.digorydoo.titanium.engine.core.App
+import ch.digorydoo.titanium.engine.core.FIXED_ASPECT_RATIO
 
 // Dialogue
 
@@ -12,7 +12,7 @@ const val DLG_LR_MARGIN = 8
 const val DLG_BTN_RIGHT_MARGIN = 80
 const val DLG_BTN_BOTTOM_MARGIN = 18
 const val DLG_TEXT_PADDING = 8 // must be large enough for glyphs not overlapping the box
-const val DLG_DEFAULT_WIDTH = 800 // width when there are no choice items
+const val DLG_DEFAULT_WIDTH = 800 // width when there are no items
 const val DLG_MIN_WIDTH = 700
 const val DLG_CORNER_SIZE = 24
 
@@ -25,7 +25,7 @@ const val ITEM_CORNER_SIZE = 16
 const val ITEM_TEXT_OUTER_PADDING = 12 // space between otl and text
 const val ITEM_TEXT_INNER_PADDING = 8 // must be large enough for glyphs not overlapping the box
 const val ITEM_DEFAULT_HEIGHT = 64
-const val ITEM_VALUE_MAX_WIDTH = 96 // maximal width of value (e.g. FloatChoice)
+const val ITEM_VALUE_MAX_WIDTH = 96 // maximal width of value (e.g. DlgFloatItem)
 const val ITEM_INCDEC_MARGIN_LR = 48 // extra margin for increment/decrement symbols
 const val ITEM_INCDEC_MARGIN_TOP = ITEM_TEXT_OUTER_PADDING + ITEM_TEXT_INNER_PADDING
 const val ITEM_SPACING = 4
@@ -41,7 +41,7 @@ val itemOtlColour = Colour.grey300
 // ButtonGel when used as a save game summary button
 
 const val SAVEGAME_THUMBNAIL_WIDTH = 128
-const val SAVEGAME_THUMBNAIL_HEIGHT = (SAVEGAME_THUMBNAIL_WIDTH / App.FIXED_ASPECT_RATIO).toInt()
+const val SAVEGAME_THUMBNAIL_HEIGHT = (SAVEGAME_THUMBNAIL_WIDTH / FIXED_ASPECT_RATIO).toInt()
 const val SUMMARY_LINE_SPACING = 12
 const val SUMMARY_BTN_MARGIN_TOP = 192
 const val SUMMARY_BTN_WIDTH = SAVEGAME_THUMBNAIL_WIDTH + 512

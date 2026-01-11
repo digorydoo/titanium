@@ -1,18 +1,21 @@
 package ch.digorydoo.titanium.engine.heightmap
 
 import ch.digorydoo.kutils.point.MutablePoint2f
+import ch.digorydoo.titanium.engine.behaviours.CreateConcurrently
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.file.HeightMapFileReader
 import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.heightmap.HeightMap.TriangulatedHeightMap
 import ch.digorydoo.titanium.engine.mesh.SimpleMeshRenderer
+import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.engine.texture.Texture
+import kotlin.reflect.KClass
 
 class HeightMapGel(override val spawnPt: HeightMapSpawnPt): GraphicElement(spawnPt) {
     init {
         inDialog = Visibility.ACTIVE
         inMenu = Visibility.INVISIBLE
         inEditor = Visibility.FROZEN_VISIBLE
-        callOnCreateConcurrently = true
     }
 
     private var tex: Texture? = null
@@ -27,18 +30,34 @@ class HeightMapGel(override val spawnPt: HeightMapSpawnPt): GraphicElement(spawn
 
     override val renderer = App.factory.createSimpleMeshRenderer(renderProps)
 
-    override suspend fun onCreateConcurrently(): () -> Unit {
-        val img = App.textures.getOrLoadImageDataAsync("test32x32.png")
-        val theHeightMap = HeightMapFileReader.read(spawnPt.filename)
-        val triangulated = theHeightMap.triangulate(spawnPt.smooth)
+    private val createConcurrently = CreateConcurrently(
+        this,
+        object: CreateConcurrently.Delegate {
+            private lateinit var tmpImg: ImageData
+            private lateinit var tmpHeightMap: HeightMap
+            private lateinit var tmpTriangulated: TriangulatedHeightMap
 
-        return {
-            // Back in main thread
-            tex = App.textures.getOrCreateTexture(img)
-            frameSize.set(tex?.width ?: 0, tex?.height ?: 0)
-            heightMap = theHeightMap
-            theHeightMap.setMesh(triangulated, tex)
+            override suspend fun onJobStart() {
+                // Do not modify gel here! Store everything in temporary variables!
+                tmpImg = App.textures.getOrLoadImageDataAsync("test32x32.png")
+                tmpHeightMap = HeightMapFileReader.read(spawnPt.filename)
+                tmpTriangulated = tmpHeightMap.triangulate(spawnPt.smooth)
+            }
+
+            override fun onJobDone() {
+                // Back in the main thread
+                tex = App.textures.getOrCreateTexture(tmpImg).also {
+                    frameSize.set(it.width, it.height)
+                }
+                tmpHeightMap.setMesh(tmpTriangulated, tex)
+                heightMap = tmpHeightMap
+            }
         }
+    )
+
+    override fun getBehaviour(klass: KClass<*>) = when (klass) {
+        CreateConcurrently::class -> createConcurrently
+        else -> null
     }
 
     fun heightMapChanged() {

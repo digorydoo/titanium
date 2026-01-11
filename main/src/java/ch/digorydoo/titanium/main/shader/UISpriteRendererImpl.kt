@@ -3,7 +3,7 @@ package ch.digorydoo.titanium.main.shader
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.kutils.utils.toFloatBuffer
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.core.App.Companion.FIXED_ASPECT_RATIO
+import ch.digorydoo.titanium.engine.core.FIXED_ASPECT_RATIO
 import ch.digorydoo.titanium.engine.shader.ShaderProgram.ProgramType
 import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import ch.digorydoo.titanium.main.opengl.checkGLError
@@ -60,17 +60,18 @@ class UISpriteRendererImpl(private val delegate: Delegate, private val antiAlias
 
         val left: Float
         val top: Float
+        val resolutionMgr = App.resolutionMgr
 
         if (delegate.renderPosIsNormalised) {
             left = delegate.renderPos.x
             top = delegate.renderPos.y
         } else {
-            left = -1.0f + App.dpToGlX(delegate.renderPos.x)
-            top = 1.0f - App.dpToGlY(delegate.renderPos.y)
+            left = -1.0f + resolutionMgr.dpToGlX(delegate.renderPos.x)
+            top = 1.0f - resolutionMgr.dpToGlY(delegate.renderPos.y)
         }
 
-        val right = left + App.dpToGlX(scaledSize.x)
-        val bottom = top - App.dpToGlY(scaledSize.y)
+        val right = left + resolutionMgr.dpToGlX(scaledSize.x)
+        val bottom = top - resolutionMgr.dpToGlY(scaledSize.y)
 
         positions.put(0, left)
         positions.put(1, bottom)

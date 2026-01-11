@@ -50,7 +50,7 @@ abstract class StateManager {
             val restoredState = restore(state)
             val sceneId = restoredState.sceneId!!
             val scene = sceneId.createScene()
-            App.load(scene, restore = restoredState)
+            App.sceneLoader.load(scene, restore = restoredState)
         } catch (e: Exception) {
             Log.error(TAG, "Exception: ${e.message}")
             return

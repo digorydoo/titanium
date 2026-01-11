@@ -5,176 +5,197 @@ import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.core.ResolutionManager.Monitor
 import ch.digorydoo.titanium.engine.i18n.EngineTextId.*
 import ch.digorydoo.titanium.engine.i18n.TextLanguage
-import ch.digorydoo.titanium.engine.ui.choice.BoolChoice
-import ch.digorydoo.titanium.engine.ui.choice.Choice
-import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 
 // Note: There are two instances of this menu: One is in game/StartScene, and one is in game/OptionsPage.
 class PrefsMenu {
     fun show(onDone: () -> Unit) {
         val reopen = { show(onDone) }
+        val prefs = App.prefs
 
-        val choices = listOf(
-            TextChoice(PREFS_GAMEPAD_AND_KEYBOARD) {
-                showGamepadAndKeyboardMenu(reopen)
-            },
-            TextChoice(PREFS_MONITOR_AND_RESOLUTION) {
-                showMonitorAndResolutionMenu(reopen)
-            },
-            TextChoice(App.i18n.format(PREFS_TEXT_LANGUAGE, App.prefs.textLanguage.displayText)) {
-                showTextLanguageMenu(reopen)
-            },
-            TextChoice(DONE) {
-                App.prefs.saveIfNeeded()
-                onDone()
+        App.dlg.showDlg<Unit> {
+            item {
+                textId = PREFS_GAMEPAD_AND_KEYBOARD
+                onSelect = { showGamepadAndKeyboardMenu(reopen) }
             }
-        )
-
-        App.dlg.showChoices(
-            choices,
-            0,
-            lastItemIsDismiss = true,
-            playSoundOnOpen = false,
-            playSoundOnDismiss = false,
-        )
+            item {
+                textId = PREFS_MONITOR_AND_RESOLUTION
+                onSelect = { showMonitorAndResolutionMenu(reopen) }
+            }
+            item {
+                text = App.i18n.format(PREFS_TEXT_LANGUAGE, prefs.textLanguage.displayText)
+                onSelect = { showTextLanguageMenu(reopen) }
+            }
+            dismiss = item {
+                textId = DONE
+                onSelect = {
+                    prefs.saveIfNeeded()
+                    onDone()
+                }
+            }
+        }
     }
 
     private fun showGamepadAndKeyboardMenu(onDone: () -> Unit) {
         val reopen = { show(onDone) }
+        val prefs = App.prefs
 
-        val choices = listOf(
-            BoolChoice(PREFS_SWAP_GAMEPAD_BTNS_ABXY, App.prefs.swapGamepadBtnsABXY) {
-                App.prefs.swapGamepadBtnsABXY = it
-            },
-            BoolChoice(PREFS_SWAP_CAMERA_X, App.prefs.swapCameraX) { App.prefs.swapCameraX = it },
-            BoolChoice(PREFS_SWAP_CAMERA_Y, App.prefs.swapCameraY) { App.prefs.swapCameraY = it },
-            TextChoice(App.i18n.format(PREFS_CAMERA_SPEED, App.prefs.speedOfCameraControls.displayText)) {
-                showCameraSpeedMenu(reopen)
-            },
-            TextChoice(DONE, onDone),
-        )
-
-        App.dlg.showChoices(
-            choices,
-            0,
-            lastItemIsDismiss = true,
-            playSoundOnOpen = false,
-            playSoundOnDismiss = false,
-        )
+        App.dlg.showDlg<Unit> {
+            itemWithBooleanValue {
+                textId = PREFS_SWAP_GAMEPAD_BTNS_ABXY
+                initialValue = prefs.swapGamepadBtnsABXY
+                onChange = { prefs.swapGamepadBtnsABXY = it }
+            }
+            itemWithBooleanValue {
+                textId = PREFS_SWAP_CAMERA_X
+                initialValue = prefs.swapCameraX
+                onChange = { prefs.swapCameraX = it }
+            }
+            itemWithBooleanValue {
+                textId = PREFS_SWAP_CAMERA_Y
+                initialValue = prefs.swapCameraY
+                onChange = { prefs.swapCameraY = it }
+            }
+            item {
+                text = App.i18n.format(PREFS_CAMERA_SPEED, prefs.speedOfCameraControls.displayText)
+                onSelect = { showCameraSpeedMenu(reopen) }
+            }
+            dismiss = item {
+                textId = DONE
+                onSelect = onDone
+            }
+        }
     }
 
     private fun showMonitorAndResolutionMenu(onDone: () -> Unit) {
         val reopen = { showMonitorAndResolutionMenu(onDone) }
+        val prefs = App.prefs
+        val resolutionMgr = App.resolutionMgr
 
-        val choices: MutableList<Choice> = mutableListOf(
-            BoolChoice(PREFS_WINDOW_MODE, !App.prefs.fullscreen) {
-                if (it) {
-                    App.resolutionMgr.setWindowModeAndUpdatePrefs()
-                } else {
-                    App.resolutionMgr.setFullscreenAndUpdatePrefs()
+        App.dlg.showDlg<Unit> {
+            itemWithBooleanValue {
+                textId = PREFS_WINDOW_MODE
+                initialValue = !prefs.fullscreen
+                onChange = {
+                    if (it) {
+                        resolutionMgr.setWindowModeAndUpdatePrefs()
+                    } else {
+                        resolutionMgr.setFullscreenAndUpdatePrefs()
+                    }
                 }
-            },
-            BoolChoice(PREFS_STRETCH_VIEWPORT, App.prefs.stretchViewport) {
-                App.resolutionMgr.setStretchViewportAndUpdatePrefs(!App.prefs.stretchViewport)
-            },
-            BoolChoice(PREFS_SCALE_UI, App.prefs.scaleUI) {
-                App.resolutionMgr.setScaleUIAndUpdatePrefs(!App.prefs.scaleUI)
-            },
-            BoolChoice(PREFS_AUTO_PICK_MONITOR_AND_RESOLUTION, App.prefs.autoPickMonitorAndRes) {
-                App.resolutionMgr.setAutoPickMonitorAndResAndUpdatePrefs(!App.prefs.autoPickMonitorAndRes)
             }
-        )
+            itemWithBooleanValue {
+                textId = PREFS_STRETCH_VIEWPORT
+                initialValue = prefs.stretchViewport
+                onChange = { resolutionMgr.setStretchViewportAndUpdatePrefs(!prefs.stretchViewport) }
+            }
+            itemWithBooleanValue {
+                textId = PREFS_SCALE_UI
+                initialValue = prefs.scaleUI
+                onChange = { resolutionMgr.setScaleUIAndUpdatePrefs(!prefs.scaleUI) }
+            }
+            itemWithBooleanValue {
+                textId = PREFS_AUTO_PICK_MONITOR_AND_RESOLUTION
+                initialValue = prefs.autoPickMonitorAndRes
+                onChange = { resolutionMgr.setAutoPickMonitorAndResAndUpdatePrefs(!prefs.autoPickMonitorAndRes) }
+            }
 
-        App.resolutionMgr.getAvailableMonitors().forEach { monitor ->
-            choices.add(
-                TextChoice(monitor.name) {
-                    showResolutionsMenu(monitor, recommendedOnly = true, reopen)
+            resolutionMgr.getAvailableMonitors().forEach { monitor ->
+                item {
+                    text = monitor.name
+                    onSelect = { showResolutionsMenu(monitor, recommendedOnly = true, reopen) }
                 }
-            )
+            }
+
+            dismiss = item {
+                textId = DONE
+                onSelect = onDone
+            }
         }
-
-        choices.add(TextChoice(DONE, onDone))
-
-        App.dlg.showChoices(
-            choices,
-            0,
-            lastItemIsDismiss = true,
-            playSoundOnOpen = false,
-            playSoundOnDismiss = false,
-        )
     }
 
     private fun showResolutionsMenu(monitor: Monitor, recommendedOnly: Boolean, onDone: () -> Unit) {
+        val prefs = App.prefs
+        val resolutionMgr = App.resolutionMgr
+
         val resolutions = when (recommendedOnly) {
-            true -> App.resolutionMgr.getRecommendedResolutions(monitor)
-            false -> App.resolutionMgr.getAvailableResolutions(monitor)
+            true -> resolutionMgr.getRecommendedResolutions(monitor)
+            false -> resolutionMgr.getAvailableResolutions(monitor)
         }
 
-        val choices = resolutions
-            .sortedBy { -it.numPixelsX * it.numPixelsY } // sort by negative area: largest first
-            .map { res ->
-                TextChoice("${res.numPixelsX}x${res.numPixelsY}") {
-                    App.prefs.autoPickMonitorAndRes = false
-                    App.resolutionMgr.setFullscreenAndUpdatePrefs(monitor, res)
-                    onDone()
+        App.dlg.showDlg<Unit> {
+            resolutions
+                .sortedBy { -it.numPixelsX * it.numPixelsY } // sort by negative area: largest first
+                .forEach { res ->
+                    item {
+                        text = "${res.numPixelsX}x${res.numPixelsY}"
+                        onSelect = {
+                            prefs.autoPickMonitorAndRes = false
+                            resolutionMgr.setFullscreenAndUpdatePrefs(monitor, res)
+                            onDone()
+                        }
+                    }
                 }
-            }.toMutableList()
 
-        if (recommendedOnly) {
-            choices.add(
-                TextChoice(MORE) {
-                    showResolutionsMenu(monitor, recommendedOnly = false, onDone)
+            if (recommendedOnly) {
+                item {
+                    textId = MORE
+                    onSelect = { showResolutionsMenu(monitor, recommendedOnly = false, onDone) }
                 }
-            )
+            }
+
+            dismiss = item {
+                textId = DONE
+                onSelect = onDone
+            }
         }
-
-        choices.add(TextChoice(CANCEL, onDone))
-
-        App.dlg.showChoices(
-            choices,
-            0,
-            lastItemIsDismiss = true,
-            playSoundOnOpen = false,
-            playSoundOnDismiss = false,
-        )
     }
 
     private fun showCameraSpeedMenu(onDone: () -> Unit) {
-        val choices = CameraSpeed.entries.map {
-            TextChoice(it.displayText) {
-                App.prefs.speedOfCameraControls = it
-                onDone()
+        val prefs = App.prefs
+
+        App.dlg.showDlg<Unit> {
+            val dlgDef = this
+
+            CameraSpeed.entries.forEach { speed ->
+                item {
+                    text = speed.displayText
+                    onSelect = {
+                        prefs.speedOfCameraControls = speed
+                        onDone()
+                    }
+                    if (speed == prefs.speedOfCameraControls) dlgDef.focus = this
+                }
             }
-        }.toMutableList()
 
-        choices.add(TextChoice(CANCEL, onDone))
-
-        App.dlg.showChoices(
-            choices,
-            CameraSpeed.entries.indexOf(App.prefs.speedOfCameraControls),
-            lastItemIsDismiss = true,
-            playSoundOnOpen = false,
-            playSoundOnDismiss = false,
-        )
+            dismiss = item {
+                textId = DONE
+                onSelect = onDone
+            }
+        }
     }
 
     private fun showTextLanguageMenu(onDone: () -> Unit) {
-        val choices = TextLanguage.entries.map {
-            TextChoice(it.displayText) {
-                App.prefs.textLanguage = it
-                App.i18n.setLocale(it.locale)
-                onDone()
+        val prefs = App.prefs
+
+        App.dlg.showDlg<Unit> {
+            val dlgDef = this
+
+            TextLanguage.entries.forEach { lang ->
+                item {
+                    text = lang.displayText
+                    onSelect = {
+                        prefs.textLanguage = lang
+                        App.i18n.setLocale(lang.locale)
+                        onDone()
+                    }
+                    if (lang == prefs.textLanguage) dlgDef.focus = this
+                }
             }
-        }.toMutableList()
 
-        choices.add(TextChoice(CANCEL, onDone))
-
-        App.dlg.showChoices(
-            choices,
-            TextLanguage.entries.indexOf(App.prefs.textLanguage),
-            lastItemIsDismiss = true,
-            playSoundOnOpen = false,
-            playSoundOnDismiss = false,
-        )
+            dismiss = item {
+                textId = DONE
+                onSelect = onDone
+            }
+        }
     }
 }

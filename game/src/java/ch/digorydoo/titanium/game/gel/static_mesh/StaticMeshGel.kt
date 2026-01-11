@@ -1,5 +1,6 @@
 package ch.digorydoo.titanium.game.gel.static_mesh
 
+import ch.digorydoo.titanium.engine.behaviours.CreateConcurrently
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.mesh.ComplexMesh
@@ -7,11 +8,11 @@ import ch.digorydoo.titanium.engine.mesh.ComplexMeshRenderer
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.game.gel.static_mesh.StaticMeshSpawnPt.Kind.*
+import kotlin.reflect.KClass
 
 class StaticMeshGel(override val spawnPt: StaticMeshSpawnPt): GraphicElement(spawnPt) {
     init {
         bodyPosOffset.set(0.0f, 0.0f, BODY_HEIGHT / 2.0f)
-        callOnCreateConcurrently = true
     }
 
     override val body = FixedCylinderBody(
@@ -38,21 +39,35 @@ class StaticMeshGel(override val spawnPt: StaticMeshSpawnPt): GraphicElement(spa
         depthTest = true
     )
 
-    override suspend fun onCreateConcurrently(): () -> Unit {
-        val theMesh = App.meshes.getOrLoadMeshAsync(
-            when (spawnPt.kind) {
-                BENCH_1 -> "bench-01.msh"
-                STONE_1 -> "obj-stone-01.msh"
-                SIGN_1 -> "sign-01.msh"
-                ROBOT_POLICEMAN -> "robot-policeman.msh"
-                RAILING_1 -> "railing-01.msh"
-                RAILING_2 -> "railing-02.msh"
+    private val createConcurrently = CreateConcurrently(
+        this,
+        object: CreateConcurrently.Delegate {
+            private lateinit var tmpMesh: ComplexMesh
+
+            override suspend fun onJobStart() {
+                // Do not modify gel here! Store everything in temporary variables!
+                tmpMesh = App.meshes.getOrLoadMeshAsync(
+                    when (spawnPt.kind) {
+                        BENCH_1 -> "bench-01.msh"
+                        STONE_1 -> "obj-stone-01.msh"
+                        SIGN_1 -> "sign-01.msh"
+                        ROBOT_POLICEMAN -> "robot-policeman.msh"
+                        RAILING_1 -> "railing-01.msh"
+                        RAILING_2 -> "railing-02.msh"
+                    }
+                )
             }
-        )
-        return {
-            // Back in main thread
-            mesh = theMesh
+
+            override fun onJobDone() {
+                // Back in main thread
+                mesh = tmpMesh
+            }
         }
+    )
+
+    override fun getBehaviour(klass: KClass<*>) = when (klass) {
+        CreateConcurrently::class -> createConcurrently
+        else -> null
     }
 
     override fun onRemoveZombie() {

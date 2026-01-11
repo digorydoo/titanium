@@ -1,7 +1,7 @@
 package ch.digorydoo.titanium.engine.behaviours
 
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.gel.Behaviour
 import kotlin.math.PI
 import kotlin.math.sin
 
@@ -9,7 +9,7 @@ import kotlin.math.sin
  * This class implements a gel behaviour that shakes a gel around a given axis. This was implemented as a proof of
  * concept for gel behaviours, and may be removed in the future, because it's too specific and not generally useful.
  */
-class Shake(private val delegate: Delegate): GraphicElement.Behaviour {
+class Shake(private val delegate: Delegate): Behaviour {
     interface Delegate {
         var shakeValue: Float
     }
@@ -27,7 +27,7 @@ class Shake(private val delegate: Delegate): GraphicElement.Behaviour {
         isShaking = true
     }
 
-    override fun animate() {
+    fun animate() {
         if (isShaking) {
             val relTime = (App.time.sessionTime - shakeStarted) / duration
 

@@ -10,13 +10,14 @@ class MapPage: MenuTabPage {
     var mapScaleFactor = 0.75f; private set
     private var mapGel: MapGel? = null
     private var curLocationGel: CurrentLocationGel? = null
+    private val screenSizeDp = App.resolutionMgr.screenSizeDp
 
     fun makeGels() {
         require(mapGel == null)
         mapGel = MapGel(this).also {
             it.onCreate(LayerKind.UI_BELOW_DLG)
             it.hide()
-            it.moveTo(App.screenWidthDp * 0.5f - MapGel.TEX_WIDTH * 0.5f, MAP_TOP, 0.0f)
+            it.moveTo(screenSizeDp.x * 0.5f - MapGel.TEX_WIDTH * 0.5f, MAP_TOP, 0.0f)
         }
 
         require(curLocationGel == null)

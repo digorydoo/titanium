@@ -9,6 +9,8 @@ import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.core.GameTime.Companion.DELTA_TIME
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.max
 
 /**
  * This class implements the facade that's used to access various aspects of the game camera.
@@ -26,17 +28,44 @@ class Camera {
 
     fun setTopDownMode() {
         mode = Mode.FIXED_DISTANCE
-        setSourceRelativeToTarget(phi = -(PI / 2.0).toFloat(), rho = 0.0f, dist = CAMERA_TOP_DOWN_DISTANCE)
+        setSourceRelativeToTarget(phi = -(PI / 2.0).toFloat(), rho = 0.0f, distance = CAMERA_TOP_DOWN_DISTANCE)
     }
 
     val isInTopDownMode get() = mode == Mode.FIXED_DISTANCE && props.distance.desired >= CAMERA_TOP_DOWN_DISTANCE
 
     val sourcePos get() = props.sourcePos.current
     val targetPos get() = props.targetPos.current
+    val targetGel get() = props.targetGel
     val currentPhi get() = props.phi.current
     val currentRho get() = props.rho.current
     val currentDir get() = props.dir as Point3f
     val projMatrix get() = projection.matrix
+
+    val currentSpeedApprox: Float
+        get() {
+            // Exposing the speed is mainly useful for cutscenes when they need to wait until the camera slows down.
+            // Therefore, a rough approximation is enough. If I use this more often, I should move it to animate()
+            // and store the result in a variable.
+
+            val src = props.sourcePos
+            val srcSpeed = src.speed
+            val vx = abs(srcSpeed.x)
+            val vy = abs(srcSpeed.y)
+            val vz = abs(srcSpeed.z)
+            val approxPosSpeed = max(vx, max(vy, vz))
+
+            // In certain camera modes, the speed of the sourcePos is not updated, because its values come from the
+            // angles and the distance. Therefore, we also need to take these values into account.
+
+            val d = props.distance
+            val distanceSpeed = abs(d.speed)
+            val r = d.current
+            val vphi = r * abs(props.phi.speed)
+            val vrho = r * abs(props.rho.speed)
+            val approxAngleSpeed = max(vphi, vrho)
+
+            return max(approxPosSpeed, max(approxAngleSpeed, distanceSpeed))
+        }
 
     fun setTarget(pt: Point3f, jump: Boolean = false) =
         props.setTarget(pt.x, pt.y, pt.z, jump)
@@ -51,12 +80,12 @@ class Camera {
         props.setSource(x, y, z, jump)
 
     fun setSourceRelativeToTarget(
-        phi: Float = CameraProps.DEFAULT_PHI,
-        rho: Float = CameraProps.DEFAULT_RHO,
-        dist: Float = CameraProps.DEFAULT_DISTANCE,
+        phi: Float = CameraProps.DEFAULT_PHI, // 3*PI/2 = towards the north; positive values move clockwise
+        rho: Float = CameraProps.DEFAULT_RHO, // 0 = from exactly above; PI/2 = horizontally
+        distance: Float = CameraProps.DEFAULT_DISTANCE,
         jump: Boolean = false,
     ) {
-        props.setSourceRelativeToTarget(phi, rho, dist, jump)
+        props.setSourceRelativeToTarget(phi, rho, distance, jump)
     }
 
     fun animate() {

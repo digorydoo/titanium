@@ -43,8 +43,22 @@ class ActionManager {
     }
 
     fun maintain() {
-        if (App.gameMenu.isShown || App.content.isLoading) return
-        val player = App.player ?: return
+        val player = App.player
+
+        if (
+            App.dlg.isInDlgMode ||
+            App.gameMenu.isShown ||
+            App.intermissions.anyRunning ||
+            App.content.isLoading ||
+            player == null
+        ) {
+            if (shownAction != null) {
+                Log.info(TAG, "Hiding action")
+                App.hud.hideAction()
+                shownAction = null
+            }
+            return
+        }
 
         actions.removeAll { it.target.zombie || App.time.sessionTime - it.time > MAX_NUM_SECONDS_UNTIL_REMOVE }
 
@@ -93,7 +107,12 @@ class ActionManager {
             Log.info(TAG, "Action input button pressed")
             App.hud.hideAction()
             shownAction = null
-            closestAction.delegate.onSelect(closestAction)
+
+            try {
+                closestAction.delegate.onSelect(closestAction)
+            } catch (e: Exception) {
+                Log.error(TAG, "Action handler crashed: $e")
+            }
         }
     }
 

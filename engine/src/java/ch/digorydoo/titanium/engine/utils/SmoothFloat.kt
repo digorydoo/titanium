@@ -13,7 +13,7 @@ class SmoothFloat(
 ) {
     var desired = initVal
     var current = initVal; private set
-    private var speed = 0.0f
+    var speed = 0.0f; private set
 
     fun jump() {
         jumpTo(desired)

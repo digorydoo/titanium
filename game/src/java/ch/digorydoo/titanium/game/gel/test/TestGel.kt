@@ -3,6 +3,7 @@ package ch.digorydoo.titanium.game.gel.test
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.utils.Log
+import ch.digorydoo.titanium.engine.behaviours.CreateConcurrently
 import ch.digorydoo.titanium.engine.brick.BrickMaterial
 import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.core.App
@@ -13,6 +14,7 @@ import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.sprite.FrameCollection
+import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.engine.utils.EPSILON
 import ch.digorydoo.titanium.engine.utils.SmoothFloat
 import kotlin.math.PI
@@ -21,6 +23,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.random.Random
+import kotlin.reflect.KClass
 
 class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
     init {
@@ -28,7 +31,6 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
         inDialog = Visibility.ACTIVE
         inMenu = Visibility.INVISIBLE
         inEditor = Visibility.FROZEN_VISIBLE
-        callOnCreateConcurrently = true
     }
 
     override val body = FixedCylinderBody(
@@ -63,15 +65,28 @@ class TestGel(override val spawnPt: TestSpawnPt): GraphicElement(spawnPt) {
 
     override val renderer = App.factory.createPaperRenderer(renderProps)
 
-    override suspend fun onCreateConcurrently(): () -> Unit {
-        val img = App.textures.getOrLoadImageDataAsync("test32x32.png")
+    private val createConcurrently = CreateConcurrently(
+        this,
+        object: CreateConcurrently.Delegate {
+            private lateinit var tmpImg: ImageData
 
-        return {
-            // Back in main thread
-            frames.setTexture(img)
-            frameOrigin.set(renderProps.frameSize.x / 2, renderProps.frameSize.y)
-            changeDirection()
+            override suspend fun onJobStart() {
+                // Do not modify gel here! Store everything in temporary variables!
+                tmpImg = App.textures.getOrLoadImageDataAsync("test32x32.png")
+            }
+
+            override fun onJobDone() {
+                // Back in main thread
+                frames.setTexture(tmpImg)
+                frameOrigin.set(renderProps.frameSize.x / 2, renderProps.frameSize.y)
+                changeDirection()
+            }
         }
+    )
+
+    override fun getBehaviour(klass: KClass<*>) = when (klass) {
+        CreateConcurrently::class -> createConcurrently
+        else -> null
     }
 
     override fun onCollide(

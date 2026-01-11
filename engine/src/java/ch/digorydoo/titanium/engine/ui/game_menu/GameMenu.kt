@@ -3,6 +3,7 @@ package ch.digorydoo.titanium.engine.ui.game_menu
 import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.rect.Recti
 import ch.digorydoo.titanium.engine.core.App
+import ch.digorydoo.titanium.engine.core.FIXED_ASPECT_RATIO
 import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import ch.digorydoo.titanium.engine.input.gamepad.GamepadBtn
 import ch.digorydoo.titanium.engine.input.keyboard.KeyboardKey
@@ -31,7 +32,7 @@ abstract class GameMenu {
     private var aboutToShow = false
 
     fun animate() {
-        if (App.dlg.hasActiveDlg || App.editor.isShown || App.isAboutToTakeScreenshot) return
+        if (App.dlg.isInDlgMode || App.editor.isShown || App.isAboutToTakeScreenshot) return
 
         val input = App.input
 
@@ -65,7 +66,7 @@ abstract class GameMenu {
         if (isShown || aboutToShow || App.isAboutToTakeScreenshot) return
         aboutToShow = true
 
-        App.screenshot.take { screenshot ->
+        App.screenshots.take { screenshot ->
             if (aboutToShow) {
                 isShown = true
                 aboutToShow = false
@@ -175,7 +176,9 @@ abstract class GameMenu {
             left = right + TAB_SPACING
         }
 
-        left = App.screenWidthDp / 2 - maxRight / 2
+        // Can't assign this as a member variable, because GameMenu is created too early.
+        val screenSizeDp = App.resolutionMgr.screenSizeDp
+        left = screenSizeDp.x / 2 - maxRight / 2
 
         forEachTopic { topic ->
             val gel = menuTabGels[topic]!!
@@ -217,7 +220,7 @@ abstract class GameMenu {
 
     companion object {
         private const val MENU_BG_WIDTH = 256
-        private const val MENU_BG_HEIGHT = (MENU_BG_WIDTH / App.FIXED_ASPECT_RATIO).toInt()
+        private const val MENU_BG_HEIGHT = (MENU_BG_WIDTH / FIXED_ASPECT_RATIO).toInt()
         const val TOP_AREA_HEIGHT = 96
         private const val TAB_MARGIN_TOP = TOP_AREA_HEIGHT - 35.0f
         private const val TAB_SPACING = 32

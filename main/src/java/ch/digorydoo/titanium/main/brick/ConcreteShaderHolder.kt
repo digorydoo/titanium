@@ -92,7 +92,7 @@ class ConcreteShaderHolder(): ShaderHolder {
             uniforms.setShadowMapSamplerUnit()
 
             // Should be bound already
-            // (App.singleton as AppImpl).shadowBuffer.bindTexture()
+            // Main.app.shadowBuffer.bindTexture()
         }
 
         return true

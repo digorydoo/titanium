@@ -4,8 +4,8 @@ import ch.digorydoo.kutils.matrix.Matrix4f
 import ch.digorydoo.kutils.matrix.MutableMatrix4f
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.camera.CameraProps.Kind
-import ch.digorydoo.titanium.engine.core.App.Companion.FIXED_ASPECT_RATIO
-import ch.digorydoo.titanium.engine.core.App.Companion.WORLD_TO_GL_FACTOR
+import ch.digorydoo.titanium.engine.core.FIXED_ASPECT_RATIO
+import ch.digorydoo.titanium.engine.core.WORLD_TO_GL_FACTOR
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin

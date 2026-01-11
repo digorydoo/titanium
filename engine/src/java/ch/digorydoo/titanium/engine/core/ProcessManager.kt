@@ -8,7 +8,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class ProcessManager {
+abstract class ProcessManager {
     private class EndOfFrameInfo(val lambda: () -> Unit, var skip: Int)
 
     private val mutex = Mutex() // all public functions of ProcessManager need to be thread-safe
@@ -22,6 +22,8 @@ class ProcessManager {
             "ProcessManager created from another thread, or unexpected name: ${Thread.currentThread().name}"
         }
     }
+
+    abstract fun exit()
 
     fun requireMainThread() {
         // using a reference to avoid string comparisions
@@ -81,7 +83,7 @@ class ProcessManager {
             }
         }
 
-        if (runList != null && runList.isNotEmpty()) {
+        if (!runList.isNullOrEmpty()) {
             runList.forEach {
                 try {
                     it.lambda()

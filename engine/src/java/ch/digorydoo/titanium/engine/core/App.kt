@@ -1,172 +1,79 @@
 package ch.digorydoo.titanium.engine.core
 
-import ch.digorydoo.kutils.point.Point2f
-import ch.digorydoo.kutils.point.Point2i
-import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.kutils.utils.Moment
 import ch.digorydoo.titanium.engine.camera.Camera
 import ch.digorydoo.titanium.engine.editor.Editor
 import ch.digorydoo.titanium.engine.font.FontManager
 import ch.digorydoo.titanium.engine.gel.SpawnManager
 import ch.digorydoo.titanium.engine.i18n.I18nManager
 import ch.digorydoo.titanium.engine.input.InputManager
+import ch.digorydoo.titanium.engine.intermission.IntermissionManager
 import ch.digorydoo.titanium.engine.mesh.MeshManager
 import ch.digorydoo.titanium.engine.physics.CollisionManager
 import ch.digorydoo.titanium.engine.prefs.PrefsManager
 import ch.digorydoo.titanium.engine.scene.ActiveSceneContent
-import ch.digorydoo.titanium.engine.scene.Scene
 import ch.digorydoo.titanium.engine.scene.SceneLoader
 import ch.digorydoo.titanium.engine.shader.ShaderManager
 import ch.digorydoo.titanium.engine.sky.Sky
 import ch.digorydoo.titanium.engine.sound.SoundManager
 import ch.digorydoo.titanium.engine.state.StateManager
-import ch.digorydoo.titanium.engine.state.StateManager.RestoredState
 import ch.digorydoo.titanium.engine.texture.TextureManager
 import ch.digorydoo.titanium.engine.ui.dialogue.DlgManager
 import ch.digorydoo.titanium.engine.ui.game_hud.GameHUD
 import ch.digorydoo.titanium.engine.ui.game_menu.GameMenu
-import java.io.File
+
+const val FIXED_ASPECT_RATIO = 16.0f / 9.0f
+const val WORLD_TO_GL_FACTOR = 0.1125f // zoom factor for world coords; does not affect dialogues or menus
+const val MILLIMETRES_PER_INCH = 25.4f // don't change this
+
+class BricksNotLoadedException: Exception()
 
 /**
- * This is the abstract part of the App singleton. The implementation of it is in the main module.
+ * This abstract class provides access to all global instances and is implemented by Main or unit tests.
  */
-abstract class App {
+abstract class AbstrApp {
+    abstract val actions: ActionManager
     abstract val assets: Assets
+    abstract val camera: Camera
+    abstract val collisions: CollisionManager
     abstract val content: ActiveSceneContent
+    abstract val crashLock: CrashLockManager
+    abstract val dlg: DlgManager
+    abstract val editor: Editor
     abstract val factory: Factory
-    abstract val fontMgr: FontManager
+    abstract val fonts: FontManager
     abstract val gameMenu: GameMenu
+    abstract val hud: GameHUD
     abstract val i18n: I18nManager
     abstract val inputMgr: InputManager
+    abstract val intermissions: IntermissionManager
+    abstract val lamps: LampManager
+    abstract val meshes: MeshManager
+    abstract val prefs: PrefsManager
+    abstract val process: ProcessManager
     abstract val resolutionMgr: ResolutionManager
-    abstract val screenshot: ScreenshotManager
-    abstract val shaderMgr: ShaderManager
+    abstract val sceneLoader: SceneLoader
+    abstract val screenshots: ScreenshotManager
+    abstract val shaders: ShaderManager
     abstract val shadowBuffer: ShadowBuffer
-    abstract val soundMgr: SoundManager
+    abstract val sky: Sky
+    abstract val sound: SoundManager
     abstract val spawnMgr: SpawnManager
     abstract val state: StateManager
-    abstract val textureMgr: TextureManager
+    abstract val textures: TextureManager
+    abstract val time: GameTime
 
-    val actions = ActionManager()
-    val camera = Camera()
-    val collisions = CollisionManager()
-    val dlgMgr = DlgManager()
-    val editor = Editor()
-    val hud = GameHUD()
-    val lamps = LampManager()
-    val meshes = MeshManager()
-    val prefs = PrefsManager()
-    val process = ProcessManager()
-    val sceneLoader = SceneLoader()
-    val sky = Sky()
-    val time = GameTime()
-
-    protected abstract val screenSizeDp: Point2i
-    protected abstract val dpToGlFactor: Point2f
-
-    var isAboutToTakeScreenshot = false
-
-    protected fun detectCrashesAndPutLockFile(): Boolean {
-        // The log file should not be set up yet. Anything we log from here should just go to the tty.
-        require(Log.logFile == null) { "Log file was set up too early" }
-        val lockFile = File(assets.pathToCrashLockFile)
-        var allGood = false
-
-        try {
-            if (lockFile.exists()) {
-                lockFile.setLastModified(System.currentTimeMillis()) // touch the lock file
-                val logFile = File(assets.pathToLogFile)
-
-                if (logFile.exists()) {
-                    // The name of the log file will have the date/time when we found the crash (now).
-                    // This is the easiest way to ensure that it's very unlikely that the file already exists.
-                    val newExt = "-crash-${Moment().formatRevDateTimeForFileName()}.log"
-                    val pathWithoutExt = logFile.path.slice(0 ..< logFile.path.length - logFile.extension.length - 1)
-                    val movedLogFile = File("$pathWithoutExt$newExt")
-                    logFile.renameTo(movedLogFile)
-                    Log.warn(
-                        TAG,
-                        "A recent crash was detected. The old log was found and moved to: ${movedLogFile.path}"
-                    )
-                } else {
-                    Log.warn(TAG, "A recent crash was detected, but no log was found!")
-                }
-            } else {
-                lockFile.writeText("0") // we could write the process id here, but it doesn't matter
-                Log.info(TAG, "Created new lock file: ${lockFile.path}")
-                allGood = true
-            }
-        } catch (e: Exception) {
-            Log.error(TAG, "Exception while detecting recent crash: ${e.message}")
-        }
-
-        return allGood
-    }
-
-    protected fun removeCrashLockFile() {
-        File(assets.pathToCrashLockFile).delete()
-    }
-
-    protected abstract fun exit()
-
-    companion object {
-        private val TAG = Log.Tag("App")
-
-        const val FIXED_ASPECT_RATIO = 16.0f / 9.0f
-        const val WORLD_TO_GL_FACTOR = 0.1125f // zoom factor for world coords; does not affect dialogues or menus
-        const val MILLIMETRES_PER_INCH = 25.4f // don't change this
-
-        @JvmStatic
-        var singleton: App? = null; protected set
-
-        val screenWidthDp get() = singleton!!.screenSizeDp.x
-        val screenHeightDp get() = singleton!!.screenSizeDp.y
-        val isAboutToTakeScreenshot get() = singleton!!.isAboutToTakeScreenshot
-
-        val actions get() = singleton!!.actions
-        val assets get() = singleton!!.assets
-        val bricks get() = singleton!!.content.bricks!!
-        val camera get() = singleton!!.camera
-        val collisions get() = singleton!!.collisions
-        val content get() = singleton!!.content
-        val dlg get() = singleton!!.dlgMgr
-        val editor get() = singleton!!.editor
-        val factory get() = singleton!!.factory
-        val fonts get() = singleton!!.fontMgr
-        val gameMenu get() = singleton!!.gameMenu
-        val hud get() = singleton!!.hud
-        val i18n get() = singleton!!.i18n
-        val input get() = singleton!!.inputMgr.accessor
-        val inputMgr get() = singleton!!.inputMgr
-        val lamps get() = singleton!!.lamps
-        val meshes get() = singleton!!.meshes
-        val player get() = singleton!!.content.player
-        val prefs get() = singleton!!.prefs
-        val process get() = singleton!!.process
-        val resolutionMgr get() = singleton!!.resolutionMgr
-        val scene get() = singleton!!.content.scene
-        val sceneLoader get() = singleton!!.sceneLoader
-        val screenshot get() = singleton!!.screenshot
-        val shaders get() = singleton!!.shaderMgr
-        val shadowBuffer get() = singleton!!.shadowBuffer
-        val sky get() = singleton!!.sky
-        val sound get() = singleton!!.soundMgr
-        val spawnMgr get() = singleton!!.spawnMgr
-        val state get() = singleton!!.state
-        val textures get() = singleton!!.textureMgr
-        val time get() = singleton!!.time
-
-        fun exit() {
-            val singleton = singleton ?: return
-            singleton.exit()
-        }
-
-        fun load(scene: Scene, playSound: Boolean = true, restore: RestoredState? = null) {
-            val singleton = singleton ?: return
-            singleton.sceneLoader.load(scene, playSound, restore)
-        }
-
-        fun dpToGlX(dp: Float) = dp * singleton!!.dpToGlFactor.x
-        fun dpToGlY(dp: Float) = dp * singleton!!.dpToGlFactor.y
-    }
+    // Provide some getters for ease of access of some very common values
+    val bricks get() = content.bricks ?: throw BricksNotLoadedException()
+    val input get() = inputMgr.accessor
+    val isAboutToTakeScreenshot get() = screenshots.isAboutToTakeScreenshot
+    val player get() = content.player
+    val scene get() = content.scene
 }
+
+/**
+ * Classes access the instance of AbstrApp through this global. Since it is lateinit, unit tests can't set it to null
+ * unfortunately, but they can set it back to a common default MockApp instance as long as it remains stateless.
+ * (Using a getter here accessing a nullable private variable would also be possible, but this variant may be slightly
+ * better for performance.)
+ */
+lateinit var App: AbstrApp

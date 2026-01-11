@@ -1,6 +1,7 @@
 package ch.digorydoo.titanium.engine.core
 
-import ch.digorydoo.titanium.engine.core.App.Companion.FIXED_ASPECT_RATIO
+import ch.digorydoo.kutils.point.Point2f
+import ch.digorydoo.kutils.point.Point2i
 import kotlin.math.abs
 
 /**
@@ -26,6 +27,13 @@ abstract class ResolutionManager {
     }
 
     class ResolutionWithReason(val res: Resolution, val reasonOfPick: ReasonOfPick)
+
+    protected abstract val dpToGlFactor: Point2f
+    fun dpToGlX(dp: Float) = dp * dpToGlFactor.x
+    fun dpToGlY(dp: Float) = dp * dpToGlFactor.y
+
+    // Implementation must guarantee that the instance of screenSizeDp never changes so gels can cache it
+    abstract val screenSizeDp: Point2i
 
     abstract fun setWindowModeAndUpdatePrefs()
     abstract fun setFullscreenAndUpdatePrefs()

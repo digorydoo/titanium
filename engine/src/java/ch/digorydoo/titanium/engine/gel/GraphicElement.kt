@@ -4,6 +4,7 @@ import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.kutils.string.zapPackageName
 import ch.digorydoo.kutils.utils.Log
+import ch.digorydoo.titanium.engine.behaviours.CreateConcurrently
 import ch.digorydoo.titanium.engine.brick.BrickMaterial
 import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.core.App
@@ -11,8 +12,10 @@ import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.engine.shader.Renderer
-import kotlinx.coroutines.Job
 import kotlin.math.sqrt
+import kotlin.reflect.KClass
+
+interface Behaviour
 
 /**
  * A GraphicElement is the base class for all animated objects in the game as well as all UI elements.
@@ -25,10 +28,6 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
     constructor(x: Int, y: Int, z: Int): this(null, MutablePoint3f(x, y, z))
 
     enum class Visibility { ACTIVE, FROZEN_VISIBLE, INVISIBLE }
-
-    interface Behaviour {
-        fun animate()
-    }
 
     open val body: RigidBody? = null
 
@@ -47,10 +46,8 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
     protected var visibleOnScreenshots = true
     private var active = true // whether to call onAnimateActive() or onAnimateInactive()
 
-    protected var callOnCreateConcurrently = false
     private var onCreateCalled = false
-    private var onCreateJob: Job? = null
-    val initialised get() = onCreateCalled && onCreateJob == null
+    val initialised get() = onCreateCalled && get<CreateConcurrently>()?.isPending != true
 
     var zombie = false; private set // true=sprite will be removed in the next frame
     var sqrDistanceToCamera = 0.0; private set
@@ -59,6 +56,21 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
 
     protected abstract val renderer: Renderer
     internal val vicinity = MutableGelSet()
+
+    /**
+     * Gels can override this to make some of their Behaviours available to other classes.
+     */
+    open fun getBehaviour(klass: KClass<*>): Behaviour? {
+        return null
+    }
+
+    /**
+     * Prefer this getter over getBehaviour to get the correct type of Behaviour. We need both variants, because
+     * inline functions cannot be open.
+     */
+    inline fun <reified B: Behaviour> get(): B? {
+        return getBehaviour(B::class) as B?
+    }
 
     fun moveTo(newPos: Point3f) {
         moveTo(newPos.x, newPos.y, newPos.z)
@@ -85,60 +97,15 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
         require(!onCreateCalled)
         onCreateCalled = true
 
-        if (!callOnCreateConcurrently) {
-            if (layer != null) {
-                App.content.add(this, layer)
-            }
-            return
+        val concurrently = get<CreateConcurrently>()
+
+        if (concurrently != null) {
+            concurrently.start(
+                onDone = { layer?.let { App.content.add(this, it) } }
+            )
+        } else {
+            layer?.let { App.content.add(this, it) }
         }
-
-        val sceneTicket = App.content.sceneTicket
-
-        require(onCreateJob == null)
-        onCreateJob = App.process.runAsyncIO {
-            var caught: Exception? = null
-            var done: (() -> Unit)? = null
-
-            try {
-                done = onCreateConcurrently()
-            } catch (e: Exception) {
-                caught = e
-            }
-
-            App.process.runAtEndOfFrame {
-                // We're back in the main thread.
-                val gel = this@GraphicElement
-                onCreateJob = null // necessary before adding the gel to the layer
-
-                if (caught != null) {
-                    Log.error(
-                        TAG,
-                        "Gel $gel crashed in onCreateConcurrently: ${caught.message}\n${caught.stackTraceToString()}"
-                    )
-                    zombie = true
-                } else if (zombie) {
-                    // This is not necessarily a bug since it just means someone else must have set it to zombie.
-                    Log.info(TAG, "Not adding $gel to layer since it went zombie while loading concurrently")
-                } else if (sceneTicket != App.content.sceneTicket) {
-                    Log.info(TAG, "Not adding $gel to layer since the scene has changed")
-                    zombie = true
-                } else if (layer != null) {
-                    // FIXME we need a ticket to check if scene hasn't been unloaded in the meantime
-                    done?.invoke()
-                    App.content.add(gel, layer)
-                }
-            }
-        }
-    }
-
-    /**
-     * Called inside a coroutine when callOnCreateConcurrently is true. Do not call any GL functions from here. Avoid
-     * modifying the gel; apply the changes in the lambda instead.
-     * @return A lambda that will be called back on the main thread. Not called when there was an exception, or when
-     *    the gel went zombie in the meantime.
-     */
-    protected open suspend fun onCreateConcurrently(): () -> Unit {
-        throw NotImplementedError() // gels that set callOnCreateConcurrently must override this function
     }
 
     protected open fun onAnimateActive() {}
@@ -150,7 +117,7 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
 
     fun setZombie() {
         zombie = true
-        onCreateJob?.cancel()
+        get<CreateConcurrently>()?.cancel()
     }
 
     // Here we will do most of the animation and compute the forces, but not move the body yet.
@@ -175,7 +142,7 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
 
         active = when {
             App.isAboutToTakeScreenshot -> false
-            App.dlg.hasActiveDlg && inDialog != Visibility.ACTIVE -> false
+            App.dlg.isInDlgMode && inDialog != Visibility.ACTIVE -> false
             App.gameMenu.isShown && inMenu != Visibility.ACTIVE -> false
             App.editor.isShown && inEditor != Visibility.ACTIVE -> false
             else -> true
@@ -214,7 +181,7 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Point3f) {
             hidden -> false
             zombie -> false
             App.isAboutToTakeScreenshot && !visibleOnScreenshots -> false
-            App.dlg.hasActiveDlg && inDialog == Visibility.INVISIBLE -> false
+            App.dlg.isInDlgMode && inDialog == Visibility.INVISIBLE -> false
             App.gameMenu.isShown && inMenu == Visibility.INVISIBLE -> false
             App.editor.isShown && inEditor == Visibility.INVISIBLE -> false
             else -> true

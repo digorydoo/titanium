@@ -5,6 +5,7 @@ import ch.digorydoo.kutils.math.lerp
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.MutablePoint3f
 import ch.digorydoo.kutils.point.Point2f
+import ch.digorydoo.titanium.engine.behaviours.CreateConcurrently
 import ch.digorydoo.titanium.engine.behaviours.TurnTowardsCamera
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.core.FrameCounter
@@ -17,16 +18,17 @@ import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.shader.Renderer
 import ch.digorydoo.titanium.engine.shader.Renderer.BlendMode
+import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.engine.texture.Texture
 import ch.digorydoo.titanium.game.gel.street_lamp.StreetLampSpawnPt.Kind.TRADITIONAL
 import kotlin.math.abs
+import kotlin.reflect.KClass
 
 class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spawnPt) {
     init {
         bodyPosOffset.set(0.0f, 0.0f, BODY_HEIGHT / 2.0f)
         inDialog = Visibility.ACTIVE // flickering should continue in dialogues
         inEditor = Visibility.ACTIVE // in order that halo gets properly turned
-        callOnCreateConcurrently = true
     }
 
     override val body = FixedCylinderBody(
@@ -61,11 +63,11 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
 
     private var lightIntensity = if (isLightOn) 1.0f else 0.0f
 
-    private val adaptLightIntensity = object: Behaviour {
+    private val adaptLightIntensity = object {
         private val flickerCount = FrameCounter.everyNthFrame(4)
         private var flickerValue = 1.0f
 
-        override fun animate() {
+        fun animate() {
             val targetIntensity = when {
                 !isLightOn -> 0.0f
                 !spawnPt.flickering -> 1.0f
@@ -149,24 +151,38 @@ class StreetLampGel(override val spawnPt: StreetLampSpawnPt): GraphicElement(spa
         override val radius = LAMP_RADIUS
     }
 
-    override suspend fun onCreateConcurrently(): () -> Unit {
-        val haloImg = App.textures.getOrLoadImageDataAsync("halo-lamp-yellow.png")
+    private val createConcurrently = CreateConcurrently(
+        this,
+        object: CreateConcurrently.Delegate {
+            private lateinit var tmpImg: ImageData
+            private lateinit var tmpMesh: ComplexMesh
 
-        val theMesh = App.meshes.getOrLoadMeshAsync(
-            when (spawnPt.kind) {
-                TRADITIONAL -> "street-lamp-01.msh"
-            }
-        )
+            override suspend fun onJobStart() {
+                // Do not modify gel here! Store everything in temporary variables!
+                tmpImg = App.textures.getOrLoadImageDataAsync("halo-lamp-yellow.png")
 
-        return {
-            // Back in main thread
-            haloTex = App.textures.getOrCreateTexture(haloImg).also {
-                haloFrameSize.set(it.width, it.height)
-                haloOrigin.set(it.width / 2, it.height / 2)
+                tmpMesh = App.meshes.getOrLoadMeshAsync(
+                    when (spawnPt.kind) {
+                        TRADITIONAL -> "street-lamp-01.msh"
+                    }
+                )
             }
-            mesh = theMesh
-            App.lamps.add(lamp)
+
+            override fun onJobDone() {
+                // Back in main thread
+                haloTex = App.textures.getOrCreateTexture(tmpImg).also {
+                    haloFrameSize.set(it.width, it.height)
+                    haloOrigin.set(it.width / 2, it.height / 2)
+                }
+                mesh = tmpMesh
+                App.lamps.add(lamp)
+            }
         }
+    )
+
+    override fun getBehaviour(klass: KClass<*>) = when (klass) {
+        CreateConcurrently::class -> createConcurrently
+        else -> null
     }
 
     override fun onAboutToRender() {

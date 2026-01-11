@@ -4,45 +4,38 @@ import ch.digorydoo.kutils.string.lpad
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.editor.action.EditorActions
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
-import ch.digorydoo.titanium.engine.ui.choice.TextChoice
+import ch.digorydoo.titanium.engine.ui.dialogue.DlgDef
 
 internal class StoryTimeMenu(private val actions: EditorActions) {
-    fun show(isTopLevel: Boolean, onCancel: () -> Unit) {
-        show(playSoundOnOpen = isTopLevel, playSoundOnDismiss = isTopLevel, onCancel)
-    }
+    fun show(onBack: () -> Unit) {
+        App.dlg.showDlg {
+            item(0, 0)
+            item(3, 0)
+            item(6, 0)
+            item(7, 0)
+            item(8, 0)
+            item(9, 0)
+            item(10, 0)
+            item(11, 0)
+            item(12, 0)
+            item(13, 0)
+            item(14, 0)
+            item(15, 0)
+            item(16, 0)
+            item(17, 0)
+            item(18, 0)
+            item(21, 0)
 
-    private fun show(playSoundOnOpen: Boolean, playSoundOnDismiss: Boolean, onCancel: () -> Unit) {
-        fun choice(hours: Int, minutes: Int) =
-            TextChoice("Set to ${lpad(hours, 2, '0')}:${lpad(minutes, 2, '0')}") {
-                actions.setStoryTime(hours, minutes)
+            dismiss = item {
+                textId = EngineTextId.CANCEL
+                onSelect = onBack
             }
-
-        val choices = listOf(
-            choice(0, 0),
-            choice(3, 0),
-            choice(6, 0),
-            choice(7, 0),
-            choice(8, 0),
-            choice(9, 0),
-            choice(10, 0),
-            choice(11, 0),
-            choice(12, 0),
-            choice(13, 0),
-            choice(14, 0),
-            choice(15, 0),
-            choice(16, 0),
-            choice(17, 0),
-            choice(18, 0),
-            choice(21, 0),
-            TextChoice(EngineTextId.CANCEL, onCancel),
-        )
-
-        App.dlg.showChoices(
-            choices,
-            0,
-            lastItemIsDismiss = true,
-            playSoundOnOpen = playSoundOnOpen,
-            playSoundOnDismiss = playSoundOnDismiss,
-        )
+        }
     }
+
+    private fun DlgDef<Unit>.item(hours: Int, minutes: Int) =
+        item {
+            text = "Set to ${lpad(hours, 2, '0')}:${lpad(minutes, 2, '0')}"
+            onSelect = { actions.setStoryTime(hours, minutes) }
+        }
 }

@@ -36,10 +36,13 @@ class GameHUD {
         require(actionInputIcon?.zombie != false)
         require(actionTargetArrow?.zombie != false)
 
+        // Can't assign this as a member variable, because GameHUD is created too early.
+        val screenSizeDp = App.resolutionMgr.screenSizeDp
+
         // Create the new progressBar now, since it should be visible while the scene is being loaded.
         progressBar = ProgressBarGel(
-            posX = (App.screenWidthDp / 2.0f - ProgressBarGel.BAR_MAX_WIDTH / 2.0f).toInt(),
-            posY = (App.screenHeightDp - PROGRESS_BAR_BOTTOM_MARGIN - ProgressBarGel.BAR_HEIGHT).toInt(),
+            posX = (screenSizeDp.x / 2.0f - ProgressBarGel.BAR_MAX_WIDTH / 2.0f).toInt(),
+            posY = (screenSizeDp.y - PROGRESS_BAR_BOTTOM_MARGIN - ProgressBarGel.BAR_HEIGHT).toInt(),
         ).also { it.onCreate(LayerKind.UI_ABOVE_DLG) }
 
         // All other gels will be created once the scene has been loaded.

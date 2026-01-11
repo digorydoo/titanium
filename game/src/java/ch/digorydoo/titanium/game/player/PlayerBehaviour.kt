@@ -4,7 +4,7 @@ import ch.digorydoo.kutils.math.clamp
 import ch.digorydoo.kutils.math.normAngle
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.gel.GraphicElement
+import ch.digorydoo.titanium.engine.gel.Behaviour
 import ch.digorydoo.titanium.engine.utils.Direction
 import ch.digorydoo.titanium.engine.utils.EPSILON
 import ch.digorydoo.titanium.game.core.GameSampleId
@@ -16,7 +16,7 @@ class PlayerBehaviour(
     private val gel: PlayerGel,
     private val frameCycles: PlayerFrameCycles,
     initialOrientation: Float,
-): GraphicElement.Behaviour {
+): Behaviour {
     var didCollideWithFloor = true
     var touchDownSpeed = 0.0f
     var timeOfGroundContact = 0.0f
@@ -25,7 +25,7 @@ class PlayerBehaviour(
 
     private val leftJoyWithCameraCorrection = MutablePoint2f()
 
-    override fun animate() {
+    fun animate() {
         val pos = gel.pos
 
         if (didCollideWithFloor) {
@@ -39,7 +39,7 @@ class PlayerBehaviour(
             hasGroundContact = false
         }
 
-        if (App.dlg.hasActiveDlg || App.editor.isShown) {
+        if (App.dlg.isInDlgMode || App.editor.isShown) {
             return
         }
 

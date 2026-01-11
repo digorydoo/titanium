@@ -2,10 +2,6 @@
 
 ## Overview
 
-License: GNU General Public License v3.0
-
-Project start: 24/Oct/2021
-
 Github: https://github.com/digorydoo/titanium
 
 Titanium is a game engine for an open world game like Zelda BoTW. The project name is a codename that should be

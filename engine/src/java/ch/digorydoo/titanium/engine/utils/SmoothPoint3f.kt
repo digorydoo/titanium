@@ -16,7 +16,8 @@ class SmoothPoint3f(
     private val _current = MutablePoint3f()
     val current get() = _current as Point3f
 
-    private val speed = MutablePoint3f()
+    private val _speed = MutablePoint3f()
+    val speed: Point3f = _speed
 
     fun jump() {
         jumpTo(desired)
@@ -25,7 +26,7 @@ class SmoothPoint3f(
     private fun jumpTo(pt: Point3f) {
         desired.set(pt)
         _current.set(pt)
-        speed.set(0.0f, 0.0f, 0.0f)
+        _speed.set(0.0f, 0.0f, 0.0f)
     }
 
     fun animate() {
@@ -33,20 +34,20 @@ class SmoothPoint3f(
         val deltaOffset = desired - _current
         val isNear = deltaOffset.maxAbsComponent() <= nearTargetThreshold
 
-        if (isNear && speed.maxAbsComponent() <= stopThreshold) {
-            speed.set(0.0f, 0.0f, 0.0f)
+        if (isNear && _speed.maxAbsComponent() <= stopThreshold) {
+            _speed.set(0.0f, 0.0f, 0.0f)
             return
         }
 
-        speed.x += deltaSpeed * deltaOffset.x
-        speed.y += deltaSpeed * deltaOffset.y
-        speed.z += deltaSpeed * deltaOffset.z
+        _speed.x += deltaSpeed * deltaOffset.x
+        _speed.y += deltaSpeed * deltaOffset.y
+        _speed.z += deltaSpeed * deltaOffset.z
 
         val brake = if (!isNear) normalBrake else strongBrake
-        speed.x -= speed.x * brake
-        speed.y -= speed.y * brake
-        speed.z -= speed.z * brake
+        _speed.x -= _speed.x * brake
+        _speed.y -= _speed.y * brake
+        _speed.z -= _speed.z * brake
 
-        _current += speed
+        _current += _speed
     }
 }

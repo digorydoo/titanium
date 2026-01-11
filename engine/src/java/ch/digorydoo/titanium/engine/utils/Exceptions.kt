@@ -1,8 +1,15 @@
 package ch.digorydoo.titanium.engine.utils
 
-// An Exception is a Throwable that a reasonable application should try to catch.
-// An Error is a Throwable indicating a serious problem that a reasonable application should not try to catch.
-// A RuntimeException is an Exception that does not need to be declared in Java; don't use it in Kotlin, ever.
-// Therefore, most exceptions in Kotlin should be instances of Exception.
+// An Exception represents an abnormal condition that code may reasonably want to handle.
+//
+// RuntimeException was intended for Java and no longer has a checked/unchecked role in Kotlin. Kotlin’s standard
+// library uses it to maintain interoperability with Java, but for Kotlin-only code, the distinction is not relevant.
+//
+// Error represents serious failures at the runtime or environment level. Application code should not normally catch
+// Error or define its own subclasses. Some errors such as NotImplementedError are OK for throwing from application
+// code.
+//
+// With other words, Kotlin-only code should always define its own errors as subclasses of Exception. Therefore, the
+// suffix ~Exception is no longer relevant and may be dropped.
 
-class NotForProductionError(): Error("not for production")
+class NotForProductionException: Exception("This feature is not meant for production")

@@ -12,78 +12,62 @@ import ch.digorydoo.titanium.engine.gel.SpawnPt
 import ch.digorydoo.titanium.engine.heightmap.HeightMapGel
 import ch.digorydoo.titanium.engine.heightmap.HeightMapSpawnPt
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
-import ch.digorydoo.titanium.engine.ui.choice.Choice
-import ch.digorydoo.titanium.engine.ui.choice.FloatChoice
-import ch.digorydoo.titanium.engine.ui.choice.IntChoice
-import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 import kotlin.math.roundToInt
 
 internal class SpawnPtMenu(private val state: EditorState, private val actions: EditorActions) {
-    fun show(cursor: Point3f, isTopLevel: Boolean, onCancel: () -> Unit) {
-        show(cursor, playSoundOnOpen = isTopLevel, playSoundOnDismiss = isTopLevel, onCancel)
-    }
+    fun show(cursor: Point3f, onBack: (() -> Unit)?) {
+        val reopen = { show(cursor, onBack) }
 
-    private fun show(cursor: Point3f, playSoundOnOpen: Boolean, playSoundOnDismiss: Boolean, onCancel: () -> Unit) {
-        val reopen = { show(cursor, playSoundOnOpen = false, playSoundOnDismiss, onCancel) }
+        App.dlg.showDlg<Unit> {
+            item {
+                text = "New..."
+                onSelect = { showNewSpawnPtMenu(onBack = reopen) }
+            }
 
-        val choices = App.spawnMgr.findClosestSpawnPts(cursor, MAX_NUM_SPAWN_PTS_IN_MENU)
-            .map { pt ->
+            App.spawnMgr.findClosestSpawnPts(cursor, MAX_NUM_SPAWN_PTS_IN_MENU).forEach { pt ->
                 val strDistance = pt.distance
                     .takeIf { it > 1.0 }
                     ?.let { " (${(it * 10).roundToInt() / 10.0f} m)" }
                     ?: ""
-                val text = "${pt.spawnPt.spawnObjTypeAsString}$strDistance"
-                TextChoice(text) {
-                    actions.jumpToSpawnPt(pt.spawnPt)
-                    showEditSpawnPtMenu(
-                        pt.spawnPt,
-                        playSoundOnOpen = false,
-                        playSoundOnDismiss = false,
-                        onBack = reopen
-                    )
+
+                item {
+                    text = "${pt.spawnPt.spawnObjTypeAsString}$strDistance"
+                    onSelect = {
+                        actions.jumpToSpawnPt(pt.spawnPt)
+                        showEditSpawnPtMenu(pt.spawnPt, onBack = reopen)
+                    }
                 }
             }
-            .toMutableList()
 
-        choices.add(0, TextChoice("New...") {
-            showNewSpawnPtMenu(onBack = reopen)
-        })
-
-        choices.add(TextChoice(if (playSoundOnDismiss) EngineTextId.DONE else EngineTextId.BACK, onCancel))
-
-        App.dlg.showChoices(
-            choices,
-            0,
-            lastItemIsDismiss = true,
-            playSoundOnOpen = playSoundOnOpen,
-            playSoundOnDismiss = playSoundOnDismiss,
-        )
+            dismiss = item {
+                textId = if (onBack == null) EngineTextId.DONE else EngineTextId.BACK
+                onSelect = onBack
+            }
+        }
     }
 
     private fun showNewSpawnPtMenu(onBack: () -> Unit) {
         val reopen = { showNewSpawnPtMenu(onBack) }
 
-        val choices = App.spawnMgr.spawnObjTypeList
-            .map {
-                TextChoice(it) {
-                    if (it == HEIGHT_MAP_SPAWN_OBJ_TYPE) {
-                        showNewHeightMapMenu(reopen)
-                    } else {
-                        actions.addNewSpawnPt(it)
+        App.dlg.showDlg<Unit> {
+            App.spawnMgr.spawnObjTypeList.forEach { type ->
+                item {
+                    text = type
+                    onSelect = {
+                        if (type == HEIGHT_MAP_SPAWN_OBJ_TYPE) {
+                            showNewHeightMapMenu(reopen)
+                        } else {
+                            actions.addNewSpawnPt(type)
+                        }
                     }
                 }
             }
-            .toMutableList()
 
-        choices.add(TextChoice(EngineTextId.BACK, onBack))
-
-        App.dlg.showChoices(
-            choices,
-            0,
-            lastItemIsDismiss = true,
-            playSoundOnOpen = false,
-            playSoundOnDismiss = false,
-        )
+            dismiss = item {
+                textId = EngineTextId.BACK
+                onSelect = onBack
+            }
+        }
     }
 
     private fun showNewHeightMapMenu(onBack: () -> Unit) {
@@ -92,113 +76,112 @@ internal class SpawnPtMenu(private val state: EditorState, private val actions: 
         var numSamplesX = 5
         var numSamplesY = 5
 
-        val choices: MutableList<Choice> = mutableListOf(
-            IntChoice(
-                "Num samples X",
-                initialValue = numSamplesX,
-                minValue = MIN_NUM_SAMPLES,
-                maxValue = MAX_NUM_SAMPLES,
-                onChange = { numSamplesX = it },
-            ),
-            IntChoice(
-                "Num samples Y",
-                initialValue = numSamplesY,
-                minValue = MIN_NUM_SAMPLES,
-                maxValue = MAX_NUM_SAMPLES,
-                onChange = { numSamplesY = it },
-            ),
-            FloatChoice(
-                "X size",
-                initialValue = xsize,
-                minValue = MIN_HEIGHT_MAP_SIZE,
-                maxValue = MAX_HEIGHT_MAP_SIZE,
-                step = 1.0f,
-                smallStep = 0.1f,
-                onChange = { xsize = it }
-            ),
-            FloatChoice(
-                "Y size",
-                initialValue = ysize,
-                minValue = MIN_HEIGHT_MAP_SIZE,
-                maxValue = MAX_HEIGHT_MAP_SIZE,
-                step = 1.0f,
-                smallStep = 0.1f,
-                onChange = { ysize = it }
-            ),
-        )
-
-        val initialIdx = choices.size
-        choices.add(
-            TextChoice("Create") {
-                actions.addNewHeightMap(
-                    xsize = xsize,
-                    ysize = ysize,
-                    numSamplesX = numSamplesX,
-                    numSamplesY = numSamplesY
-                )
+        App.dlg.showDlg<Unit> {
+            itemWithIntValue {
+                text = "Num samples X"
+                initialValue = numSamplesX
+                minValue = MIN_NUM_SAMPLES
+                maxValue = MAX_NUM_SAMPLES
+                onChange = { numSamplesX = it }
             }
-        )
-        choices.add(TextChoice(EngineTextId.BACK, onBack))
-
-        App.dlg.showChoices(
-            choices,
-            initialIdx,
-            lastItemIsDismiss = true,
-            playSoundOnOpen = false,
-            playSoundOnDismiss = false,
-        )
-    }
-
-    fun showEditSpawnPtMenu(spawnPt: SpawnPt, onBack: () -> Unit) {
-        showEditSpawnPtMenu(spawnPt, playSoundOnOpen = true, playSoundOnDismiss = true, onBack)
-    }
-
-    fun showEditSpawnPtMenu(
-        spawnPt: SpawnPt,
-        playSoundOnOpen: Boolean,
-        playSoundOnDismiss: Boolean,
-        onBack: () -> Unit,
-    ) {
-        val reopen = {
-            showEditSpawnPtMenu(spawnPt, playSoundOnOpen = false, playSoundOnDismiss = playSoundOnDismiss, onBack)
-        }
-
-        val choices = mutableListOf<Choice>()
-
-        if (spawnPt is HeightMapSpawnPt) {
-            val heightMap = (App.content.find { it.spawnPt == spawnPt } as? HeightMapGel)?.heightMap
-
-            if (heightMap != null) {
-                if (state.editMode != EditMode.HEIGHT_MAP) {
-                    choices.add(TextChoice("Enter edit mode") { actions.setHeightMapEditMode(heightMap, spawnPt) })
-                } else {
-                    choices.add(TextChoice("Exit edit mode") { actions.setBricksEditMode() })
+            itemWithIntValue {
+                text = "Num samples Y"
+                initialValue = numSamplesY
+                minValue = MIN_NUM_SAMPLES
+                maxValue = MAX_NUM_SAMPLES
+                onChange = { numSamplesY = it }
+            }
+            itemWithFloatValue {
+                text = "X size"
+                initialValue = xsize
+                minValue = MIN_HEIGHT_MAP_SIZE
+                maxValue = MAX_HEIGHT_MAP_SIZE
+                step = 1.0f
+                smallStep = 0.1f
+                onChange = { xsize = it }
+            }
+            itemWithFloatValue {
+                text = "Y size"
+                initialValue = ysize
+                minValue = MIN_HEIGHT_MAP_SIZE
+                maxValue = MAX_HEIGHT_MAP_SIZE
+                step = 1.0f
+                smallStep = 0.1f
+                onChange = { ysize = it }
+            }
+            focus = item {
+                text = "Create"
+                onSelect = {
+                    actions.addNewHeightMap(
+                        xsize = xsize,
+                        ysize = ysize,
+                        numSamplesX = numSamplesX,
+                        numSamplesY = numSamplesY
+                    )
                 }
             }
-
-            choices.add(TextChoice("Resize...") { showResizeHeightMapMenu(spawnPt, reopen) })
-            choices.add(TextChoice("Resample...") { showResampleHeightMapMenu(spawnPt, reopen) })
+            dismiss = item {
+                textId = EngineTextId.BACK
+                onSelect = onBack
+            }
         }
+    }
 
-        choices.add(TextChoice("Move...") { showMoveRotateSpawnPtMenu(spawnPt, reopen) })
-
-        val onChange = { actions.spawnPtChanged(spawnPt) }
-        choices.addAll(spawnPt.getEditorChoices(onChange)) // the spawn pt's individual properties
-
-        choices.add(TextChoice("Delete") { actions.deleteSpawnPt(spawnPt) })
-        choices.add(TextChoice(EngineTextId.BACK, onBack))
+    fun showEditSpawnPtMenu(spawnPt: SpawnPt, onBack: (() -> Unit)?) {
+        val reopen = { showEditSpawnPtMenu(spawnPt, onBack) }
 
         // This log line is useful for copying the id from console output.
         Log.info(TAG, "Showing menu for ${spawnPt.spawnObjTypeAsString} id=${spawnPt.id}")
 
-        App.dlg.showChoices(
-            choices,
-            0,
-            questionText = "${spawnPt.spawnObjTypeAsString}\n#${spawnPt.id}",
-            lastItemIsDismiss = true,
-            playSoundOnOpen = playSoundOnOpen,
-            playSoundOnDismiss = playSoundOnDismiss,
-        )
+        App.dlg.showDlg<Unit> {
+            text = "${spawnPt.spawnObjTypeAsString}\n#${spawnPt.id}"
+
+            if (spawnPt is HeightMapSpawnPt) {
+                val heightMap = (App.content.find { it.spawnPt == spawnPt } as? HeightMapGel)?.heightMap
+
+                if (heightMap != null) {
+                    if (state.editMode != EditMode.HEIGHT_MAP) {
+                        item {
+                            text = "Enter edit mode"
+                            onSelect = { actions.setHeightMapEditMode(heightMap, spawnPt) }
+                        }
+                    } else {
+                        item {
+                            text = "Exit edit mode"
+                            onSelect = { actions.setBricksEditMode() }
+                        }
+                    }
+                }
+
+                item {
+                    text = "Resize..."
+                    onSelect = { showResizeHeightMapMenu(spawnPt, reopen) }
+                }
+                item {
+                    text = "Resample..."
+                    onSelect = { showResampleHeightMapMenu(spawnPt, reopen) }
+                }
+            }
+
+            item {
+                text = "Move..."
+                onSelect = { showMoveRotateSpawnPtMenu(spawnPt, reopen) }
+            }
+
+            spawnPt.buildEditorItems(
+                dlgDef = this,
+                onChange = { actions.spawnPtChanged(spawnPt) }
+            )
+
+            item {
+                text = "Delete"
+                onSelect = { actions.deleteSpawnPt(spawnPt) }
+            }
+            dismiss = item {
+                textId = if (onBack == null) EngineTextId.DONE else EngineTextId.BACK
+                onSelect = onBack
+            }
+        }
     }
 
     private fun showResizeHeightMapMenu(spawnPt: HeightMapSpawnPt, onBack: () -> Unit) {
@@ -210,42 +193,38 @@ internal class SpawnPtMenu(private val state: EditorState, private val actions: 
             return
         }
 
-        val choices = listOf(
-            FloatChoice(
-                "X size",
-                initialValue = heightMap.xsize,
-                minValue = MIN_HEIGHT_MAP_SIZE,
-                maxValue = MAX_HEIGHT_MAP_SIZE,
-                step = 1.0f,
-                smallStep = 0.1f,
+        App.dlg.showDlg<Unit> {
+            text = "Resizing ${spawnPt.id}"
+
+            itemWithFloatValue {
+                text = "X size"
+                initialValue = heightMap.xsize
+                minValue = MIN_HEIGHT_MAP_SIZE
+                maxValue = MAX_HEIGHT_MAP_SIZE
+                step = 1.0f
+                smallStep = 0.1f
                 onChange = {
                     heightMap.xsize = it
                     gel.heightMapChanged()
                 }
-            ),
-            FloatChoice(
-                "Y size",
-                initialValue = heightMap.ysize,
-                minValue = MIN_HEIGHT_MAP_SIZE,
-                maxValue = MAX_HEIGHT_MAP_SIZE,
-                step = 1.0f,
-                smallStep = 0.1f,
+            }
+            itemWithFloatValue {
+                text = "Y size"
+                initialValue = heightMap.ysize
+                minValue = MIN_HEIGHT_MAP_SIZE
+                maxValue = MAX_HEIGHT_MAP_SIZE
+                step = 1.0f
+                smallStep = 0.1f
                 onChange = {
                     heightMap.ysize = it
                     gel.heightMapChanged()
                 }
-            ),
-            TextChoice(EngineTextId.BACK, onBack),
-        )
-
-        App.dlg.showChoices(
-            choices,
-            0,
-            questionText = "Resizing ${spawnPt.id}",
-            lastItemIsDismiss = true,
-            playSoundOnOpen = false,
-            playSoundOnDismiss = false,
-        )
+            }
+            dismiss = item {
+                textId = EngineTextId.BACK
+                onSelect = onBack
+            }
+        }
     }
 
     private fun showResampleHeightMapMenu(spawnPt: HeightMapSpawnPt, onBack: () -> Unit) {
@@ -260,62 +239,75 @@ internal class SpawnPtMenu(private val state: EditorState, private val actions: 
         var numSamplesX = heightMap.numSamplesX
         var numSamplesY = heightMap.numSamplesY
 
-        val choices = listOf(
-            IntChoice(
-                "Num samples X",
-                initialValue = numSamplesX,
-                minValue = MIN_NUM_SAMPLES,
-                maxValue = MAX_NUM_SAMPLES,
-                onChange = { numSamplesX = it }
-            ),
-            IntChoice(
-                "Y size",
-                initialValue = numSamplesY,
-                minValue = MIN_NUM_SAMPLES,
-                maxValue = MAX_NUM_SAMPLES,
-                onChange = { numSamplesY = it }
-            ),
-            TextChoice("Resample") { actions.resampleHeightMap(heightMap, gel, numSamplesX, numSamplesY) },
-            TextChoice(EngineTextId.BACK, onBack),
-        )
+        App.dlg.showDlg<Unit> {
+            text = "Resampling ${spawnPt.id}"
 
-        App.dlg.showChoices(
-            choices,
-            0,
-            questionText = "Resampling ${spawnPt.id}",
-            lastItemIsDismiss = true,
-            playSoundOnOpen = false,
-            playSoundOnDismiss = false,
-        )
+            itemWithIntValue {
+                text = "Num samples X"
+                initialValue = numSamplesX
+                minValue = MIN_NUM_SAMPLES
+                maxValue = MAX_NUM_SAMPLES
+                onChange = { numSamplesX = it }
+            }
+            itemWithIntValue {
+                text = "Y size"
+                initialValue = numSamplesY
+                minValue = MIN_NUM_SAMPLES
+                maxValue = MAX_NUM_SAMPLES
+                onChange = { numSamplesY = it }
+            }
+            item {
+                text = "Resample"
+                onSelect = { actions.resampleHeightMap(heightMap, gel, numSamplesX, numSamplesY) }
+            }
+            dismiss = item {
+                textId = EngineTextId.BACK
+                onSelect = onBack
+            }
+        }
     }
 
     private fun showMoveRotateSpawnPtMenu(spawnPt: SpawnPt, onBack: () -> Unit) {
         val pos = MutablePoint3f(spawnPt.pos)
 
-        val choices = listOf(
-            FloatChoice("X", initialValue = pos.x, step = MOVE_STEP, smallStep = MOVE_SMALL_STEP) {
-                pos.x = it
-                actions.moveSpawnPt(spawnPt, pos)
-            },
-            FloatChoice("Y", initialValue = pos.y, step = MOVE_STEP, smallStep = MOVE_SMALL_STEP) {
-                pos.y = it
-                actions.moveSpawnPt(spawnPt, pos)
-            },
-            FloatChoice("Z", initialValue = pos.z, step = MOVE_STEP, smallStep = MOVE_SMALL_STEP) {
-                pos.z = it
-                actions.moveSpawnPt(spawnPt, pos)
-            },
-            TextChoice(EngineTextId.BACK, onBack),
-        )
+        App.dlg.showDlg<Unit> {
+            text = "Moving ${spawnPt.spawnObjTypeAsString}"
 
-        App.dlg.showChoices(
-            choices,
-            0,
-            questionText = "Moving ${spawnPt.spawnObjTypeAsString}",
-            lastItemIsDismiss = true,
-            playSoundOnOpen = false,
-            playSoundOnDismiss = false,
-        )
+            itemWithFloatValue {
+                text = "X"
+                initialValue = pos.x
+                step = MOVE_STEP
+                smallStep = MOVE_SMALL_STEP
+                onChange = {
+                    pos.x = it
+                    actions.moveSpawnPt(spawnPt, pos)
+                }
+            }
+            itemWithFloatValue {
+                text = "Y"
+                initialValue = pos.y
+                step = MOVE_STEP
+                smallStep = MOVE_SMALL_STEP
+                onChange = {
+                    pos.y = it
+                    actions.moveSpawnPt(spawnPt, pos)
+                }
+            }
+            itemWithFloatValue {
+                text = "Z"
+                initialValue = pos.z
+                step = MOVE_STEP
+                smallStep = MOVE_SMALL_STEP
+                onChange = {
+                    pos.z = it
+                    actions.moveSpawnPt(spawnPt, pos)
+                }
+            }
+            dismiss = item {
+                textId = EngineTextId.BACK
+                onSelect = onBack
+            }
+        }
     }
 
     companion object {

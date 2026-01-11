@@ -8,21 +8,12 @@ import ch.digorydoo.titanium.engine.brick.BrickShape
 import ch.digorydoo.titanium.engine.brick.BrickShapeAndMaterial
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.editor.action.EditorActions
-import ch.digorydoo.titanium.engine.ui.choice.TextChoice
+import ch.digorydoo.titanium.engine.i18n.EngineTextId
 
 internal class WizardMenu(private val actions: EditorActions) {
     private val drawingWizard = DrawingWizard()
 
-    fun show(curSelection: Boxi, isTopLevel: Boolean, onCancel: () -> Unit) {
-        show(curSelection, playSoundOnOpen = isTopLevel, playSoundOnDismiss = isTopLevel, onCancel)
-    }
-
-    private fun show(
-        curSelection: Boxi,
-        playSoundOnOpen: Boolean,
-        playSoundOnDismiss: Boolean,
-        onCancel: () -> Unit,
-    ) {
+    fun show(curSelection: Boxi, onBack: (() -> Unit)?) {
         val suggestions = drawingWizard.getSuggestions(curSelection.centrei()).toMutableList()
 
         if (suggestions.size <= 4) {
@@ -38,25 +29,23 @@ internal class WizardMenu(private val actions: EditorActions) {
             suggestions.add(BrickShapeAndMaterial(BrickShape.BASIC_BLOCK, BrickMaterial.GREY_CONCRETE))
         }
 
-        val choices = suggestions
-            .distinctBy { "${it.shape}_${it.material}" }
-            .map { suggest ->
-                val text = trunc("${suggest.shape.displayText} (${suggest.material.displayText})", 34)
-                TextChoice(text) {
-                    actions.setActiveShape(suggest.shape)
-                    actions.setActiveMaterial(suggest.material)
+        App.dlg.showDlg<Unit> {
+            suggestions
+                .distinctBy { "${it.shape}_${it.material}" }
+                .forEach { suggest ->
+                    item {
+                        text = trunc("${suggest.shape.displayText} (${suggest.material.displayText})", 34)
+                        onSelect = {
+                            actions.setActiveShape(suggest.shape)
+                            actions.setActiveMaterial(suggest.material)
+                        }
+                    }
                 }
+
+            dismiss = item {
+                textId = if (onBack == null) EngineTextId.DONE else EngineTextId.BACK
+                onSelect = onBack
             }
-            .toMutableList()
-
-        choices.add(TextChoice("Cancel", onCancel))
-
-        App.dlg.showChoices(
-            choices,
-            initHilitedIdx = 0,
-            lastItemIsDismiss = true,
-            playSoundOnOpen = playSoundOnOpen,
-            playSoundOnDismiss = playSoundOnDismiss,
-        )
+        }
     }
 }

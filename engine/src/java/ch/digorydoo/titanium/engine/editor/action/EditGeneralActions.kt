@@ -101,7 +101,7 @@ internal class EditGeneralActions(
         val sel = brickSelection.getUnreversed()
 
         if (sel.xsize != 1 || sel.ysize != 1 || sel.zsize != 1) {
-            App.dlg.showMessage(
+            App.dlg.showDlg(
                 """
                     Selected: $sel
                     Size: (${sel.xsize}, ${sel.ysize}, ${sel.zsize})
@@ -129,7 +129,7 @@ internal class EditGeneralActions(
                 "W=${br.westFaceIdx}",
             ).joinToString(", ").trim()
 
-            App.dlg.showMessage(
+            App.dlg.showDlg(
                 """
                    Shape: ${br.shape.displayText}
                    Material: ${br.material.displayText}

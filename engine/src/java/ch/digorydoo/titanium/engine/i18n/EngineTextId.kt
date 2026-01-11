@@ -42,6 +42,7 @@ enum class EngineTextId(
     BACK("BACK"),
     CANCEL("CANCEL"),
     DONE("DONE"),
+    GAME_SAVED("GAME_SAVED"),
 
     // Miscellaneous
     LOADING("LOADING"),

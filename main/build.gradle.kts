@@ -19,7 +19,7 @@ sourceSets {
 }
 
 application {
-    mainClass.set("ch.digorydoo.titanium.main.app.MainKt")
+    mainClass.set("ch.digorydoo.titanium.main.core.MainKt")
 
     if (OperatingSystem.current().isMacOsX) {
         applicationDefaultJvmArgs = listOf("-XstartOnFirstThread")

@@ -44,55 +44,50 @@ class UIAreaGel(
 
     private var prevScreenWidth = 0
     private var prevScreenHeight = 0
-
-    private val setPosBehaviour: Behaviour = object: Behaviour {
-        override fun animate() {
-            val screenWidthDp = App.screenWidthDp
-            val screenHeightDp = App.screenHeightDp
-
-            if (screenWidthDp == prevScreenWidth && screenHeightDp == prevScreenHeight) {
-                return // positions do not change
-            }
-
-            val left = when {
-                marginLeft != null -> marginLeft
-                width != null -> screenWidthDp - (marginRight ?: 0) - width
-                else -> 0
-            }
-
-            val right = when {
-                marginRight != null -> screenWidthDp - marginRight
-                width != null -> (marginLeft ?: 0) + width
-                else -> screenWidthDp
-            }
-
-            val top = when {
-                marginTop != null -> marginTop
-                height != null -> screenHeightDp - (marginBottom ?: 0) - height
-                else -> 0
-            }
-
-            val bottom = when {
-                marginBottom != null -> screenHeightDp - marginBottom
-                height != null -> (marginTop ?: 0) + height
-                else -> screenHeightDp
-            }
-
-            moveTo(left, top, 0)
-            frameSize.set(right - left, bottom - top)
-
-            prevScreenWidth = screenWidthDp
-            prevScreenHeight = screenHeightDp
-
-            if (scaleTexToFrameSize) {
-                texScaleFactor.x = texture.width.toFloat() / frameSize.x
-                texScaleFactor.y = texture.height.toFloat() / frameSize.y
-            }
-        }
-    }
+    private val screenSizeDp = App.resolutionMgr.screenSizeDp
 
     override fun onAnimateActive() {
-        setPosBehaviour.animate()
+        val screenWidthDp = screenSizeDp.x
+        val screenHeightDp = screenSizeDp.y
+
+        if (screenWidthDp == prevScreenWidth && screenHeightDp == prevScreenHeight) {
+            return // positions do not change
+        }
+
+        val left = when {
+            marginLeft != null -> marginLeft
+            width != null -> screenWidthDp - (marginRight ?: 0) - width
+            else -> 0
+        }
+
+        val right = when {
+            marginRight != null -> screenWidthDp - marginRight
+            width != null -> (marginLeft ?: 0) + width
+            else -> screenWidthDp
+        }
+
+        val top = when {
+            marginTop != null -> marginTop
+            height != null -> screenHeightDp - (marginBottom ?: 0) - height
+            else -> 0
+        }
+
+        val bottom = when {
+            marginBottom != null -> screenHeightDp - marginBottom
+            height != null -> (marginTop ?: 0) + height
+            else -> screenHeightDp
+        }
+
+        moveTo(left, top, 0)
+        frameSize.set(right - left, bottom - top)
+
+        prevScreenWidth = screenWidthDp
+        prevScreenHeight = screenHeightDp
+
+        if (scaleTexToFrameSize) {
+            texScaleFactor.x = texture.width.toFloat() / frameSize.x
+            texScaleFactor.y = texture.height.toFloat() / frameSize.y
+        }
     }
 
     override fun onRemoveZombie() {

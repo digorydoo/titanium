@@ -1,12 +1,14 @@
 package ch.digorydoo.titanium.game.gel.ball
 
 import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.titanium.engine.behaviours.CreateConcurrently
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.mesh.ComplexMesh
 import ch.digorydoo.titanium.engine.mesh.ComplexMeshRenderer
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
 import ch.digorydoo.titanium.game.gel.ball.BallSpawnPt.Kind
+import kotlin.reflect.KClass
 
 class BallGel private constructor(
     override val spawnPt: BallSpawnPt?,
@@ -26,7 +28,6 @@ class BallGel private constructor(
         inDialog = Visibility.ACTIVE
         inMenu = Visibility.INVISIBLE
         inEditor = Visibility.FROZEN_VISIBLE
-        callOnCreateConcurrently = true
     }
 
     override val body = FixedSphereBody(
@@ -61,17 +62,31 @@ class BallGel private constructor(
         depthTest = true
     )
 
-    override suspend fun onCreateConcurrently(): () -> Unit {
-        val theMesh = App.meshes.getOrLoadMeshAsync(
-            when (kind) {
-                Kind.BALL_R25CM -> "ball-r25cm.msh"
-                Kind.BALL_R33CM -> "ball-r33cm.msh"
+    private val createConcurrently = CreateConcurrently(
+        this,
+        object: CreateConcurrently.Delegate {
+            private lateinit var tmpMesh: ComplexMesh
+
+            override suspend fun onJobStart() {
+                // Do not modify gel here! Store everything in temporary variables!
+                tmpMesh = App.meshes.getOrLoadMeshAsync(
+                    when (kind) {
+                        Kind.BALL_R25CM -> "ball-r25cm.msh"
+                        Kind.BALL_R33CM -> "ball-r33cm.msh"
+                    }
+                )
             }
-        )
-        return {
-            // Back in main thread
-            mesh = theMesh
+
+            override fun onJobDone() {
+                // Back in main thread
+                mesh = tmpMesh
+            }
         }
+    )
+
+    override fun getBehaviour(klass: KClass<*>) = when (klass) {
+        CreateConcurrently::class -> createConcurrently
+        else -> null
     }
 
     override fun onRemoveZombie() {

@@ -1,8 +1,7 @@
 package ch.digorydoo.titanium.game.gel.street_lamp
 
 import ch.digorydoo.titanium.engine.gel.SpawnPt
-import ch.digorydoo.titanium.engine.ui.choice.BoolChoice
-import ch.digorydoo.titanium.engine.ui.choice.Choice
+import ch.digorydoo.titanium.engine.ui.dialogue.DlgDef
 
 class StreetLampSpawnPt(raw: Map<String, String>, val kind: Kind): SpawnPt(raw) {
     enum class Kind { TRADITIONAL }
@@ -19,25 +18,34 @@ class StreetLampSpawnPt(raw: Map<String, String>, val kind: Kind): SpawnPt(raw) 
         return result
     }
 
-    override fun getEditorChoices(onChange: () -> Unit): MutableList<Choice> {
-        val result = super.getEditorChoices(onChange)
-        result.addAll(
-            listOf(
-                BoolChoice("Light on", initialValue = lightOn) {
+    override fun buildEditorItems(dlgDef: DlgDef<Unit>, onChange: () -> Unit) {
+        super.buildEditorItems(dlgDef, onChange)
+        dlgDef.apply {
+            itemWithBooleanValue {
+                text = "Light on"
+                initialValue = lightOn
+                this.onChange = {
                     lightOn = it
                     onChange()
-                },
-                BoolChoice("Off during daylight", initialValue = offDuringDaylight) {
+                }
+            }
+            itemWithBooleanValue {
+                text = "Off during daylight"
+                initialValue = offDuringDaylight
+                this.onChange = {
                     offDuringDaylight = it
                     onChange()
-                },
-                BoolChoice("Flickering", initialValue = flickering) {
+                }
+            }
+            itemWithBooleanValue {
+                text = "Flickering"
+                initialValue = flickering
+                this.onChange = {
                     flickering = it
                     onChange()
                 }
-            )
-        )
-        return result
+            }
+        }
     }
 
     override fun createGel() =

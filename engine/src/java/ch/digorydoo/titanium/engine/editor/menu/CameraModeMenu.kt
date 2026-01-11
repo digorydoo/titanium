@@ -4,33 +4,26 @@ import ch.digorydoo.titanium.engine.camera.CameraProps.Mode
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.editor.action.EditorActions
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
-import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 
 internal class CameraModeMenu(private val actions: EditorActions) {
-    fun show(isTopLevel: Boolean, onCancel: () -> Unit) {
-        show(
-            playSoundOnOpen = isTopLevel,
-            playSoundOnDismiss = isTopLevel,
-            onCancel
-        )
-    }
+    fun show(onBack: (() -> Unit)?) {
+        App.dlg.showDlg<Unit> {
+            Mode.entries.forEach { mode ->
+                item {
+                    text = mode.displayText
+                    onSelect = { actions.setCameraMode(mode) }
+                    if (mode == App.camera.mode) this@showDlg.focus = this
+                }
+            }
 
-    private fun show(playSoundOnOpen: Boolean, playSoundOnDismiss: Boolean, onCancel: () -> Unit) {
-        val choices = Mode.entries.map { mode ->
-            TextChoice(mode.displayText) { actions.setCameraMode(mode) }
-        }.toMutableList()
-
-        val curIdx = Mode.entries.indexOfFirst { it == App.camera.mode }
-
-        choices.add(TextChoice("Top-down (fixed distance)") { actions.setCameraModeTopDown() })
-        choices.add(TextChoice(EngineTextId.CANCEL) { onCancel() })
-
-        App.dlg.showChoices(
-            choices,
-            curIdx,
-            lastItemIsDismiss = true,
-            playSoundOnOpen = playSoundOnOpen,
-            playSoundOnDismiss = playSoundOnDismiss,
-        )
+            item {
+                text = "Top-down (fixed distance)"
+                onSelect = { actions.setCameraModeTopDown() }
+            }
+            dismiss = item {
+                textId = if (onBack == null) EngineTextId.DONE else EngineTextId.BACK
+                onSelect = onBack
+            }
+        }
     }
 }

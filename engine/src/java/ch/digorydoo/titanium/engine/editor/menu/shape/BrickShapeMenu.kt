@@ -5,31 +5,14 @@ import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.editor.action.EditorActions
 import ch.digorydoo.titanium.engine.editor.menu.shape.BrickShapeGroup.Companion.findFirstInnermostGroup
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
-import ch.digorydoo.titanium.engine.ui.choice.Choice
-import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 
 internal class BrickShapeMenu(private val actions: EditorActions) {
-    fun show(initialShape: BrickShape, isTopLevel: Boolean, onCancel: () -> Unit) {
-        show(
-            BrickShapeGroup.ROOT,
-            initialShape,
-            playSoundOnOpen = isTopLevel,
-            playSoundOnDismiss = isTopLevel,
-            onCancel
-        )
+    fun show(initialShape: BrickShape, onBack: (() -> Unit)?) {
+        show(BrickShapeGroup.ROOT, initialShape, onBack)
     }
 
-    private fun show(
-        group: BrickShapeGroup,
-        initialShape: BrickShape?,
-        playSoundOnOpen: Boolean,
-        playSoundOnDismiss: Boolean,
-        onCancel: () -> Unit,
-    ) {
-        val reopen = {
-            show(group, null, playSoundOnOpen = false, playSoundOnDismiss, onCancel)
-        }
-
+    private fun show(group: BrickShapeGroup, initialShape: BrickShape?, onBack: (() -> Unit)?) {
+        val reopen = { show(group, null, onBack) }
         val groupsOfInitialShape = mutableListOf<BrickShapeGroup>()
 
         if (initialShape != null) {
@@ -41,54 +24,36 @@ internal class BrickShapeMenu(private val actions: EditorActions) {
             }
         }
 
-        var textOfInitiallySelected = ""
+        App.dlg.showDlg<Unit> {
+            val dlgDef = this
 
-        val groupChoices = BrickShapeGroup.entries
-            .filter { it.findParent() == group }
-            .map { grp ->
-                val choiceText = grp.displayText + " >"
-
-                if (groupsOfInitialShape.contains(grp)) {
-                    textOfInitiallySelected = choiceText
+            BrickShapeGroup.entries
+                .filter { it.findParent() == group }
+                .sortedBy { it.displayText }
+                .forEach { grp ->
+                    item {
+                        text = grp.displayText + " >"
+                        onSelect = { show(grp, initialShape, onBack = reopen) }
+                        if (groupsOfInitialShape.contains(grp)) {
+                            dlgDef.focus = this
+                        }
+                    }
                 }
 
-                TextChoice(choiceText) {
-                    show(
-                        grp,
-                        initialShape,
-                        playSoundOnOpen = false,
-                        playSoundOnDismiss = false,
-                        onCancel = reopen
-                    )
+            group.shapes()
+                .sortedBy { it.displayText }
+                .forEach { shape ->
+                    item {
+                        text = shape.displayText
+                        onSelect = { actions.setActiveShape(shape) }
+                        if (shape == initialShape) dlgDef.focus = this
+                    }
                 }
+
+            dismiss = item {
+                textId = if (onBack == null) EngineTextId.DONE else EngineTextId.BACK
+                onSelect = onBack
             }
-            .sortedBy { it.itemText }
-
-        val shapeChoices = group.shapes()
-            .map { shape ->
-                val choiceText = shape.displayText
-                if (shape == initialShape) textOfInitiallySelected = choiceText
-
-                TextChoice(choiceText) {
-                    actions.setActiveShape(shape)
-                }
-            }
-            .sortedBy { it.itemText }
-
-        val choices = mutableListOf<Choice>().apply {
-            addAll(groupChoices)
-            addAll(shapeChoices)
         }
-
-        val curIdx = choices.indexOfFirst { it.itemText == textOfInitiallySelected }
-        choices.add(TextChoice(EngineTextId.BACK) { onCancel() })
-
-        App.dlg.showChoices(
-            choices,
-            curIdx,
-            lastItemIsDismiss = true,
-            playSoundOnOpen = playSoundOnOpen,
-            playSoundOnDismiss = playSoundOnDismiss,
-        )
     }
 }

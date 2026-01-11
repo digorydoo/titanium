@@ -1,19 +1,20 @@
 package ch.digorydoo.titanium.engine.input
 
-import ch.digorydoo.titanium.engine.core.App
+import ch.digorydoo.titanium.engine.input.gamepad.Gamepad
 import ch.digorydoo.titanium.engine.input.gamepad.GamepadBtn
+import ch.digorydoo.titanium.engine.input.keyboard.Keyboard
 
 /**
  * The InputManager is the owner of the object related to gamepad and keyboard input. Accessing these values go
  * preferable over App.input (which resolves to App.inputMgr.accessor).
  */
-abstract class InputManager {
+abstract class InputManager(
+    protected val gamepad: Gamepad,
+    protected val keyboard: Keyboard,
+) {
     enum class InputMode { KEYBOARD, GAMEPAD }
 
     var mode = InputMode.KEYBOARD; protected set
-
-    protected val gamepad = App.factory.createGamepad()
-    protected val keyboard = App.factory.createKeyboard()
 
     val accessor = InputAccessor(gamepad, keyboard)
 

@@ -2,6 +2,7 @@ package ch.digorydoo.titanium.game.player
 
 import ch.digorydoo.kutils.point.MutablePoint2f
 import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.titanium.engine.behaviours.CreateConcurrently
 import ch.digorydoo.titanium.engine.behaviours.TurnTowardsCamera
 import ch.digorydoo.titanium.engine.brick.BrickMaterial
 import ch.digorydoo.titanium.engine.brick.BrickShape
@@ -12,12 +13,13 @@ import ch.digorydoo.titanium.engine.physics.HitArea
 import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCapsuleBody
 import ch.digorydoo.titanium.engine.shader.PaperRenderer
 import ch.digorydoo.titanium.engine.sprite.FrameCollection
+import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.engine.utils.Direction
+import kotlin.reflect.KClass
 
 class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): AbstrPlayerGel(initialPos) {
     init {
         bodyPosOffset.set(0.0f, 0.0f, BODY_HEIGHT / 2.0f)
-        callOnCreateConcurrently = true
     }
 
     override val body = FixedCapsuleBody(
@@ -47,17 +49,30 @@ class PlayerGel(initialPos: Point3f, initialRotationPhi: Float): AbstrPlayerGel(
 
     override val allowActions = true
 
-    override suspend fun onCreateConcurrently(): () -> Unit {
-        // We're inside a coroutine.
-        val img = App.textures.getOrLoadImageDataAsync(TEX_FILENAME)
-        return {
-            // We're back in the main thread.
-            frames.setTexture(img, 22, 11) // also sets frameSize
-            frameScaleFactor.x = 1.1f / 32
-            frameScaleFactor.y = 1.5f / 32 // slightly larger, because camera usually is from above
-            frameOrigin.set(renderProps.frameSize.x / 2, renderProps.frameSize.y)
-            frameCycles.turn(Direction.SE)
+    private val createConcurrently = CreateConcurrently(
+        this,
+        object: CreateConcurrently.Delegate {
+            private lateinit var tmpImg: ImageData
+
+            override suspend fun onJobStart() {
+                // Do not modify gel here! Store everything in temporary variables!
+                tmpImg = App.textures.getOrLoadImageDataAsync(TEX_FILENAME)
+            }
+
+            override fun onJobDone() {
+                // Back in the main thread
+                frames.setTexture(tmpImg, 22, 11) // also sets frameSize
+                frameScaleFactor.x = 1.1f / 32
+                frameScaleFactor.y = 1.5f / 32 // slightly larger, because camera usually is from above
+                frameOrigin.set(renderProps.frameSize.x / 2, renderProps.frameSize.y)
+                frameCycles.turn(Direction.SE)
+            }
         }
+    )
+
+    override fun getBehaviour(klass: KClass<*>) = when (klass) {
+        CreateConcurrently::class -> createConcurrently
+        else -> null
     }
 
     override fun onAnimateActive() {

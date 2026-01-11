@@ -3,7 +3,7 @@ package ch.digorydoo.titanium.engine.shader
 import ch.digorydoo.kutils.string.indexOfAnyExcept
 import ch.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags
 
-// NOTE: GLSL actually implements #ifdef directives. I did not realize I could simply prepend the external defines to
+// NOTE: GLSL actually implements #ifdef directives. I did not realise I could simply prepend the external defines to
 // the source, and wrote this precompiler instead. That isn't too bad, since I'm going to need this code anyway when
 // minifying and bundling shaders into a PAK. Also, I could handle #include here, which GLSL does not support.
 class ShaderPrecompiler {
@@ -40,7 +40,9 @@ class ShaderPrecompiler {
     class MissingKeyInIfdefException(lineIdx: Int): PrecompilerException(lineIdx, "The #ifdef is missing its key")
     class MissingKeyInIfndefException(lineIdx: Int): PrecompilerException(lineIdx, "The #ifndef is missing its key")
     class MissingKeyInUndefException(lineIdx: Int): PrecompilerException(lineIdx, "The #undef is missing its key")
-    class TooManyArgumentsException(lineIdx: Int): PrecompilerException(lineIdx, "The directive has too many arguments")
+
+    class TooManyArgumentsException(lineIdx: Int):
+        PrecompilerException(lineIdx, "The directive has too many arguments")
 
     private class If(val lineIdx: Int, val condition: Boolean, val isElif: Boolean) {
         var elseSeen = false

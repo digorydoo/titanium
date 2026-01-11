@@ -6,23 +6,59 @@ import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
 import ch.digorydoo.titanium.engine.i18n.ITextId
 import ch.digorydoo.titanium.engine.sound.EngineSampleId
+import ch.digorydoo.titanium.engine.sound.SoundManager.SampleId
 import ch.digorydoo.titanium.engine.ui.SnackbarGel
-import ch.digorydoo.titanium.engine.ui.choice.Choice
-import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 class DlgManager {
-    private var activeDlg: Dialogue? = null
-    val hasActiveDlg get() = activeDlg != null
+    private var activeDlg: Dialogue<*>? = null
+    var isInDlgMode = false; private set
+    private var soundOnLeavingDlgMode: SampleId? = null
+    private var leaveDlgModeOnNextFrame = false
 
-    fun showMessage(textId: ITextId) {
-        showMessage(App.i18n.getString(textId))
+    fun showDlg(textId: ITextId) {
+        showDlg(App.i18n.getString(textId))
     }
 
-    fun showMessage(msg: String) {
-        val dlg = DlgBuilder.makeDialogue(questionText = msg)
-        App.sound.play(EngineSampleId.MSG_SHOW)
-        show(dlg)
+    fun showDlg(msg: String) {
+        showDlg<Unit> { text = msg }
+    }
+
+    fun <Id> showDlg(lambda: DlgDef<Id>.() -> Unit) {
+        abortAllDlgs()
+        val def = DlgDef.build(lambda)
+        showDlg(def)
+    }
+
+    fun <Id> showDlg(def: DlgDef<Id>) {
+        abortAllDlgs()
+        val dlg = DlgFactory.create(def)
+
+        // If isInDlgMode is still true, this must be a followup dialogue. Don't leave dlg mode just yet!
+        leaveDlgModeOnNextFrame = false
+
+        if (!isInDlgMode) {
+            isInDlgMode = true
+
+            val soundOnOpen = when {
+                App.gameMenu.isShown -> null
+                def.suppressSoundsOnShowAndDismiss -> null
+                def.items.isEmpty() -> EngineSampleId.MSG_SHOW
+                else -> EngineSampleId.CHOICES_SHOW
+            }
+
+            soundOnOpen?.let { App.sound.play(it) }
+
+            soundOnLeavingDlgMode = when {
+                App.gameMenu.isShown -> null
+                def.suppressSoundsOnShowAndDismiss -> null
+                def.items.isEmpty() -> EngineSampleId.MSG_DISMISS
+                else -> EngineSampleId.CHOICES_DISMISS
+            }
+        }
+
+        activeDlg = dlg
+        dlg.onShow()
     }
 
     fun showTwoWayDlg(
@@ -45,17 +81,18 @@ class DlgManager {
         onConfirm: () -> Unit,
         onDeny: (() -> Unit)?,
     ) {
-        showChoices(
-            listOf(
-                TextChoice(confirm, onConfirm),
-                TextChoice(deny) { onDeny?.invoke() }
-            ),
-            initHilitedIdx = 0,
-            questionText = App.i18n.getString(question),
-            lastItemIsDismiss = true,
-            playSoundOnOpen = playSoundOnOpen,
-            playSoundOnDismiss = playSoundOnDismiss,
-        )
+        showDlg<Unit> {
+            textId = question
+
+            item {
+                textId = confirm
+                onSelect = onConfirm
+            }
+            dismiss = item {
+                textId = deny
+                onSelect = onDeny
+            }
+        }
     }
 
     fun showTwoWayDlg(
@@ -67,46 +104,18 @@ class DlgManager {
         onConfirm: () -> Unit,
         onDeny: (() -> Unit)?,
     ) {
-        showChoices(
-            listOf(
-                TextChoice(confirm, onConfirm),
-                TextChoice(deny) { onDeny?.invoke() }
-            ),
-            initHilitedIdx = 0,
-            questionText = questionText,
-            lastItemIsDismiss = true,
-            playSoundOnOpen = playSoundOnOpen,
-            playSoundOnDismiss = playSoundOnDismiss,
-        )
-    }
+        showDlg<Unit> {
+            text = questionText
 
-    fun showChoices(
-        choices: List<Choice>,
-        initHilitedIdx: Int = 0, // can be set to -1 if none is to be initially highlighted
-        questionText: String = "",
-        lastItemIsDismiss: Boolean = false,
-        playSoundOnOpen: Boolean = true,
-        playSoundOnDismiss: Boolean = true,
-    ) {
-        val dlg = DlgBuilder.makeDialogue(
-            choices = choices,
-            initHilitedIdx = initHilitedIdx,
-            questionText = questionText,
-            lastItemIsDismiss = lastItemIsDismiss,
-            playSoundOnDismiss = playSoundOnDismiss,
-        )
-
-        if (playSoundOnOpen) {
-            App.sound.play(EngineSampleId.CHOICES_SHOW)
+            item {
+                textId = confirm
+                onSelect = onConfirm
+            }
+            dismiss = item {
+                textId = deny
+                onSelect = onDeny
+            }
         }
-
-        show(dlg)
-    }
-
-    private fun show(dlg: Dialogue) {
-        dismiss()
-        activeDlg = dlg
-        dlg.onShow()
     }
 
     fun showSnackbar(textId: ITextId) =
@@ -117,21 +126,44 @@ class DlgManager {
     }
 
     fun handle() {
-        activeDlg?.handle()
+        val dlg = activeDlg
+
+        if (dlg != null) {
+            if (!isInDlgMode) {
+                Log.error(TAG, "A dialogue is active, but we're not in dlg mode!")
+                isInDlgMode = true
+            }
+            if (leaveDlgModeOnNextFrame) {
+                Log.error(TAG, "leaveDlgModeOnNextFrame must stay false while a dialogue is active!")
+                leaveDlgModeOnNextFrame = false
+            }
+            dlg.handle()
+        } else if (isInDlgMode) {
+            // There is no dialogue, but we're still in dialogue mode. We need to wait for one frame, because the
+            // item's click handler may open a followup dialogue.
+            if (leaveDlgModeOnNextFrame) {
+                isInDlgMode = false
+                leaveDlgModeOnNextFrame = false
+                soundOnLeavingDlgMode?.let { App.sound.play(it) }
+                soundOnLeavingDlgMode = null
+            } else {
+                leaveDlgModeOnNextFrame = true
+            }
+        }
     }
 
-    fun dismiss(dlg: Dialogue) {
+    // Called by Dialogue when it was closed
+    internal fun onClose(dlg: Dialogue<*>) {
         if (activeDlg != dlg) {
             Log.error(TAG, "Cannot remove dlg $dlg, because another is active: $activeDlg")
             return
         }
         activeDlg = null
-        dlg.onDismiss()
         System.gc() // now seems a good time
     }
 
-    fun dismiss() {
-        activeDlg?.let { dismiss(it) }
+    fun abortAllDlgs() {
+        activeDlg?.abort()
     }
 
     companion object {

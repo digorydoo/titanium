@@ -1,7 +1,7 @@
 package ch.digorydoo.titanium.engine.behaviours
 
 import ch.digorydoo.titanium.engine.core.App
-import ch.digorydoo.titanium.engine.gel.GraphicElement.Behaviour
+import ch.digorydoo.titanium.engine.gel.Behaviour
 
 /**
  * This class implements a gel behaviour that aligns the gel with one of the boundaries of the screen. Use this for UI
@@ -20,36 +20,38 @@ class Align(private val delegate: Delegate): Behaviour {
         open val marginBottom: Int = 0,
     )
 
+    private val screenSizeDp = App.resolutionMgr.screenSizeDp
+
     abstract class Delegate: Alignment() {
         open val width = 0
         open val height = 0
         abstract fun setPos(x: Int, y: Int)
     }
 
-    override fun animate() {
+    fun animate() {
         val x = delegate.xOffset + when (delegate.anchor) {
             Anchor.TOP_LEFT,
             Anchor.BOTTOM_LEFT,
-                -> delegate.marginLeft
+            -> delegate.marginLeft
 
             Anchor.TOP_CENTRE,
             Anchor.BOTTOM_CENTRE,
-                -> App.screenWidthDp / 2 - delegate.width / 2
+            -> screenSizeDp.x / 2 - delegate.width / 2
 
             Anchor.TOP_RIGHT,
             Anchor.BOTTOM_RIGHT,
-                -> App.screenWidthDp - delegate.width - delegate.marginRight
+            -> screenSizeDp.x - delegate.width - delegate.marginRight
         }
         val y = delegate.yOffset + when (delegate.anchor) {
             Anchor.TOP_LEFT,
             Anchor.TOP_CENTRE,
             Anchor.TOP_RIGHT,
-                -> delegate.marginTop
+            -> delegate.marginTop
 
             Anchor.BOTTOM_LEFT,
             Anchor.BOTTOM_CENTRE,
             Anchor.BOTTOM_RIGHT,
-                -> App.screenHeightDp - delegate.height - delegate.marginBottom
+            -> screenSizeDp.y - delegate.height - delegate.marginBottom
         }
         delegate.setPos(x, y)
     }

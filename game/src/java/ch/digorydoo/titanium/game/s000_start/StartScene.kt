@@ -7,7 +7,6 @@ import ch.digorydoo.titanium.engine.prefs.PrefsMenu
 import ch.digorydoo.titanium.engine.scene.Lighting
 import ch.digorydoo.titanium.engine.scene.Scene
 import ch.digorydoo.titanium.engine.state.StateManager.RestoredState
-import ch.digorydoo.titanium.engine.ui.choice.TextChoice
 import ch.digorydoo.titanium.game.core.SceneId
 import ch.digorydoo.titanium.game.i18n.GameTextId.*
 import ch.digorydoo.titanium.game.s999_town.TownScene
@@ -48,24 +47,33 @@ class StartScene: Scene(
     private fun showStartMenu() {
         val reopen = { showStartMenu() }
 
-        App.dlg.showChoices(
-            listOfNotNull(
-                if (SaveGameFileReader.anyFiles()) {
-                    TextChoice(CONTINUE_GAME) { loadGameMenu.show(onDidLoad = {}, onCancel = reopen) }
-                } else {
-                    null
-                },
-                TextChoice(NEW_GAME) { startNewGame() },
-                TextChoice(SETTINGS) { prefsMenu.show(reopen) },
-                TextChoice(QUIT) { App.exit() },
-            ),
-            playSoundOnOpen = false,
-            playSoundOnDismiss = false,
-        )
+        App.dlg.showDlg<Unit> {
+            suppressSoundsOnShowAndDismiss = true
+
+            if (SaveGameFileReader.anyFiles()) {
+                item {
+                    textId = CONTINUE_GAME
+                    onSelect = { loadGameMenu.show(onDidLoad = {}, onCancel = reopen) }
+                }
+            }
+
+            item {
+                textId = NEW_GAME
+                onSelect = { startNewGame() }
+            }
+            item {
+                textId = SETTINGS
+                onSelect = { prefsMenu.show(reopen) }
+            }
+            item {
+                textId = QUIT
+                onSelect = { App.process.exit() }
+            }
+        }
     }
 
     private fun startNewGame() {
         App.time.setStoryTime(10, 30)
-        App.load(TownScene())
+        App.sceneLoader.load(TownScene())
     }
 }

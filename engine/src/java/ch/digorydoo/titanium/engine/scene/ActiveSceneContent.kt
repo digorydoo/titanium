@@ -9,10 +9,10 @@ import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import ch.digorydoo.titanium.engine.gel.GraphicElement
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
 
-class ActiveSceneContent(startScene: Scene) {
+class ActiveSceneContent {
     var bricks: BrickVolume? = null
     var player: AbstrPlayerGel? = null
-    var scene: Scene = startScene
+    lateinit var scene: Scene // will be init'ed when Main loads the first scene
     var sceneTicket = 0L; private set // incremented each time a scnene is loaded
     var isLoading = false; private set
 

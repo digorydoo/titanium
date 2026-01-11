@@ -270,6 +270,87 @@ If d > 0, then C is on the side of the plane pointed to by n.
 If d < 0, then C is on the opposite side.
 The sphere collides if |d| <= r.
 
+Separating a sphere and a cuboid
+--------------------------------
+
+Given:
+    P1: centre of the sphere
+    P2: centre of the cuboid
+    n: normal of the cuboid face, pointing inwards (i.e. from sphere to cuboid)
+    r: sphere radius
+    s_half: three dimensional vector of the cuboid's size divided by 2 ("half-size")
+
+Compute the position of the sphere if we moved it completely to the other side of the plane. First, compute the
+distance along the normal:
+
+    d_n = (P2 - P1) dot n
+
+Compute the required distance along the normal:
+
+    d_required = r + |s_half dot n|
+
+We need to move the sphere by this amount to move it outside the plane of the cuboid face:
+
+    d_move = d_required - d_n
+
+If d_move <= 0, the sphere and the cuboid are already separated, i.e. not colliding. Otherwise, go on by computing the
+preliminary new position of the sphere:
+
+    M_1 = P_1 - n * d_move
+
+If the sphere is close to a cuboid corner, we may have moved it too far. To check this, first project the sphere centre
+onto the plane:
+
+    d_plane = d_n - |s_half dot n|
+    P_projected = P_1 + d_plane * n
+
+Clamp P_projected to the extent of the cuboid to get P_clamped. If the sphere was indeed close to a corner (or beyond),
+P_clamped is now that cuboid corner. Compute the distance of the preliminary position M_1 to the clamped point.
+
+    d_m1clamped = |M_1 - P_clamped|
+    k := d_m1clamped - r
+
+If k > 0, then M_1 is too far from the corner, and we need to move it further. We would need to move M_1 a distance of
+k along the direction M_1 - P_clamped, but since we are only supposed to move the bodies along n, we need to compute
+the delta along n. Specifically, we want to move M_1 along n such that:
+
+    M_1touching = M_1 + q * n (for some q)
+
+The sphere should touch at P_c:
+
+    |M_1touching - P_c| = r
+
+Substitute:
+
+    |M_1 + q * n - P_c| = r
+
+The Euclidian distance |x| can be expressed as sqrt(x dot x), so:
+
+   sqrt((M_1 + q * n - P_c) • (M_1 + q * n - P_c)) = r
+
+   (M_1 + q * n - P_c) • (M_1 + q * n - P_c) = r^2
+
+Expand:
+
+   (M_1 • M_1) + 2 q (M_1 • n) + q^2 (n • n) - 2 M_1 • P_c - 2 q (n • P_c) + (P_c • P_c) = r^2
+
+Rearrange, and n • n = 1:
+
+   q^2 + 2 q (M_1 • n - n • P_c) + (M_1 • M_1 - 2 M_1 • P_c + P_c • P_c - r^2) = 0
+
+And since |M_1 - P_c| = sqrt(M_1 • M_1 - 2 M_1 • P_c + P_c • P_c), we have:
+
+   q^2 + 2 q (M_1 • n - n • P_c) + (|M_1 - P_c|^2 - r^2) = 0
+
+This is a standard quadratic equation with q_12 = (-B (+/-) sqrt(B^2 - 4 A C)) / 2 A. If the discriminant is less than
+zero, there is no solution, but this should never happen, because we already know that d_m1clamped is too close. From
+the two solutions, we take the smaller q, because the larger one is expected to be a solution where the sphere touches
+the corner from the other side of the plane, which isn't what we're looking for.
+
+Now that we have q, we can compute the distance to move along n:
+
+    d_movebetter = d_required - d_n - q
+
 Forcing a sphere and a cuboid apart
 -----------------------------------
 
