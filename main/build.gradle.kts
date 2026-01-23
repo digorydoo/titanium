@@ -35,6 +35,7 @@ dependencies {
     implementation(project(":kutils"))
 
     implementation(libs.kotlinx.coroutines)
+    implementation(libs.kstruct)
 
     // To learn what libaries are available for LWJGL, see:
     // https://www.lwjgl.org/customize

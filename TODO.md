@@ -2,6 +2,17 @@
 
 ## Backlog
 
+* Bugs
+  * Log: "Unloading all 3450 of non-shared programmes..." BrickVolumeRendererImpl should be created by BrickVolume, not
+    by BrickSubvolume!
+  * Railing 2 has strange lighting issue across instances (see level)
+  * Sometimes keyboard strokes get lost (when frame takes too long, or stroke is hit too quickly)
+  * Jumping (CMD) + Camera H hides the application... How is it when standalone?
+  * Haloes of street lamp behind street lamp get clipped, because transparent gels are not sorted
+  * Fix incorrect tex coords with ThickStairsModel
+  * Sun seems broken, is nowhere to be seen
+  * If you change the smooth property of a height map while in edit mode, all changes will be lost!
+
 * Intermissions
   * Implement begin cutscene/cutscene indicator bars
   * Any user interaction must be disabled during intermission except camera
@@ -105,16 +116,6 @@ conversation {
   * Save and restore camera settings (for cutscenes)
   * Phi and rho are never taken modulo; setting them to some value makes the camera rotate
   * Way to control the speed of the camera (during cutscenes)
-
-* Bugs
-  * Log: "Unloading all 3450 of non-shared programmes..." BrickVolumeRendererImpl should be created by BrickVolume, not
-    by BrickSubvolume!
-  * Railing 2 has strange lighting issue across instances (see level)
-  * Sometimes keyboard strokes get lost (when frame takes too long, or stroke is hit too quickly)
-  * Jumping (CMD) + Camera H hides the application... How is it when standalone?
-  * Haloes of street lamp behind street lamp get clipped, because transparent gels are not sorted
-  * Fix incorrect tex coords with ThickStairsModel
-  * Sun seems broken, is nowhere to be seen
 
 * Bodies with constraints and procedural shapes
   * A dumbbell has two gels but may only have one renderer

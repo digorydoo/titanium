@@ -2,16 +2,18 @@ package ch.digorydoo.titanium.engine.heightmap
 
 import ch.digorydoo.titanium.engine.gel.SpawnPt
 import ch.digorydoo.titanium.engine.ui.dialogue.DlgDef
+import io.github.digorydoo.kstruct.KstructBuilder
+import io.github.digorydoo.kstruct.KstructMap
 
-class HeightMapSpawnPt(raw: Map<String, String>): SpawnPt(raw) {
-    var filename = raw["f"] ?: ""; private set
-    var smooth = raw["smooth"]?.toBoolean() ?: false; private set
+class HeightMapSpawnPt(raw: KstructMap): SpawnPt(raw) {
+    var filename = raw["f"]?.stringOrNull() ?: ""; private set
+    var smooth = raw["smooth"]?.booleanOrNull() ?: false; private set
 
-    override fun serialize(): MutableMap<String, String> {
-        val result = super.serialize()
-        result["f"] = filename
-        result["smooth"] = "$smooth"
-        return result
+    override fun serialiseSpecific(builder: KstructBuilder) {
+        builder.apply {
+            set("f", filename)
+            set("smooth", smooth)
+        }
     }
 
     override fun buildEditorItems(dlgDef: DlgDef<Unit>, onChange: () -> Unit) {

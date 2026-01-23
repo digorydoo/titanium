@@ -7,6 +7,8 @@ import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import ch.digorydoo.titanium.engine.ui.dialogue.DlgDef
+import io.github.digorydoo.kstruct.KstructBuilder
+import io.github.digorydoo.kstruct.KstructMap
 import kotlin.math.sqrt
 
 abstract class SpawnPt private constructor(
@@ -20,20 +22,20 @@ abstract class SpawnPt private constructor(
     private var maxCameraSqrDistForAutoSpawn: Double, // also affects min distance for despawn
     private var preventRespawnWhenClose: Boolean, // true = do not respawn if camera is close to spawn pt
 ) {
-    constructor(raw: Map<String, String>): this(
-        id = raw["id"] ?: "",
-        spawnObjTypeAsString = raw["spawnObjType"]!!,
+    constructor(raw: KstructMap): this(
+        id = raw["id"]?.stringOrNull() ?: "",
+        spawnObjTypeAsString = raw["type"]?.stringOrNull()!!,
         pos = MutablePoint3f(
-            raw["x"]?.toFloat() ?: 0.0f,
-            raw["y"]?.toFloat() ?: 0.0f,
-            raw["z"]?.toFloat() ?: 0.0f,
+            raw["x"]?.floatOrNull() ?: 0.0f,
+            raw["y"]?.floatOrNull() ?: 0.0f,
+            raw["z"]?.floatOrNull() ?: 0.0f,
         ),
-        rotation = raw["rotation"]?.toFloat() ?: 0.0f,
-        canCollide = raw["canCollide"]?.toBoolean() ?: true,
-        autoSpawn = raw["autoSpawn"]?.toBoolean() ?: true,
-        autoDespawn = raw["autoDespawn"]?.toBoolean() ?: true,
-        maxCameraSqrDistForAutoSpawn = raw["maxCamDistForSpawn"]?.toDouble()?.let { it * it } ?: (100.0 * 100.0),
-        preventRespawnWhenClose = raw["preventRespawnWhenClose"]?.toBoolean() ?: false,
+        rotation = raw["rotation"]?.floatOrNull() ?: 0.0f,
+        canCollide = raw["canCollide"]?.booleanOrNull() ?: true,
+        autoSpawn = raw["autoSpawn"]?.booleanOrNull() ?: true,
+        autoDespawn = raw["autoDespawn"]?.booleanOrNull() ?: true,
+        maxCameraSqrDistForAutoSpawn = raw["maxCamDistForSpawn"]?.doubleOrNull()?.let { it * it } ?: (100.0 * 100.0),
+        preventRespawnWhenClose = raw["preventRespawnWhenClose"]?.booleanOrNull() ?: false,
     )
 
     var canCollide = canCollide; private set
@@ -41,21 +43,24 @@ abstract class SpawnPt private constructor(
     var sessionTimeWhenSpawned = Float.NaN; private set
     private var suppressRespawnUntilSessionTime = Float.NaN
 
-    open fun serialize(): MutableMap<String, String> {
-        val result = mutableMapOf<String, String>()
-        // spawnObjType is not serialized; GelListFileWriter treats this specially
-        if (id.isNotEmpty()) result["id"] = id
-        result["x"] = pos.x.toString()
-        result["y"] = pos.y.toString()
-        result["z"] = pos.z.toString()
-        result["rotation"] = rotation.toString()
-        result["canCollide"] = "$canCollide"
-        result["autoSpawn"] = "$autoSpawn"
-        result["autoDespawn"] = "$autoDespawn"
-        result["maxCamDistForSpawn"] = sqrt(maxCameraSqrDistForAutoSpawn).toString()
-        result["preventRespawnWhenClose"] = "$preventRespawnWhenClose"
-        return result
+    fun serialise(builder: KstructBuilder) {
+        builder.apply {
+            set("type", spawnObjTypeAsString)
+            set("id", id)
+            set("x", pos.x)
+            set("y", pos.y)
+            set("z", pos.z)
+            set("rotation", rotation)
+            set("canCollide", canCollide)
+            set("autoSpawn", autoSpawn)
+            set("autoDespawn", autoDespawn)
+            set("maxCamDistForSpawn", sqrt(maxCameraSqrDistForAutoSpawn))
+            set("preventRespawnWhenClose", preventRespawnWhenClose)
+        }
+        serialiseSpecific(builder)
     }
+
+    protected abstract fun serialiseSpecific(builder: KstructBuilder)
 
     // The position is treated especially (see SpawnPtMenu)
     open fun buildEditorItems(dlgDef: DlgDef<Unit>, onChange: () -> Unit) {

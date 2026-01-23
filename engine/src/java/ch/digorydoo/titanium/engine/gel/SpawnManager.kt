@@ -7,6 +7,7 @@ import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.file.GelListFileReader
 import ch.digorydoo.titanium.engine.file.GelListFileWriter
+import io.github.digorydoo.kstruct.KstructMap
 import kotlin.math.max
 
 abstract class SpawnManager {
@@ -16,7 +17,7 @@ abstract class SpawnManager {
 
     private val spawnPts = mutableListOf<SpawnPt>()
 
-    fun add(rawSpawnPt: Map<String, String>): SpawnPt {
+    fun add(rawSpawnPt: KstructMap): SpawnPt {
         val spawnPt = App.factory.createSpawnPt(rawSpawnPt)
         spawnPts.add(spawnPt)
         return spawnPt

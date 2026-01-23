@@ -23,6 +23,7 @@ dependencies {
     testImplementation(libs.kotlin.test)
 
     implementation(libs.kotlinx.coroutines)
+    implementation(libs.kstruct)
 
     implementation(project(":kutils"))
 }

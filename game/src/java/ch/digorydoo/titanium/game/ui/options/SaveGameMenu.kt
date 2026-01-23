@@ -29,7 +29,7 @@ class SaveGameMenu {
         val summary = object: Summary() {
             override val fileName = SaveGameFileWriter.getNewFileName()
             override val sceneTitle = App.i18n.getString(App.scene.title)
-            override val saveDate = Moment().formatRevDateTime()
+            override val saveDate = Moment.now().formatAsZoneAgnosticDateTime()
             override val screenshot = thumbnail
         }
 

@@ -3,6 +3,7 @@ package ch.digorydoo.titanium.main.core
 import ch.digorydoo.kutils.point.Point3f
 import ch.digorydoo.titanium.engine.brick.BrickModelData
 import ch.digorydoo.titanium.engine.core.Factory
+import ch.digorydoo.titanium.engine.gel.SpawnPt
 import ch.digorydoo.titanium.engine.heightmap.HeightMapSpawnPt
 import ch.digorydoo.titanium.engine.mesh.ComplexMeshRenderer
 import ch.digorydoo.titanium.engine.mesh.SimpleMeshRenderer
@@ -25,6 +26,7 @@ import ch.digorydoo.titanium.main.mesh.SimpleMeshRendererImpl
 import ch.digorydoo.titanium.main.shader.PaperRendererImpl
 import ch.digorydoo.titanium.main.shader.SkydomeRendererImpl
 import ch.digorydoo.titanium.main.shader.UISpriteRendererImpl
+import io.github.digorydoo.kstruct.KstructMap
 
 class FactoryImpl: Factory {
     override fun createBrickVolumeRenderer(translation: Point3f, tex: Texture, modelData: BrickModelData) =
@@ -74,8 +76,9 @@ class FactoryImpl: Factory {
     override fun createUISpriteRenderer(props: UISpriteRenderer.Delegate, antiAliasing: Boolean) =
         UISpriteRendererImpl(props, antiAliasing = antiAliasing)
 
-    override fun createSpawnPt(raw: Map<String, String>) =
-        when (SpawnObjType.fromString(raw["spawnObjType"]!!)) {
+    override fun createSpawnPt(raw: KstructMap): SpawnPt {
+        val rawType = raw["type"]?.stringOrNull() ?: throw Exception("Missing type in raw spawn pt def")
+        return when (SpawnObjType.fromString(rawType)) {
             // StaticMesh
             SpawnObjType.BENCH_1 -> StaticMeshSpawnPt(raw, StaticMeshSpawnPt.Kind.BENCH_1)
             SpawnObjType.RAILING_1 -> StaticMeshSpawnPt(raw, StaticMeshSpawnPt.Kind.RAILING_1)
@@ -99,4 +102,5 @@ class FactoryImpl: Factory {
             SpawnObjType.VASE_H1M -> VaseSpawnPt(raw, VaseSpawnPt.Kind.VASE_H1M)
             SpawnObjType.TEST_GEL -> TestSpawnPt(raw)
         }
+    }
 }

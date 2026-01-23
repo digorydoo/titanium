@@ -1,17 +1,17 @@
 package ch.digorydoo.titanium.import_asset.collada
 
-import ch.digorydoo.kutils.tty.Kokuban
-import ch.digorydoo.kutils.tty.ShellCommandError
 import ch.digorydoo.titanium.import_asset.Options
 import ch.digorydoo.titanium.import_asset.Options.Verbosity
 import ch.digorydoo.titanium.import_asset.WriterStats
 import ch.digorydoo.titanium.import_asset.collada.data.ColladaData
 import ch.digorydoo.titanium.import_asset.collada.data.VisualSceneNode
+import io.github.digorydoo.kokuban.ShellCommandError
+import io.github.digorydoo.kokuban.ttyFaint
+import io.github.digorydoo.kokuban.ttyGreen
+import io.github.digorydoo.kokuban.ttyRed
 import java.io.File
 
 class ColladaFileConverter(private val options: Options) {
-    private val kokuban = Kokuban()
-
     fun convertFiles() {
         if (options.outDir.isEmpty()) {
             throw ShellCommandError("The output directory has not been set.")
@@ -32,7 +32,7 @@ class ColladaFileConverter(private val options: Options) {
         }
 
         if (options.verbosity == Verbosity.VERBOSE) {
-            kokuban.text("Processing ${srcFileNames.size} files").println()
+            println("Processing ${srcFileNames.size} files")
         }
 
         srcFileNames.forEach { colladaFilePath ->
@@ -40,7 +40,7 @@ class ColladaFileConverter(private val options: Options) {
             val outFile = File(dstDir.path + File.separator + colladaFile.nameWithoutExtension + ".msh")
 
             if (options.verbosity != Verbosity.QUIET) {
-                kokuban.faint.text("${colladaFile.path} ").plain.print()
+                print(ttyFaint("${colladaFile.path} "))
             }
 
             var skip = false
@@ -57,13 +57,13 @@ class ColladaFileConverter(private val options: Options) {
 
             if (skip) {
                 if (options.verbosity != Verbosity.QUIET) {
-                    kokuban.green.text("SKIP").plain.println()
+                    println(ttyGreen("SKIP"))
                 }
             } else {
                 val data = read(colladaFile)
 
                 if (options.verbosity != Verbosity.QUIET) {
-                    kokuban.green.text("OK").plain.println()
+                    println(ttyGreen("OK"))
                 }
 
                 write(data, outFile)
@@ -79,7 +79,7 @@ class ColladaFileConverter(private val options: Options) {
             val parser = ColladaFileParser()
             result = parser.parse(stream)
         } catch (e: Exception) {
-            kokuban.red.bold.text("FAILED").plain.println()
+            System.err.println(ttyRed("FAILED"))
             throw e
         }
 
@@ -88,7 +88,7 @@ class ColladaFileConverter(private val options: Options) {
 
     private fun write(data: ColladaData, outFile: File) {
         if (options.verbosity != Verbosity.QUIET) {
-            kokuban.faint.text("   ${outFile.path} ").plain.print()
+            print(ttyFaint("   ${outFile.path} "))
         }
 
         val accessor = ColladaDataAccessor(data)
@@ -97,12 +97,12 @@ class ColladaFileConverter(private val options: Options) {
         try {
             stats = MeshFileWriter.write(accessor, outFile)
         } catch (e: Exception) {
-            kokuban.red.bold.text("FAILED").plain.println()
+            System.err.println(ttyRed("FAILED"))
             throw e
         }
 
         if (options.verbosity != Verbosity.QUIET) {
-            kokuban.green.text("OK").plain.print()
+            print(ttyGreen("OK"))
 
             if (options.verbosity == Verbosity.VERBOSE) {
                 println()

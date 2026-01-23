@@ -7,6 +7,7 @@ import ch.digorydoo.titanium.engine.editor.BrickSelection
 import ch.digorydoo.titanium.engine.gel.SpawnPt
 import ch.digorydoo.titanium.engine.heightmap.HeightMapSpawnPt
 import ch.digorydoo.titanium.engine.i18n.EngineTextId
+import io.github.digorydoo.kstruct.KstructBuilder
 
 internal class EditSpawnPtActions(private val brickSelection: BrickSelection) {
     private val history = mutableListOf<SpawnPt>()
@@ -61,14 +62,16 @@ internal class EditSpawnPtActions(private val brickSelection: BrickSelection) {
         val id = App.spawnMgr.generateUniqueId(spawnObjType)
         val pt = brickSelection.getTipPosInWorldCoords().apply { z -= 0.5f }
 
-        val raw = mutableMapOf<String, String>()
-        raw["id"] = id
-        raw["spawnObjType"] = spawnObjType
-        raw["x"] = pt.x.toString()
-        raw["y"] = pt.y.toString()
-        raw["z"] = pt.z.toString()
-        raw["rotation"] = rotation.toString()
-        App.spawnMgr.add(raw)
+        App.spawnMgr.add(
+            KstructBuilder.build {
+                set("id", id)
+                set("type", spawnObjType)
+                set("x", pt.x)
+                set("y", pt.y)
+                set("z", pt.z)
+                set("rotation", rotation)
+            }
+        )
 
         typeOfLastAdd = spawnObjType
         rotationOfLastAdd = rotation

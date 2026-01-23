@@ -1,14 +1,15 @@
 package ch.digorydoo.titanium.import_asset
 
-import ch.digorydoo.kutils.tty.OptionsBuilder
-import ch.digorydoo.kutils.tty.OptionsParser
-import ch.digorydoo.kutils.tty.OptionsParserException
-import ch.digorydoo.kutils.tty.ShellCommandError
 import ch.digorydoo.titanium.import_asset.Options.Action.BRICK_TEXTURES
 import ch.digorydoo.titanium.import_asset.Options.Action.COLLADA
+import io.github.digorydoo.kokuban.OptionsBuilder
+import io.github.digorydoo.kokuban.OptionsParser
+import io.github.digorydoo.kokuban.OptionsParserException
+import io.github.digorydoo.kokuban.ShellCommandError
 import kotlin.system.exitProcess
 
-class Options {
+// FIXME minai has a better pattern for actions
+class Options private constructor() {
     enum class Action(val cmd: String) {
         COLLADA("collada"),
         BRICK_TEXTURES("brick-textures"),
@@ -58,17 +59,17 @@ class Options {
         }
 
         val defs = OptionsBuilder.build {
-            addBoolean("only-newer", "n") { only(COLLADA); onlyNewer = it }
-            addString("out-dir", "d") { only(COLLADA); outDir = it }
+            addBoolean("only-newer", 'n') { only(COLLADA); onlyNewer = it }
+            addString("out-dir", 'd') { only(COLLADA); outDir = it }
 
-            addInt("arrange-across", "a", 1, 100) { only(BRICK_TEXTURES); arrangeAcross = it }
-            addString("out-file", "f") { only(BRICK_TEXTURES); outFile = it }
-            addInt("padding", "p", 0, 32) { only(BRICK_TEXTURES); padding = it }
+            addInt("arrange-across", 'a', 1, 100) { only(BRICK_TEXTURES); arrangeAcross = it }
+            addString("out-file", 'f') { only(BRICK_TEXTURES); outFile = it }
+            addInt("padding", 'p', 0, 32) { only(BRICK_TEXTURES); padding = it }
 
-            addValueless("help", "h") { showHelp = true }
-            addBoolean("overwrite", "w") { overwrite = it }
-            addValueless("quiet", "q") { verbosity = Verbosity.QUIET }
-            addValueless("verbose", "v") { verbosity = Verbosity.VERBOSE }
+            addValueless("help", 'h') { showHelp = true }
+            addBoolean("overwrite", 'w') { overwrite = it }
+            addValueless("quiet", 'q') { verbosity = Verbosity.QUIET }
+            addValueless("verbose", 'v') { verbosity = Verbosity.VERBOSE }
         }
 
         val parser = OptionsParser(defs)

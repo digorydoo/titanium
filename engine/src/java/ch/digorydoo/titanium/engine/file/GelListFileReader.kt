@@ -3,58 +3,33 @@ package ch.digorydoo.titanium.engine.file
 import ch.digorydoo.kutils.utils.Log
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.gel.SpawnPt
-import java.io.BufferedReader
+import io.github.digorydoo.kstruct.KstructList
+import io.github.digorydoo.kstruct.KstructMap
+import io.github.digorydoo.kstruct.parser.KstructParser
 import java.io.File
 import java.nio.charset.StandardCharsets
 
-class GelListFileReader private constructor(private val reader: BufferedReader) {
-    private fun read(result: MutableList<SpawnPt>) {
-        reader.forEachLine { line ->
-            try {
-                if (!line.startsWith("#")) {
-                    val colonAt = line.indexOf(":")
-                    require(colonAt > 0) { "Missing colon: $line" }
-                    val map = mutableMapOf<String, String>()
-                    map["spawnObjType"] = line.substring(0 ..< colonAt)
+object GelListFileReader {
+    private val TAG = Log.Tag("GelListFileReader")
 
-                    line.substring(colonAt + 1).split(",").forEach { part ->
-                        val eqAt = part.indexOf("=")
-                        require(eqAt > 0) { "Missing eq: $part ($line)" }
-                        val key = part.substring(0 ..< eqAt).trim()
-                        val value = part.substring(eqAt + 1).trim()
-                        map[key] = value
-                    }
+    fun readFile(fileName: String, result: MutableList<SpawnPt>): List<SpawnPt> {
+        if (fileName.isEmpty()) throw Exception("File name is empty!")
 
-                    // EditorActions should assign ids to new spawn pts, so while createSpawnPt allows empty ids for
-                    // ad-hoc spawn points, but this is an error inside a GelList.
-                    if (!map.containsKey("id")) {
-                        throw Exception("Spawn point is missing an id: $line")
-                    }
+        val path = App.assets.pathToGelList(fileName)
+        val file = File(path)
 
-                    result.add(App.factory.createSpawnPt(map))
-                }
-            } catch (e: Exception) {
-                Log.error(TAG, "Failed to create spawn point: $line")
-                throw e
+        file.bufferedReader(StandardCharsets.UTF_8).let { reader ->
+            val root = KstructParser.parse(reader.readText())
+            val listNode = root["list"] ?: throw Exception("Missing member 'list'")
+            val list = listNode as? KstructList ?: throw Exception("Member 'list' is not a list")
+
+            list.forEachChild { i, child ->
+                val map = (child as? KstructMap) ?: throw Exception("Member [$i] not a map!")
+                result.add(App.factory.createSpawnPt(map))
             }
         }
-    }
 
-    companion object {
-        private val TAG = Log.Tag("GelListFileReader")
-
-        fun readFile(fileName: String, result: MutableList<SpawnPt>): List<SpawnPt> {
-            if (fileName.isEmpty()) throw Exception("File name is empty!")
-
-            val path = App.assets.pathToGelList(fileName)
-            val file = File(path)
-
-            file.bufferedReader(StandardCharsets.UTF_8).let { reader ->
-                GelListFileReader(reader).read(result)
-            }
-
-            Log.info(TAG, "$fileName: ${result.size} spawn points")
-            return result
-        }
+        Log.info(TAG, "$fileName: ${result.size} spawn points")
+        return result
     }
 }

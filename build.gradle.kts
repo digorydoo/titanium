@@ -48,16 +48,17 @@ abstract class GenerateSourcesTask: DefaultTask() {
     }
 }
 
+// FIXME What was the reason for this? Can I remove this?
 tasks.register("run") {
     if (project == rootProject) {
         error(
-            "Running `run` from the root project is not allowed. " +
-                "Use `./gradlew <subproject>:run` instead."
+            "Running `run` from the root project is not allowed to avoid ambiguities.\n" +
+                "Use instead: ./gradlew main:run -Pflavour=[development|production]"
         )
     }
 }
 
-val flavour = providers.gradleProperty("flavour").orElse("")
+val flavour: Provider<String> = providers.gradleProperty("flavour").orElse("")
 
 subprojects {
     val generateSources = tasks.register<GenerateSourcesTask>("generateSources") {

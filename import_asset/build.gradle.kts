@@ -24,6 +24,7 @@ dependencies {
     implementation(platform(libs.kotlin.bom))
     testImplementation(libs.kotlin.test)
 
+    implementation(libs.kokuban)
     implementation(libs.xmlparserv2)
 
     implementation(project(":engine"))

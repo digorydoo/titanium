@@ -1,14 +1,16 @@
 package ch.digorydoo.titanium.game.gel.test
 
 import ch.digorydoo.titanium.engine.gel.SpawnPt
+import io.github.digorydoo.kstruct.KstructBuilder
+import io.github.digorydoo.kstruct.KstructMap
 
-class TestSpawnPt(raw: Map<String, String>): SpawnPt(raw) {
+class TestSpawnPt(raw: KstructMap): SpawnPt(raw) {
     // var rotSpeed = raw["rotSpeed"]?.toFloat() ?: 1.0f
 
-    override fun serialize(): MutableMap<String, String> {
-        val result = super.serialize()
-        // result["rotSpeed"] = "$rotSpeed"
-        return result
+    override fun serialiseSpecific(builder: KstructBuilder) {
+        // builder.apply {
+        //     set("rotSpeed", rotSpeed)
+        // }
     }
 
     // override fun buildEditorItems(dlgDef: DlgDef, onChange: () -> Unit) {
@@ -25,6 +27,5 @@ class TestSpawnPt(raw: Map<String, String>): SpawnPt(raw) {
     //     }
     // }
 
-    override fun createGel() =
-        TestGel(this)
+    override fun createGel() = TestGel(this)
 }

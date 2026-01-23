@@ -1,11 +1,12 @@
 package ch.digorydoo.titanium.import_asset.brick_textures
 
 import ch.digorydoo.kutils.rect.Recti
-import ch.digorydoo.kutils.tty.Kokuban
-import ch.digorydoo.kutils.tty.ShellCommandError
 import ch.digorydoo.titanium.engine.texture.ImageData
 import ch.digorydoo.titanium.import_asset.Options
 import ch.digorydoo.titanium.import_asset.Options.Verbosity
+import io.github.digorydoo.kokuban.ShellCommandError
+import io.github.digorydoo.kokuban.ttyFaint
+import io.github.digorydoo.kokuban.ttyGreen
 import java.awt.image.BufferedImage
 import java.awt.image.ColorModel
 import java.awt.image.DataBufferByte
@@ -14,8 +15,6 @@ import javax.imageio.ImageIO
 import kotlin.math.ceil
 
 class BrickTextureImporter(private val options: Options) {
-    private val kokuban = Kokuban()
-
     fun importFiles() {
         if (options.outFile.isEmpty()) {
             throw ShellCommandError("Please specify an output filename.")
@@ -44,7 +43,7 @@ class BrickTextureImporter(private val options: Options) {
         }
 
         if (options.verbosity == Verbosity.VERBOSE) {
-            kokuban.text("Processing ${srcFileNames.size} files").println()
+            println("Processing ${srcFileNames.size} files")
         }
 
         val textures = mutableListOf<ImageData>()
@@ -53,7 +52,7 @@ class BrickTextureImporter(private val options: Options) {
             val srcFile = File(src)
 
             if (options.verbosity != Verbosity.QUIET) {
-                kokuban.faint.text("${srcFile.path} ").plain.print()
+                print(ttyFaint("${srcFile.path} "))
             }
 
             if (options.verbosity == Verbosity.VERBOSE) {
@@ -67,7 +66,7 @@ class BrickTextureImporter(private val options: Options) {
             }
 
             if (options.verbosity != Verbosity.QUIET) {
-                kokuban.green.text("OK").plain.println()
+                println(ttyGreen("OK"))
             }
         }
 
@@ -80,14 +79,16 @@ class BrickTextureImporter(private val options: Options) {
         val cm: ColorModel? = img.colorModel
 
         if (options.verbosity == Verbosity.VERBOSE) {
-            kokuban
-                .text("   width=${img.width}")
-                .text(", height=${img.height}")
-                .text(", alpha=${cm?.hasAlpha()}")
-                .text(", alphaPremult=${cm?.isAlphaPremultiplied()}")
-                .text(", pxSize=${cm?.pixelSize}")
-                .text(", numComponents=${cm?.numComponents}")
-                .println()
+            println(
+                buildString {
+                    append("   width=${img.width}")
+                    append(", height=${img.height}")
+                    append(", alpha=${cm?.hasAlpha()}")
+                    append(", alphaPremult=${cm?.isAlphaPremultiplied()}")
+                    append(", pxSize=${cm?.pixelSize}")
+                    append(", numComponents=${cm?.numComponents}")
+                }
+            )
         }
 
         require(img.width > 0) { "Bad width: ${img.width}" }
@@ -159,7 +160,7 @@ class BrickTextureImporter(private val options: Options) {
     }
 
     private fun write(combined: ImageData, dstFile: File) {
-        kokuban.text("Writing ${dstFile.extension.uppercase()} file: ${dstFile.path}").println()
+        println("Writing ${dstFile.extension.uppercase()} file: ${dstFile.path}")
         val bim = combined.toBufferedImage()
         ImageIO.write(bim, dstFile.extension, dstFile)
     }

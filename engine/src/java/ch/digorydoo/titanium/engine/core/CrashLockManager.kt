@@ -19,7 +19,7 @@ class CrashLockManager {
                 if (logFile.exists()) {
                     // The name of the log file will have the date/time when we found the crash (now).
                     // This is the easiest way to ensure that it's very unlikely that the file already exists.
-                    val newExt = "-crash-${Moment().formatRevDateTimeForFileName()}.log"
+                    val newExt = "-crash-${Moment.now().formatAsZoneAgnosticDateTimeCompact()}.log"
                     val pathWithoutExt = logFile.path.slice(0 ..< logFile.path.length - logFile.extension.length - 1)
                     val movedLogFile = File("$pathWithoutExt$newExt")
                     logFile.renameTo(movedLogFile)

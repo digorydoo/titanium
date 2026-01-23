@@ -1,12 +1,14 @@
 package ch.digorydoo.titanium.game.gel.door
 
 import ch.digorydoo.titanium.engine.gel.SpawnPt
+import io.github.digorydoo.kstruct.KstructBuilder
+import io.github.digorydoo.kstruct.KstructMap
 
-class DoorSpawnPt(raw: Map<String, String>, val kind: Kind): SpawnPt(raw) {
+class DoorSpawnPt(raw: KstructMap, val kind: Kind): SpawnPt(raw) {
     enum class Kind {
         DOOR_WITH_WOODEN_FRAME
     }
 
-    override fun createGel() =
-        DoorGel(this)
+    override fun serialiseSpecific(builder: KstructBuilder) {}
+    override fun createGel() = DoorGel(this)
 }

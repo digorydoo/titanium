@@ -11,6 +11,7 @@ import ch.digorydoo.titanium.engine.shader.Renderer.BlendMode
 import ch.digorydoo.titanium.engine.sky.SkydomeRenderer
 import ch.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import ch.digorydoo.titanium.engine.texture.Texture
+import io.github.digorydoo.kstruct.KstructMap
 
 /**
  * The factory is accessible through App.factory, and is used to instantiate various objects, whose implementation are
@@ -43,7 +44,7 @@ interface Factory {
     ): PaperRenderer
 
     fun createUISpriteRenderer(props: UISpriteRenderer.Delegate, antiAliasing: Boolean = false): UISpriteRenderer
-    fun createSpawnPt(raw: Map<String, String>): SpawnPt
+    fun createSpawnPt(raw: KstructMap): SpawnPt
 
     // createScene is inside SceneId
 }

@@ -4,6 +4,7 @@ import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.rect.MutableRecti
 import ch.digorydoo.kutils.rect.Recti
 import ch.digorydoo.kutils.utils.Log
+import ch.digorydoo.kutils.utils.Moment
 import ch.digorydoo.titanium.BuildConfig
 import ch.digorydoo.titanium.engine.core.App
 import ch.digorydoo.titanium.engine.font.FontManager.FontName.DIALOG_FONT
@@ -37,8 +38,13 @@ object ButtonTextureFactory {
         }
 
     fun makeTextTexture(item: DlgItemDef<*>): Texture {
-        val textFromSavegame = (item as? DlgSavegameItemDef)?.summary
-            ?.let { "${it.sceneTitle}\n${it.saveDateLocalized}" }
+        val textFromSavegame = (item as? DlgSavegameItemDef)?.summary?.let { summary ->
+            Moment.parseZoneAgnosticOrNull(summary.saveDate)
+                ?.formatLocalized(locale = App.prefs.textLanguage.locale)
+                ?.let { "${summary.sceneTitle}\n${it}" }
+                ?: ""
+        }
+
         val textFromId = item.textId?.let { App.i18n.getString(it) }
         val textFromString = item.text
 

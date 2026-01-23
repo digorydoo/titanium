@@ -15,9 +15,8 @@ class SaveGameFileWriter private constructor(private val stream: KDataOutputStre
     abstract class Summary {
         abstract val fileName: String
         abstract val sceneTitle: String
-        abstract val saveDate: String
-        val saveDateLocalized get() = Moment.fromString(saveDate)?.formatDateTimeLocalized() ?: ""
         abstract val screenshot: ImageData?
+        abstract val saveDate: String // yyyy-MM-dd HH:mm:ss
     }
 
     private fun write(summary: Summary, state: SerializedState) {
@@ -66,7 +65,7 @@ class SaveGameFileWriter private constructor(private val stream: KDataOutputStre
         private const val MAX_NUM_SAVEGAMES = 10 // because building the list of screenshots would become too slow
 
         fun getNewFileName(): String {
-            val stamp = Moment().formatRevDateTimeForFileName()
+            val stamp = Moment.now().formatAsZoneAgnosticDateTimeCompact()
             return "${PREFIX}$stamp${POSTFIX}"
         }
 

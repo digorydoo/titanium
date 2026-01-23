@@ -12,6 +12,7 @@ import ch.digorydoo.titanium.engine.heightmap.HeightMap
 import ch.digorydoo.titanium.engine.heightmap.HeightMapGel
 import ch.digorydoo.titanium.engine.heightmap.HeightMapSpawnPt
 import ch.digorydoo.titanium.engine.mesh.MeshMaterial
+import io.github.digorydoo.kstruct.KstructBuilder
 import java.io.File
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -54,15 +55,17 @@ internal class EditHeightMapActions(
             )
         )
 
-        val raw = mutableMapOf<String, String>()
-        raw["id"] = id
-        raw["spawnObjType"] = HEIGHT_MAP_SPAWN_OBJ_TYPE
-        raw["f"] = filename
-        raw["x"] = pt.x.toString()
-        raw["y"] = pt.y.toString()
-        raw["z"] = pt.z.toString()
-        raw["rotation"] = 0.0f.toString()
-        val spawnPt = App.spawnMgr.add(raw)
+        val spawnPt = App.spawnMgr.add(
+            KstructBuilder.build {
+                set("id", id)
+                set("type", HEIGHT_MAP_SPAWN_OBJ_TYPE)
+                set("f", filename)
+                set("x", pt.x)
+                set("y", pt.y)
+                set("z", pt.z)
+                set("rotation", 0.0f)
+            }
+        )
         actions.didAddNewHeightMap(spawnPt as HeightMapSpawnPt)
     }
 

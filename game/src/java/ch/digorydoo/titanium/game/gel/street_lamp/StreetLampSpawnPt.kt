@@ -2,20 +2,22 @@ package ch.digorydoo.titanium.game.gel.street_lamp
 
 import ch.digorydoo.titanium.engine.gel.SpawnPt
 import ch.digorydoo.titanium.engine.ui.dialogue.DlgDef
+import io.github.digorydoo.kstruct.KstructBuilder
+import io.github.digorydoo.kstruct.KstructMap
 
-class StreetLampSpawnPt(raw: Map<String, String>, val kind: Kind): SpawnPt(raw) {
+class StreetLampSpawnPt(raw: KstructMap, val kind: Kind): SpawnPt(raw) {
     enum class Kind { TRADITIONAL }
 
-    var lightOn = raw["lightOn"]?.toBoolean() ?: true
-    var offDuringDaylight = raw["offDuringDaylight"]?.toBoolean() ?: true
-    var flickering = raw["flickering"]?.toBoolean() ?: false
+    var lightOn = raw["lightOn"]?.booleanOrNull() ?: true
+    var offDuringDaylight = raw["offDuringDaylight"]?.booleanOrNull() ?: true
+    var flickering = raw["flickering"]?.booleanOrNull() ?: false
 
-    override fun serialize(): MutableMap<String, String> {
-        val result = super.serialize()
-        result["lightOn"] = "$lightOn"
-        result["offDuringDaylight"] = "$offDuringDaylight"
-        result["flickering"] = "$flickering"
-        return result
+    override fun serialiseSpecific(builder: KstructBuilder) {
+        builder.apply {
+            set("lightOn", lightOn)
+            set("offDuringDaylight", offDuringDaylight)
+            set("flickering", flickering)
+        }
     }
 
     override fun buildEditorItems(dlgDef: DlgDef<Unit>, onChange: () -> Unit) {
@@ -48,7 +50,6 @@ class StreetLampSpawnPt(raw: Map<String, String>, val kind: Kind): SpawnPt(raw) 
         }
     }
 
-    override fun createGel() =
-        StreetLampGel(this)
+    override fun createGel() = StreetLampGel(this)
 }
 
