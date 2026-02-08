@@ -1,17 +1,17 @@
-package ch.digorydoo.titanium.engine.physics.strategy
+package io.github.digorydoo.titanium.engine.physics.strategy
 
-import ch.digorydoo.kutils.point.MutablePoint3f
-import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.kutils.vector.MutableVector3f
+import ch.digorydoo.kutils.vector.Vector3f
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.titanium.engine.physics.HitArea
-import ch.digorydoo.titanium.engine.physics.MutableHitResult
-import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
-import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
-import ch.digorydoo.titanium.engine.physics.strategy.sphere_vs_cylinder.BounceSphereVsCylinder
-import ch.digorydoo.titanium.engine.physics.strategy.sphere_vs_cylinder.CheckSphereVsCylinder
-import ch.digorydoo.titanium.engine.physics.strategy.sphere_vs_cylinder.SeparateSphereVsCylinder
-import ch.digorydoo.titanium.engine.utils.assertGreaterThan
-import ch.digorydoo.titanium.engine.utils.assertLessThan
+import io.github.digorydoo.titanium.engine.physics.HitArea
+import io.github.digorydoo.titanium.engine.physics.MutableHitResult
+import io.github.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
+import io.github.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
+import io.github.digorydoo.titanium.engine.physics.strategy.sphere_vs_cylinder.BounceSphereVsCylinder
+import io.github.digorydoo.titanium.engine.physics.strategy.sphere_vs_cylinder.CheckSphereVsCylinder
+import io.github.digorydoo.titanium.engine.physics.strategy.sphere_vs_cylinder.SeparateSphereVsCylinder
+import io.github.digorydoo.titanium.engine.utils.assertGreaterThan
+import io.github.digorydoo.titanium.engine.utils.assertLessThan
 import kotlin.math.abs
 import kotlin.math.sqrt
 import kotlin.test.Test
@@ -24,7 +24,7 @@ internal class CollideSphereVsCylinderTest {
     fun `should collide when the two bodies get too close and the speed is parallel to the x-axis`() {
         val sphere = FixedSphereBody(
             "sphere",
-            initialPos = MutablePoint3f(10.0f, 7.2f, 10.45f),
+            initialPos = MutableVector3f(10.0f, 7.2f, 10.45f),
             mass = 13.0f,
             gravity = false,
             radius = 0.3f,
@@ -33,7 +33,7 @@ internal class CollideSphereVsCylinderTest {
         )
         val cylinder = FixedCylinderBody(
             "cylinder",
-            initialPos = MutablePoint3f(10.5f, 7.1f, 10.45f),
+            initialPos = MutableVector3f(10.5f, 7.1f, 10.45f),
             mass = 11.0f,
             gravity = false,
             radius = 0.2f,
@@ -162,7 +162,7 @@ internal class CollideSphereVsCylinderTest {
     fun `should collide when the two bodies get too close and the speed is parallel to the y-axis`() {
         val sphere = FixedSphereBody(
             "sphere",
-            initialPos = MutablePoint3f(8.2f, 7.5f, 10.4f),
+            initialPos = MutableVector3f(8.2f, 7.5f, 10.4f),
             mass = 7.0f,
             gravity = false,
             radius = 0.3f,
@@ -171,7 +171,7 @@ internal class CollideSphereVsCylinderTest {
         )
         val cylinder = FixedCylinderBody(
             "cylinder",
-            initialPos = MutablePoint3f(8.1f, 7.0f, 10.45f),
+            initialPos = MutableVector3f(8.1f, 7.0f, 10.45f),
             mass = 9.0f,
             gravity = false,
             radius = 0.2f,
@@ -286,7 +286,7 @@ internal class CollideSphereVsCylinderTest {
     fun `should collide when the two bodies get too close and the speed is parallel to the z-axis`() {
         val sphere = FixedSphereBody(
             "sphere",
-            initialPos = MutablePoint3f(8.3f, 7.1f, 10.96f),
+            initialPos = MutableVector3f(8.3f, 7.1f, 10.96f),
             mass = 7.0f,
             gravity = false,
             radius = 0.3f,
@@ -295,7 +295,7 @@ internal class CollideSphereVsCylinderTest {
         )
         val cylinder = FixedCylinderBody(
             "cylinder",
-            initialPos = MutablePoint3f(8.1f, 7.2f, 10.4f),
+            initialPos = MutableVector3f(8.1f, 7.2f, 10.4f),
             mass = 9.0f,
             gravity = false,
             radius = 0.2f,
@@ -429,7 +429,7 @@ internal class CollideSphereVsCylinderTest {
     fun `should correctly bounce one cylinder off the other when moving in an arbitrary direction`() {
         val sphere = FixedSphereBody(
             "sphere",
-            initialPos = MutablePoint3f(10.0f, 10.0f, 10.5f),
+            initialPos = MutableVector3f(10.0f, 10.0f, 10.5f),
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
@@ -438,7 +438,7 @@ internal class CollideSphereVsCylinderTest {
         )
         val cylinder = FixedCylinderBody(
             "cylinder",
-            initialPos = MutablePoint3f(10.0f, 10.51f, 10.76f),
+            initialPos = MutableVector3f(10.0f, 10.51f, 10.76f),
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
@@ -530,7 +530,7 @@ internal class CollideSphereVsCylinderTest {
 
     @Test
     fun `should behave graciously if a sphere and a cylinder are spawned in the exact same spot`() {
-        val pos = MutablePoint3f(42.0f, 33.0f, 24.0f)
+        val pos = MutableVector3f(42.0f, 33.0f, 24.0f)
         val sphere = FixedSphereBody(
             "sphere",
             initialPos = pos,
@@ -678,7 +678,7 @@ internal class CollideSphereVsCylinderTest {
     fun `should properly handle collisions in situation 1`() {
         val sphere = FixedSphereBody(
             "sphere",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = 0.52f,
             gravity = false,
             radius = 0.25f,
@@ -687,7 +687,7 @@ internal class CollideSphereVsCylinderTest {
         )
         val cylinder = FixedCylinderBody(
             "cylinder",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = 20.0f,
             gravity = false,
             radius = 0.45f,
@@ -723,7 +723,7 @@ internal class CollideSphereVsCylinderTest {
     fun `should properly handle collisions in situation 2`() {
         val sphere = FixedSphereBody(
             "sphere",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = 0.52f,
             gravity = false,
             radius = 0.25f,
@@ -732,7 +732,7 @@ internal class CollideSphereVsCylinderTest {
         )
         val cylinder = FixedCylinderBody(
             "cylinder",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = 20.0f,
             gravity = false,
             radius = 0.45f,

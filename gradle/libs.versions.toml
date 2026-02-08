@@ -19,7 +19,7 @@ lwjgl-opengl = { module = "org.lwjgl:lwjgl-opengl", version.ref = "lwjgl" }
 lwjgl-stb = { module = "org.lwjgl:lwjgl-stb", version.ref = "lwjgl" }
 xmlparserv2 = { module = "com.oracle.database.xml:xmlparserv2", version = "21.14.0.0" }
 
-kokuban = { module = "io.github.digorydoo:kokuban", version = "0.9.1" }
+kokuban = { module = "io.github.digorydoo:kokuban", version = "0.9.2" }
 kstruct = { module = "io.github.digorydoo:kstruct", version = "0.9.6" }
 
 [plugins]

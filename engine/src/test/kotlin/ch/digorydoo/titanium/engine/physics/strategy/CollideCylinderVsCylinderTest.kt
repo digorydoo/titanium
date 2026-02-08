@@ -1,18 +1,18 @@
-package ch.digorydoo.titanium.engine.physics.strategy
+package io.github.digorydoo.titanium.engine.physics.strategy
 
-import ch.digorydoo.kutils.point.MutablePoint3f
-import ch.digorydoo.kutils.point.Point2f
-import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.kutils.vector.MutableVector3f
+import ch.digorydoo.kutils.vector.Vector2f
+import ch.digorydoo.kutils.vector.Vector3f
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.titanium.engine.physics.HitArea
-import ch.digorydoo.titanium.engine.physics.MutableHitResult
-import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
-import ch.digorydoo.titanium.engine.physics.strategy.cylinder_vs_cylinder.BounceCylinderVsCylinder
-import ch.digorydoo.titanium.engine.physics.strategy.cylinder_vs_cylinder.CheckCylinderVsCylinder
-import ch.digorydoo.titanium.engine.physics.strategy.cylinder_vs_cylinder.SeparateCylinderVsCylinder
-import ch.digorydoo.titanium.engine.utils.assertGreaterThan
-import ch.digorydoo.titanium.engine.utils.assertLessThan
-import ch.digorydoo.titanium.engine.utils.assertWithin
+import io.github.digorydoo.titanium.engine.physics.HitArea
+import io.github.digorydoo.titanium.engine.physics.MutableHitResult
+import io.github.digorydoo.titanium.engine.physics.rigid_body.FixedCylinderBody
+import io.github.digorydoo.titanium.engine.physics.strategy.cylinder_vs_cylinder.BounceCylinderVsCylinder
+import io.github.digorydoo.titanium.engine.physics.strategy.cylinder_vs_cylinder.CheckCylinderVsCylinder
+import io.github.digorydoo.titanium.engine.physics.strategy.cylinder_vs_cylinder.SeparateCylinderVsCylinder
+import io.github.digorydoo.titanium.engine.utils.assertGreaterThan
+import io.github.digorydoo.titanium.engine.utils.assertLessThan
+import io.github.digorydoo.titanium.engine.utils.assertWithin
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -24,7 +24,7 @@ internal class CollideCylinderVsCylinderTest {
     fun `should collide when the two cylinders get too close and the speed is parallel to the x-axis`() {
         val b1 = FixedCylinderBody(
             "b1",
-            initialPos = MutablePoint3f(10.0f, 7.2f, 11.1f),
+            initialPos = MutableVector3f(10.0f, 7.2f, 11.1f),
             mass = 13.0f,
             gravity = false,
             radius = 0.3f,
@@ -34,7 +34,7 @@ internal class CollideCylinderVsCylinderTest {
         )
         val b2 = FixedCylinderBody(
             "b2",
-            initialPos = MutablePoint3f(10.5f, 7.1f, 10.45f),
+            initialPos = MutableVector3f(10.5f, 7.1f, 10.45f),
             mass = 11.0f,
             gravity = false,
             radius = 0.2f,
@@ -123,8 +123,8 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(10.45f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // Since it was SIDE, the cylinders should now be separated in XY
-        val centre1 = Point2f(b1.nextPos.x, b1.nextPos.y)
-        val centre2 = Point2f(b2.nextPos.x, b2.nextPos.y)
+        val centre1 = Vector2f(b1.nextPos.x, b1.nextPos.y)
+        val centre2 = Vector2f(b2.nextPos.x, b2.nextPos.y)
         val newDistance = centre1.distanceTo(centre2).toFloat()
         assertWithin(0.0f ..< 0.00006f, newDistance - (b1.radius + b2.radius), "gap") // less than 6 mm/100
 
@@ -164,7 +164,7 @@ internal class CollideCylinderVsCylinderTest {
     fun `should collide when the two cylinders get too close and the speed is parallel to the y-axis`() {
         val b1 = FixedCylinderBody(
             "b1",
-            initialPos = MutablePoint3f(8.2f, 7.5f, 11.1f),
+            initialPos = MutableVector3f(8.2f, 7.5f, 11.1f),
             mass = 7.0f,
             gravity = false,
             radius = 0.3f,
@@ -174,7 +174,7 @@ internal class CollideCylinderVsCylinderTest {
         )
         val b2 = FixedCylinderBody(
             "b2",
-            initialPos = MutablePoint3f(8.1f, 7.0f, 10.45f),
+            initialPos = MutableVector3f(8.1f, 7.0f, 10.45f),
             mass = 9.0f,
             gravity = false,
             radius = 0.2f,
@@ -285,8 +285,8 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(0.0f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
 
         // Since it was SIDE, the cylinders should now be separated in XY
-        val centre1 = Point2f(b1.nextPos.x, b1.nextPos.y)
-        val centre2 = Point2f(b2.nextPos.x, b2.nextPos.y)
+        val centre1 = Vector2f(b1.nextPos.x, b1.nextPos.y)
+        val centre2 = Vector2f(b2.nextPos.x, b2.nextPos.y)
         val newDistance = centre1.distanceTo(centre2).toFloat()
         assertWithin(0.0f ..< 0.00006f, newDistance - (b1.radius + b2.radius), "gap") // less than 6 mm/100
     }
@@ -295,7 +295,7 @@ internal class CollideCylinderVsCylinderTest {
     fun `should collide when the two cylinders get too close and the speed is parallel to the z-axis`() {
         val b1 = FixedCylinderBody(
             "b1",
-            initialPos = MutablePoint3f(8.3f, 7.1f, 11.21f),
+            initialPos = MutableVector3f(8.3f, 7.1f, 11.21f),
             mass = 7.0f,
             gravity = false,
             radius = 0.3f,
@@ -305,7 +305,7 @@ internal class CollideCylinderVsCylinderTest {
         )
         val b2 = FixedCylinderBody(
             "b2",
-            initialPos = MutablePoint3f(8.1f, 7.2f, 10.45f),
+            initialPos = MutableVector3f(8.1f, 7.2f, 10.45f),
             mass = 9.0f,
             gravity = false,
             radius = 0.2f,
@@ -424,7 +424,7 @@ internal class CollideCylinderVsCylinderTest {
     fun `should correctly bounce one cylinder off the other when moving in an arbitrary direction`() {
         val b1 = FixedCylinderBody(
             "b1",
-            initialPos = MutablePoint3f(10.0f, 10.0f, 10.5f),
+            initialPos = MutableVector3f(10.0f, 10.0f, 10.5f),
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
@@ -434,7 +434,7 @@ internal class CollideCylinderVsCylinderTest {
         )
         val b2 = FixedCylinderBody(
             "b2",
-            initialPos = MutablePoint3f(10.0f, 10.51f, 10.76f),
+            initialPos = MutableVector3f(10.0f, 10.51f, 10.76f),
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
@@ -525,15 +525,15 @@ internal class CollideCylinderVsCylinderTest {
         assertEquals(0.012000001f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
 
         // Since it was SIDE, the cylinders should now be separated in XY
-        val centre1 = Point2f(b1.nextPos.x, b1.nextPos.y)
-        val centre2 = Point2f(b2.nextPos.x, b2.nextPos.y)
+        val centre1 = Vector2f(b1.nextPos.x, b1.nextPos.y)
+        val centre2 = Vector2f(b2.nextPos.x, b2.nextPos.y)
         val newDistance = centre1.distanceTo(centre2).toFloat()
         assertWithin(0.0f ..< 0.00006f, newDistance - (b1.radius + b2.radius), "gap") // less than 6 mm/100
     }
 
     @Test
     fun `should behave graciously if two identical cylinders are spawned in the exact same spot`() {
-        val pos = MutablePoint3f(42.0f, 33.0f, 24.0f)
+        val pos = MutableVector3f(42.0f, 33.0f, 24.0f)
         val b1 = FixedCylinderBody(
             "b1",
             initialPos = pos,
@@ -618,7 +618,7 @@ internal class CollideCylinderVsCylinderTest {
                     "hitNormal12=${hit.hitNormal12}, " +
                     "expected distance in XY=${b1.radius + b2.radius}, " +
                     "actual distance in XY=" +
-                    Point2f(b1.nextPos.x, b1.nextPos.y).distanceTo(Point2f(b2.nextPos.x, b2.nextPos.y))
+                    Vector2f(b1.nextPos.x, b1.nextPos.y).distanceTo(Vector2f(b2.nextPos.x, b2.nextPos.y))
             )
         } finally {
             Log.enabled = true
@@ -664,8 +664,8 @@ internal class CollideCylinderVsCylinderTest {
 
         // The new distance should be in the range we'd expect. Since z was not involved, we can just check XY length.
         // Since it was SIDE, the cylinders should now be separated in XY
-        val centre1 = Point2f(b1.nextPos.x, b1.nextPos.y)
-        val centre2 = Point2f(b2.nextPos.x, b2.nextPos.y)
+        val centre1 = Vector2f(b1.nextPos.x, b1.nextPos.y)
+        val centre2 = Vector2f(b2.nextPos.x, b2.nextPos.y)
         val newDistance = centre1.distanceTo(centre2).toFloat()
         assertWithin(0.0f ..< 0.00006f, newDistance - (b1.radius + b2.radius), "gap") // less than 6 mm/100
 
@@ -684,7 +684,7 @@ internal class CollideCylinderVsCylinderTest {
     fun `should properly handle collisions in situation 1`() {
         val b1 = FixedCylinderBody(
             "b1",
-            initialPos = MutablePoint3f(10.0f, 10.0f, 10.5f),
+            initialPos = MutableVector3f(10.0f, 10.0f, 10.5f),
             mass = 10.0f,
             gravity = false,
             radius = 0.25f,
@@ -694,7 +694,7 @@ internal class CollideCylinderVsCylinderTest {
         )
         val b2 = FixedCylinderBody(
             "b2",
-            initialPos = MutablePoint3f(10.0f, 10.451f, 11.351f),
+            initialPos = MutableVector3f(10.0f, 10.451f, 11.351f),
             mass = 10.0f,
             gravity = false,
             radius = 0.2f,
@@ -795,7 +795,7 @@ internal class CollideCylinderVsCylinderTest {
     fun `should properly handle collisions in situation 2`() {
         val b1 = FixedCylinderBody(
             "b1",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = 20.0f,
             gravity = false,
             radius = 0.45f,
@@ -805,7 +805,7 @@ internal class CollideCylinderVsCylinderTest {
         )
         val b2 = FixedCylinderBody(
             "b2",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = 20.0f,
             gravity = false,
             radius = 0.45f,

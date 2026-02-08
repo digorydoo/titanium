@@ -1,20 +1,20 @@
-package ch.digorydoo.titanium.engine.physics.strategy
+package io.github.digorydoo.titanium.engine.physics.strategy
 
-import ch.digorydoo.kutils.point.Point3f
-import ch.digorydoo.kutils.point.Point3i
-import ch.digorydoo.titanium.engine.brick.BrickFaceCovering
-import ch.digorydoo.titanium.engine.brick.IBrickFaceCoveringRetriever
-import ch.digorydoo.titanium.engine.physics.HitArea
-import ch.digorydoo.titanium.engine.physics.MutableHitResult
-import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCuboidBody
-import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
-import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
-import ch.digorydoo.titanium.engine.physics.strategy.sphere_vs_cuboid.BounceSphereVsCuboid
-import ch.digorydoo.titanium.engine.physics.strategy.sphere_vs_cuboid.CheckSphereVsCuboid
-import ch.digorydoo.titanium.engine.physics.strategy.sphere_vs_cuboid.SeparateSphereVsCuboid
-import ch.digorydoo.titanium.engine.utils.Direction
-import ch.digorydoo.titanium.engine.utils.assertGreaterThan
-import ch.digorydoo.titanium.engine.utils.assertLessThan
+import ch.digorydoo.kutils.vector.Vector3f
+import ch.digorydoo.kutils.vector.Vector3i
+import io.github.digorydoo.titanium.engine.brick.BrickFaceCovering
+import io.github.digorydoo.titanium.engine.brick.IBrickFaceCoveringRetriever
+import io.github.digorydoo.titanium.engine.physics.HitArea
+import io.github.digorydoo.titanium.engine.physics.MutableHitResult
+import io.github.digorydoo.titanium.engine.physics.rigid_body.FixedCuboidBody
+import io.github.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
+import io.github.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
+import io.github.digorydoo.titanium.engine.physics.strategy.sphere_vs_cuboid.BounceSphereVsCuboid
+import io.github.digorydoo.titanium.engine.physics.strategy.sphere_vs_cuboid.CheckSphereVsCuboid
+import io.github.digorydoo.titanium.engine.physics.strategy.sphere_vs_cuboid.SeparateSphereVsCuboid
+import io.github.digorydoo.titanium.engine.utils.Direction
+import io.github.digorydoo.titanium.engine.utils.assertGreaterThan
+import io.github.digorydoo.titanium.engine.utils.assertLessThan
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -25,7 +25,7 @@ internal class CollideSphereVsCuboidTest {
     private fun getSphere(mass: Float, radius: Float, elasticity: Float = 0.8f, friction: Float = 0.5f) =
         FixedSphereBody(
             "sphere",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = mass,
             radius = radius,
             gravity = false,
@@ -43,7 +43,7 @@ internal class CollideSphereVsCuboidTest {
     ) =
         FixedCuboidBody(
             "cuboid",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = mass,
             sizeX = sizeX,
             sizeY = sizeY,
@@ -63,7 +63,13 @@ internal class CollideSphereVsCuboidTest {
 
         fun check() = chk.check(b1, b1.nextPos, b2, b2.nextPos, hit)
 
-        fun shouldCollideAt(p1: Point3f, p2: Point3f, area: HitArea, expectedHitPt: Point3f, expectedNormal: Point3f) {
+        fun shouldCollideAt(
+            p1: Vector3f,
+            p2: Vector3f,
+            area: HitArea,
+            expectedHitPt: Vector3f,
+            expectedNormal: Vector3f,
+        ) {
             b1.nextPos.set(p1)
             b2.nextPos.set(p2)
 
@@ -85,7 +91,7 @@ internal class CollideSphereVsCuboidTest {
             assertGreaterThan(len, 0.99f, "hitNormal12")
         }
 
-        fun shouldNotCollideAt(p1: Point3f, p2: Point3f) {
+        fun shouldNotCollideAt(p1: Vector3f, p2: Vector3f) {
             b1.nextPos.set(p1)
             b2.nextPos.set(p2)
             assertFalse(check(), "should not collide at $p1 vs $p2, but collided with area ${hit.area2}")
@@ -93,10 +99,10 @@ internal class CollideSphereVsCuboidTest {
 
         // Check the situation of complete overlap
         shouldCollideAt(
-            Point3f(10.0f, 10.0f, 10.0f),
-            Point3f(10.0f, 10.0f, 10.0f),
+            Vector3f(10.0f, 10.0f, 10.0f),
+            Vector3f(10.0f, 10.0f, 10.0f),
             HitArea.NORTH_FACE, // this is arbitrary since we have a hit on all sides
-            Point3f(9.8f, 10.0f, 10.0f), // seems odd, but correct since the hit point is always on the colliding face
+            Vector3f(9.8f, 10.0f, 10.0f), // seems odd, but correct since the hit point is always on the colliding face
             Direction.southVector // points from sphere to cuboid, i.e. into the cuboid
         )
 
@@ -115,288 +121,288 @@ internal class CollideSphereVsCuboidTest {
         run {
             // Centre
             shouldCollideAt(
-                Point3f(xnorth - r + 0.000001f, y, z),
-                Point3f(x, y, z),
+                Vector3f(xnorth - r + 0.000001f, y, z),
+                Vector3f(x, y, z),
                 HitArea.NORTH_FACE,
-                Point3f(9.8f, y, z),
+                Vector3f(9.8f, y, z),
                 Direction.southVector,
             )
-            shouldNotCollideAt(Point3f(xnorth - r - 0.000001f, y, z), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xnorth - r - 0.000001f, y, z), Vector3f(x, y, z))
 
             // Close to the top
             shouldCollideAt(
-                Point3f(xnorth - r + 0.000001f, y, ztop - 0.001f),
-                Point3f(x, y, z),
+                Vector3f(xnorth - r + 0.000001f, y, ztop - 0.001f),
+                Vector3f(x, y, z),
                 HitArea.NORTH_FACE,
-                Point3f(9.8f, y, 10.099f),
+                Vector3f(9.8f, y, 10.099f),
                 Direction.southVector,
             )
-            shouldNotCollideAt(Point3f(xnorth - r + 0.000001f, y, ztop + 0.001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xnorth - r + 0.000001f, y, ztop + 0.001f), Vector3f(x, y, z))
 
             // Close to the bottom
             shouldCollideAt(
-                Point3f(xnorth - r + 0.000001f, y, zbottom + 0.001f),
-                Point3f(x, y, z),
+                Vector3f(xnorth - r + 0.000001f, y, zbottom + 0.001f),
+                Vector3f(x, y, z),
                 HitArea.NORTH_FACE,
-                Point3f(9.8f, y, 9.901f),
+                Vector3f(9.8f, y, 9.901f),
                 Direction.southVector,
             )
-            shouldNotCollideAt(Point3f(xnorth - r + 0.000001f, y, zbottom - 0.001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xnorth - r + 0.000001f, y, zbottom - 0.001f), Vector3f(x, y, z))
         }
 
         // East face
         run {
             // Centre
             shouldCollideAt(
-                Point3f(x, yeast + r - 0.000001f, z),
-                Point3f(x, y, z),
+                Vector3f(x, yeast + r - 0.000001f, z),
+                Vector3f(x, y, z),
                 HitArea.EAST_FACE,
-                Point3f(x, 10.15f, z),
+                Vector3f(x, 10.15f, z),
                 Direction.westVector,
             )
-            shouldNotCollideAt(Point3f(x, yeast + r + 0.000001f, z), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(x, yeast + r + 0.000001f, z), Vector3f(x, y, z))
 
             // Close to the top
             shouldCollideAt(
-                Point3f(x, yeast + r - 0.000001f, ztop - 0.001f),
-                Point3f(x, y, z),
+                Vector3f(x, yeast + r - 0.000001f, ztop - 0.001f),
+                Vector3f(x, y, z),
                 HitArea.EAST_FACE,
-                Point3f(x, 10.15f, 10.099f),
+                Vector3f(x, 10.15f, 10.099f),
                 Direction.westVector,
             )
-            shouldNotCollideAt(Point3f(x, yeast + r - 0.000001f, ztop + 0.001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(x, yeast + r - 0.000001f, ztop + 0.001f), Vector3f(x, y, z))
 
             // Close to the bottom
             shouldCollideAt(
-                Point3f(x, yeast + r - 0.000001f, zbottom + 0.001f),
-                Point3f(x, y, z),
+                Vector3f(x, yeast + r - 0.000001f, zbottom + 0.001f),
+                Vector3f(x, y, z),
                 HitArea.EAST_FACE,
-                Point3f(x, 10.15f, 9.901f),
+                Vector3f(x, 10.15f, 9.901f),
                 Direction.westVector,
             )
-            shouldNotCollideAt(Point3f(x, yeast + r - 0.000001f, zbottom - 0.001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(x, yeast + r - 0.000001f, zbottom - 0.001f), Vector3f(x, y, z))
         }
 
         // South face
         run {
             // Centre
             shouldCollideAt(
-                Point3f(xsouth + r - 0.000001f, y, z),
-                Point3f(x, y, z),
+                Vector3f(xsouth + r - 0.000001f, y, z),
+                Vector3f(x, y, z),
                 HitArea.SOUTH_FACE,
-                Point3f(10.2f, y, z),
+                Vector3f(10.2f, y, z),
                 Direction.northVector,
             )
-            shouldNotCollideAt(Point3f(xsouth + r + 0.000001f, y, z), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xsouth + r + 0.000001f, y, z), Vector3f(x, y, z))
 
             // Close to the top
             shouldCollideAt(
-                Point3f(xsouth + r - 0.000001f, y, ztop - 0.001f),
-                Point3f(x, y, z),
+                Vector3f(xsouth + r - 0.000001f, y, ztop - 0.001f),
+                Vector3f(x, y, z),
                 HitArea.SOUTH_FACE,
-                Point3f(10.2f, y, 10.099f),
+                Vector3f(10.2f, y, 10.099f),
                 Direction.northVector,
             )
-            shouldNotCollideAt(Point3f(xsouth + r - 0.000001f, y, ztop + 0.001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xsouth + r - 0.000001f, y, ztop + 0.001f), Vector3f(x, y, z))
 
             // Close to the bottom
             shouldCollideAt(
-                Point3f(xsouth + r - 0.000001f, y, zbottom + 0.001f),
-                Point3f(x, y, z),
+                Vector3f(xsouth + r - 0.000001f, y, zbottom + 0.001f),
+                Vector3f(x, y, z),
                 HitArea.SOUTH_FACE,
-                Point3f(10.2f, y, 9.901f),
+                Vector3f(10.2f, y, 9.901f),
                 Direction.northVector,
             )
-            shouldNotCollideAt(Point3f(xsouth + r - 0.000001f, y, zbottom - 0.001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xsouth + r - 0.000001f, y, zbottom - 0.001f), Vector3f(x, y, z))
         }
 
         // West face
         run {
             // Centre
             shouldCollideAt(
-                Point3f(x, ywest - r + 0.000001f, z),
-                Point3f(x, y, z),
+                Vector3f(x, ywest - r + 0.000001f, z),
+                Vector3f(x, y, z),
                 HitArea.WEST_FACE,
-                Point3f(x, 9.85f, z),
+                Vector3f(x, 9.85f, z),
                 Direction.eastVector,
             )
-            shouldNotCollideAt(Point3f(x, ywest - r - 0.000001f, z), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(x, ywest - r - 0.000001f, z), Vector3f(x, y, z))
 
             // Close to the top
             shouldCollideAt(
-                Point3f(x, ywest - r + 0.000001f, ztop - 0.001f),
-                Point3f(x, y, z),
+                Vector3f(x, ywest - r + 0.000001f, ztop - 0.001f),
+                Vector3f(x, y, z),
                 HitArea.WEST_FACE,
-                Point3f(x, 9.85f, 10.099f),
+                Vector3f(x, 9.85f, 10.099f),
                 Direction.eastVector,
             )
-            shouldNotCollideAt(Point3f(x, ywest - r + 0.000001f, ztop + 0.001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(x, ywest - r + 0.000001f, ztop + 0.001f), Vector3f(x, y, z))
 
             // Close to the bottom
             shouldCollideAt(
-                Point3f(x, ywest - r + 0.000001f, zbottom + 0.001f),
-                Point3f(x, y, z),
+                Vector3f(x, ywest - r + 0.000001f, zbottom + 0.001f),
+                Vector3f(x, y, z),
                 HitArea.WEST_FACE,
-                Point3f(x, 9.85f, 9.901f),
+                Vector3f(x, 9.85f, 9.901f),
                 Direction.eastVector,
             )
-            shouldNotCollideAt(Point3f(x, ywest - r + 0.000001f, zbottom - 0.001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(x, ywest - r + 0.000001f, zbottom - 0.001f), Vector3f(x, y, z))
         }
 
         // Top face
         run {
             // Centre
             shouldCollideAt(
-                Point3f(x, y, ztop + r - 0.000001f),
-                Point3f(x, y, z),
+                Vector3f(x, y, ztop + r - 0.000001f),
+                Vector3f(x, y, z),
                 HitArea.TOP_FACE,
-                Point3f(x, y, 10.1f),
+                Vector3f(x, y, 10.1f),
                 Direction.downVector,
             )
-            shouldNotCollideAt(Point3f(x, y, ztop + r + 0.000001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(x, y, ztop + r + 0.000001f), Vector3f(x, y, z))
 
             // Close to the north
             shouldCollideAt(
-                Point3f(xnorth, y, ztop + r - 0.000001f),
-                Point3f(x, y, z),
+                Vector3f(xnorth, y, ztop + r - 0.000001f),
+                Vector3f(x, y, z),
                 HitArea.TOP_FACE,
-                Point3f(9.8f, y, 10.1f),
+                Vector3f(9.8f, y, 10.1f),
                 Direction.downVector,
             )
-            shouldNotCollideAt(Point3f(xnorth, y, ztop + r + 0.000001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xnorth, y, ztop + r + 0.000001f), Vector3f(x, y, z))
 
             // Close to the east
             shouldCollideAt(
-                Point3f(x, yeast, ztop + r - 0.000001f),
-                Point3f(x, y, z),
+                Vector3f(x, yeast, ztop + r - 0.000001f),
+                Vector3f(x, y, z),
                 HitArea.TOP_FACE,
-                Point3f(x, 10.15f, 10.1f),
+                Vector3f(x, 10.15f, 10.1f),
                 Direction.downVector,
             )
-            shouldNotCollideAt(Point3f(x, yeast, ztop + r + 0.000001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(x, yeast, ztop + r + 0.000001f), Vector3f(x, y, z))
 
             // Close to the south
             shouldCollideAt(
-                Point3f(xsouth, y, ztop + r - 0.000001f),
-                Point3f(x, y, z),
+                Vector3f(xsouth, y, ztop + r - 0.000001f),
+                Vector3f(x, y, z),
                 HitArea.TOP_FACE,
-                Point3f(10.2f, y, 10.1f),
+                Vector3f(10.2f, y, 10.1f),
                 Direction.downVector,
             )
-            shouldNotCollideAt(Point3f(xsouth, y, ztop + r + 0.000001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xsouth, y, ztop + r + 0.000001f), Vector3f(x, y, z))
 
             // Close to the west
             shouldCollideAt(
-                Point3f(x, ywest, ztop + r - 0.000001f),
-                Point3f(x, y, z),
+                Vector3f(x, ywest, ztop + r - 0.000001f),
+                Vector3f(x, y, z),
                 HitArea.TOP_FACE,
-                Point3f(x, 9.85f, 10.1f),
+                Vector3f(x, 9.85f, 10.1f),
                 Direction.downVector,
             )
-            shouldNotCollideAt(Point3f(x, ywest, ztop + r + 0.000001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(x, ywest, ztop + r + 0.000001f), Vector3f(x, y, z))
         }
 
         // Bottom face
         run {
             // Centre
             shouldCollideAt(
-                Point3f(x, y, zbottom - r + 0.000001f),
-                Point3f(x, y, z),
+                Vector3f(x, y, zbottom - r + 0.000001f),
+                Vector3f(x, y, z),
                 HitArea.BOTTOM_FACE,
-                Point3f(x, y, 9.9f),
+                Vector3f(x, y, 9.9f),
                 Direction.upVector,
             )
-            shouldNotCollideAt(Point3f(x, y, zbottom - r - 0.000001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(x, y, zbottom - r - 0.000001f), Vector3f(x, y, z))
 
             // Close to the north
             shouldCollideAt(
-                Point3f(xnorth, y, zbottom - r + 0.000001f),
-                Point3f(x, y, z),
+                Vector3f(xnorth, y, zbottom - r + 0.000001f),
+                Vector3f(x, y, z),
                 HitArea.BOTTOM_FACE,
-                Point3f(9.8f, y, 9.9f),
+                Vector3f(9.8f, y, 9.9f),
                 Direction.upVector,
             )
-            shouldNotCollideAt(Point3f(xnorth, y, zbottom - r - 0.000001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xnorth, y, zbottom - r - 0.000001f), Vector3f(x, y, z))
 
             // Close to the east
             shouldCollideAt(
-                Point3f(x, yeast, zbottom - r + 0.000001f),
-                Point3f(x, y, z),
+                Vector3f(x, yeast, zbottom - r + 0.000001f),
+                Vector3f(x, y, z),
                 HitArea.BOTTOM_FACE,
-                Point3f(x, 10.15f, 9.9f),
+                Vector3f(x, 10.15f, 9.9f),
                 Direction.upVector,
             )
-            shouldNotCollideAt(Point3f(x, yeast, zbottom - r - 0.000001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(x, yeast, zbottom - r - 0.000001f), Vector3f(x, y, z))
 
             // Close to the south
             shouldCollideAt(
-                Point3f(xsouth, y, zbottom - r + 0.000001f),
-                Point3f(x, y, z),
+                Vector3f(xsouth, y, zbottom - r + 0.000001f),
+                Vector3f(x, y, z),
                 HitArea.BOTTOM_FACE,
-                Point3f(10.2f, y, 9.9f),
+                Vector3f(10.2f, y, 9.9f),
                 Direction.upVector,
             )
-            shouldNotCollideAt(Point3f(xsouth, y, zbottom - r - 0.000001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xsouth, y, zbottom - r - 0.000001f), Vector3f(x, y, z))
 
             // Close to the west
             shouldCollideAt(
-                Point3f(x, ywest, zbottom - r + 0.000001f),
-                Point3f(x, y, z),
+                Vector3f(x, ywest, zbottom - r + 0.000001f),
+                Vector3f(x, y, z),
                 HitArea.BOTTOM_FACE,
-                Point3f(x, 9.85f, 9.9f),
+                Vector3f(x, 9.85f, 9.9f),
                 Direction.upVector,
             )
-            shouldNotCollideAt(Point3f(x, ywest, zbottom - r - 0.000001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(x, ywest, zbottom - r - 0.000001f), Vector3f(x, y, z))
         }
 
         // Top south-east corner
         run {
             // When the sphere's centre point is aligned to the corner in two axes
             shouldCollideAt(
-                Point3f(xsouth + r - 0.000001f, yeast, ztop),
-                Point3f(x, y, z),
+                Vector3f(xsouth + r - 0.000001f, yeast, ztop),
+                Vector3f(x, y, z),
                 HitArea.SOUTH_FACE,
-                Point3f(10.2f, 10.15f, 10.1f),
+                Vector3f(10.2f, 10.15f, 10.1f),
                 Direction.northVector,
             )
-            shouldNotCollideAt(Point3f(xsouth + r + 0.000001f, yeast, ztop), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xsouth + r + 0.000001f, yeast, ztop), Vector3f(x, y, z))
             shouldCollideAt(
-                Point3f(xsouth, yeast + r - 0.000001f, ztop),
-                Point3f(x, y, z),
+                Vector3f(xsouth, yeast + r - 0.000001f, ztop),
+                Vector3f(x, y, z),
                 HitArea.EAST_FACE,
-                Point3f(10.2f, 10.15f, 10.1f),
+                Vector3f(10.2f, 10.15f, 10.1f),
                 Direction.westVector,
             )
-            shouldNotCollideAt(Point3f(xsouth, yeast + r + 0.000001f, ztop), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xsouth, yeast + r + 0.000001f, ztop), Vector3f(x, y, z))
             shouldCollideAt(
-                Point3f(xsouth, yeast, ztop + r - 0.000001f),
-                Point3f(x, y, z),
+                Vector3f(xsouth, yeast, ztop + r - 0.000001f),
+                Vector3f(x, y, z),
                 HitArea.TOP_FACE,
-                Point3f(10.2f, 10.15f, 10.1f),
+                Vector3f(10.2f, 10.15f, 10.1f),
                 Direction.downVector,
             )
-            shouldNotCollideAt(Point3f(xsouth, yeast, ztop + r + 0.000001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xsouth, yeast, ztop + r + 0.000001f), Vector3f(x, y, z))
 
             // When the centre point isn't perfectly aligned with the corner in any axis
             shouldCollideAt(
-                Point3f(xsouth + r - 0.22f, yeast + r - 0.209f, ztop + r - 0.206f),
-                Point3f(x, y, z),
+                Vector3f(xsouth + r - 0.22f, yeast + r - 0.209f, ztop + r - 0.206f),
+                Vector3f(x, y, z),
                 HitArea.TOP_FACE,
-                Point3f(10.2f, 10.15f, 10.1f),
+                Vector3f(10.2f, 10.15f, 10.1f),
                 Direction.downVector,
             )
             shouldCollideAt(
-                Point3f(xsouth + r - 0.209f, yeast + r - 0.206f, ztop + r - 0.22f),
-                Point3f(x, y, z),
+                Vector3f(xsouth + r - 0.209f, yeast + r - 0.206f, ztop + r - 0.22f),
+                Vector3f(x, y, z),
                 HitArea.EAST_FACE,
-                Point3f(10.2f, 10.15f, 10.1f),
+                Vector3f(10.2f, 10.15f, 10.1f),
                 Direction.westVector,
             )
             shouldCollideAt(
-                Point3f(xsouth + r - 0.206f, yeast + r - 0.22f, ztop + r - 0.209f),
-                Point3f(x, y, z),
+                Vector3f(xsouth + r - 0.206f, yeast + r - 0.22f, ztop + r - 0.209f),
+                Vector3f(x, y, z),
                 HitArea.SOUTH_FACE,
-                Point3f(10.2f, 10.15f, 10.1f),
+                Vector3f(10.2f, 10.15f, 10.1f),
                 Direction.northVector,
             )
         }
@@ -405,50 +411,50 @@ internal class CollideSphereVsCuboidTest {
         run {
             // When the sphere's centre point is aligned to the corner in two axes
             shouldCollideAt(
-                Point3f(xnorth - r + 0.000001f, ywest, zbottom),
-                Point3f(x, y, z),
+                Vector3f(xnorth - r + 0.000001f, ywest, zbottom),
+                Vector3f(x, y, z),
                 HitArea.NORTH_FACE,
-                Point3f(9.8f, 9.85f, 9.9f),
+                Vector3f(9.8f, 9.85f, 9.9f),
                 Direction.southVector,
             )
-            shouldNotCollideAt(Point3f(xnorth - r - 0.000001f, ywest, zbottom), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xnorth - r - 0.000001f, ywest, zbottom), Vector3f(x, y, z))
             shouldCollideAt(
-                Point3f(xnorth, ywest - r + 0.000001f, zbottom),
-                Point3f(x, y, z),
+                Vector3f(xnorth, ywest - r + 0.000001f, zbottom),
+                Vector3f(x, y, z),
                 HitArea.WEST_FACE,
-                Point3f(9.8f, 9.85f, 9.9f),
+                Vector3f(9.8f, 9.85f, 9.9f),
                 Direction.eastVector,
             )
-            shouldNotCollideAt(Point3f(xnorth, ywest - r - 0.000001f, zbottom), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xnorth, ywest - r - 0.000001f, zbottom), Vector3f(x, y, z))
             shouldCollideAt(
-                Point3f(xnorth, ywest, zbottom - r + 0.000001f),
-                Point3f(x, y, z),
+                Vector3f(xnorth, ywest, zbottom - r + 0.000001f),
+                Vector3f(x, y, z),
                 HitArea.BOTTOM_FACE,
-                Point3f(9.8f, 9.85f, 9.9f),
+                Vector3f(9.8f, 9.85f, 9.9f),
                 Direction.upVector,
             )
-            shouldNotCollideAt(Point3f(xnorth, ywest, zbottom - r - 0.000001f), Point3f(x, y, z))
+            shouldNotCollideAt(Vector3f(xnorth, ywest, zbottom - r - 0.000001f), Vector3f(x, y, z))
 
             // When the centre point isn't perfectly aligned with the corner in any axis
             shouldCollideAt(
-                Point3f(xnorth - r + 0.22f, ywest - r + 0.209f, zbottom - r + 0.206f),
-                Point3f(x, y, z),
+                Vector3f(xnorth - r + 0.22f, ywest - r + 0.209f, zbottom - r + 0.206f),
+                Vector3f(x, y, z),
                 HitArea.BOTTOM_FACE,
-                Point3f(9.8f, 9.85f, 9.9f),
+                Vector3f(9.8f, 9.85f, 9.9f),
                 Direction.upVector,
             )
             shouldCollideAt(
-                Point3f(xnorth - r + 0.209f, ywest - r + 0.206f, zbottom - r + 0.22f),
-                Point3f(x, y, z),
+                Vector3f(xnorth - r + 0.209f, ywest - r + 0.206f, zbottom - r + 0.22f),
+                Vector3f(x, y, z),
                 HitArea.WEST_FACE,
-                Point3f(9.8f, 9.85f, 9.9f),
+                Vector3f(9.8f, 9.85f, 9.9f),
                 Direction.eastVector,
             )
             shouldCollideAt(
-                Point3f(xnorth - r + 0.206f, ywest - r + 0.22f, zbottom - r + 0.209f),
-                Point3f(x, y, z),
+                Vector3f(xnorth - r + 0.206f, ywest - r + 0.22f, zbottom - r + 0.209f),
+                Vector3f(x, y, z),
                 HitArea.NORTH_FACE,
-                Point3f(9.8f, 9.85f, 9.9f),
+                Vector3f(9.8f, 9.85f, 9.9f),
                 Direction.southVector,
             )
         }
@@ -1470,7 +1476,7 @@ internal class CollideSphereVsCuboidTest {
         // mock brick volume
         val bricks = object: IBrickFaceCoveringRetriever {
             override fun getBrickFaceCovering(
-                brickCoords: Point3i,
+                brickCoords: Vector3i,
                 faceNormalX: Float,
                 faceNormalY: Float,
                 faceNormalZ: Float,
@@ -1497,7 +1503,7 @@ internal class CollideSphereVsCuboidTest {
                 cuboid.nextPos.z,
                 body2IsBrick = true,
                 bricks,
-                brickCoords = Point3i(31, 4, 1),
+                brickCoords = Vector3i(31, 4, 1),
                 hit
             ),
             "should collide"

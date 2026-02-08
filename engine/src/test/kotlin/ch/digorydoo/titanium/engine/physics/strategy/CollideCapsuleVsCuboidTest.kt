@@ -1,14 +1,14 @@
-package ch.digorydoo.titanium.engine.physics.strategy
+package io.github.digorydoo.titanium.engine.physics.strategy
 
-import ch.digorydoo.kutils.point.Point3f
-import ch.digorydoo.titanium.engine.physics.HitArea
-import ch.digorydoo.titanium.engine.physics.MutableHitResult
-import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCapsuleBody
-import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCuboidBody
-import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
-import ch.digorydoo.titanium.engine.physics.strategy.capsule_vs_cuboid.BounceCapsuleVsCuboid
-import ch.digorydoo.titanium.engine.physics.strategy.capsule_vs_cuboid.CheckCapsuleVsCuboid
-import ch.digorydoo.titanium.engine.physics.strategy.capsule_vs_cuboid.SeparateCapsuleVsCuboid
+import ch.digorydoo.kutils.vector.Vector3f
+import io.github.digorydoo.titanium.engine.physics.HitArea
+import io.github.digorydoo.titanium.engine.physics.MutableHitResult
+import io.github.digorydoo.titanium.engine.physics.rigid_body.FixedCapsuleBody
+import io.github.digorydoo.titanium.engine.physics.rigid_body.FixedCuboidBody
+import io.github.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
+import io.github.digorydoo.titanium.engine.physics.strategy.capsule_vs_cuboid.BounceCapsuleVsCuboid
+import io.github.digorydoo.titanium.engine.physics.strategy.capsule_vs_cuboid.CheckCapsuleVsCuboid
+import io.github.digorydoo.titanium.engine.physics.strategy.capsule_vs_cuboid.SeparateCapsuleVsCuboid
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -18,7 +18,7 @@ internal class CollideCapsuleVsCuboidTest {
     private fun getCapsule(mass: Float, radius: Float, height: Float, friction: Float = 0.5f) =
         FixedCapsuleBody(
             "capsule",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = mass,
             radius = radius,
             height = height,
@@ -30,7 +30,7 @@ internal class CollideCapsuleVsCuboidTest {
     private fun getCuboid(mass: Float, sizeX: Float, sizeY: Float, sizeZ: Float, friction: Float = 0.72f) =
         FixedCuboidBody(
             "cuboid",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = mass,
             sizeX = sizeX,
             sizeY = sizeY,

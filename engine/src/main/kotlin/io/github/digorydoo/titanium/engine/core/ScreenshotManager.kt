@@ -1,0 +1,25 @@
+package io.github.digorydoo.titanium.engine.core
+
+import io.github.digorydoo.titanium.engine.texture.ImageData
+
+/**
+ * This is the abstract part of the manager that deals with screenshots.
+ */
+abstract class ScreenshotManager {
+    protected interface Listener {
+        fun onScreenshot(screenshot: ImageData)
+    }
+
+    var isAboutToTakeScreenshot = false; protected set
+    protected val listeners = mutableListOf<Listener>()
+
+    fun take(lambda: (screenshot: ImageData) -> Unit) {
+        listeners.add(
+            object: Listener {
+                override fun onScreenshot(screenshot: ImageData) {
+                    lambda(screenshot)
+                }
+            }
+        )
+    }
+}

@@ -58,7 +58,7 @@ APP_VERSION="1.0.0"
 COPYRIGHT="Copyright 2025 by Digory Doolittle"
 DESCRIPTION="Game"
 EXE_NAME="Titanium"
-MAIN_CLASS="ch.digorydoo.titanium.main.core.MainKt"
+MAIN_CLASS="io.github.digorydoo.titanium.main.core.MainKt"
 VENDOR="Digory Doolittle"
 
 if [[ "$OS_TYPE" == "Darwin" ]]; then
@@ -152,7 +152,7 @@ echo "Making bundle..."
 cp "$MAIN_JAR" "$COPIED_ASSETS_DIR"/"$MAIN_JAR_NAME"
 
 if [[ "$OS_TYPE" == "Darwin" ]]; then
-   MAC_PCK_ID="ch.digorydoo.titanium"
+   MAC_PCK_ID="io.github.digorydoo.titanium"
    MAC_PCK_NAME="$EXE_NAME" # the name that appears in the menu bar
    MAC_APP_CATEGORY="game"
    BUNDLE_TYPE="app-image"                    # valid values are: app-image, dmg, pkg

@@ -1,6 +1,6 @@
-package ch.digorydoo.titanium.engine.material
+package io.github.digorydoo.titanium.engine.material
 
-import ch.digorydoo.titanium.engine.mesh.MeshMaterial
+import io.github.digorydoo.titanium.engine.mesh.MeshMaterial
 import kotlin.test.Test
 import kotlin.test.assertFalse
 

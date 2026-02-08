@@ -7,16 +7,8 @@ kotlin {
     jvmToolchain(libs.versions.targetJDK.get().toInt())
 }
 
-sourceSets {
-    main {
-        java {
-            setSrcDirs(listOf("src/java"))
-        }
-    }
-}
-
 application {
-    mainClass.set("ch.digorydoo.titanium.import_asset.MainKt")
+    mainClass.set("io.github.digorydoo.titanium.import_asset.MainKt")
 }
 
 dependencies {

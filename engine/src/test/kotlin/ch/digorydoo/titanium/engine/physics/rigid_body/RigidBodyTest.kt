@@ -1,6 +1,6 @@
-package ch.digorydoo.titanium.engine.physics.rigid_body
+package io.github.digorydoo.titanium.engine.physics.rigid_body
 
-import ch.digorydoo.kutils.point.MutablePoint3f
+import ch.digorydoo.kutils.vector.MutableVector3f
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -9,7 +9,7 @@ import kotlin.test.assertNull
 
 internal class CollideSphereVsSphereTest {
     private fun getTestBody(
-        pos: MutablePoint3f,
+        pos: MutableVector3f,
         elasticity: Float,
         friction: Float,
         mass: Float,
@@ -31,7 +31,7 @@ internal class CollideSphereVsSphereTest {
     @Test
     fun `should correctly initialize its internal values`() {
         val b1 = getTestBody(
-            pos = MutablePoint3f(4.0f, 5.0f, 6.0f),
+            pos = MutableVector3f(4.0f, 5.0f, 6.0f),
             mass = 7.0f,
             gravity = false,
             elasticity = 0.5f,
@@ -71,7 +71,7 @@ internal class CollideSphereVsSphereTest {
     @Test
     fun `should correctly update its values when forces are applied`() {
         val b1 = getTestBody(
-            pos = MutablePoint3f(4.0f, 5.0f, 6.0f),
+            pos = MutableVector3f(4.0f, 5.0f, 6.0f),
             mass = 7.0f,
             gravity = false,
             elasticity = 0.5f,
@@ -127,7 +127,7 @@ internal class CollideSphereVsSphereTest {
     @Test
     fun `should correctly move the body when told to do so`() {
         val b1 = getTestBody(
-            pos = MutablePoint3f(4.0f, 5.0f, 6.0f),
+            pos = MutableVector3f(4.0f, 5.0f, 6.0f),
             mass = 7.0f,
             gravity = false,
             elasticity = 0.5f,
@@ -199,7 +199,7 @@ internal class CollideSphereVsSphereTest {
     @Test
     fun `should correctly stop all motion when told to do so`() {
         val b1 = getTestBody(
-            pos = MutablePoint3f(4.0f, 5.0f, 6.0f),
+            pos = MutableVector3f(4.0f, 5.0f, 6.0f),
             mass = 7.0f,
             gravity = false,
             elasticity = 0.5f,

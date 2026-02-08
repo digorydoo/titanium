@@ -1,4 +1,4 @@
-package ch.digorydoo.titanium.engine.sound
+package io.github.digorydoo.titanium.engine.sound
 
 import kotlin.test.Test
 import kotlin.test.assertFalse

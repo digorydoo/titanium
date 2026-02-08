@@ -1,6 +1,6 @@
-package ch.digorydoo.titanium.game.i18n
+package io.github.digorydoo.titanium.game.i18n
 
-import ch.digorydoo.titanium.engine.i18n.I18nBundle
+import io.github.digorydoo.titanium.engine.i18n.I18nBundle
 import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals

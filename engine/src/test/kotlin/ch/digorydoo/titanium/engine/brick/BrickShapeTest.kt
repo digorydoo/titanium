@@ -1,4 +1,4 @@
-package ch.digorydoo.titanium.engine.brick
+package io.github.digorydoo.titanium.engine.brick
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

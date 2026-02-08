@@ -2,6 +2,18 @@
 
 ## Backlog
 
+* Intermissions
+  * Any user interaction must be disabled during intermission
+    * Camera control should be allowed unless we're inside a cutscene
+  * Dialogues must be aligned with larger bottom margin when cutscene strip are active
+  * Cutscene strips should be faded in/moved
+  * CutsceneStripGel and UIAreaGel should both not create a texture for their colour; UIRenderer should support colour
+  * Skip button should appear when cutscene starts
+    * Disappears again after 1 second
+    * Reappears on user input
+    * `[X]`, must be pressed down 2 seconds to skip cutscene
+    * Must go away when endCutscene() was called
+
 * Bugs
   * Log: "Unloading all 3450 of non-shared programmes..." BrickVolumeRendererImpl should be created by BrickVolume, not
     by BrickSubvolume!
@@ -13,15 +25,10 @@
   * Sun seems broken, is nowhere to be seen
   * If you change the smooth property of a height map while in edit mode, all changes will be lost!
 
-* Intermissions
-  * Implement begin cutscene/cutscene indicator bars
-  * Any user interaction must be disabled during intermission except camera
-  * Camera movement must be disabled during cutscene
-
 * Actions
   * We _could_ make action delegates optional and ask the Scene instead to implement the action given the spawnpt id.
-  * However, it is probably totally unnecessary, because Gels can be parametrised via spawnpt variables, e.g.:
-    * a resusable Shrine gel just needs to parametrise the target room id
+  * However, it is probably totally unnecessary, because Gels can be parametrized via spawnpt variables, e.g.:
+    * a resusable Shrine gel just needs to parametrize the target room id
     * a broken Shrine would use a slightly altered mesh anyway and could be an entire different gel
     * a generic Lever could find its target dynamically, delegating the action to the target gel
     * a reusable locked door just needs an id for its matching key
@@ -40,10 +47,6 @@
   * Conditions and side-effects must be covered by a map each providing lambdas
   * Therefore, each conversation also has its own Kotlin class
   * Texts can contain simple HTML tags such as <b>bold and red</b>, <emph>just bold</emph>, <small>small, grey</small>
-  * FRAGEN
-    * Is this really necessary?
-    * Have Zelda-style games enough texts/long conversations to justify this?
-    * Is this really better than pure Kotlin code plus localised texts? YES.
 
 ```
 conversation {
@@ -127,7 +130,7 @@ conversation {
 
 * Materials
   * Ideally, MeshMaterial and BrickMaterial should be merged, and both should use the same shaders
-  * Most materials should have a shader of their own, to optimise computation for that particular material
+  * Most materials should have a shader of their own, to optimize computation for that particular material
   * Metallic material should shrink the range of diffuse light such that the point of 100% diffuse light becomes an
     area, and the range where diffuse light is between 0% and 100% is pressed together. This increases the overall
     contrast and reduces the range of soft transition.
@@ -149,9 +152,9 @@ conversation {
   * Implement angular momentum for spheres
 
 * Shadows
-  * Optimise shadow implementation
+  * Optimize shadow implementation
     * MacBook Pro (which has strong CPU and weak GPU) has similar FPS, slightly faster than Mac Mini
-    * So, both CPU and GPU should probably be optimised
+    * So, both CPU and GPU should probably be optimized
 
   * Make the shadow map more dense outside; or use multiple shadow maps
     * sampler2DArray to hold multiple layers
@@ -165,7 +168,7 @@ conversation {
 
 * Dialogues and fonts
   * The story time should be paused while the gameMenu or a dialog is active
-  * Dialogue text needs a way to emphasise certain words (bold, red) for highlighting important keywords
+  * Dialogue text needs a way to emphasize certain words (bold, red) for highlighting important keywords
   * Maybe also a way to make the text appear smaller and less bright (if an NPC is whispering)
   * When an item is highlighted whose step != smallStep, should show a hint that ALT/ZR can be used
 
@@ -291,9 +294,9 @@ conversation {
     * Double-bevel bricks (horiz bevel at 0.5m height, but no additional vertical division) for walls
   * Pull A corners further back when they're next to each other (to join ramps)
   * Make alt-ramp half its height when joining a ramp that has its downside on the alt-ramp's downside
-  * Optimise Tesselator by implementing quads with GL triangle strips
-  * Optimise Tesselator by implementing fans with GL fans
-  * Optimise more of brick face culling, e.g. bevel checking against bevel
+  * Optimize Tesselator by implementing quads with GL triangle strips
+  * Optimize Tesselator by implementing fans with GL fans
+  * Optimize more of brick face culling, e.g. bevel checking against bevel
 
 * Camera
   * Improve camera by moving away from a near wall (camera can sometimes look into a wall)
@@ -305,7 +308,7 @@ conversation {
 
 ## Optimisation
 
-Some parts of the engine need a lot of optimisation. Here are a few ideas:
+Some parts of the engine need a lot of optimization. Here are a few ideas:
 
 From <https://docs.nvidia.com/jetson/archives/r36.2/DeveloperGuide/SD/Graphics/GraphicsProgramming/OpenglEsProgrammingTips.html>
 
@@ -313,7 +316,7 @@ From <https://docs.nvidia.com/jetson/archives/r36.2/DeveloperGuide/SD/Graphics/G
 * Batching shaders together is beneficial
 * A very common mistake is setting the tex parameters for filtering and wrapping every time a texture object is bound
 * Another common mistake is updating uniforms that haven't changed since the last time the program was used
-* Per-vertex colours are accurately stored with 3 x BYTEs with a flag to normalise in VertexAttributePointer
+* Per-vertex colours are accurately stored with 3 x BYTEs with a flag to normalize in VertexAttributePointer
 * If some attribute for a primitive or a number of primitives is constant for the same draw call, then disable the
   particular vertex attribute index and set the constant value with VertexAttrib*() instead of replicating the data.
 * The number of vertex attributes is a limited resource. If each vertex comes with two sets of texture coordinates for
@@ -324,7 +327,7 @@ From <https://docs.nvidia.com/jetson/archives/r36.2/DeveloperGuide/SD/Graphics/G
   and that no code is calling glDrawElements() without a buffer bind.
 * A common mistake is to have too many small buffers, leading to too many draw calls and thus high CPU load
 * USE VERTEX INDICES AND MAKE UNIQUE IDENTICAL POSITIONS AND NORMALS!
-* Do not write large or generalised shaders
+* Do not write large or generalized shaders
 * Be careful with assuming that conditionals skip computations and reduce the workload
 * Many application-defined uniforms, colours, normals and texture samples can usually be represented using lowp
 * Use mipmaps when appropriate

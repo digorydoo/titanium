@@ -1,18 +1,18 @@
-package ch.digorydoo.titanium.engine.physics.strategy
+package io.github.digorydoo.titanium.engine.physics.strategy
 
-import ch.digorydoo.kutils.point.MutablePoint3f
-import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.kutils.vector.MutableVector3f
+import ch.digorydoo.kutils.vector.Vector3f
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.titanium.engine.physics.HitArea
-import ch.digorydoo.titanium.engine.physics.MutableHitResult
-import ch.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
-import ch.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
-import ch.digorydoo.titanium.engine.physics.strategy.sphere_vs_sphere.BounceSphereVsSphere
-import ch.digorydoo.titanium.engine.physics.strategy.sphere_vs_sphere.CheckSphereVsSphere
-import ch.digorydoo.titanium.engine.physics.strategy.sphere_vs_sphere.SeparateSphereVsSphere
-import ch.digorydoo.titanium.engine.utils.assertGreaterThan
-import ch.digorydoo.titanium.engine.utils.assertLessThan
-import ch.digorydoo.titanium.engine.utils.assertWithin
+import io.github.digorydoo.titanium.engine.physics.HitArea
+import io.github.digorydoo.titanium.engine.physics.MutableHitResult
+import io.github.digorydoo.titanium.engine.physics.rigid_body.FixedSphereBody
+import io.github.digorydoo.titanium.engine.physics.rigid_body.RigidBody.Companion.LARGE_MASS
+import io.github.digorydoo.titanium.engine.physics.strategy.sphere_vs_sphere.BounceSphereVsSphere
+import io.github.digorydoo.titanium.engine.physics.strategy.sphere_vs_sphere.CheckSphereVsSphere
+import io.github.digorydoo.titanium.engine.physics.strategy.sphere_vs_sphere.SeparateSphereVsSphere
+import io.github.digorydoo.titanium.engine.utils.assertGreaterThan
+import io.github.digorydoo.titanium.engine.utils.assertLessThan
+import io.github.digorydoo.titanium.engine.utils.assertWithin
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -24,7 +24,7 @@ internal class CollideSphereVsSphereTest {
     fun `should collide when the two spheres get too close and the speed is parallel to the x-axis`() {
         val b1 = FixedSphereBody(
             "b1",
-            initialPos = MutablePoint3f(42.1f, 64.1f, 96.5f),
+            initialPos = MutableVector3f(42.1f, 64.1f, 96.5f),
             mass = 10.0f,
             gravity = false,
             radius = 0.3f,
@@ -33,7 +33,7 @@ internal class CollideSphereVsSphereTest {
         )
         val b2 = FixedSphereBody(
             "b2",
-            initialPos = MutablePoint3f(42.6f, 64.2f, 96.57f),
+            initialPos = MutableVector3f(42.6f, 64.2f, 96.57f),
             mass = 9.0f,
             gravity = false,
             radius = 0.2f,
@@ -137,8 +137,8 @@ internal class CollideSphereVsSphereTest {
         assertEquals(96.57005f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // Check the gap between the nextPos
-        val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
-        val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
+        val centre1 = Vector3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
+        val centre2 = Vector3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
         val newDistance = centre1.distanceTo(centre2).toFloat()
         assertWithin(0.0f ..< 0.00006f, newDistance - (b1.radius + b2.radius), "gap") // less than 6 mm/100
 
@@ -167,7 +167,7 @@ internal class CollideSphereVsSphereTest {
     fun `should collide when the two spheres get too close and the speed is parallel to the y-axis`() {
         val b1 = FixedSphereBody(
             "b1",
-            initialPos = MutablePoint3f(64.2f, 42.1f, 96.5f),
+            initialPos = MutableVector3f(64.2f, 42.1f, 96.5f),
             mass = 8.0f,
             gravity = false,
             radius = 0.3f,
@@ -176,7 +176,7 @@ internal class CollideSphereVsSphereTest {
         )
         val b2 = FixedSphereBody(
             "b2",
-            initialPos = MutablePoint3f(64.1f, 42.6f, 96.57f),
+            initialPos = MutableVector3f(64.1f, 42.6f, 96.57f),
             mass = 9.0f,
             gravity = false,
             radius = 0.2f,
@@ -285,8 +285,8 @@ internal class CollideSphereVsSphereTest {
         assertEquals(0.06365099f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
 
         // Check the gap between the nextPos
-        val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
-        val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
+        val centre1 = Vector3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
+        val centre2 = Vector3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
         val newDistance = centre1.distanceTo(centre2).toFloat()
         assertWithin(0.0f ..< 0.00006f, newDistance - (b1.radius + b2.radius), "gap") // less than 6 mm/100
     }
@@ -295,7 +295,7 @@ internal class CollideSphereVsSphereTest {
     fun `should collide when the two spheres get too close and the speed is parallel to the z-axis`() {
         val b1 = FixedSphereBody(
             "b1",
-            initialPos = MutablePoint3f(64.2f, 42.1f, 96.88f),
+            initialPos = MutableVector3f(64.2f, 42.1f, 96.88f),
             mass = 8.0f,
             gravity = false,
             radius = 0.3f,
@@ -304,7 +304,7 @@ internal class CollideSphereVsSphereTest {
         )
         val b2 = FixedSphereBody(
             "b2",
-            initialPos = MutablePoint3f(64.1f, 42.2f, 96.4f),
+            initialPos = MutableVector3f(64.1f, 42.2f, 96.4f),
             mass = 9.0f,
             gravity = false,
             radius = 0.2f,
@@ -413,8 +413,8 @@ internal class CollideSphereVsSphereTest {
         assertEquals(-0.1269107f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
 
         // Check the distance between the nextPos
-        val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
-        val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
+        val centre1 = Vector3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
+        val centre2 = Vector3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
         val newDistance = centre1.distanceTo(centre2).toFloat()
         assertWithin(0.0f ..< 0.00006f, newDistance - (b1.radius + b2.radius), "gap") // less than 6 mm/100
     }
@@ -423,7 +423,7 @@ internal class CollideSphereVsSphereTest {
     fun `should collide when the two spheres get to close and the speed is arbitrary`() {
         val b1 = FixedSphereBody(
             "b1",
-            initialPos = MutablePoint3f(5.0f, 7.2f, 3.0f),
+            initialPos = MutableVector3f(5.0f, 7.2f, 3.0f),
             mass = 42.0f,
             gravity = false,
             radius = 3.0f,
@@ -432,7 +432,7 @@ internal class CollideSphereVsSphereTest {
         )
         val b2 = FixedSphereBody(
             "b2",
-            initialPos = MutablePoint3f(6.0f, 5.1f, 7.48f),
+            initialPos = MutableVector3f(6.0f, 5.1f, 7.48f),
             mass = 3.0f, // lighter in weight
             gravity = false,
             radius = 2.0f, // smaller
@@ -541,15 +541,15 @@ internal class CollideSphereVsSphereTest {
         assertEquals(2.6771874f, b2.nextSpeed.z, TOLERANCE, "b2.nextSpeed.z")
 
         // Check the gap between the nextPos
-        val centre1 = Point3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
-        val centre2 = Point3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
+        val centre1 = Vector3f(b1.nextPos.x, b1.nextPos.y, b1.nextPos.z)
+        val centre2 = Vector3f(b2.nextPos.x, b2.nextPos.y, b2.nextPos.z)
         val newDistance = centre1.distanceTo(centre2).toFloat()
         assertWithin(0.0f ..< 0.00006f, newDistance - (b1.radius + b2.radius), "gap") // less than 6 mm/100
     }
 
     @Test
     fun `should behave graciously if two identical spheres are spawned in the exact same spot`() {
-        val pos = MutablePoint3f(42.0f, 33.0f, 24.0f)
+        val pos = MutableVector3f(42.0f, 33.0f, 24.0f)
         val b1 = FixedSphereBody(
             "b1",
             initialPos = pos,
@@ -688,7 +688,7 @@ internal class CollideSphereVsSphereTest {
     fun `should force apart two spheres colliding at their initial position even though positions differ`() {
         val b1 = FixedSphereBody(
             "b1",
-            initialPos = MutablePoint3f(10.0f, 10.0f, 10.0f),
+            initialPos = MutableVector3f(10.0f, 10.0f, 10.0f),
             mass = 9.0f,
             gravity = false,
             radius = 0.5f,
@@ -697,7 +697,7 @@ internal class CollideSphereVsSphereTest {
         )
         val b2 = FixedSphereBody(
             "b2",
-            initialPos = MutablePoint3f(10.2f, 9.8f, 10.1f),
+            initialPos = MutableVector3f(10.2f, 9.8f, 10.1f),
             mass = 7.0f,
             gravity = false,
             radius = 0.5f,
@@ -777,7 +777,7 @@ internal class CollideSphereVsSphereTest {
     fun `should force apart two spheres colliding at their initial pos when the first one is a LARGE_MASS`() {
         val b1 = FixedSphereBody(
             "b1",
-            initialPos = MutablePoint3f(10.0f, 10.0f, 10.0f),
+            initialPos = MutableVector3f(10.0f, 10.0f, 10.0f),
             mass = LARGE_MASS,
             gravity = false,
             radius = 0.5f,
@@ -786,7 +786,7 @@ internal class CollideSphereVsSphereTest {
         )
         val b2 = FixedSphereBody(
             "b2",
-            initialPos = MutablePoint3f(10.2f, 9.8f, 10.1f),
+            initialPos = MutableVector3f(10.2f, 9.8f, 10.1f),
             mass = 7.0f,
             gravity = false,
             radius = 0.5f,
@@ -866,7 +866,7 @@ internal class CollideSphereVsSphereTest {
     fun `should force apart two spheres colliding at their initial pos when the second one is a LARGE_MASS`() {
         val b1 = FixedSphereBody(
             "b1",
-            initialPos = MutablePoint3f(10.0f, 10.0f, 10.0f),
+            initialPos = MutableVector3f(10.0f, 10.0f, 10.0f),
             mass = 9.0f,
             gravity = false,
             radius = 0.5f,
@@ -875,7 +875,7 @@ internal class CollideSphereVsSphereTest {
         )
         val b2 = FixedSphereBody(
             "b2",
-            initialPos = MutablePoint3f(10.2f, 9.8f, 10.1f),
+            initialPos = MutableVector3f(10.2f, 9.8f, 10.1f),
             mass = LARGE_MASS,
             gravity = false,
             radius = 0.5f,
@@ -955,7 +955,7 @@ internal class CollideSphereVsSphereTest {
     fun `should properly handle collisions in situation 1`() {
         val b1 = FixedSphereBody(
             "b1",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = 0.52f,
             gravity = false,
             radius = 0.25f,
@@ -964,7 +964,7 @@ internal class CollideSphereVsSphereTest {
         )
         val b2 = FixedSphereBody(
             "b2",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = 0.52f,
             gravity = false,
             radius = 0.25f,
@@ -999,7 +999,7 @@ internal class CollideSphereVsSphereTest {
     fun `should properly handle collisions in situation 2`() {
         val b1 = FixedSphereBody(
             "b1",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = 0.52f,
             gravity = false,
             radius = 0.25f,
@@ -1008,7 +1008,7 @@ internal class CollideSphereVsSphereTest {
         )
         val b2 = FixedSphereBody(
             "b2",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = 0.42f,
             gravity = false,
             radius = 0.33f,

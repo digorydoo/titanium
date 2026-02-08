@@ -1,4 +1,4 @@
-package ch.digorydoo.titanium.game.core
+package io.github.digorydoo.titanium.game.core
 
 import kotlin.test.Test
 import kotlin.test.assertFalse

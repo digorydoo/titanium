@@ -1,16 +1,16 @@
-package ch.digorydoo.titanium.engine.physics.strategy
+package io.github.digorydoo.titanium.engine.physics.strategy
 
-import ch.digorydoo.kutils.point.MutablePoint3f
-import ch.digorydoo.kutils.point.Point2f
-import ch.digorydoo.kutils.point.Point3f
+import ch.digorydoo.kutils.vector.MutableVector3f
+import ch.digorydoo.kutils.vector.Vector2f
+import ch.digorydoo.kutils.vector.Vector3f
 import ch.digorydoo.kutils.utils.Log
-import ch.digorydoo.titanium.engine.physics.HitArea
-import ch.digorydoo.titanium.engine.physics.MutableHitResult
-import ch.digorydoo.titanium.engine.physics.rigid_body.FixedCapsuleBody
-import ch.digorydoo.titanium.engine.physics.strategy.capsule_vs_capsule.BounceCapsuleVsCapsule
-import ch.digorydoo.titanium.engine.physics.strategy.capsule_vs_capsule.CheckCapsuleVsCapsule
-import ch.digorydoo.titanium.engine.physics.strategy.capsule_vs_capsule.SeparateCapsuleVsCapsule
-import ch.digorydoo.titanium.engine.utils.assertWithin
+import io.github.digorydoo.titanium.engine.physics.HitArea
+import io.github.digorydoo.titanium.engine.physics.MutableHitResult
+import io.github.digorydoo.titanium.engine.physics.rigid_body.FixedCapsuleBody
+import io.github.digorydoo.titanium.engine.physics.strategy.capsule_vs_capsule.BounceCapsuleVsCapsule
+import io.github.digorydoo.titanium.engine.physics.strategy.capsule_vs_capsule.CheckCapsuleVsCapsule
+import io.github.digorydoo.titanium.engine.physics.strategy.capsule_vs_capsule.SeparateCapsuleVsCapsule
+import io.github.digorydoo.titanium.engine.utils.assertWithin
 import kotlin.math.min
 import kotlin.math.sqrt
 import kotlin.test.Test
@@ -23,7 +23,7 @@ internal class CollideCapsuleVsCapsuleTest {
     fun `should collide when the two bodies get too close and the speed is parallel to the x-axis`() {
         val b1 = FixedCapsuleBody(
             "b1",
-            initialPos = MutablePoint3f(10.0f, 7.2f, 10.96f),
+            initialPos = MutableVector3f(10.0f, 7.2f, 10.96f),
             mass = 13.0f,
             gravity = false,
             radius = 0.3f,
@@ -33,7 +33,7 @@ internal class CollideCapsuleVsCapsuleTest {
         )
         val b2 = FixedCapsuleBody(
             "b2",
-            initialPos = MutablePoint3f(10.5f, 7.1f, 10.45f),
+            initialPos = MutableVector3f(10.5f, 7.1f, 10.45f),
             mass = 11.0f,
             gravity = false,
             radius = 0.2f,
@@ -122,8 +122,8 @@ internal class CollideCapsuleVsCapsuleTest {
         assertEquals(10.45f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z")
 
         // Since it was SIDE, the bodies should now be separated in XY
-        val centre1 = Point2f(b1.nextPos.x, b1.nextPos.y)
-        val centre2 = Point2f(b2.nextPos.x, b2.nextPos.y)
+        val centre1 = Vector2f(b1.nextPos.x, b1.nextPos.y)
+        val centre2 = Vector2f(b2.nextPos.x, b2.nextPos.y)
         val newDistance = centre1.distanceTo(centre2).toFloat()
         assertWithin(0.0f ..< 0.00006f, newDistance - (b1.radius + b2.radius), "gap") // less than 6 mm/100
 
@@ -163,7 +163,7 @@ internal class CollideCapsuleVsCapsuleTest {
     fun `should collide when the two bodies get too close and the speed is parallel to the y-axis`() {
         val b1 = FixedCapsuleBody(
             "b1",
-            initialPos = MutablePoint3f(8.2f, 7.5f, 10.94f),
+            initialPos = MutableVector3f(8.2f, 7.5f, 10.94f),
             mass = 7.0f,
             gravity = false,
             radius = 0.3f,
@@ -173,7 +173,7 @@ internal class CollideCapsuleVsCapsuleTest {
         )
         val b2 = FixedCapsuleBody(
             "b2",
-            initialPos = MutablePoint3f(8.1f, 7.0f, 10.48f),
+            initialPos = MutableVector3f(8.1f, 7.0f, 10.48f),
             mass = 9.0f,
             gravity = false,
             radius = 0.2f,
@@ -263,8 +263,8 @@ internal class CollideCapsuleVsCapsuleTest {
         assertEquals(10.48f, b2.nextPos.z, TOLERANCE, "b2.nextPos.z") // unchanged
 
         // Since it was SIDE, the bodies should now be separated in XY
-        val centre1 = Point2f(b1.nextPos.x, b1.nextPos.y)
-        val centre2 = Point2f(b2.nextPos.x, b2.nextPos.y)
+        val centre1 = Vector2f(b1.nextPos.x, b1.nextPos.y)
+        val centre2 = Vector2f(b2.nextPos.x, b2.nextPos.y)
         val newDistance = centre1.distanceTo(centre2).toFloat()
         assertWithin(0.0f ..< 0.00006f, newDistance - (b1.radius + b2.radius), "gap") // less than 6 mm/100
 
@@ -305,7 +305,7 @@ internal class CollideCapsuleVsCapsuleTest {
     fun `should collide when the two bodies get too close and the speed is parallel to the z-axis`() {
         val b1 = FixedCapsuleBody(
             "b1",
-            initialPos = MutablePoint3f(8.35f, 7.1f, 11.1f),
+            initialPos = MutableVector3f(8.35f, 7.1f, 11.1f),
             mass = 7.0f,
             gravity = false,
             radius = 0.3f,
@@ -315,7 +315,7 @@ internal class CollideCapsuleVsCapsuleTest {
         )
         val b2 = FixedCapsuleBody(
             "b2",
-            initialPos = MutablePoint3f(8.1f, 7.2f, 10.42f),
+            initialPos = MutableVector3f(8.1f, 7.2f, 10.42f),
             mass = 9.0f,
             gravity = false,
             radius = 0.2f,
@@ -447,7 +447,7 @@ internal class CollideCapsuleVsCapsuleTest {
 
     @Test
     fun `should behave graciously if two capsules are spawned in the exact same spot`() {
-        val pos = MutablePoint3f(42.0f, 33.0f, 24.0f)
+        val pos = MutableVector3f(42.0f, 33.0f, 24.0f)
         val b1 = FixedCapsuleBody(
             "b1",
             initialPos = pos,
@@ -580,7 +580,7 @@ internal class CollideCapsuleVsCapsuleTest {
     fun `should properly bounce bodies in situation 1`() {
         val b1 = FixedCapsuleBody(
             "b1",
-            initialPos = MutablePoint3f(10.0f, 10.0f, 3.0f),
+            initialPos = MutableVector3f(10.0f, 10.0f, 3.0f),
             mass = 10.0f,
             gravity = false,
             radius = 2.5f,
@@ -590,7 +590,7 @@ internal class CollideCapsuleVsCapsuleTest {
         )
         val b2 = FixedCapsuleBody(
             "b2",
-            initialPos = MutablePoint3f(10.0f, 6.5f, 7.5f),
+            initialPos = MutableVector3f(10.0f, 6.5f, 7.5f),
             mass = 10.0f,
             gravity = false,
             radius = 2.0f,
@@ -705,7 +705,7 @@ internal class CollideCapsuleVsCapsuleTest {
     fun `should properly handle collisions in situation 2`() {
         val b1 = FixedCapsuleBody(
             "b1",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = 64.0f,
             gravity = false,
             radius = 0.25f,
@@ -715,7 +715,7 @@ internal class CollideCapsuleVsCapsuleTest {
         )
         val b2 = FixedCapsuleBody(
             "b2",
-            initialPos = Point3f.zero,
+            initialPos = Vector3f.zero,
             mass = 64.0f,
             gravity = false,
             radius = 0.3f,

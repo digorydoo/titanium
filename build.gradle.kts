@@ -37,7 +37,7 @@ abstract class GenerateSourcesTask: DefaultTask() {
         dir.mkdirs()
         dir.resolve("BuildConfig.kt").writeText(
             """
-            package ch.digorydoo.titanium
+            package io.github.digorydoo.titanium
 
             object BuildConfig {
                 val isWindows = ${OperatingSystem.current().isWindows}

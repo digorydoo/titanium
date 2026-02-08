@@ -15,8 +15,12 @@ include("engine", "game", "import_asset", "kutils", "main")
 
 /**
  * Use -PlocalLibs=kokuban,kstruct to use locally modified copies of those libraries instead of the published version.
+ * To use this inside IDEA, comment out this line and provide a hard-coded string.
  */
-providers.gradleProperty("localLibs").orElse("").get().takeIf { it.isNotEmpty() }?.split(",")?.forEach { lib ->
+private val localLibs = providers.gradleProperty("localLibs").orElse("").get()
+// private val localLibs = "kokuban"
+
+localLibs.takeIf { it.isNotEmpty() }?.split(",")?.forEach { lib ->
     val libPath = "../$lib"
     val libCoords = "io.github.digorydoo:$lib"
     val libProject = ":$lib-core"

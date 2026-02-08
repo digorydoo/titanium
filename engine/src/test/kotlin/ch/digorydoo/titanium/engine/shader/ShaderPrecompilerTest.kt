@@ -1,8 +1,8 @@
-package ch.digorydoo.titanium.engine.shader
+package io.github.digorydoo.titanium.engine.shader
 
-import ch.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags.CONTOUR
-import ch.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags.SHADOWS
-import ch.digorydoo.titanium.engine.shader.ShaderPrecompiler.*
+import io.github.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags.CONTOUR
+import io.github.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags.SHADOWS
+import io.github.digorydoo.titanium.engine.shader.ShaderPrecompiler.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

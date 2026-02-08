@@ -1,4 +1,4 @@
-package ch.digorydoo.titanium.engine.state
+package io.github.digorydoo.titanium.engine.state
 
 import kotlin.test.Test
 import kotlin.test.assertFalse

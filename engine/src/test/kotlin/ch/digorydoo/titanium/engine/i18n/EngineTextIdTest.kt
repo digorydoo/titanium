@@ -1,4 +1,4 @@
-package ch.digorydoo.titanium.engine.i18n
+package io.github.digorydoo.titanium.engine.i18n
 
 import java.util.*
 import kotlin.test.Test

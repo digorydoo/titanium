@@ -1,7 +1,7 @@
-package ch.digorydoo.titanium.engine.editor
+package io.github.digorydoo.titanium.engine.editor
 
-import ch.digorydoo.titanium.engine.brick.BrickMaterial
-import ch.digorydoo.titanium.engine.editor.menu.material.BrickMaterialGroup
+import io.github.digorydoo.titanium.engine.brick.BrickMaterial
+import io.github.digorydoo.titanium.engine.editor.menu.material.BrickMaterialGroup
 import kotlin.test.Test
 import kotlin.test.assertTrue
 

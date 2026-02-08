@@ -1,4 +1,4 @@
-package ch.digorydoo.titanium.engine.file
+package io.github.digorydoo.titanium.engine.file
 
 import kotlin.test.Test
 import kotlin.test.assertFalse

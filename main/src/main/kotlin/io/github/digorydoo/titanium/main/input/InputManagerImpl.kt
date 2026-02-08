@@ -1,0 +1,20 @@
+package io.github.digorydoo.titanium.main.input
+
+import io.github.digorydoo.titanium.engine.input.InputManager
+
+class InputManagerImpl(gamepad: GamepadImpl, keyboard: KeyboardImpl): InputManager(gamepad, keyboard) {
+    enum class KeyAction { PRESS, RELEASE }
+
+    fun onGLFWKeyEvent(glfwKey: Int, action: KeyAction) {
+        (keyboard as KeyboardImpl).onGLFWKeyEvent(glfwKey, action)
+
+        if (action == KeyAction.PRESS) {
+            mode = InputMode.KEYBOARD
+        }
+    }
+
+    fun onGLFWCharEvent(charCode: Int) {
+        (keyboard as KeyboardImpl).onGLFWCharEvent(charCode)
+        mode = InputMode.KEYBOARD
+    }
+}

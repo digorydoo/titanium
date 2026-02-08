@@ -1,8 +1,8 @@
-package ch.digorydoo.titanium.engine.editor
+package io.github.digorydoo.titanium.engine.editor
 
-import ch.digorydoo.titanium.engine.brick.BrickShape
-import ch.digorydoo.titanium.engine.brick.BrickShape.*
-import ch.digorydoo.titanium.engine.editor.wizard.wizardRules
+import io.github.digorydoo.titanium.engine.brick.BrickShape
+import io.github.digorydoo.titanium.engine.brick.BrickShape.*
+import io.github.digorydoo.titanium.engine.editor.wizard.wizardRules
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

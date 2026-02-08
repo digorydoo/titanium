@@ -1,6 +1,6 @@
-package ch.digorydoo.titanium.engine.material
+package io.github.digorydoo.titanium.engine.material
 
-import ch.digorydoo.titanium.engine.brick.BrickMaterial
+import io.github.digorydoo.titanium.engine.brick.BrickMaterial
 import kotlin.test.Test
 import kotlin.test.assertFalse
 

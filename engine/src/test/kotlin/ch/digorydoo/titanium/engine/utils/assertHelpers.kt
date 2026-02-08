@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package ch.digorydoo.titanium.engine.utils
+package io.github.digorydoo.titanium.engine.utils
 
 import ch.digorydoo.kutils.string.toPrecision
 
