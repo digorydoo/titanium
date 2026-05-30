@@ -11,7 +11,7 @@ plugins {
 }
 
 rootProject.name = "titanium"
-include("engine", "game", "import_asset", "kutils", "main")
+include("kutils", "titanium-engine", "titanium-game", "titanium-main", "tool-collect-intl", "tool-import-asset")
 
 /**
  * Use -PlocalLibs=kokuban,kstruct to use locally modified copies of those libraries instead of the published version.

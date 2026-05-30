@@ -1,10 +1,15 @@
 #!/bin/bash
-# This script is called from main/build.gradle after each build.
+#
+# ./post-build.sh
+#
+# This script is called from main/build.gradle after each build. It adds symbolic links from the game assets to the
+# build directory under macOS, or copies the assets to the build directory under Windows.
+#
 
 set -e
 
 OS_TYPE="$(uname -o)"
-BUILD_DIR="./main/build"
+BUILD_DIR="./titanium-main/build"
 SRC_DIR="./assets"
 DST_DIR="$BUILD_DIR/assets"
 

@@ -1,0 +1,4 @@
+LOAD_GAME=Load game
+SAVE_GAME=Save game
+EXIT_TO_TITLE=Exit to title screen
+CONFIRM_EXIT_TO_TITLE=All unsaved progress will be lost. Are you sure?

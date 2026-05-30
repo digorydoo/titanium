@@ -1,0 +1,4 @@
+LOAD_GAME=Spielstand laden
+SAVE_GAME=Spielstand speichern
+EXIT_TO_TITLE=Zum Startbildschirm
+CONFIRM_EXIT_TO_TITLE=Ungespeicherter Spielfortschritt geht verloren! Bist du sicher?

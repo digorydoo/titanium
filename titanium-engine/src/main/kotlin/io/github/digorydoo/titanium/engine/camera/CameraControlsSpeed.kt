@@ -1,0 +1,21 @@
+package io.github.digorydoo.titanium.engine.camera
+
+import io.github.digorydoo.titanium.engine.core.App
+import io.github.digorydoo.titanium.engine.i18n.EngineTextId.*
+import io.github.digorydoo.titanium.engine.i18n.ITextId
+
+/**
+ * These constants define the speed how the camera reacts to the player camera controls.
+ */
+enum class CameraControlsSpeed(val id: Int, val speed: Float, private val textId: ITextId) {
+    SLOW(1, 0.75f, PREFS_CAMERA_SLOW_SPEED),
+    NORMAL(2, 1.0f, PREFS_CAMERA_NORMAL_SPEED),
+    FAST(3, 1.5f, PREFS_CAMERA_FAST_SPEED);
+
+    val displayText get() = App.i18n.getString(textId)
+
+    companion object {
+        fun fromIntOrNull(id: Int) =
+            entries.find { it.id == id }
+    }
+}

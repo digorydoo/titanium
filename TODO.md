@@ -14,6 +14,12 @@
     * `[X]`, must be pressed down 2 seconds to skip cutscene
     * Must go away when endCutscene() was called
 
+* Conversations
+  * Intermissions are perfect for cutscenes as well as conversations; no extra construct is necessary
+  * Add two more variants to Intermission::showDlg:
+    * suspend fun showMessage(textId): Unit
+    * suspend fun showYesNo(textId): Boolean
+
 * Bugs
   * Log: "Unloading all 3450 of non-shared programmes..." BrickVolumeRendererImpl should be created by BrickVolume, not
     by BrickSubvolume!
@@ -32,88 +38,6 @@
     * a broken Shrine would use a slightly altered mesh anyway and could be an entire different gel
     * a generic Lever could find its target dynamically, delegating the action to the target gel
     * a reusable locked door just needs an id for its matching key
-
-* Conversations
-  * Intermissions are perfect for cutscenes, but no good for tree-like conversations
-  * Another problem: Conversations have a lot of text, and it's very tedious to define constants for each of these
-  * Idea: Conversations are Kstructs, contain all texts in all languages, and are imported as assets
-  * The importer splits them by language in order that only the current locale needs to be loaded
-  * Conversations declare the id of the characters. When a conversation is launched, those are assigned to a gel
-  * The gel could also be null (if that character speaks over a device and is not present, etc.)
-  * The name of the characters are defined elsewhere and can be used as variables inside the conversation
-  * Conversations can define conditions by name, e.g. <if>hasAtLeast500Buckazoids</if>
-    * Simple && and || combinations are possible, but nothing more complex
-  * Conversations can define side-effects by name, e.g. <side-effect>shrineMaterialises</side-effect>
-  * Conditions and side-effects must be covered by a map each providing lambdas
-  * Therefore, each conversation also has its own Kotlin class
-  * Texts can contain simple HTML tags such as <b>bold and red</b>, <emph>just bold</emph>, <small>small, grey</small>
-
-```
-conversation {
-  actors = [
-    { name = "Hero"; actorId = "HERO" },
-    { name = "Mr Pickwick"; actorId = "MR_PICKWICK" }
-  ]
-  start {
-    if { cond = "isSpecialOccasion"; goto = 27 }
-    // start with level 0 if no match
-  }
-  levels {
-    `0` {
-      speaking = [
-        {
-          actor = "Hero"
-          text = {
-            en = [
-              "Level 0 is the introductory text.",
-              "Each entry in the array is a dialogue sheet.",
-              "We can also <emph>change the style</emph>, <small>but the subset of available tags is very small.</small>"
-            ]
-            de = [
-              "Hier ist derselbe Text in Deutsch.",
-              "Er muss nicht in gleich viele Abschnitte eingeteilt sein."
-            ]
-          }
-        },
-        {
-          actor = "Mr Pickwick"
-          text = [
-            { lang = "en"; content = ["..."] },
-            { lang = "de"; content = ["..."] }
-          ]
-        }
-      ]
-      choices = [
-        {
-          text = { en = "What's up?"; de = "Was gibt's?" }
-          onSelect = { sideEffect = "add5XP"; goto = 27 }
-        },
-        {
-          if = "hasEnoughMoney"
-          text = { en = "Can I buy this?"; de = "Kann ich das kaufen?" }
-          onSelect = {
-            speaking = {
-              actor = "Mr Pickwick"
-              text = [
-                { lang = "en"; content = ["No."] },
-                { lang = "de"; content = ["Nein."] }
-              ]
-            }
-            sideEffect = "removeChoice"
-          },
-        },
-        {
-          text = { en = "See ya."; de = "Bis bald." }
-          onSelect = { sideEffect = "exit" }
-        }
-      ]
-    }
-    `27` {
-      # ...
-    }
-  }
-}
-```
 
 * Camera
   * Save and restore camera settings (for cutscenes)
