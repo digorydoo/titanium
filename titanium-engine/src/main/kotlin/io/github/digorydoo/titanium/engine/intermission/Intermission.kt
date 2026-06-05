@@ -2,8 +2,11 @@ package io.github.digorydoo.titanium.engine.intermission
 
 import ch.digorydoo.kutils.logging.Log
 import io.github.digorydoo.titanium.engine.core.App
+import io.github.digorydoo.titanium.engine.i18n.ITextId
 import io.github.digorydoo.titanium.engine.intermission.IntermissionManager.IntermissionAlreadyRunningException
 import io.github.digorydoo.titanium.engine.ui.dialogue.DlgDef
+import io.github.digorydoo.titanium.engine.ui.dialogue.DlgItemDef
+import io.github.digorydoo.titanium.engine.ui.dialogue.SuspendingOnSelect
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -11,7 +14,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-class Intermission(private val scope: CoroutineScope) {
+class Intermission internal constructor(private val scope: CoroutineScope) {
+    class DlgCancelledException: Exception("The dialogue was cancelled")
     class IntermissionAlreadyPausedException: Exception("An effect has already been scheduled")
     class CancellablePartAlreadyRunningException: Exception("A cancellable part is already running")
 
@@ -22,18 +26,21 @@ class Intermission(private val scope: CoroutineScope) {
     internal var hasCancellable = false; private set // extra flag needed, see below
 
     internal fun begin(lambda: suspend Intermission.() -> Unit): Job {
+        App.process.requireMainThread()
         if (mainJob != null) throw IntermissionAlreadyRunningException()
         return scope
             .launch {
-                // Since our scope is Unconfined, launch uses the current thread. We better make sure, because GL
-                // operations must always happen on the same thread.
-                require(Thread.currentThread().id == App.mainThreadId)
+                // The scope must have our MainThreadDispatcher, so this should be the main thread.
+                App.process.requireMainThread()
                 lambda()
+                // Even if the lambda involved a different thread by calling withContext(), we should be back by now.
+                App.process.requireMainThread()
             }
             .also { mainJob = it }
     }
 
     suspend fun cancellable(lambda: suspend Intermission.() -> Unit) {
+        App.process.requireMainThread()
         if (hasCancellable || cancellable != null) throw CancellablePartAlreadyRunningException()
 
         Log.info(TAG, "About to enter cancellable section")
@@ -44,8 +51,9 @@ class Intermission(private val scope: CoroutineScope) {
 
         val job = scope.launch {
             Log.info(TAG, "Inside cancellable section")
-            require(Thread.currentThread().id == App.mainThreadId)
+            App.process.requireMainThread()
             lambda()
+            App.process.requireMainThread()
             Log.info(TAG, "Cancellable section about to end")
         }
 
@@ -67,16 +75,51 @@ class Intermission(private val scope: CoroutineScope) {
         job.join()
     }
 
-    suspend fun <Id> showDlg(lambda: DlgDef<Id>.() -> Unit): Id? = suspendCancellableCoroutine { cont ->
-        val def = DlgDef.build(lambda)
-        val origOnClose = def.onClose
+    @Suppress("unused")
+    suspend fun showMessage(textId: ITextId) {
+        val def = DlgDef.build { this.textId = textId }
+        showDlg(def)
+    }
 
-        def.onClose = { selectedItem ->
-            origOnClose?.invoke(selectedItem)
-            cont.resume(selectedItem?.id)
+    suspend fun showMessage(text: String) {
+        val def = DlgDef.build { this.text = text }
+        showDlg(def)
+    }
+
+    suspend fun showDlg(lambda: DlgDef.() -> Unit): DlgItemDef {
+        val def = DlgDef.build(lambda)
+
+        if (def.items.isEmpty()) {
+            // We cannot allow this, because we must return an item.
+            throw Exception("Dialogue with no items must be called through showMessage")
         }
 
-        App.dlg.showDlg(def)
+        val selected = showDlg(def) ?: throw DlgCancelledException()
+        return selected
+    }
+
+    /**
+     * @return null if dialogue hasn't got any items (pure message);
+     *   null if dialogue with items was cancelled through App.dlg.cancelActiveDlg();
+     *   otherwise the definition of the item that was selected by the user.
+     */
+    private suspend fun showDlg(def: DlgDef): DlgItemDef? {
+        val selectedItem = suspendCancellableCoroutine { cont ->
+            val origOnClose = def.onClose
+
+            def.onClose = { selectedItem ->
+                origOnClose?.invoke(selectedItem)
+                cont.resume(selectedItem)
+            }
+
+            App.dlg.showDlg(def)
+        }
+
+        if (selectedItem is SuspendingOnSelect) {
+            selectedItem.onSelect?.invoke(this)
+        }
+
+        return selectedItem
     }
 
     suspend fun sleep(seconds: Float) {

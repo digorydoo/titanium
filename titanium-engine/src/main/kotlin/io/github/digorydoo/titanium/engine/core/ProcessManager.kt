@@ -3,6 +3,7 @@ package io.github.digorydoo.titanium.engine.core
 import ch.digorydoo.kutils.logging.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -14,34 +15,39 @@ abstract class ProcessManager {
     private val mutex = Mutex() // all public functions of ProcessManager need to be thread-safe
     private val endOfFrameLambdas = mutableListOf<EndOfFrameInfo>()
 
-    private val cpuScope = CoroutineScope(Dispatchers.Default)
-    private val ioScope = CoroutineScope(Dispatchers.IO)
+    private val cpuScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private val ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    private val mainThread: Thread = Thread.currentThread().also {
-        require(it.name == MAIN_THREAD_NAME) {
-            "ProcessManager created from another thread, or unexpected name: ${Thread.currentThread().name}"
+    // Apparently, there is no Java function to check whether we're in the main thread directly.
+    private val mainThreadId: Long = Thread.currentThread().let {
+        // Note that the name is not guaranteed by the JVM to always be "main", but since we're using jpackage to
+        // provide the JVM, this should be safe.
+        require(it.name == "main") {
+            "ProcessManager must be constructed from main thread! Current thread: ${it.name}"
+        }
+        it.id
+    }
+
+    fun isMainThread() = Thread.currentThread().id == mainThreadId
+
+    fun requireMainThread() {
+        require(isMainThread()) {
+            "Code is required to run in main thread! Current thread is: ${Thread.currentThread().name}"
         }
     }
 
     abstract fun exit()
 
-    fun requireMainThread() {
-        // using a reference to avoid string comparisions
-        require(Thread.currentThread() == mainThread) {
-            "Expected main thread, but got instead: ${Thread.currentThread().name}"
-        }
-    }
-
     /**
-     * Runs the given suspended lambda in a coroutine. Use this for CPU-heavy tasks.
-     * @return An instance of Job, which has a cancel() function
+     * Launches the given suspending lambda in our cpuScope. Use this for CPU-heavy tasks.
+     * @return An instance of Job
      */
     fun runAsync(block: suspend CoroutineScope.() -> Unit) =
         cpuScope.launch(block = block)
 
     /**
-     * Runs the given suspended lambda in a coroutine. Use this for IO-heavy tasks.
-     * @return An instance of Job, which has a cancel() function
+     * Launches the given suspending lambda in our ioScope. Use this for IO-heavy tasks.
+     * @return An instance of Job
      */
     fun runAsyncIO(block: suspend CoroutineScope.() -> Unit) =
         ioScope.launch(block = block)
@@ -96,6 +102,5 @@ abstract class ProcessManager {
 
     companion object {
         private val TAG = Log.Tag("ProcessManager")
-        const val MAIN_THREAD_NAME = "main"
     }
 }

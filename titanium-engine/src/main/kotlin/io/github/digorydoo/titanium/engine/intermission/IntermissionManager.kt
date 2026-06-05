@@ -1,8 +1,9 @@
 package io.github.digorydoo.titanium.engine.intermission
 
 import ch.digorydoo.kutils.logging.Log
+import io.github.digorydoo.titanium.engine.core.MainThreadDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 class IntermissionManager {
     class IntermissionAlreadyRunningException: Exception("An intermission is already running")
@@ -11,7 +12,7 @@ class IntermissionManager {
     val anyRunning get() = intermission != null
     val canCancel get() = intermission?.hasCancellable == true
 
-    private val scope = CoroutineScope(Dispatchers.Unconfined)
+    private val scope = CoroutineScope(MainThreadDispatcher() + SupervisorJob())
 
     fun begin(lambda: suspend Intermission.() -> Unit) {
         if (anyRunning) throw IntermissionAlreadyRunningException()

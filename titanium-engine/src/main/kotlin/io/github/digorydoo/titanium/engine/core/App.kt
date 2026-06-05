@@ -62,9 +62,6 @@ abstract class AbstrApp {
     abstract val textures: TextureManager
     abstract val time: GameTime
 
-    // Strangely, JVM does not seem to provide a clean way to obtain the main thread id
-    val mainThreadId = Thread.currentThread().id
-
     // Provide some getters for ease of access of some very common values
     val bricks get() = content.bricks ?: throw BricksNotLoadedException()
     val input get() = inputMgr.accessor

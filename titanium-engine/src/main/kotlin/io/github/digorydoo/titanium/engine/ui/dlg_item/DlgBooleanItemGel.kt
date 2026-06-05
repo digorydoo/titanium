@@ -20,13 +20,13 @@ import io.github.digorydoo.titanium.engine.ui.dlg_item.DlgItemGel.Companion.FADE
 import kotlin.math.floor
 import kotlin.math.max
 
-class DlgBooleanItemGel<Id>(
-    override val def: DlgBooleanItemDef<Id>,
+class DlgBooleanItemGel(
+    override val def: DlgBooleanItemDef,
     alignment: Align.Alignment,
     override val btnWidth: Int,
     override val btnHeight: Int,
     precomputedTextTex: Texture?,
-): GraphicElement(), DlgItemGel<Id> {
+): GraphicElement(), DlgItemGel, CanToggle, CanIncrementDecrement {
     init {
         inDialog = Visibility.ACTIVE
         inMenu = Visibility.ACTIVE
@@ -54,10 +54,9 @@ class DlgBooleanItemGel<Id>(
             if (b) glow.reset(0.25f)
         }
 
-    override val canSelect = true // def has no onSelect, but we implement a toggle action
     override val autoDismiss = false
 
-    override fun select(onBeforeAction: () -> Unit) {
+    override fun toggle() {
         if (!curValue) increment(true)
         else decrement(true)
     }
@@ -144,7 +143,7 @@ class DlgBooleanItemGel<Id>(
     override fun toString() = "DlgBooleanItemGel($def)"
 
     companion object {
-        private fun makeCombinedRenderer(gel: DlgBooleanItemGel<*>): Renderer {
+        private fun makeCombinedRenderer(gel: DlgBooleanItemGel): Renderer {
             val delegate = object: ButtonRendererFactory.Delegate {
                 override val pos = gel.pos // shared mutable object
                 override val opacity get() = gel.opacity
@@ -179,7 +178,7 @@ class DlgBooleanItemGel<Id>(
             }
         }
 
-        private fun makeSwitchRenderer(gel: DlgBooleanItemGel<*>): Renderer {
+        private fun makeSwitchRenderer(gel: DlgBooleanItemGel): Renderer {
             val bgTex = gel.bgTex
             val frames = gel.switchFrames
             val valueTex = frames.tex

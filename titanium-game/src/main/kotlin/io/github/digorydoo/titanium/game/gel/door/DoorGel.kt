@@ -174,53 +174,56 @@ class DoorGel private constructor(
                 // Wait until the camera has almost completed adjusting itself
                 sleep(seconds = 0.1f)
 
-                // Start opening the door
-                open(facingFront)
+                // Just a test for "cancellable" a.k.a. cutscene. FIXME remove this once we have an actual cutscene
+                cancellable {
+                    // Start opening the door
+                    open(facingFront)
 
-                // Wait until the door has opened a little
-                sleep(seconds = 0.2f * OPENING_DURATION_SECONDS)
+                    // Wait until the door has opened a little
+                    sleep(seconds = 0.2f * OPENING_DURATION_SECONDS)
 
-                // Send the player towards the door centre while the door is still opening
-                sendPlayer?.sendTo(body.pos, ignoreZ = true)
+                    // Send the player towards the door centre while the door is still opening
+                    sendPlayer?.sendTo(body.pos, ignoreZ = true)
 
-                // Wait until the door is fully open and the player has reached the door centre
-                waitFor { state == State.OPEN && sendPlayer?.active != true }
+                    // Wait until the door is fully open and the player has reached the door centre
+                    waitFor { state == State.OPEN && sendPlayer?.active != true }
 
-                // Send the player further into the room
-                sendPlayer?.sendTo(getPlayerTargetPos(facingFront), ignoreZ = true, maxSpeed = 2.0f)
+                    // Send the player further into the room
+                    sendPlayer?.sendTo(getPlayerTargetPos(facingFront), ignoreZ = true, maxSpeed = 2.0f)
 
-                // Make the camera move towards the player and turn slightly towards the opening
-                camera.setTarget(player)
-                camera.setSourceRelativeToTarget(
-                    phi = phiTowardsDoor + (if (facingFront) CAMERA_PHI_OFFSET else -CAMERA_PHI_OFFSET),
-                    rho = rhoHorizontal,
-                    distance = 0.2f,
-                )
+                    // Make the camera move towards the player and turn slightly towards the opening
+                    camera.setTarget(player)
+                    camera.setSourceRelativeToTarget(
+                        phi = phiTowardsDoor + (if (facingFront) CAMERA_PHI_OFFSET else -CAMERA_PHI_OFFSET),
+                        rho = rhoHorizontal,
+                        distance = 0.2f,
+                    )
 
-                // Wait until the camera has almost reached the door centre
-                sleep(seconds = 1.1f)
+                    // Wait until the camera has almost reached the door centre
+                    sleep(seconds = 1.1f)
 
-                // Start closing the door
-                close()
+                    // Start closing the door
+                    close()
 
-                // Make the camera move even closer and restore its direction
-                camera.setSourceRelativeToTarget(
-                    phi = phiTowardsDoor,
-                    rho = rhoHorizontal,
-                    distance = 2.0f,
-                )
+                    // Make the camera move even closer and restore its direction
+                    camera.setSourceRelativeToTarget(
+                        phi = phiTowardsDoor,
+                        rho = rhoHorizontal,
+                        distance = 2.0f,
+                    )
 
-                // Wait until the camera has moved a little closer
-                sleep(seconds = 0.42f)
+                    // Wait until the camera has moved a little closer
+                    sleep(seconds = 0.42f)
 
-                // Change camera inertia to make it move a little faster for the last bit.
-                camera.inertia = CameraProps.Inertia.NORMAL
+                    // Change camera inertia to make it move a little faster for the last bit.
+                    camera.inertia = CameraProps.Inertia.NORMAL
 
-                // Wait until camera has settled.
-                sleep(seconds = 0.5f)
+                    // Wait until camera has settled.
+                    sleep(seconds = 0.5f)
 
-                // Wait for player to stop moving (if he hasn't).
-                waitFor { sendPlayer?.active != true }
+                    // Wait for player to stop moving (if he hasn't).
+                    waitFor { sendPlayer?.active != true }
+                }
 
                 // Restore camera properties and player
                 camera.mode = origCameraMode

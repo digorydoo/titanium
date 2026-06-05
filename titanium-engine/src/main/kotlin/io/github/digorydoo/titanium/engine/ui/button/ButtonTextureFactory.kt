@@ -5,7 +5,6 @@ import ch.digorydoo.kutils.logging.Log
 import ch.digorydoo.kutils.rect.MutableRecti
 import ch.digorydoo.kutils.rect.Recti
 import ch.digorydoo.kutils.utils.Moment
-import io.github.digorydoo.titanium.BuildConfig
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.font.FontManager.FontName.DIALOG_FONT
 import io.github.digorydoo.titanium.engine.texture.Texture
@@ -37,27 +36,27 @@ object ButtonTextureFactory {
             }
         }
 
-    fun makeTextTexture(item: DlgItemDef<*>): Texture {
+    fun makeTextTexture(item: DlgItemDef): Texture {
         val textFromSavegame = (item as? DlgSavegameItemDef)?.summary?.let { summary ->
             Moment.parseZoneAgnosticOrNull(summary.saveDate)
                 ?.formatLocalized(locale = App.prefs.textLanguage.locale)
                 ?.let { "${summary.sceneTitle}\n${it}" }
-                ?: ""
         }
 
-        val textFromId = item.textId?.let { App.i18n.getString(it) }
-        val textFromString = item.text
+        // It is valid to set both a text and a textId, in which case text will be displayed to the user while textId
+        // may be used by code to identify the item.
 
-        if (!BuildConfig.isProduction) {
-            val check = listOfNotNull(textFromSavegame, textFromId, textFromString).filter { it.isNotEmpty() }
+        val text = textFromSavegame?.takeIf { it.isNotEmpty() }
+            ?: item.text.takeIf { it.isNotEmpty() }
+            ?: item.textId?.let { App.i18n.getString(it) }
+            ?: ""
 
-            if (check.size > 1) {
-                Log.warn(TAG, "Item cannot have more than one text: ${check.joinToString("/")}")
-            }
+        if (text.isEmpty()) {
+            Log.error(TAG, "No text for item: $item")
         }
 
         return App.textures.createTexture(
-            text = textFromSavegame ?: textFromId ?: textFromString,
+            text = text,
             allowNewlines = item is DlgSavegameItemDef,
             lineSpacing = if (item is DlgSavegameItemDef) SUMMARY_LINE_SPACING else 0,
             font = DIALOG_FONT,

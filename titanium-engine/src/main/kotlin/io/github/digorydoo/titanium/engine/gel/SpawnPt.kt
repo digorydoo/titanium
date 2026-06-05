@@ -63,7 +63,7 @@ abstract class SpawnPt private constructor(
     protected abstract fun serialiseSpecific(builder: KstructBuilder)
 
     // The position is treated especially (see SpawnPtMenu)
-    open fun buildEditorItems(dlgDef: DlgDef<Unit>, onChange: () -> Unit) {
+    open fun buildEditorItems(dlgDef: DlgDef, onChange: () -> Unit) {
         dlgDef.apply {
             itemWithFloatValue {
                 text = "Rotation"

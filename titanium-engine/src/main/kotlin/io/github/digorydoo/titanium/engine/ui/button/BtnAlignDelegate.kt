@@ -3,7 +3,7 @@ package io.github.digorydoo.titanium.engine.ui.button
 import io.github.digorydoo.titanium.engine.behaviours.Align
 import io.github.digorydoo.titanium.engine.ui.dlg_item.DlgItemGel
 
-class BtnAlignDelegate(val btn: DlgItemGel<*>, val alignment: Align.Alignment): Align.Delegate() {
+class BtnAlignDelegate(val btn: DlgItemGel, val alignment: Align.Alignment): Align.Delegate() {
     override val anchor = alignment.anchor
     override val xOffset = alignment.xOffset
     override val yOffset get() = btn.scrollOffset.toInt() + alignment.yOffset

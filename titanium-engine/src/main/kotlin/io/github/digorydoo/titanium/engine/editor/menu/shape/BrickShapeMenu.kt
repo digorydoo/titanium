@@ -5,55 +5,65 @@ import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.editor.action.EditorActions
 import io.github.digorydoo.titanium.engine.editor.menu.shape.BrickShapeGroup.Companion.findFirstInnermostGroup
 import io.github.digorydoo.titanium.engine.i18n.EngineTextId
+import io.github.digorydoo.titanium.engine.intermission.Intermission
 
 internal class BrickShapeMenu(private val actions: EditorActions) {
-    fun show(initialShape: BrickShape, onBack: (() -> Unit)?) {
-        show(BrickShapeGroup.ROOT, initialShape, onBack)
+    fun showInIntermission(initial: BrickShape) {
+        App.intermissions.begin {
+            showImpl(initial, hasParentMenu = false)
+        }
     }
 
-    private fun show(group: BrickShapeGroup, initialShape: BrickShape?, onBack: (() -> Unit)?) {
-        val reopen = { show(group, null, onBack) }
-        val groupsOfInitialShape = mutableListOf<BrickShapeGroup>()
+    suspend fun Intermission.show(initial: BrickShape) {
+        showImpl(initial, hasParentMenu = true)
+    }
 
-        if (initialShape != null) {
-            var grp = initialShape.findFirstInnermostGroup()
+    private suspend fun Intermission.showImpl(initial: BrickShape, hasParentMenu: Boolean) {
+        val groupsOfInitial = mutableListOf<BrickShapeGroup>().also { groups ->
+            var grp = initial.findFirstInnermostGroup()
 
             while (grp != null) {
-                groupsOfInitialShape.add(grp)
+                groups.add(grp)
                 grp = grp.findParent()
             }
         }
 
-        App.dlg.showDlg<Unit> {
-            val dlgDef = this
+        val path = mutableListOf(BrickShapeGroup.ROOT)
 
-            BrickShapeGroup.entries
-                .filter { it.findParent() == group }
-                .sortedBy { it.displayText }
-                .forEach { grp ->
-                    item {
-                        text = grp.displayText + " >"
-                        onSelect = { show(grp, initialShape, onBack = reopen) }
-                        if (groupsOfInitialShape.contains(grp)) {
-                            dlgDef.focus = this
+        do {
+            val currentGroup = path.first()
+            showDlg {
+                val dlgDef = this
+
+                BrickShapeGroup.entries
+                    .filter { it.findParent() == currentGroup }
+                    .sortedBy { it.displayText }
+                    .forEach { grp ->
+                        item {
+                            text = grp.displayText + " >"
+                            if (groupsOfInitial.contains(grp)) dlgDef.focus = this
+                            onSelect = { path.add(0, grp) }
                         }
                     }
-                }
 
-            group.shapes()
-                .sortedBy { it.displayText }
-                .forEach { shape ->
-                    item {
-                        text = shape.displayText
-                        onSelect = { actions.setActiveShape(shape) }
-                        if (shape == initialShape) dlgDef.focus = this
+                currentGroup.shapes()
+                    .sortedBy { it.displayText }
+                    .forEach { shape ->
+                        item {
+                            text = shape.displayText
+                            if (shape == initial) dlgDef.focus = this
+                            onSelect = {
+                                actions.setActiveShape(shape)
+                                path.clear() // force-close all hierarchies
+                            }
+                        }
                     }
-                }
 
-            dismiss = item {
-                textId = if (onBack == null) EngineTextId.DONE else EngineTextId.BACK
-                onSelect = onBack
+                dismiss = item {
+                    textId = if (path.size > 1 || hasParentMenu) EngineTextId.BACK else EngineTextId.DONE
+                    onSelect = { path.removeAt(0) }
+                }
             }
-        }
+        } while (path.isNotEmpty())
     }
 }

@@ -5,6 +5,7 @@ import io.github.digorydoo.titanium.engine.behaviours.Glow
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.gel.GraphicElement
 import io.github.digorydoo.titanium.engine.shader.Renderer
+import io.github.digorydoo.titanium.engine.sound.EngineSampleId
 import io.github.digorydoo.titanium.engine.texture.Texture
 import io.github.digorydoo.titanium.engine.ui.button.BtnAlignDelegate
 import io.github.digorydoo.titanium.engine.ui.button.ButtonRendererFactory
@@ -15,13 +16,13 @@ import io.github.digorydoo.titanium.engine.ui.dlg_item.DlgItemGel.Companion.SELE
 import kotlin.math.max
 import kotlin.math.pow
 
-class DlgTextItemGel<Id>(
-    override val def: DlgTextItemDef<Id>,
+class DlgTextItemGel(
+    override val def: DlgTextItemDef,
     alignment: Align.Alignment,
     override val btnWidth: Int,
     override val btnHeight: Int,
     precomputedTextTex: Texture?,
-): GraphicElement(), DlgItemGel<Id> {
+): GraphicElement(), DlgItemGel, CanAnimateSelectAndThen {
     init {
         inDialog = Visibility.ACTIVE
         inMenu = Visibility.ACTIVE
@@ -41,16 +42,16 @@ class DlgTextItemGel<Id>(
             if (b) glow.reset(0.25f)
         }
 
-    override val canSelect = true
     override val autoDismiss = def.autoDismiss
     private var selected = false
     private var selectTime = 0.0f
     private var selectCallback: (() -> Unit)? = null
 
-    override fun select(onBeforeAction: () -> Unit) {
+    override fun animateSelectAndThen(callback: () -> Unit) {
         if (!selected) {
+            App.sound.play(EngineSampleId.BUTTON1)
             selectTime = App.time.sessionTime
-            selectCallback = onBeforeAction
+            selectCallback = callback
             selected = true
             glow.reset(0.25f)
         }
@@ -105,8 +106,6 @@ class DlgTextItemGel<Id>(
 
                 selectCallback?.invoke()
                 selectCallback = null
-
-                def.onSelect?.invoke()
             }
         }
 
@@ -127,7 +126,7 @@ class DlgTextItemGel<Id>(
     override fun toString() = "DlgTextItemGel($def)"
 
     companion object {
-        private fun makeCombinedRenderer(gel: DlgTextItemGel<*>): Renderer {
+        private fun makeCombinedRenderer(gel: DlgTextItemGel): Renderer {
             val delegate = object: ButtonRendererFactory.Delegate {
                 override val pos = gel.pos // shared mutable object
                 override val opacity get() = gel.opacity

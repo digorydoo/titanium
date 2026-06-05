@@ -14,12 +14,6 @@
     * `[X]`, must be pressed down 2 seconds to skip cutscene
     * Must go away when endCutscene() was called
 
-* Conversations
-  * Intermissions are perfect for cutscenes as well as conversations; no extra construct is necessary
-  * Add two more variants to Intermission::showDlg:
-    * suspend fun showMessage(textId): Unit
-    * suspend fun showYesNo(textId): Boolean
-
 * Bugs
   * Log: "Unloading all 3450 of non-shared programmes..." BrickVolumeRendererImpl should be created by BrickVolume, not
     by BrickSubvolume!

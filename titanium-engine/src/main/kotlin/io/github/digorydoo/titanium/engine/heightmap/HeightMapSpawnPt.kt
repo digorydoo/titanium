@@ -1,9 +1,9 @@
 package io.github.digorydoo.titanium.engine.heightmap
 
-import io.github.digorydoo.titanium.engine.gel.SpawnPt
-import io.github.digorydoo.titanium.engine.ui.dialogue.DlgDef
 import io.github.digorydoo.kstruct.KstructBuilder
 import io.github.digorydoo.kstruct.KstructMap
+import io.github.digorydoo.titanium.engine.gel.SpawnPt
+import io.github.digorydoo.titanium.engine.ui.dialogue.DlgDef
 
 class HeightMapSpawnPt(raw: KstructMap): SpawnPt(raw) {
     var filename = raw["f"]?.stringOrNull() ?: ""; private set
@@ -16,7 +16,7 @@ class HeightMapSpawnPt(raw: KstructMap): SpawnPt(raw) {
         }
     }
 
-    override fun buildEditorItems(dlgDef: DlgDef<Unit>, onChange: () -> Unit) {
+    override fun buildEditorItems(dlgDef: DlgDef, onChange: () -> Unit) {
         super.buildEditorItems(dlgDef, onChange)
         dlgDef.apply {
             itemWithBooleanValue {

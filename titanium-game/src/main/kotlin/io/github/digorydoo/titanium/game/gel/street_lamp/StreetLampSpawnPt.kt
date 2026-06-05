@@ -1,9 +1,9 @@
 package io.github.digorydoo.titanium.game.gel.street_lamp
 
-import io.github.digorydoo.titanium.engine.gel.SpawnPt
-import io.github.digorydoo.titanium.engine.ui.dialogue.DlgDef
 import io.github.digorydoo.kstruct.KstructBuilder
 import io.github.digorydoo.kstruct.KstructMap
+import io.github.digorydoo.titanium.engine.gel.SpawnPt
+import io.github.digorydoo.titanium.engine.ui.dialogue.DlgDef
 
 class StreetLampSpawnPt(raw: KstructMap, val kind: Kind): SpawnPt(raw) {
     enum class Kind { TRADITIONAL }
@@ -20,7 +20,7 @@ class StreetLampSpawnPt(raw: KstructMap, val kind: Kind): SpawnPt(raw) {
         }
     }
 
-    override fun buildEditorItems(dlgDef: DlgDef<Unit>, onChange: () -> Unit) {
+    override fun buildEditorItems(dlgDef: DlgDef, onChange: () -> Unit) {
         super.buildEditorItems(dlgDef, onChange)
         dlgDef.apply {
             itemWithBooleanValue {

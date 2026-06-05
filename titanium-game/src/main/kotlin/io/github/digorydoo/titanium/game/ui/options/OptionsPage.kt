@@ -11,7 +11,7 @@ import io.github.digorydoo.titanium.game.i18n.GameTextId
 import io.github.digorydoo.titanium.game.s000_start.StartScene
 
 class OptionsPage: MenuTabPage {
-    private val btnArea = ButtonArea<Unit>(marginLeft = BTN_AREA_LEFT, marginTop = BTN_AREA_TOP)
+    private val btnArea = ButtonArea(marginLeft = BTN_AREA_LEFT, marginTop = BTN_AREA_TOP)
     private val prefsMenu = PrefsMenu()
     private val saveGameMenu = SaveGameMenu()
     private val loadGameMenu = LoadGameMenu()
@@ -33,35 +33,59 @@ class OptionsPage: MenuTabPage {
 
     private fun saveBtnClicked() {
         btnArea.hideAll()
-        saveGameMenu.show(onDidSave = { App.gameMenu.dismiss() }, onCancel = { btnArea.showAll() })
+
+        App.intermissions.begin {
+            val result = saveGameMenu.run { show() }
+
+            when (result) {
+                SaveGameMenu.Result.DID_SAVE -> App.gameMenu.dismiss()
+                SaveGameMenu.Result.CANCEL -> btnArea.showAll()
+            }
+        }
     }
 
     private fun loadBtnClicked() {
         btnArea.hideAll()
-        loadGameMenu.show(onDidLoad = { App.gameMenu.dismiss() }, onCancel = { btnArea.showAll() })
+
+        App.intermissions.begin {
+            val result = loadGameMenu.run { show() }
+
+            when (result) {
+                LoadGameMenu.Result.DID_LOAD -> App.gameMenu.dismiss()
+                LoadGameMenu.Result.CANCEL -> btnArea.showAll()
+            }
+        }
     }
 
     private fun settingsBtnClicked() {
-        // We close the GameMenu first, because the menu needs to be rebuilt when the user changes the language.
+        // FIXME If the user changes the language, we should inform the game menu that it needs to rebuild itself.
         btnArea.hideAll()
-        prefsMenu.show(onDone = { btnArea.showAll() })
+
+        App.intermissions.begin {
+            prefsMenu.run { show() }
+            btnArea.showAll()
+        }
     }
 
     private fun exitBtnClicked() {
         btnArea.hideAll()
 
-        App.dlg.showTwoWayDlg(
-            GameTextId.CONFIRM_EXIT_TO_TITLE,
-            confirm = GameTextId.EXIT_TO_TITLE,
-            deny = EngineTextId.CANCEL,
-            onConfirm = {
-                App.gameMenu.dismiss()
-                App.sceneLoader.load(StartScene())
-            },
-            onDeny = {
-                btnArea.showAll()
+        App.intermissions.begin {
+            val selected = showDlg {
+                textId = GameTextId.CONFIRM_EXIT_TO_TITLE
+                item { textId = GameTextId.EXIT_TO_TITLE }
+                focus = item { textId = EngineTextId.CANCEL }
+                dismiss = focus
             }
-        )
+
+            when (selected.textId) {
+                GameTextId.EXIT_TO_TITLE -> {
+                    App.gameMenu.dismiss()
+                    App.sceneLoader.load(StartScene())
+                }
+                else -> btnArea.showAll()
+            }
+        }
     }
 
     override fun show() {

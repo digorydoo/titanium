@@ -18,12 +18,12 @@ import kotlin.math.max
 internal object DlgFactory {
     private class ItemTextures(val list: List<Texture>, val minItemWidth: Int)
 
-    fun <Id> create(def: DlgDef<Id>): Dialogue<Id> {
+    fun create(def: DlgDef): Dialogue {
         var dlgTextGel: DlgTextGel? = null
         var dismissIcon: DlgInputIconGel? = null
         var itemWidth = 0
-        val itemGels = mutableListOf<DlgItemGel<Id>>()
-        var dismissItem: DlgItemGel<Id>? = null
+        val itemGels = mutableListOf<DlgItemGel>()
+        var dismissItem: DlgItemGel? = null
 
         if (def.items.isNotEmpty()) {
             val textTextures = createTextTextures(def.items)
@@ -103,7 +103,7 @@ internal object DlgFactory {
         )
     }
 
-    private fun createTextTextures(items: List<DlgItemDef<*>>): ItemTextures {
+    private fun createTextTextures(items: List<DlgItemDef>): ItemTextures {
         var minWidthTotal = ITEM_MIN_WIDTH
 
         val textTextures = items.map { item ->
@@ -127,13 +127,13 @@ internal object DlgFactory {
         return ItemTextures(textTextures, minWidthTotal)
     }
 
-    private fun <Id> createItemGel(
-        def: DlgItemDef<Id>,
+    private fun createItemGel(
+        def: DlgItemDef,
         yOffset: Int,
         precomputedTextTex: Texture? = null, // null = create from item def
         itemWidth: Int? = null, // null = automatic
         btnHeight: Int? = null, // null = automatic
-    ): DlgItemGel<Id> {
+    ): DlgItemGel {
         val alignment = Align.Alignment(
             anchor = Anchor.BOTTOM_RIGHT,
             yOffset = yOffset,

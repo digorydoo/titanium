@@ -1,5 +1,6 @@
 package io.github.digorydoo.titanium.engine.ui.dialogue
 
+import ch.digorydoo.kutils.logging.Log
 import ch.digorydoo.kutils.math.lerp
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.gel.GelLayer.LayerKind
@@ -8,6 +9,9 @@ import io.github.digorydoo.titanium.engine.sound.EngineSampleId
 import io.github.digorydoo.titanium.engine.ui.ITEM_MARGIN_BOTTOM
 import io.github.digorydoo.titanium.engine.ui.ITEM_MARGIN_TOP
 import io.github.digorydoo.titanium.engine.ui.ITEM_SPACING
+import io.github.digorydoo.titanium.engine.ui.dlg_item.CanAnimateSelectAndThen
+import io.github.digorydoo.titanium.engine.ui.dlg_item.CanIncrementDecrement
+import io.github.digorydoo.titanium.engine.ui.dlg_item.CanToggle
 import io.github.digorydoo.titanium.engine.ui.dlg_item.DlgItemGel
 import io.github.digorydoo.titanium.engine.ui.icon.DlgInputIconGel
 import kotlin.math.max
@@ -15,12 +19,12 @@ import kotlin.math.max
 /**
  * Dialogues can be a dismissable message or a list of items to choose from. Create them through App.dlg.show().
  */
-internal class Dialogue<Id>(
+internal class Dialogue(
     private val dlgTextGel: DlgTextGel?, // must not be null if items is empty, otherwise we'd show nothing
     private val dismissIcon: DlgInputIconGel?, // the icon sticks either to dismissItem or to the dlg
-    private val items: List<DlgItemGel<Id>>,
-    private val dismissItem: DlgItemGel<Id>?,
-    private val onClose: ((DlgItemDef<Id>?) -> Unit)?,
+    private val items: List<DlgItemGel>,
+    private val dismissItem: DlgItemGel?,
+    private val onClose: ((DlgItemDef?) -> Unit)?,
     initHilitedIdx: Int = 0,
 ) {
     private val dlgId = nextDlgId++ // for debugging purposes only
@@ -41,7 +45,7 @@ internal class Dialogue<Id>(
         dismissIcon?.onCreate(LayerKind.UI_ABOVE_DLG)
     }
 
-    private fun close(selectedItem: DlgItemDef<Id>?) {
+    private fun close(selectedItem: DlgItemDef?) {
         dlgTextGel?.setZombie()
         dismissIcon?.setZombie()
         items.forEach { it.setZombie() }
@@ -83,31 +87,38 @@ internal class Dialogue<Id>(
         }
 
         val gel = hilitedGel ?: return
-        if (!gel.canSelect) return
 
-        App.sound.play(EngineSampleId.BUTTON1)
+        when (gel) {
+            is CanAnimateSelectAndThen -> {
+                if (gel == dismissItem || gel.autoDismiss) {
+                    items.forEach {
+                        it.fadeOut()
+                    }
+                }
 
-        if (gel == dismissItem || gel.autoDismiss) {
-            items.forEach {
-                it.fadeOut()
+                gel.animateSelectAndThen {
+                    onSelectAnimEnded(gel)
+                }
             }
+            is CanToggle -> gel.toggle()
+            else -> Unit
         }
+    }
 
-        gel.select {
-            if (gel == dismissItem || gel.autoDismiss) {
-                close(gel.def)
-            }
+    private fun onSelectAnimEnded(gel: DlgItemGel) {
+        if (gel == dismissItem || gel.autoDismiss) {
+            close(gel.def)
         }
     }
 
     private fun onIncrementBtnPressed(smallStep: Boolean = false) {
         val gel = hilitedGel ?: return
-        gel.increment(smallStep)
+        if (gel is CanIncrementDecrement) gel.increment(smallStep)
     }
 
     private fun onDecrementBtnPressed(smallStep: Boolean = false) {
         val gel = hilitedGel ?: return
-        gel.decrement(smallStep)
+        if (gel is CanIncrementDecrement) gel.decrement(smallStep)
     }
 
     private fun onDismissBtnPressed() {
@@ -117,7 +128,7 @@ internal class Dialogue<Id>(
             return
         }
 
-        if (dismissItem != null) {
+        dismissItem?.let { gel ->
             App.sound.play(EngineSampleId.BUTTON1)
             hilitedGel?.hilited = false
 
@@ -125,8 +136,13 @@ internal class Dialogue<Id>(
                 it.fadeOut()
             }
 
-            dismissItem.select {
-                close(dismissItem.def)
+            if (gel is CanAnimateSelectAndThen) {
+                gel.animateSelectAndThen {
+                    onSelectAnimEnded(gel)
+                }
+            } else {
+                Log.warn(TAG, "Dismiss item does not implement CanAnimateSelectAndThen")
+                onSelectAnimEnded(gel)
             }
         }
     }
@@ -173,6 +189,7 @@ internal class Dialogue<Id>(
             .let { "Dialogue($it)" }
 
     companion object {
+        private val TAG = Log.Tag("Dialogue")
         private var nextDlgId = 1
     }
 }

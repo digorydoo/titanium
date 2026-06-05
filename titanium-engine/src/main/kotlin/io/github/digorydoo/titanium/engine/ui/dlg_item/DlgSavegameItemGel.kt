@@ -10,6 +10,7 @@ import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.file.SaveGameFileWriter
 import io.github.digorydoo.titanium.engine.gel.GraphicElement
 import io.github.digorydoo.titanium.engine.shader.Renderer
+import io.github.digorydoo.titanium.engine.sound.EngineSampleId
 import io.github.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import io.github.digorydoo.titanium.engine.texture.Texture
 import io.github.digorydoo.titanium.engine.ui.ITEM_TEXT_OUTER_PADDING
@@ -26,18 +27,18 @@ import kotlin.math.pow
 
 /**
  * Performance note: Loading the list of files and creating the entire LoadGameMenu with 10 savegames including loading
- * their thumbnails and initialising all DlgSavegameItemGels takes only about 50ms on Mac Mini. So, loading the files
+ * their thumbnails and initializing all DlgSavegameItemGels takes only about 50ms on Mac Mini. So, loading the files
  * concurrently would not help much. Still, the list takes about 250ms on the first render cycle, creating a noticable
  * lag. The culprit appears to be GL: UISpriteRendererImpl's first call to drawArray takes about 5ms, and since this
  * gel has four parts, the gel's first render takes about 20ms. Can this be improved?
  */
-class DlgSavegameItemGel<Id>(
-    override val def: DlgSavegameItemDef<Id>,
+class DlgSavegameItemGel(
+    override val def: DlgSavegameItemDef,
     alignment: Align.Alignment,
     override val btnWidth: Int,
     override val btnHeight: Int,
     precomputedTextTex: Texture?,
-): GraphicElement(), DlgItemGel<Id> {
+): GraphicElement(), DlgItemGel, CanAnimateSelectAndThen {
     init {
         inDialog = Visibility.ACTIVE
         inMenu = Visibility.ACTIVE
@@ -47,7 +48,7 @@ class DlgSavegameItemGel<Id>(
     private val bgTex = ButtonTextureFactory.makeBgTexture(btnWidth, btnHeight)
     private val otlTex = ButtonTextureFactory.makeOtlTexture(btnWidth, btnHeight)
     private val textTex = precomputedTextTex ?: ButtonTextureFactory.makeTextTexture(def)
-    private val thumbnailTex = def.summary?.let { makeSavegameImageTexture(it) }
+    private val thumbnailTex = def.summary.let { makeSavegameImageTexture(it) }
 
     private var _hilited = false
 
@@ -58,16 +59,16 @@ class DlgSavegameItemGel<Id>(
             if (b) glow.reset(0.25f)
         }
 
-    override val canSelect = true
     override val autoDismiss = true
     private var selected = false
     private var selectTime = 0.0f
     private var selectCallback: (() -> Unit)? = null
 
-    override fun select(onBeforeAction: () -> Unit) {
+    override fun animateSelectAndThen(callback: () -> Unit) {
         if (!selected) {
+            App.sound.play(EngineSampleId.BUTTON1)
             selectTime = App.time.sessionTime
-            selectCallback = onBeforeAction
+            selectCallback = callback
             selected = true
             glow.reset(0.25f)
         }
@@ -122,8 +123,6 @@ class DlgSavegameItemGel<Id>(
 
                 selectCallback?.invoke()
                 selectCallback = null
-
-                def.onSelect?.invoke()
             }
         }
 
@@ -139,7 +138,7 @@ class DlgSavegameItemGel<Id>(
         textTex.freeRequireUnshared()
         bgTex.freeRequireUnshared()
         otlTex.freeRequireUnshared()
-        thumbnailTex?.freeRequireUnshared()
+        thumbnailTex.freeRequireUnshared()
     }
 
     override fun toString() = "DlgSavegameItemGel($def)"
@@ -164,7 +163,7 @@ class DlgSavegameItemGel<Id>(
                 }
             }
 
-        private fun makeCombinedRenderer(gel: DlgSavegameItemGel<*>): Renderer {
+        private fun makeCombinedRenderer(gel: DlgSavegameItemGel): Renderer {
             val delegate = object: ButtonRendererFactory.Delegate {
                 override val pos = gel.pos // shared mutable object
                 override val opacity get() = gel.opacity
@@ -177,7 +176,7 @@ class DlgSavegameItemGel<Id>(
             val bg = ButtonRendererFactory.makeBgRenderer(delegate, gel.bgTex)
             val otl = ButtonRendererFactory.makeOtlRenderer(delegate, gel.otlTex)
 
-            val xoffset = (gel.thumbnailTex?.width ?: 0) + 2 * ITEM_TEXT_OUTER_PADDING
+            val xoffset = gel.thumbnailTex.width + 2 * ITEM_TEXT_OUTER_PADDING
             val text = ButtonRendererFactory.makeTextRenderer(delegate, gel.textTex, xoffset)
 
             val thumbnail = makeThumbnailRenderer(gel)
@@ -202,7 +201,7 @@ class DlgSavegameItemGel<Id>(
             }
         }
 
-        private fun makeThumbnailRenderer(gel: DlgSavegameItemGel<*>): Renderer {
+        private fun makeThumbnailRenderer(gel: DlgSavegameItemGel): Renderer {
             val imageTex = gel.thumbnailTex
             val imagePos = MutableVector3f() // bound variable
             return App.factory.createUISpriteRenderer(

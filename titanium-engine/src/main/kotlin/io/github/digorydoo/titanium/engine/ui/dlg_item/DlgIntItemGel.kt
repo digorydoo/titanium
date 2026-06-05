@@ -30,13 +30,13 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
 
-class DlgIntItemGel<Id>(
-    override val def: DlgIntItemDef<Id>,
+class DlgIntItemGel(
+    override val def: DlgIntItemDef,
     alignment: Align.Alignment,
     override val btnWidth: Int,
     override val btnHeight: Int,
     precomputedTextTex: Texture?,
-): GraphicElement(), DlgItemGel<Id> {
+): GraphicElement(), DlgItemGel, CanIncrementDecrement {
     init {
         inDialog = Visibility.ACTIVE
         inMenu = Visibility.ACTIVE
@@ -76,7 +76,6 @@ class DlgIntItemGel<Id>(
             if (b) glow.reset(0.25f)
         }
 
-    override val canSelect = false
     override val autoDismiss = false
 
     private val canIncrement get() = curValue < def.maxValue
@@ -185,7 +184,7 @@ class DlgIntItemGel<Id>(
     companion object {
         private val TAG = Log.Tag("DlgIntItemGel")
 
-        private fun makeCombinedRenderer(gel: DlgIntItemGel<*>): Renderer {
+        private fun makeCombinedRenderer(gel: DlgIntItemGel): Renderer {
             val delegate = object: ButtonRendererFactory.Delegate {
                 override val pos = gel.pos // shared mutable object
                 override val opacity get() = gel.opacity
@@ -226,7 +225,7 @@ class DlgIntItemGel<Id>(
             }
         }
 
-        private fun makeValueRenderer(gel: DlgIntItemGel<*>): Renderer {
+        private fun makeValueRenderer(gel: DlgIntItemGel): Renderer {
             val incDecFrames = gel.incDecFrames
             val incDecWidth = incDecFrames.frameSize.x
             val bgTex = gel.bgTex
@@ -249,7 +248,7 @@ class DlgIntItemGel<Id>(
             )
         }
 
-        private fun makeIncDecRenderer(gel: DlgIntItemGel<*>, isInc: Boolean): Renderer {
+        private fun makeIncDecRenderer(gel: DlgIntItemGel, isInc: Boolean): Renderer {
             val bgTex = gel.bgTex
             val incDecFrames = gel.incDecFrames
             val incDecTex = incDecFrames.tex

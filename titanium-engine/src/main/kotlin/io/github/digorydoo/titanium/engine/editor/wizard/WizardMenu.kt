@@ -9,11 +9,22 @@ import io.github.digorydoo.titanium.engine.brick.BrickShapeAndMaterial
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.editor.action.EditorActions
 import io.github.digorydoo.titanium.engine.i18n.EngineTextId
+import io.github.digorydoo.titanium.engine.intermission.Intermission
 
 internal class WizardMenu(private val actions: EditorActions) {
     private val drawingWizard = DrawingWizard()
 
-    fun show(curSelection: Boxi, onBack: (() -> Unit)?) {
+    fun showInIntermission(curSelection: Boxi) {
+        App.intermissions.begin {
+            showImpl(curSelection, hasParentMenu = false)
+        }
+    }
+
+    suspend fun Intermission.show(curSelection: Boxi) {
+        showImpl(curSelection, hasParentMenu = true)
+    }
+
+    private suspend fun Intermission.showImpl(curSelection: Boxi, hasParentMenu: Boolean) {
         val suggestions = drawingWizard.getSuggestions(curSelection.centrei()).toMutableList()
 
         if (suggestions.size <= 4) {
@@ -29,7 +40,7 @@ internal class WizardMenu(private val actions: EditorActions) {
             suggestions.add(BrickShapeAndMaterial(BrickShape.BASIC_BLOCK, BrickMaterial.GREY_CONCRETE))
         }
 
-        App.dlg.showDlg<Unit> {
+        showDlg {
             suggestions
                 .distinctBy { "${it.shape}_${it.material}" }
                 .forEach { suggest ->
@@ -42,10 +53,7 @@ internal class WizardMenu(private val actions: EditorActions) {
                     }
                 }
 
-            dismiss = item {
-                textId = if (onBack == null) EngineTextId.DONE else EngineTextId.BACK
-                onSelect = onBack
-            }
+            dismiss = item { textId = if (hasParentMenu) EngineTextId.BACK else EngineTextId.DONE }
         }
     }
 }

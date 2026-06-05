@@ -5,56 +5,65 @@ import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.editor.action.EditorActions
 import io.github.digorydoo.titanium.engine.editor.menu.material.BrickMaterialGroup.Companion.findFirstInnermostGroup
 import io.github.digorydoo.titanium.engine.i18n.EngineTextId
+import io.github.digorydoo.titanium.engine.intermission.Intermission
 
 internal class BrickMaterialMenu(private val actions: EditorActions) {
-    fun show(initial: BrickMaterial, onBack: (() -> Unit)?) {
-        show(BrickMaterialGroup.ROOT, initial, onBack)
+    fun showInIntermission(initial: BrickMaterial) {
+        App.intermissions.begin {
+            showImpl(initial, hasParentMenu = false)
+        }
     }
 
-    private fun show(group: BrickMaterialGroup, initialMat: BrickMaterial?, onBack: (() -> Unit)?) {
-        val reopen = { show(group, null, onBack) }
-        val groupsOfInitialMat = mutableListOf<BrickMaterialGroup>()
+    suspend fun Intermission.show(initial: BrickMaterial) {
+        showImpl(initial, hasParentMenu = true)
+    }
 
-        if (initialMat != null) {
-            var grp = initialMat.findFirstInnermostGroup()
+    private suspend fun Intermission.showImpl(initial: BrickMaterial, hasParentMenu: Boolean) {
+        val groupsOfInitial = mutableListOf<BrickMaterialGroup>().also { groups ->
+            var grp = initial.findFirstInnermostGroup()
 
             while (grp != null) {
-                groupsOfInitialMat.add(grp)
+                groups.add(grp)
                 grp = grp.findParent()
             }
         }
 
-        App.dlg.showDlg<Unit> {
-            val dlgDef = this
+        val path = mutableListOf(BrickMaterialGroup.ROOT)
 
-            BrickMaterialGroup.entries
-                .filter { it.findParent() == group }
-                .sortedBy { it.displayText }
-                .forEach { grp ->
-                    item {
-                        text = grp.displayText + " >"
-                        onSelect = { show(grp, initialMat, onBack = reopen) }
+        do {
+            val currentGroup = path.first()
+            showDlg {
+                val dlgDef = this
 
-                        if (groupsOfInitialMat.contains(grp)) {
-                            dlgDef.focus = this
+                BrickMaterialGroup.entries
+                    .filter { it.findParent() == currentGroup }
+                    .sortedBy { it.displayText }
+                    .forEach { grp ->
+                        item {
+                            text = grp.displayText + " >"
+                            if (groupsOfInitial.contains(grp)) dlgDef.focus = this
+                            onSelect = { path.add(0, grp) }
                         }
                     }
-                }
 
-            group.materials()
-                .sortedBy { it.displayText }
-                .forEach { mat ->
-                    item {
-                        text = mat.displayText
-                        onSelect = { actions.setActiveMaterial(mat) }
-                        if (mat == initialMat) dlgDef.focus = this
+                currentGroup.materials()
+                    .sortedBy { it.displayText }
+                    .forEach { mat ->
+                        item {
+                            text = mat.displayText
+                            if (mat == initial) dlgDef.focus = this
+                            onSelect = {
+                                actions.setActiveMaterial(mat)
+                                path.clear() // force-close all hierarchies
+                            }
+                        }
                     }
-                }
 
-            dismiss = item {
-                textId = if (onBack == null) EngineTextId.DONE else EngineTextId.BACK
-                onSelect = onBack
+                dismiss = item {
+                    textId = if (path.size > 1 || hasParentMenu) EngineTextId.BACK else EngineTextId.DONE
+                    onSelect = { path.removeAt(0) }
+                }
             }
-        }
+        } while (path.isNotEmpty())
     }
 }

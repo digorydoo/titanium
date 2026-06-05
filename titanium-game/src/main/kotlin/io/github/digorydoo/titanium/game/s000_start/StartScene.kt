@@ -1,8 +1,11 @@
 package io.github.digorydoo.titanium.game.s000_start
 
+import ch.digorydoo.kutils.logging.Log
 import io.github.digorydoo.titanium.engine.camera.CameraProps.Mode.FIXED_DISTANCE
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.file.SaveGameFileReader
+import io.github.digorydoo.titanium.engine.intermission.Intermission
+import io.github.digorydoo.titanium.engine.intermission.Intermission.DlgCancelledException
 import io.github.digorydoo.titanium.engine.prefs.PrefsMenu
 import io.github.digorydoo.titanium.engine.scene.Lighting
 import io.github.digorydoo.titanium.engine.scene.Scene
@@ -40,40 +43,59 @@ class StartScene: Scene(
         // We set skip = 2 so that two frames will be skipped. After the scene has been loaded, spawn points will
         // spawn new gels in the first frame, and we want to wait until all of them have been animated once.
         App.process.runAtEndOfFrame(skip = 1) {
-            showStartMenu()
+            App.intermissions.begin {
+                showStartMenu()
+            }
         }
     }
 
-    private fun showStartMenu() {
-        val reopen = { showStartMenu() }
+    private suspend fun Intermission.showStartMenu() {
+        try {
+            do {
+                var reopen = false
 
-        App.dlg.showDlg<Unit> {
-            suppressSoundsOnShowAndDismiss = true
+                val selected = showDlg {
+                    suppressSoundsOnShowAndDismiss = true
 
-            if (SaveGameFileReader.anyFiles()) {
-                item {
-                    textId = CONTINUE_GAME
-                    onSelect = { loadGameMenu.show(onDidLoad = {}, onCancel = reopen) }
+                    if (SaveGameFileReader.anyFiles()) {
+                        item { textId = CONTINUE_GAME }
+                    }
+
+                    item { textId = NEW_GAME }
+                    item { textId = SETTINGS }
+                    item { textId = QUIT }
                 }
-            }
 
-            item {
-                textId = NEW_GAME
-                onSelect = { startNewGame() }
-            }
-            item {
-                textId = SETTINGS
-                onSelect = { prefsMenu.show(reopen) }
-            }
-            item {
-                textId = QUIT
-                onSelect = { App.process.exit() }
-            }
+                when (selected.textId) {
+                    CONTINUE_GAME -> {
+                        val result = loadGameMenu.run { show() }
+
+                        when (result) {
+                            LoadGameMenu.Result.DID_LOAD -> Unit
+                            LoadGameMenu.Result.CANCEL -> reopen = true
+                        }
+                    }
+                    NEW_GAME -> startNewGame()
+                    SETTINGS -> {
+                        prefsMenu.run { show() }
+                        reopen = true
+                    }
+                    QUIT -> App.process.exit() // initiates termination at end of frame, not immediately
+                    else -> Unit // We come here if dlg is aborted, e.g. when the editor mode is enabled.
+                }
+            } while (reopen)
+        } catch (_: DlgCancelledException) {
+            // This happens when switching to editor while the start menu is being shown.
+            Log.info(TAG, "Start menu was cancelled")
         }
     }
 
     private fun startNewGame() {
         App.time.setStoryTime(10, 30)
         App.sceneLoader.load(TownScene())
+    }
+
+    companion object {
+        private val TAG = Log.Tag("StartScene")
     }
 }

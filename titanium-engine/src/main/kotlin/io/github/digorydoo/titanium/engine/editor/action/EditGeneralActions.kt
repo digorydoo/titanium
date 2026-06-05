@@ -101,12 +101,14 @@ internal class EditGeneralActions(
         val sel = brickSelection.getUnreversed()
 
         if (sel.xsize != 1 || sel.ysize != 1 || sel.zsize != 1) {
-            App.dlg.showDlg(
-                """
+            App.intermissions.begin {
+                showMessage(
+                    """
                     Selected: $sel
                     Size: (${sel.xsize}, ${sel.ysize}, ${sel.zsize})
-                """.trimIndent()
-            )
+                    """.trimIndent()
+                )
+            }
         } else {
             val br = Brick()
             val subRelCoords = MutableVector3i()
@@ -129,15 +131,17 @@ internal class EditGeneralActions(
                 "W=${br.westFaceIdx}",
             ).joinToString(", ").trim()
 
-            App.dlg.showDlg(
-                """
-                   Shape: ${br.shape.displayText}
-                   Material: ${br.material.displayText}
-                   Brick coords: (${sel.x0}, ${sel.y0}, ${sel.z0})
-                   Subvolume-relative brick coords: $subRelCoords
-                   Face indices: $faces
-                """.trimIndent()
-            )
+            App.intermissions.begin {
+                showMessage(
+                    """
+                       Shape: ${br.shape.displayText}
+                       Material: ${br.material.displayText}
+                       Brick coords: (${sel.x0}, ${sel.y0}, ${sel.z0})
+                       Subvolume-relative brick coords: $subRelCoords
+                       Face indices: $faces
+                    """.trimIndent()
+                )
+            }
         }
     }
 
@@ -145,7 +149,7 @@ internal class EditGeneralActions(
         BrickVolumeFileWriter.writeFile(App.bricks)
         App.spawnMgr.save(App.scene.gelListFileName)
 
-        App.content.forEachGel { layer, gel ->
+        App.content.forEachGel { _, gel ->
             if (gel is HeightMapGel) {
                 gel.heightMap?.let { HeightMapFileWriter.write(it) }
             }

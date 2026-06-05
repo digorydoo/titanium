@@ -37,7 +37,7 @@ class Editor {
             if (isShown) {
                 hide()
             } else {
-                App.dlg.abortAllDlgs() // e.g. dismiss start menu when editor is activated in the StartScene
+                App.dlg.cancelActiveDlg() // e.g. dismiss start menu when editor is activated in the StartScene
                 App.gameMenu.dismiss()
                 show()
             }
