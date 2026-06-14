@@ -1,7 +1,7 @@
 package io.github.digorydoo.titanium.engine.camera
 
-import ch.digorydoo.kutils.string.initCap
 import ch.digorydoo.kutils.vector.MutableVector3f
+import io.github.digorydoo.titanium.engine.camera.Camera.Companion.TARGET_Z_OFFSET
 import io.github.digorydoo.titanium.engine.gel.GraphicElement
 import io.github.digorydoo.titanium.engine.utils.Direction
 import io.github.digorydoo.titanium.engine.utils.EPSILON
@@ -16,65 +16,9 @@ import kotlin.math.max
  * This class holds the various properties of the camera
  */
 class CameraProps {
-    enum class Mode(val value: Int) {
-        FIXED_SOURCE(1), FIXED_DISTANCE(2), SMART(3);
+    enum class ProjectionMode { PERSPECTIVE, ORTHOGONAL }
 
-        val displayText = initCap(toString().replace("_", " ").lowercase()) // for Editor
-
-        companion object {
-            fun fromIntOrNull(value: Int) =
-                entries.find { it.value == value }
-        }
-    }
-
-    enum class Kind { PERSPECTIVE, ORTHOGONAL }
-
-    enum class Inertia(
-        val sourceAccel: Float,
-        val sourceNormalBrake: Float,
-        val sourceStrongBrake: Float,
-        val targetAccel: Float,
-        val targetNormalBrake: Float,
-        val targetStrongBrake: Float,
-        val angleAccel: Float,
-        val angleNormalBrake: Float,
-        val angleStrongBrake: Float,
-        val distanceAccel: Float,
-        val distanceNormalBrake: Float,
-        val distanceStrongBrake: Float,
-    ) {
-        NORMAL(
-            sourceAccel = 1.5f,
-            sourceNormalBrake = 0.25f,
-            sourceStrongBrake = 0.30f,
-            targetAccel = 0.8f,
-            targetNormalBrake = 0.20f,
-            targetStrongBrake = 0.25f,
-            angleAccel = 2.9f,
-            angleNormalBrake = 0.25f,
-            angleStrongBrake = 0.30f,
-            distanceAccel = 0.5f,
-            distanceNormalBrake = 0.25f,
-            distanceStrongBrake = 0.30f,
-        ),
-        HIGH(
-            sourceAccel = 0.17f,
-            sourceNormalBrake = 0.10f,
-            sourceStrongBrake = 0.15f,
-            targetAccel = 0.12f,
-            targetNormalBrake = 0.10f,
-            targetStrongBrake = 0.15f,
-            angleAccel = 0.42f,
-            angleNormalBrake = 0.15f,
-            angleStrongBrake = 0.20f,
-            distanceAccel = 0.12f,
-            distanceNormalBrake = 0.10f,
-            distanceStrongBrake = 0.15f,
-        )
-    }
-
-    var mode = Mode.SMART
-    var kind = Kind.PERSPECTIVE
+    var projectionMode = ProjectionMode.PERSPECTIVE
     var targetGel: GraphicElement? = null
     val sourcePos = SmoothVector3f()
     val targetPos = SmoothVector3f()
@@ -82,16 +26,30 @@ class CameraProps {
     val rho = SmoothAngle(DEFAULT_RHO)
     val distance = SmoothFloat(DEFAULT_DISTANCE)
     val dir = Direction.northVector.toMutable()
-
     private val tempPt = MutableVector3f()
 
-    var inertia = Inertia.NORMAL; private set
+    var directingMode = CameraDirectingMode.SMART; private set
+
+    fun setDirectingMode(newMode: CameraDirectingMode) {
+        directingMode = newMode
+
+        if (newMode == CameraDirectingMode.MAP) {
+            setSourceRelativeToTarget(
+                newPhi = -(PI / 2.0).toFloat(),
+                newRho = 0.0f,
+                newDistance = CAMERA_TOP_DOWN_DISTANCE,
+                jump = false
+            )
+        }
+    }
+
+    var inertia = CameraInertia.NORMAL; private set
 
     init {
         setInertia(inertia)
     }
 
-    fun setInertia(newInertia: Inertia) {
+    fun setInertia(newInertia: CameraInertia) {
         inertia = newInertia
         sourcePos.apply {
             accel = newInertia.sourceAccel
@@ -120,6 +78,18 @@ class CameraProps {
         }
     }
 
+    var inputMode = CameraInputMode.OFF; private set
+
+    fun setInputMode(newMode: CameraInputMode) {
+        inputMode = newMode
+
+        // stopTreshold is used to prevent from overshooting; but in CONSTRAINED mode, the values should always return
+        // to their initial position when the user lets go of the joystick.
+        val stopThreshold = if (newMode == CameraInputMode.CONSTRAINED) 0f else 0.0008f
+        phi.stopThreshold = stopThreshold
+        rho.stopThreshold = stopThreshold
+    }
+
     fun setTarget(x: Float, y: Float, z: Float, jump: Boolean) {
         targetPos.desired.set(x, y, z)
         if (jump) targetPos.jump()
@@ -131,7 +101,8 @@ class CameraProps {
             targetPos.desired.set(targetPos.current)
             targetGel = null
         } else {
-            targetPos.desired.set(gel.pos)
+            val pos = gel.pos
+            targetPos.desired.set(pos.x, pos.y, pos.z + TARGET_Z_OFFSET)
             targetGel = gel
             if (jump) targetPos.jump()
         }
@@ -187,6 +158,8 @@ class CameraProps {
     }
 
     companion object {
+        private const val CAMERA_TOP_DOWN_DISTANCE = 420.0f
+
         const val DEFAULT_PHI = -2.1f // rotation around z
         const val DEFAULT_RHO = -0.82f // inclination
         const val DEFAULT_DISTANCE = 5.0f

@@ -12,16 +12,6 @@ class StateManagerImpl: StateManager() {
         var playerPos: Vector3f? = null
     }
 
-    override fun clearGameSpecificState() {
-        // Nothing to do yet, because currently all state information is owned by other objects.
-        //
-        // GameStateId.entries.forEach { id ->
-        //     when (id) {
-        //         GameStateId.PLAYER_POS -> Unit
-        //     }
-        // }
-    }
-
     override fun createNewRestoredState(): RestoredState {
         return RestoredStateImpl()
     }
@@ -30,10 +20,11 @@ class StateManagerImpl: StateManager() {
         GameStateId.entries.find { it.value == value }
             ?: EngineStateId.entries.find { it.value == value }
 
-    override fun getSceneId(intId: Int): ISceneId =
-        SceneId.fromIntOrNull(intId) ?: throw Exception("Bad scene id: $intId")
+    override fun getSceneId(value: Int): ISceneId =
+        SceneId.fromIntOrNull(value) ?: throw Exception("Bad scene id: $value")
 
-    override fun serializeGameSpecificValues(s: MutableSerializedState) {
+    override fun serializeGameSpecificValues() {
+        val s = currentState
         GameStateId.entries.forEach { id ->
             when (id) {
                 GameStateId.PLAYER_POS -> App.player?.pos?.let { s.vector3fs[id] = Vector3f(it) }
@@ -41,7 +32,8 @@ class StateManagerImpl: StateManager() {
         }
     }
 
-    override fun restoreGameSpecificValues(s: SerializedState, restoredState: RestoredState) {
+    override fun restoreGameSpecificValues(restoredState: RestoredState) {
+        val s = currentState
         val r = restoredState as RestoredStateImpl
         GameStateId.entries.forEach { id ->
             when (id) {

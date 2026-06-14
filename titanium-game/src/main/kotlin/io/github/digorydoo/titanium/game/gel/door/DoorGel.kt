@@ -5,7 +5,8 @@ import ch.digorydoo.kutils.vector.MutableVector3f
 import ch.digorydoo.kutils.vector.Vector3f
 import io.github.digorydoo.titanium.engine.behaviours.CreateConcurrently
 import io.github.digorydoo.titanium.engine.behaviours.Send
-import io.github.digorydoo.titanium.engine.camera.CameraProps
+import io.github.digorydoo.titanium.engine.camera.CameraDirectingMode
+import io.github.digorydoo.titanium.engine.camera.CameraInertia
 import io.github.digorydoo.titanium.engine.core.ActionManager
 import io.github.digorydoo.titanium.engine.core.ActionManager.ActionDelegate
 import io.github.digorydoo.titanium.engine.core.App
@@ -148,13 +149,13 @@ class DoorGel private constructor(
             val sendPlayer = player.get<Send>()
             val camera = App.camera
             val origTargetGel = camera.targetGel
-            val origCameraMode = camera.mode
+            val origCameraMode = camera.directingMode
             val origCameraInertia = camera.inertia
 
             App.intermissions.begin {
-                camera.mode = CameraProps.Mode.FIXED_DISTANCE
+                camera.directingMode = CameraDirectingMode.FIXED_DISTANCE
                 camera.setTarget(this@DoorGel)
-                camera.inertia = CameraProps.Inertia.HIGH
+                camera.inertia = CameraInertia.HIGH
 
                 val facingFront = isInFront(player.pos, angularOffset = (PI / 2.0).toFloat())
 
@@ -216,7 +217,7 @@ class DoorGel private constructor(
                     sleep(seconds = 0.42f)
 
                     // Change camera inertia to make it move a little faster for the last bit.
-                    camera.inertia = CameraProps.Inertia.NORMAL
+                    camera.inertia = CameraInertia.NORMAL
 
                     // Wait until camera has settled.
                     sleep(seconds = 0.5f)
@@ -226,7 +227,7 @@ class DoorGel private constructor(
                 }
 
                 // Restore camera properties and player
-                camera.mode = origCameraMode
+                camera.directingMode = origCameraMode
                 camera.setTarget(origTargetGel)
                 camera.inertia = origCameraInertia
                 player.collisionsWithGelsSuppressed = origCollisionsWithGelsSuppressed

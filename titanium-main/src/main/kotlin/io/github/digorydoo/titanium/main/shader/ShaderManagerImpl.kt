@@ -45,6 +45,8 @@ class ShaderManagerImpl: ShaderManager() {
             ProgramType.PAPER -> "paper"
             ProgramType.SHADOWS -> "shadows"
             ProgramType.SKYDOME -> "skydome"
+            ProgramType.UI_CIRCULAR_PROGRESS -> "ui-circular-progress"
+            ProgramType.UI_SOLID -> "ui-solid"
             ProgramType.UI_SPRITES -> "ui-sprite"
             ProgramType.WATER -> "water"
         }

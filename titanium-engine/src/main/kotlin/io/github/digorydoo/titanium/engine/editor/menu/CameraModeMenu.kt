@@ -1,6 +1,6 @@
 package io.github.digorydoo.titanium.engine.editor.menu
 
-import io.github.digorydoo.titanium.engine.camera.CameraProps.Mode
+import io.github.digorydoo.titanium.engine.camera.CameraDirectingMode
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.editor.action.EditorActions
 import io.github.digorydoo.titanium.engine.i18n.EngineTextId
@@ -19,17 +19,12 @@ internal class CameraModeMenu(private val actions: EditorActions) {
 
     private suspend fun Intermission.showImpl(hasParentMenu: Boolean) {
         showDlg {
-            Mode.entries.forEach { mode ->
+            CameraDirectingMode.entries.forEach { mode ->
                 item {
                     text = mode.displayText
-                    if (mode == App.camera.mode) this@showDlg.focus = this
+                    if (mode == App.camera.directingMode) this@showDlg.focus = this
                     onSelect = { actions.setCameraMode(mode) }
                 }
-            }
-
-            item {
-                text = "Top-down (fixed distance)"
-                onSelect = { actions.setCameraModeTopDown() }
             }
 
             dismiss = item {

@@ -1,7 +1,6 @@
 package io.github.digorydoo.titanium.engine.input
 
 import io.github.digorydoo.titanium.engine.input.gamepad.Gamepad
-import io.github.digorydoo.titanium.engine.input.gamepad.GamepadBtn
 import io.github.digorydoo.titanium.engine.input.keyboard.Keyboard
 
 /**
@@ -32,28 +31,14 @@ abstract class InputManager(
     }
 
     fun update() {
-        gamepad.update()
-
-        if (mode != InputMode.GAMEPAD) {
-            val shouldUseGamepad = gamepad.run {
-                leftJoy.x != 0.0f ||
-                    leftJoy.y != 0.0f ||
-                    rightJoy.x != 0.0f ||
-                    rightJoy.y != 0.0f ||
-                    isPressed(GamepadBtn.ACTION_A) ||
-                    isPressed(GamepadBtn.OPEN_MENU_LEFT) ||
-                    isPressed(GamepadBtn.OPEN_MENU_RIGHT) ||
-                    isPressed(GamepadBtn.REAR_UPPER_LEFT) ||
-                    isPressed(GamepadBtn.REAR_UPPER_RIGHT)
-            }
-
-            if (shouldUseGamepad) {
-                mode = InputMode.GAMEPAD
-            }
-        }
+        gamepad.update() // always update so that we can check anyBtnPressed
 
         if (mode == InputMode.KEYBOARD) {
             accessor.updateSynthesized()
+
+            if (gamepad.anyBtnPressed) {
+                mode = InputMode.GAMEPAD
+            }
         }
     }
 }

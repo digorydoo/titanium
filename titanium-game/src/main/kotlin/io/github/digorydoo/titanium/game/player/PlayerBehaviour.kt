@@ -97,7 +97,7 @@ class PlayerBehaviour(
         if (!frameCycles.isJumping) {
             val input = App.input
 
-            if (input.jumpBtn.pressedOnce) {
+            if (input.jumpBtn.checkPressedOnce()) {
                 if (hasGroundContact) {
                     shouldJump = true
                 } else {
@@ -167,7 +167,7 @@ class PlayerBehaviour(
         val joyNormX = dx / joyLen
         val joyNormY = dy / joyLen
 
-        val speedFactor = if (App.input.dashBtn.pressed) 2.0f else clamp(joyLen, 0.0f, 1.0f)
+        val speedFactor = if (App.input.dashBtn.checkPressed()) 2.0f else clamp(joyLen, 0.0f, 1.0f)
         val targetSpeed = WALK_SPEED * speedFactor
 
         dx = body.speed.x

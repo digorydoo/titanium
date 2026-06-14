@@ -22,6 +22,7 @@ class InputAccessor(private val gamepad: Gamepad, private val keyboard: Keyboard
     val dashBtn = BtnOrKeyAccessor(GamepadBtn.ACTION_B, KeyboardKey.RIGHT_SHIFT)
     val jumpBtn = BtnOrKeyAccessor(GamepadBtn.ACTION_X, KeyboardKey.RIGHT_META)
     val useBtn = BtnOrKeyAccessor(GamepadBtn.ACTION_Y, KeyboardKey.LEFT_CTRL)
+    val skipBtn = BtnOrKeyAccessor(GamepadBtn.ACTION_X, KeyboardKey.ESCAPE)
 
     val hatOrArrowLeft = BtnOrKeyAccessor(GamepadBtn.HAT_LEFT, KeyboardKey.ARROW_LEFT)
     val hatOrArrowRight = BtnOrKeyAccessor(GamepadBtn.HAT_RIGHT, KeyboardKey.ARROW_RIGHT)
@@ -33,27 +34,31 @@ class InputAccessor(private val gamepad: Gamepad, private val keyboard: Keyboard
     // the hat switch as well as ZL and ZR, while keyboard navigation should rely on arrow keys and TAB. In these cases,
     // GamepadBtn and KeyboardKey should be directly accessed with the following functions.
 
-    fun isPressed(btn: GamepadBtn) = gamepad.isPressed(btn)
-    fun isPressedOnce(btn: GamepadBtn) = gamepad.isPressedOnce(btn)
-    fun isPressedWithRepeat(btn: GamepadBtn) = gamepad.isPressedWithRepeat(btn)
+    fun checkPressed(btn: GamepadBtn) = gamepad.checkPressed(btn)
+    fun checkPressedOnce(btn: GamepadBtn) = gamepad.checkPressedOnce(btn)
+    fun checkPressedWithRepeat(btn: GamepadBtn) = gamepad.checkPressedWithRepeat(btn)
+    fun didHandle(btn: GamepadBtn) = gamepad.didHandle(btn)
 
-    fun isPressed(key: KeyboardKey) = keyboard.isPressed(key)
-    fun isPressedOnce(key: KeyboardKey) = keyboard.isPressedOnce(key)
-    fun isPressedWithRepeat(key: KeyboardKey) = keyboard.isPressedWithRepeat(key)
+    fun checkPressed(key: KeyboardKey) = keyboard.checkPressed(key)
+    fun checkPressedOnce(key: KeyboardKey) = keyboard.checkPressedOnce(key)
+    fun checkPressedWithRepeat(key: KeyboardKey) = keyboard.checkPressedWithRepeat(key)
+    fun didHandle(key: KeyboardKey) = keyboard.didHandle(key)
+
+    val anyBtnOrKeyPressed get() = gamepad.anyBtnPressed || keyboard.anyKeyPressed
 
     // Accessing keys by Char means that they depend on the system's current keyboard layout, and the key in question
     // may even be unavailable. Therefore, these functions should be used by the editor only.
 
-    fun isPressed(c: Char) = keyboard.isPressed(c)
-    fun isPressedOnce(c: Char) = keyboard.isPressedOnce(c)
-    fun isPressedWithRepeat(c: Char) = keyboard.isPressedWithRepeat(c)
+    fun checkPressed(c: Char) = keyboard.checkPressed(c)
+    fun checkPressedOnce(c: Char) = keyboard.checkPressedOnce(c)
+    fun checkPressedWithRepeat(c: Char) = keyboard.checkPressedWithRepeat(c)
 
-    // The following shorthands should be used by the Editor only. The game should use BtnOrKeyAccessor and should
-    // distinguish between the left and right modifier key.
+    // The following shorthands should be used by the engine only. The game should use BtnOrKeyAccessor and should
+    // distinguish between the left and right modifier keys.
 
-    val altPressed get() = isPressed(KeyboardKey.LEFT_ALT) || isPressed(KeyboardKey.RIGHT_ALT)
-    val ctrlPressed get() = isPressed(KeyboardKey.LEFT_CTRL) || isPressed(KeyboardKey.RIGHT_CTRL)
-    val shiftPressed get() = isPressed(KeyboardKey.LEFT_SHIFT) || isPressed(KeyboardKey.RIGHT_SHIFT)
+    internal val altIsDown get() = keyboard.isDown(KeyboardKey.LEFT_ALT) || keyboard.isDown(KeyboardKey.RIGHT_ALT)
+    internal val ctrlIsDown get() = keyboard.isDown(KeyboardKey.LEFT_CTRL) || keyboard.isDown(KeyboardKey.RIGHT_CTRL)
+    internal val shiftIsDown get() = keyboard.isDown(KeyboardKey.LEFT_SHIFT) || keyboard.isDown(KeyboardKey.RIGHT_SHIFT)
 
     // The left and right joystick get a special treatment. They are available as Vector2f even in keyboard mode, and
     // they are available as Boolean button values even in gamepad mode.
@@ -91,21 +96,31 @@ class InputAccessor(private val gamepad: Gamepad, private val keyboard: Keyboard
         rjoySynthesized.update()
     }
 
-    inner class BtnOrKeyAccessor(private val btn: GamepadBtn, private val key: KeyboardKey) {
-        val pressed
+    inner class BtnOrKeyAccessor(val btn: GamepadBtn, val key: KeyboardKey) {
+        val isDown
             get() = when (App.inputMgr.mode) {
-                InputMode.GAMEPAD -> gamepad.isPressed(btn)
-                InputMode.KEYBOARD -> keyboard.isPressed(key)
+                InputMode.GAMEPAD -> gamepad.isDown(btn)
+                InputMode.KEYBOARD -> keyboard.isDown(key)
             }
-        val pressedOnce
-            get() = when (App.inputMgr.mode) {
-                InputMode.GAMEPAD -> gamepad.isPressedOnce(btn)
-                InputMode.KEYBOARD -> keyboard.isPressedOnce(key)
-            }
-        val pressedWithRepeat
-            get() = when (App.inputMgr.mode) {
-                InputMode.GAMEPAD -> gamepad.isPressedWithRepeat(btn)
-                InputMode.KEYBOARD -> keyboard.isPressedWithRepeat(key)
-            }
+
+        fun checkPressed() = when (App.inputMgr.mode) {
+            InputMode.GAMEPAD -> gamepad.checkPressed(btn)
+            InputMode.KEYBOARD -> keyboard.checkPressed(key)
+        }
+
+        fun checkPressedOnce() = when (App.inputMgr.mode) {
+            InputMode.GAMEPAD -> gamepad.checkPressedOnce(btn)
+            InputMode.KEYBOARD -> keyboard.checkPressedOnce(key)
+        }
+
+        fun checkPressedWithRepeat() = when (App.inputMgr.mode) {
+            InputMode.GAMEPAD -> gamepad.checkPressedWithRepeat(btn)
+            InputMode.KEYBOARD -> keyboard.checkPressedWithRepeat(key)
+        }
+
+        fun didHandle() = when (App.inputMgr.mode) {
+            InputMode.GAMEPAD -> gamepad.didHandle(btn)
+            InputMode.KEYBOARD -> keyboard.didHandle(key)
+        }
     }
 }

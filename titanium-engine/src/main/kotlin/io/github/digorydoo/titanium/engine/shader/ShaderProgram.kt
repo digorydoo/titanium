@@ -10,6 +10,8 @@ interface ShaderProgram {
         PAPER,
         SHADOWS,
         SKYDOME,
+        UI_CIRCULAR_PROGRESS,
+        UI_SOLID,
         UI_SPRITES,
         WATER,
     }

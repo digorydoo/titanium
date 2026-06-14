@@ -136,7 +136,8 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Vector3f) 
     }
 
     fun setShown(shown: Boolean) {
-        setHiddenOnNextFrameTo = !shown
+        if (shown) show()
+        else hide()
     }
 
     // All gels must at least dispose of their renderer. See also SpawnPt.didRemoveGel()

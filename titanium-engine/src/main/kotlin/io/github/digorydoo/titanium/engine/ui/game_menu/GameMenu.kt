@@ -32,31 +32,35 @@ abstract class GameMenu {
     private var aboutToShow = false
 
     fun animate() {
-        if (App.dlg.isInDlgMode || App.editor.isShown || App.isAboutToTakeScreenshot) return
+        // Dialogues may be started from GameMenu, so if isInDlgMode or intermissions.anyRunning is set, we don't close
+        // the GameMenu, but we must not handle its keyboard events either.
+        if (App.dlg.isInDlgMode || App.intermissions.anyRunning || App.editor.isShown || App.isAboutToTakeScreenshot) {
+            return
+        }
 
         val input = App.input
 
         when {
-            input.isPressedOnce(GamepadBtn.OPEN_MENU_LEFT) -> showOrSwitchOrDismiss(firstTopic)
-            input.isPressedOnce(GamepadBtn.OPEN_MENU_RIGHT) -> showOrSwitchOrDismiss(lastTopic)
-            input.isPressedOnce(KeyboardKey.ESCAPE) -> toggleShow()
+            input.checkPressedOnce(GamepadBtn.OPEN_MENU_LEFT) -> showOrSwitchOrDismiss(firstTopic)
+            input.checkPressedOnce(GamepadBtn.OPEN_MENU_RIGHT) -> showOrSwitchOrDismiss(lastTopic)
+            input.checkPressedOnce(KeyboardKey.ESCAPE) -> toggleShow()
         }
 
         if (!isShown) return
 
         when {
-            input.dismissBtn.pressedOnce -> dismiss()
-            input.isPressedOnce(GamepadBtn.REAR_UPPER_LEFT) -> switchTo(topic.previous())
-            input.isPressedOnce(GamepadBtn.REAR_UPPER_RIGHT) -> switchTo(topic.next())
-            input.isPressedOnce(KeyboardKey.HOME) -> switchTo(firstTopic)
-            input.isPressedOnce(KeyboardKey.END) -> switchTo(lastTopic)
-            input.isPressedOnce(KeyboardKey.TAB) -> cycleThroughTopics(reverse = input.shiftPressed)
+            input.dismissBtn.checkPressedOnce() -> dismiss()
+            input.checkPressedOnce(GamepadBtn.REAR_UPPER_LEFT) -> switchTo(topic.previous())
+            input.checkPressedOnce(GamepadBtn.REAR_UPPER_RIGHT) -> switchTo(topic.next())
+            input.checkPressedOnce(KeyboardKey.HOME) -> switchTo(firstTopic)
+            input.checkPressedOnce(KeyboardKey.END) -> switchTo(lastTopic)
+            input.checkPressedOnce(KeyboardKey.TAB) -> cycleThroughTopics(reverse = input.shiftIsDown)
 
             // These may need to go away once we have horizontally arranged elements on the page
-            input.isPressedOnce(GamepadBtn.HAT_LEFT) -> switchTo(topic.previous())
-            input.isPressedOnce(GamepadBtn.HAT_RIGHT) -> switchTo(topic.next())
-            input.isPressedOnce(KeyboardKey.ARROW_LEFT) -> switchTo(topic.previous())
-            input.isPressedOnce(KeyboardKey.ARROW_RIGHT) -> switchTo(topic.next())
+            input.checkPressedOnce(GamepadBtn.HAT_LEFT) -> switchTo(topic.previous())
+            input.checkPressedOnce(GamepadBtn.HAT_RIGHT) -> switchTo(topic.next())
+            input.checkPressedOnce(KeyboardKey.ARROW_LEFT) -> switchTo(topic.previous())
+            input.checkPressedOnce(KeyboardKey.ARROW_RIGHT) -> switchTo(topic.next())
         }
 
         tabs.forEach { it.page.animate() }

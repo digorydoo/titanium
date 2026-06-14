@@ -22,6 +22,7 @@ class ShaderUniforms {
         ContourTopReflectsSky,  // uniform float
         ContourWidth,           // uniform float
         Contrast,               // uniform float
+        ColourWithAlpha,        // uniform vec4
         DiffuseLightAmount,     // uniform float
         DiffuseLightColour,     // uniform vec3
         EmittingLight,          // uniform vec3
@@ -49,6 +50,8 @@ class ShaderUniforms {
         Lamp4Radius,            // uniform float
         MultColour,             // uniform vec3
         Opacity,                // uniform float
+        PenSize,                // uniform float
+        Progress,               // uniform float
         Projection,             // uniform mat4
         RotOrigin,              // uniform vec3
         RotationPhi,            // uniform float
@@ -78,9 +81,9 @@ class ShaderUniforms {
         }
     }
 
-    fun setAmbientLightColour(c: Colour) = set(AmbientLightColour, c)
+    fun setAmbientLightColour(c: Colour) = setRGB(AmbientLightColour, c)
     fun setAmbientLightAmount(amount: Float) = set(AmbientLightAmount, amount)
-    fun setDiffuseLightColour(c: Colour) = set(DiffuseLightColour, c)
+    fun setDiffuseLightColour(c: Colour) = setRGB(DiffuseLightColour, c)
     fun setDiffuseLightAmount(amount: Float) = set(DiffuseLightAmount, amount)
     fun setEmittingLight(r: Float, g: Float, b: Float) = set(EmittingLight, r, g, b)
     fun setShininess(f: Float) = set(Shininess, f)
@@ -90,12 +93,13 @@ class ShaderUniforms {
     fun setContourWidth(f: Float) = set(ContourWidth, f)
     fun setTexIntensity(f: Float) = set(TexIntensity, f)
     fun setTintAmount(amount: Float) = set(TintAmount, amount)
-    fun setTintColour(c: Colour) = set(TintColour, c)
+    fun setTintColour(c: Colour) = setRGB(TintColour, c)
+    fun setColourWithAlpha(c: Colour) = setRGBA(ColourWithAlpha, c)
     fun setSunDir(vec: Vector3f) = set(SunDir, vec)
-    fun setSkyColour1(c: Colour) = set(SkyColour1, c)
-    fun setSkyColour2(c: Colour) = set(SkyColour2, c)
-    fun setMultColour(c: Colour) = set(MultColour, c)
-    fun setHazyColour(c: Colour) = set(HazyColour, c)
+    fun setSkyColour1(c: Colour) = setRGB(SkyColour1, c)
+    fun setSkyColour2(c: Colour) = setRGB(SkyColour2, c)
+    fun setMultColour(c: Colour) = setRGB(MultColour, c)
+    fun setHazyColour(c: Colour) = setRGB(HazyColour, c)
     fun setHaziness(hazy: Float) = set(Haziness, hazy)
     fun setBrightness(brite: Float) = set(Brightness, brite)
     fun setContrast(c: Float) = set(Contrast, c)
@@ -114,6 +118,8 @@ class ShaderUniforms {
     fun setSessionTime() = set(SessionTime, App.time.sessionTime)
     fun setShadowMapSamplerUnit() = set(ShadowMap, SamplerUnit.SHADOW_MAP.index)
     fun setTextureSamplerUnit() = set(Texture, SamplerUnit.TEXTURE.index)
+    fun setProgress(f: Float) = set(Progress, f)
+    fun setPenSize(f: Float) = set(PenSize, f)
 
     fun setLamp0Props() {
         val lamp0 = App.lamps.getOrNull(0)
@@ -182,23 +188,23 @@ class ShaderUniforms {
 
     private fun setLamp0Intensity(f: Float) = set(Lamp0Intensity, f)
     private fun setLamp0Pos(pos: Vector3f) = set(Lamp0Pos, pos)
-    private fun setLamp0Colour(c: Colour) = set(Lamp0Colour, c)
+    private fun setLamp0Colour(c: Colour) = setRGB(Lamp0Colour, c)
     private fun setLamp0Radius(r: Float) = set(Lamp0Radius, r)
     private fun setLamp1Intensity(f: Float) = set(Lamp1Intensity, f)
     private fun setLamp1Pos(pos: Vector3f) = set(Lamp1Pos, pos)
-    private fun setLamp1Colour(c: Colour) = set(Lamp1Colour, c)
+    private fun setLamp1Colour(c: Colour) = setRGB(Lamp1Colour, c)
     private fun setLamp1Radius(r: Float) = set(Lamp1Radius, r)
     private fun setLamp2Intensity(f: Float) = set(Lamp2Intensity, f)
     private fun setLamp2Pos(pos: Vector3f) = set(Lamp2Pos, pos)
-    private fun setLamp2Colour(c: Colour) = set(Lamp2Colour, c)
+    private fun setLamp2Colour(c: Colour) = setRGB(Lamp2Colour, c)
     private fun setLamp2Radius(r: Float) = set(Lamp2Radius, r)
     private fun setLamp3Intensity(f: Float) = set(Lamp3Intensity, f)
     private fun setLamp3Pos(pos: Vector3f) = set(Lamp3Pos, pos)
-    private fun setLamp3Colour(c: Colour) = set(Lamp3Colour, c)
+    private fun setLamp3Colour(c: Colour) = setRGB(Lamp3Colour, c)
     private fun setLamp3Radius(r: Float) = set(Lamp3Radius, r)
     private fun setLamp4Intensity(f: Float) = set(Lamp4Intensity, f)
     private fun setLamp4Pos(pos: Vector3f) = set(Lamp4Pos, pos)
-    private fun setLamp4Colour(c: Colour) = set(Lamp4Colour, c)
+    private fun setLamp4Colour(c: Colour) = setRGB(Lamp4Colour, c)
     private fun setLamp4Radius(r: Float) = set(Lamp4Radius, r)
 
     private fun set(u: Uniform, i: Int) {
@@ -229,10 +235,17 @@ class ShaderUniforms {
         checkGLError { "Failed to set value for uniform $u" }
     }
 
-    private fun set(u: Uniform, c: Colour) {
+    private fun setRGB(u: Uniform, c: Colour) {
         val loc = locations[u] ?: -1
         require(loc >= 0) { "Uniform location unknown: $u" }
         glUniform3f(loc, c.red, c.green, c.blue)
+        checkGLError { "Failed to set value for uniform $u" }
+    }
+
+    private fun setRGBA(u: Uniform, c: Colour) {
+        val loc = locations[u] ?: -1
+        require(loc >= 0) { "Uniform location unknown: $u" }
+        glUniform4f(loc, c.red, c.green, c.blue, c.alpha)
         checkGLError { "Failed to set value for uniform $u" }
     }
 

@@ -4,11 +4,12 @@ import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.vector.MutableVector2f
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.gel.GraphicElement
+import io.github.digorydoo.titanium.engine.sprite.UISolidRenderer
 import io.github.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import io.github.digorydoo.titanium.engine.texture.Texture
 
 class UIAreaGel(
-    bgTex: Texture? = null, // must not be a shared texture; ownership is passed to gel
+    private val bgTex: Texture? = null, // must not be a shared texture; ownership is passed to gel
     bgColour: Colour = Colour.black, // ignored if bgTex is not null
     private val marginLeft: Int? = null,
     private val marginTop: Int? = null,
@@ -24,23 +25,27 @@ class UIAreaGel(
         inEditor = Visibility.ACTIVE
     }
 
-    private val texture = when {
-        bgTex != null -> bgTex // will be freed in aboutToRemove
-        else -> makeTexture(bgColour) // FIXME should not use a tex; see CutsceneStripesGel
-    }
-
     private val frameSize = MutableVector2f()
     private val texScaleFactor = MutableVector2f(1.0f, 1.0f)
 
-    override val renderer = App.factory.createUISpriteRenderer(
-        object: UISpriteRenderer.Delegate() {
-            override val tex = this@UIAreaGel.texture
-            override val frameSize = this@UIAreaGel.frameSize
-            override val renderPos = this@UIAreaGel.pos
-            override val texScaleFactor = this@UIAreaGel.texScaleFactor
-        },
-        antiAliasing = true
-    )
+    override val renderer = when {
+        bgTex != null -> App.factory.createUISpriteRenderer(
+            object: UISpriteRenderer.Delegate() {
+                override val tex = bgTex
+                override val frameSize = this@UIAreaGel.frameSize
+                override val renderPos = this@UIAreaGel.pos
+                override val texScaleFactor = this@UIAreaGel.texScaleFactor
+            },
+            antiAliasing = true
+        )
+        else -> App.factory.createUISolidRenderer(
+            object: UISolidRenderer.Delegate() {
+                override val frameSize = this@UIAreaGel.frameSize
+                override val renderPos = this@UIAreaGel.pos
+                override val colour = bgColour
+            },
+        )
+    }
 
     private var prevScreenWidth = 0
     private var prevScreenHeight = 0
@@ -85,21 +90,13 @@ class UIAreaGel(
         prevScreenHeight = screenHeightDp
 
         if (scaleTexToFrameSize) {
-            texScaleFactor.x = texture.width.toFloat() / frameSize.x
-            texScaleFactor.y = texture.height.toFloat() / frameSize.y
+            texScaleFactor.x = (bgTex?.width ?: 0).toFloat() / frameSize.x
+            texScaleFactor.y = (bgTex?.height ?: 0).toFloat() / frameSize.y
         }
     }
 
     override fun onRemoveZombie() {
         renderer.free()
-        texture.freeRequireUnshared()
-    }
-
-    companion object {
-        @Deprecated("Use Colour directly")
-        fun makeTexture(bgColour: Colour) =
-            App.textures.createTexture(2, 2).apply {
-                drawInto { clear(bgColour) }
-            }
+        bgTex?.freeRequireUnshared()
     }
 }

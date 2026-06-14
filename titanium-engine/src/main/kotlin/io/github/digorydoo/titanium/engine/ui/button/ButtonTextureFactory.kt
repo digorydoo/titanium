@@ -6,11 +6,13 @@ import ch.digorydoo.kutils.rect.MutableRecti
 import ch.digorydoo.kutils.rect.Recti
 import ch.digorydoo.kutils.utils.Moment
 import io.github.digorydoo.titanium.engine.core.App
+import io.github.digorydoo.titanium.engine.file.SaveGameFileWriter
 import io.github.digorydoo.titanium.engine.font.FontManager.FontName.DIALOG_FONT
 import io.github.digorydoo.titanium.engine.texture.Texture
 import io.github.digorydoo.titanium.engine.ui.*
 import io.github.digorydoo.titanium.engine.ui.dialogue.DlgItemDef
 import io.github.digorydoo.titanium.engine.ui.dialogue.DlgSavegameItemDef
+import kotlin.math.ceil
 
 object ButtonTextureFactory {
     private val TAG = Log.Tag("ButtonTextureFactory")
@@ -65,4 +67,38 @@ object ButtonTextureFactory {
             otlColour = null,
         )
     }
+
+    fun makeStringValueTexture(value: String): Texture {
+        val sz = App.fonts.measureText("0", DIALOG_FONT)
+        val textWidth = ITEM_VALUE_MAX_WIDTH + 2 * ITEM_TEXT_INNER_PADDING
+        val textHeight = ceil(sz.y).toInt() + 2 * ITEM_TEXT_INNER_PADDING
+        return App.textures.createTexture(textWidth, textHeight).also {
+            Log.info(TAG, "Item value texture created: w=${it.width}, h=${it.height}, value=$value")
+            redrawStringValue(it, value)
+        }
+    }
+
+    fun redrawStringValue(tex: Texture, value: String) {
+        tex.drawInto {
+            clear(Colour.transparent)
+            drawTextCentred(value, tex.width / 2, ITEM_TEXT_INNER_PADDING, dlgTextColour, DIALOG_FONT)
+        }
+    }
+
+    fun makeSavegameImageTexture(summary: SaveGameFileWriter.Summary) =
+        App.textures.createTexture(SAVEGAME_THUMBNAIL_WIDTH, SAVEGAME_THUMBNAIL_HEIGHT).apply {
+            drawInto {
+                val src = summary.screenshot
+                if (src == null) {
+                    Log.warn(TAG, "Drawing an empty thumbnail, because summary.screenshot is null")
+                    clear(Colour.black)
+                } else if (src.width != SAVEGAME_THUMBNAIL_WIDTH || src.height != SAVEGAME_THUMBNAIL_HEIGHT) {
+                    Log.warn(TAG, "Thumbnail does not have the expected size: ${src.width}x${src.height}")
+                    clear(Colour.black)
+                } else {
+                    // We can't help redrawing the image here, because the thumbnail is RGB8, but we need RGBA8.
+                    drawImage(src, 0, 0)
+                }
+            }
+        }
 }

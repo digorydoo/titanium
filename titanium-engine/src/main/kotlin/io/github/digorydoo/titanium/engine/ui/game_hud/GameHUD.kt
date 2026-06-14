@@ -8,8 +8,12 @@ import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import io.github.digorydoo.titanium.engine.gel.GraphicElement
 import io.github.digorydoo.titanium.engine.gel.NumberGel
+import io.github.digorydoo.titanium.engine.i18n.EngineTextId
 import io.github.digorydoo.titanium.engine.i18n.ITextId
+import io.github.digorydoo.titanium.engine.ui.FOOTER_ICON_MARGIN_BOTTOM
+import io.github.digorydoo.titanium.engine.ui.FOOTER_ICON_MARGIN_RIGHT
 import io.github.digorydoo.titanium.engine.ui.icon.ActionInputIconGel
+import io.github.digorydoo.titanium.engine.ui.icon.InputIconGel
 
 /**
  * HUD = Heads Up Display
@@ -26,6 +30,9 @@ class GameHUD {
     private var actionTargetArrow: ActionTargetArrowGel? = null
     private var cutsceneTopStrip: CutsceneStripGel? = null
     private var cutsceneBtmStrip: CutsceneStripGel? = null
+    private var skipCutsceneBtn: InputIconGel? = null
+
+    val cutsceneStripsShown get() = mode == Mode.SKIPPABLE_CUTSCENE || mode == Mode.NON_SKIPPABLE_CUTSCENE
 
     fun onBeforeLoadScene() {
         Log.info(TAG, "onBeforeLoadScene")
@@ -39,6 +46,7 @@ class GameHUD {
         require(actionTargetArrow?.zombie != false)
         require(cutsceneTopStrip?.zombie != false)
         require(cutsceneBtmStrip?.zombie != false)
+        require(skipCutsceneBtn?.zombie != false)
 
         // Can't assign this as a member variable, because GameHUD is created too early.
         val screenSizeDp = App.resolutionMgr.screenSizeDp
@@ -57,6 +65,7 @@ class GameHUD {
         actionTargetArrow = null
         cutsceneTopStrip = null
         cutsceneBtmStrip = null
+        skipCutsceneBtn = null
         mode = Mode.HIDDEN
     }
 
@@ -77,7 +86,11 @@ class GameHUD {
 
         if (!BuildConfig.isProduction) {
             fpsGel = NumberGel(
-                alignment = Align.Alignment(anchor = Anchor.BOTTOM_CENTRE, marginBottom = 8, xOffset = 64)
+                alignment = Align.Alignment(
+                    Anchor.BOTTOM_CENTRE,
+                    marginBottom = 8,
+                    xOffset = 64,
+                )
             ).also {
                 it.hide()
                 it.onCreate(LayerKind.UI_BELOW_DLG)
@@ -108,6 +121,22 @@ class GameHUD {
             it.hide()
             it.onCreate(LayerKind.UI_BELOW_DLG)
         }
+        skipCutsceneBtn = InputIconGel(
+            input = App.input.skipBtn,
+            alignment = Align.Alignment(
+                Anchor.BOTTOM_RIGHT,
+                marginRight = FOOTER_ICON_MARGIN_RIGHT,
+                marginBottom = FOOTER_ICON_MARGIN_BOTTOM,
+            ),
+            label = EngineTextId.HUD_SKIP_CUTSCENE,
+            glowEnabled = false,
+            fadeWhenNoInput = true,
+            secondsToHoldForSelect = 1.0f,
+            onSelect = { App.intermissions.cancel() }
+        ).also {
+            it.hide()
+            it.onCreate(LayerKind.UI_BELOW_DLG)
+        }
     }
 
     private fun setMode(newMode: Mode) {
@@ -120,10 +149,11 @@ class GameHUD {
         fpsGel?.setShown(newMode != Mode.HIDDEN)
         compass?.setShown(newMode == Mode.FULL)
         timeDisplay?.setShown(newMode == Mode.FULL)
-        cutsceneTopStrip?.setShown(newMode == Mode.SKIPPABLE_CUTSCENE || newMode == Mode.NON_SKIPPABLE_CUTSCENE)
-        cutsceneBtmStrip?.setShown(newMode == Mode.SKIPPABLE_CUTSCENE || newMode == Mode.NON_SKIPPABLE_CUTSCENE)
 
-        // TODO skip button
+        val hasCutsceneStrips = newMode == Mode.SKIPPABLE_CUTSCENE || newMode == Mode.NON_SKIPPABLE_CUTSCENE
+        cutsceneTopStrip?.setShown(hasCutsceneStrips)
+        cutsceneBtmStrip?.setShown(hasCutsceneStrips)
+        skipCutsceneBtn?.setShown(App.intermissions.canCancel)
     }
 
     fun hideAction() {

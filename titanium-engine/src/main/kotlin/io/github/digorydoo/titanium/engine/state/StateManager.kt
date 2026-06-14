@@ -2,28 +2,30 @@ package io.github.digorydoo.titanium.engine.state
 
 import ch.digorydoo.kutils.logging.Log
 import ch.digorydoo.kutils.vector.Vector3f
-import io.github.digorydoo.titanium.engine.camera.CameraProps
+import io.github.digorydoo.titanium.engine.camera.CameraDirectingMode
+import io.github.digorydoo.titanium.engine.camera.CameraInertia
+import io.github.digorydoo.titanium.engine.camera.CameraInputMode
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.file.SaveGameFileReader
 import io.github.digorydoo.titanium.engine.file.SaveGameFileWriter
 import io.github.digorydoo.titanium.engine.scene.ISceneId
 
 abstract class StateManager {
-    open class SerializedState(
-        open val ints: Map<IStateId, Int>,
-        open val floats: Map<IStateId, Float>,
-        open val vector3fs: Map<IStateId, Vector3f>,
-    )
+    interface SerializedState {
+        val ints: Map<IStateId, Int>
+        val floats: Map<IStateId, Float>
+        val vector3fs: Map<IStateId, Vector3f>
+    }
 
     class MutableSerializedState(
         override val ints: MutableMap<IStateId, Int>,
         override val floats: MutableMap<IStateId, Float>,
         override val vector3fs: MutableMap<IStateId, Vector3f>,
-    ): SerializedState(ints, floats, vector3fs) {
+    ): SerializedState {
         constructor(): this(mutableMapOf(), mutableMapOf(), mutableMapOf())
     }
 
-    // All the values that are delegated to other objects and need to be restored by SceneLoader.
+    // Class that contains the values that are delegated to other objects and need to be restored by SceneLoader.
     // State values whose source of truth is StateManager or StateManagerImpl are not included here.
     abstract class RestoredState {
         var sceneId: ISceneId? = null
@@ -31,23 +33,26 @@ abstract class StateManager {
         var cameraRho: Float? = null
         var cameraSource: Vector3f? = null
         var cameraTarget: Vector3f? = null
-        var cameraMode: CameraProps.Mode? = null
+        var cameraDirectingMode: CameraDirectingMode? = null
+        var cameraInertia: CameraInertia? = null
+        var cameraInputMode: CameraInputMode? = null
         var storyClockHoursHand: Int? = null
         var storyClockMinutesHand: Int? = null
         var storyClockSecondsHand: Int? = null
     }
 
+    protected var currentState = MutableSerializedState()
+
     abstract fun getStateId(value: UShort): IStateId?
-    protected abstract fun clearGameSpecificState()
-    protected abstract fun getSceneId(intId: Int): ISceneId
+    protected abstract fun getSceneId(value: Int): ISceneId
     protected abstract fun createNewRestoredState(): RestoredState
-    protected abstract fun serializeGameSpecificValues(s: MutableSerializedState)
-    protected abstract fun restoreGameSpecificValues(s: SerializedState, restoredState: RestoredState)
+    protected abstract fun serializeGameSpecificValues()
+    protected abstract fun restoreGameSpecificValues(restoredState: RestoredState)
 
     fun loadFromFile(fileName: String) {
         try {
-            val state = SaveGameFileReader.readContent(fileName)
-            val restoredState = restore(state)
+            currentState = SaveGameFileReader.readContent(fileName)
+            val restoredState = restore()
             val sceneId = restoredState.sceneId!!
             val scene = sceneId.createScene()
             App.sceneLoader.load(scene, restore = restoredState)
@@ -59,8 +64,8 @@ abstract class StateManager {
 
     fun saveToFile(summary: SaveGameFileWriter.Summary): Boolean {
         try {
-            val state = serialize()
-            SaveGameFileWriter.write(summary, state)
+            serialize()
+            SaveGameFileWriter.write(summary, currentState)
             return true
         } catch (e: Exception) {
             Log.error(TAG, "Exception: ${e.message}")
@@ -70,28 +75,13 @@ abstract class StateManager {
 
     fun clearAllState() {
         Log.info(TAG, "clearAllState called")
-
-        // Nothing to do yet, because currently all state information is owned by other objects.
-        //
-        // EngineStateId.entries.forEach { id ->
-        //     when (id) {
-        //         EngineStateId.CURRENT_SCENE -> Unit
-        //         EngineStateId.CAMERA_PHI -> Unit
-        //         EngineStateId.CAMERA_RHO -> Unit
-        //         EngineStateId.CAMERA_SOURCE_PT -> Unit
-        //         EngineStateId.CAMERA_TARGET_PT -> Unit
-        //         EngineStateId.CAMERA_MODE -> Unit
-        //         EngineStateId.STORY_CLOCK_HOURS_HAND -> Unit
-        //         EngineStateId.STORY_CLOCK_MINUTES_HAND -> Unit
-        //         EngineStateId.STORY_CLOCK_SECONDS_HAND -> Unit
-        //     }
-        // }
-
-        clearGameSpecificState()
+        currentState = MutableSerializedState()
     }
 
-    private fun serialize(): SerializedState {
-        val s = MutableSerializedState()
+    private fun serialize() {
+        val s = currentState
+
+        // Update state information whose source of truth lies outside StateManager.
 
         val scene = App.scene
         val camera = App.camera
@@ -99,40 +89,49 @@ abstract class StateManager {
 
         EngineStateId.entries.forEach { id ->
             when (id) {
-                EngineStateId.CURRENT_SCENE -> s.ints[id] = scene.id?.value ?: -1
+                EngineStateId.CAMERA_DIRECTING_MODE -> s.ints[id] = camera.directingMode.value
+                EngineStateId.CAMERA_INERTIA -> s.ints[id] = camera.inertia.id
+                EngineStateId.CAMERA_INPUT_MODE -> s.ints[id] = camera.inputMode.value
                 EngineStateId.CAMERA_PHI -> s.floats[id] = camera.currentPhi
                 EngineStateId.CAMERA_RHO -> s.floats[id] = camera.currentRho
                 EngineStateId.CAMERA_SOURCE_PT -> s.vector3fs[id] = Vector3f(camera.sourcePos)
                 EngineStateId.CAMERA_TARGET_PT -> s.vector3fs[id] = Vector3f(camera.targetPos)
-                EngineStateId.CAMERA_MODE -> s.ints[id] = camera.mode.value
+                EngineStateId.CURRENT_SCENE -> s.ints[id] = scene.id?.value ?: -1
                 EngineStateId.STORY_CLOCK_HOURS_HAND -> s.ints[id] = time.storyClockHoursHand
                 EngineStateId.STORY_CLOCK_MINUTES_HAND -> s.ints[id] = time.storyClockMinutesHand
                 EngineStateId.STORY_CLOCK_SECONDS_HAND -> s.ints[id] = time.storyClockSecondsHand
             }
         }
 
-        serializeGameSpecificValues(s)
-        return SerializedState(s.ints, s.floats, s.vector3fs)
+        serializeGameSpecificValues()
     }
 
-    private fun restore(s: SerializedState): RestoredState {
+    private fun restore(): RestoredState {
+        val s = currentState
+
+        // Wrap state values that need to be restored by SceneLoader in a RestoredState object.
         val r = createNewRestoredState()
 
         EngineStateId.entries.forEach { id ->
             when (id) {
-                EngineStateId.CURRENT_SCENE -> r.sceneId = s.ints[id]?.let { getSceneId(it) }
-                EngineStateId.CAMERA_MODE -> r.cameraMode = s.ints[id]?.let { CameraProps.Mode.fromIntOrNull(it) }
+                EngineStateId.CAMERA_DIRECTING_MODE -> r.cameraDirectingMode =
+                    s.ints[id]?.let { CameraDirectingMode.fromIntOrNull(it) }
+                EngineStateId.CAMERA_INERTIA -> r.cameraInertia =
+                    s.ints[id]?.let { CameraInertia.fromIntOrNull(it) }
+                EngineStateId.CAMERA_INPUT_MODE -> r.cameraInputMode =
+                    s.ints[id]?.let { CameraInputMode.fromIntOrNull(it) }
                 EngineStateId.CAMERA_PHI -> r.cameraPhi = s.floats[id]
                 EngineStateId.CAMERA_RHO -> r.cameraRho = s.floats[id]
                 EngineStateId.CAMERA_SOURCE_PT -> r.cameraSource = s.vector3fs[id]
                 EngineStateId.CAMERA_TARGET_PT -> r.cameraTarget = s.vector3fs[id]
+                EngineStateId.CURRENT_SCENE -> r.sceneId = s.ints[id]?.let { getSceneId(it) }
                 EngineStateId.STORY_CLOCK_HOURS_HAND -> r.storyClockHoursHand = s.ints[id]
                 EngineStateId.STORY_CLOCK_MINUTES_HAND -> r.storyClockMinutesHand = s.ints[id]
                 EngineStateId.STORY_CLOCK_SECONDS_HAND -> r.storyClockSecondsHand = s.ints[id]
             }
         }
 
-        restoreGameSpecificValues(s, r)
+        restoreGameSpecificValues(r)
         return r
     }
 

@@ -10,7 +10,7 @@ enum class Icon(val frame: Int) {
     B(1),
     X(2),
     Y(3),
-    RESERVED1(4),
+    UNSPECIFIED_GAMEPAD_BTN(4), // fallback icon for gamepad buttons we have no icon for yet
     HAT_SWITCH(5),
     LJOY(6),
     RJOY(7),
@@ -25,6 +25,6 @@ enum class Icon(val frame: Int) {
     MENU_RIGHT(16), // start
     ESC(17),
     RETURN(18),
-    RESERVED3(19),
-    FOCUS_TRIANGLE(20),
+    UNSPECIFIED_KEYBOARD_BTN(19), // fallback icon for keyboard keys we have no icon for yet
+    FOCUS_TRIANGLE(20), // hovering in 3D space over gels that provide an action
 }

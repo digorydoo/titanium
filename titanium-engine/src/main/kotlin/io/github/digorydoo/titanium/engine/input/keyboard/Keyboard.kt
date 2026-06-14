@@ -5,24 +5,18 @@ import io.github.digorydoo.titanium.engine.input.InputStateMap
 
 abstract class Keyboard {
     protected val keyState = InputStateMap<KeyboardKey>()
+    val anyKeyPressed get() = keyState.anyPressed
+
     protected val charState = InputState()
     protected var charPressedLast = '\u0000'
 
-    fun isPressed(key: KeyboardKey) =
-        keyState.isPressed(key)
+    fun isDown(key: KeyboardKey) = keyState.isDown(key)
+    fun checkPressed(key: KeyboardKey) = keyState.checkPressed(key)
+    fun checkPressedOnce(key: KeyboardKey) = keyState.checkPressedOnce(key)
+    fun checkPressedWithRepeat(key: KeyboardKey) = keyState.checkPressedWithRepeat(key)
+    fun didHandle(key: KeyboardKey) = keyState.didHandle(key)
 
-    fun isPressedOnce(key: KeyboardKey) =
-        keyState.isPressedOnce(key)
-
-    fun isPressedWithRepeat(key: KeyboardKey) =
-        keyState.isPressedWithRepeat(key)
-
-    fun isPressed(c: Char) =
-        charPressedLast == c && charState.pressed
-
-    fun isPressedOnce(c: Char) =
-        charPressedLast == c && charState.pressedOnce
-
-    fun isPressedWithRepeat(c: Char) =
-        charPressedLast == c && charState.pressedWithRepeat
+    fun checkPressed(c: Char) = charPressedLast == c && charState.checkPressed()
+    fun checkPressedOnce(c: Char) = charPressedLast == c && charState.checkPressedOnce()
+    fun checkPressedWithRepeat(c: Char) = charPressedLast == c && charState.checkPressedWithRepeat()
 }

@@ -3,7 +3,8 @@ package io.github.digorydoo.titanium.engine.editor
 import ch.digorydoo.kutils.string.toDelimited
 import io.github.digorydoo.titanium.engine.behaviours.Align
 import io.github.digorydoo.titanium.engine.behaviours.Align.Anchor
-import io.github.digorydoo.titanium.engine.camera.CameraProps.Mode
+import io.github.digorydoo.titanium.engine.camera.CameraDirectingMode
+import io.github.digorydoo.titanium.engine.camera.CameraInputMode
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.editor.EditorState.EditMode
 import io.github.digorydoo.titanium.engine.gel.GelLayer.LayerKind
@@ -39,7 +40,7 @@ internal class EditorHUD(private val state: EditorState) {
     }
 
     fun cameraModeChanged() {
-        cameraModeGel?.text = App.camera.mode.displayText
+        cameraModeGel?.text = App.camera.directingMode.displayText
     }
 
     fun show() {
@@ -65,7 +66,7 @@ internal class EditorHUD(private val state: EditorState) {
         ).also { it.onCreate(LayerKind.UI_BELOW_DLG) }
 
         cameraModeGel = TextGel(
-            App.camera.mode.displayText,
+            App.camera.directingMode.displayText,
             alignment = Align.Alignment(anchor = Anchor.TOP_CENTRE, marginTop = 16)
         ).also { it.onCreate(LayerKind.UI_BELOW_DLG) }
 
@@ -75,6 +76,7 @@ internal class EditorHUD(private val state: EditorState) {
         ).also { it.onCreate(LayerKind.UI_BELOW_DLG) }
 
         updateStats()
+        App.camera.inputMode = CameraInputMode.FULLY_CONTROLLABLE
     }
 
     fun hide() {
@@ -90,7 +92,7 @@ internal class EditorHUD(private val state: EditorState) {
         cameraModeGel = null
         statsGel = null
 
-        App.camera.mode = Mode.SMART
+        App.camera.directingMode = CameraDirectingMode.SMART
     }
 
     fun updateStats() {

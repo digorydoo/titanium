@@ -12,7 +12,7 @@ class InventoryPage: MenuTabPage {
         require(message == null)
         message = TextGel(
             "The InventoryPage",
-            alignment = Align.Alignment(marginLeft = 100, marginTop = 120)
+            alignment = Align.Alignment(Align.Anchor.TOP_LEFT, marginLeft = 100, marginTop = 120)
         ).also {
             it.onCreate(LayerKind.UI_BELOW_DLG)
             it.hide()

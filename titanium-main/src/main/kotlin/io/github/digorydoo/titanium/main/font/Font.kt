@@ -85,6 +85,7 @@ class Font private constructor(
                 -> "zakirahs-hand-bold-non-commercial.ttf"
 
                 FontName.LARGE_HUD_FONT,
+                FontName.MEDIUM_HUD_FONT,
                 FontName.SMALL_HUD_FONT,
                 FontName.TOPIC_FONT,
                 -> "xball-non-commercial.ttf"
@@ -94,6 +95,7 @@ class Font private constructor(
                 FontName.DIALOG_FONT -> 27.0f
                 FontName.SNACKBAR_FONT -> 23.0f
                 FontName.SMALL_HUD_FONT -> 18.0f
+                FontName.MEDIUM_HUD_FONT -> 28.0f
                 FontName.LARGE_HUD_FONT -> 32.0f
                 FontName.TOPIC_FONT -> 26.0f
             }
@@ -102,6 +104,7 @@ class Font private constructor(
                 FontName.DIALOG_FONT -> -0.3f // slightly condensed
                 FontName.SNACKBAR_FONT -> -0.2f // slightly condensed
                 FontName.SMALL_HUD_FONT -> 1.0f // slightly extended
+                FontName.MEDIUM_HUD_FONT -> 0.8f
                 FontName.LARGE_HUD_FONT -> 0.6f
                 FontName.TOPIC_FONT -> 0.6f
             }
@@ -117,6 +120,7 @@ class Font private constructor(
                 }
 
                 FontName.SMALL_HUD_FONT,
+                FontName.MEDIUM_HUD_FONT,
                 FontName.LARGE_HUD_FONT,
                 FontName.TOPIC_FONT,
                 -> { value -> value }

@@ -1,6 +1,7 @@
 package io.github.digorydoo.titanium.main.core
 
 import ch.digorydoo.kutils.vector.Vector3f
+import io.github.digorydoo.kstruct.KstructMap
 import io.github.digorydoo.titanium.engine.brick.BrickModelData
 import io.github.digorydoo.titanium.engine.core.Factory
 import io.github.digorydoo.titanium.engine.gel.SpawnPt
@@ -10,6 +11,8 @@ import io.github.digorydoo.titanium.engine.mesh.SimpleMeshRenderer
 import io.github.digorydoo.titanium.engine.shader.PaperRenderer
 import io.github.digorydoo.titanium.engine.shader.Renderer.BlendMode
 import io.github.digorydoo.titanium.engine.sky.SkydomeRenderer
+import io.github.digorydoo.titanium.engine.sprite.UICircularProgressRenderer
+import io.github.digorydoo.titanium.engine.sprite.UISolidRenderer
 import io.github.digorydoo.titanium.engine.sprite.UISpriteRenderer
 import io.github.digorydoo.titanium.engine.texture.Texture
 import io.github.digorydoo.titanium.game.core.SpawnObjType
@@ -25,56 +28,63 @@ import io.github.digorydoo.titanium.main.mesh.ComplexMeshRendererImpl
 import io.github.digorydoo.titanium.main.mesh.SimpleMeshRendererImpl
 import io.github.digorydoo.titanium.main.shader.PaperRendererImpl
 import io.github.digorydoo.titanium.main.shader.SkydomeRendererImpl
+import io.github.digorydoo.titanium.main.shader.UICircularProgressRendererImpl
+import io.github.digorydoo.titanium.main.shader.UISolidRendererImpl
 import io.github.digorydoo.titanium.main.shader.UISpriteRendererImpl
-import io.github.digorydoo.kstruct.KstructMap
 
 class FactoryImpl: Factory {
     override fun createBrickVolumeRenderer(translation: Vector3f, tex: Texture, modelData: BrickModelData) =
         BrickVolumeRendererImpl(translation, tex, modelData)
 
-    override fun createSkydomeRenderer(props: SkydomeRenderer.Delegate) =
-        SkydomeRendererImpl(props)
+    override fun createSkydomeRenderer(delegate: SkydomeRenderer.Delegate) =
+        SkydomeRendererImpl(delegate)
 
     override fun createSimpleMeshRenderer(
-        props: SimpleMeshRenderer.Delegate,
+        delegate: SimpleMeshRenderer.Delegate,
         antiAliasing: Boolean,
         cullFace: Boolean,
         depthTest: Boolean,
     ) = SimpleMeshRendererImpl(
-        props,
+        delegate,
         antiAliasing = antiAliasing,
         cullFace = cullFace,
         depthTest = depthTest,
     )
 
     override fun createComplexMeshRenderer(
-        props: ComplexMeshRenderer.Delegate,
+        delegate: ComplexMeshRenderer.Delegate,
         antiAliasing: Boolean,
         cullFace: Boolean,
         depthTest: Boolean,
     ) = ComplexMeshRendererImpl(
-        props,
+        delegate,
         antiAliasing = antiAliasing,
         cullFace = cullFace,
         depthTest = depthTest,
     )
 
     override fun createPaperRenderer(
-        props: PaperRenderer.Delegate,
+        delegate: PaperRenderer.Delegate,
         antiAliasing: Boolean,
         blendMode: BlendMode,
         depthTest: Boolean,
         stellarObject: Boolean,
     ) = PaperRendererImpl(
-        props,
+        delegate,
         antiAliasing = antiAliasing,
         blendMode = blendMode,
         depthTest = depthTest,
         stellarObject = stellarObject,
     )
 
-    override fun createUISpriteRenderer(props: UISpriteRenderer.Delegate, antiAliasing: Boolean) =
-        UISpriteRendererImpl(props, antiAliasing = antiAliasing)
+    override fun createUISpriteRenderer(delegate: UISpriteRenderer.Delegate, antiAliasing: Boolean) =
+        UISpriteRendererImpl(delegate, antiAliasing = antiAliasing)
+
+    override fun createUICircularProgressRenderer(delegate: UICircularProgressRenderer.Delegate) =
+        UICircularProgressRendererImpl(delegate)
+
+    override fun createUISolidRenderer(delegate: UISolidRenderer.Delegate) =
+        UISolidRendererImpl(delegate)
 
     override fun createSpawnPt(raw: KstructMap): SpawnPt {
         val rawType = raw["type"]?.stringOrNull() ?: throw Exception("Missing type in raw spawnpt def")

@@ -2,17 +2,57 @@
 
 ## Backlog
 
-* Intermissions
-  * Any user interaction must be disabled during intermission
-    * Camera control should be allowed unless we're inside a cutscene
-  * Dialogues must be aligned with larger bottom margin when cutscene strip are active
-  * Cutscene strips should be faded in/moved
-  * CutsceneStripGel and UIAreaGel should both not create a texture for their colour; UIRenderer should support colour
-  * Skip button should appear when cutscene starts
-    * Disappears again after 1 second
-    * Reappears on user input
-    * `[X]`, must be pressed down 2 seconds to skip cutscene
-    * Must go away when endCutscene() was called
+* UI elements
+  * Alignment currently works for screen boundaries only
+  * If Alignment was used for other gels as well, then there is an ordering issue: If the attached gel renders first, it
+    would see the parent's old position, thus end up with an incorrect position for one frame.
+  * Doing linear layouts with the current approach is kind of tedious, because you have to manually track the insertion
+    position; and it's also fixed, i.e. not dynamic, not adaptive to changes, and doing flex is more or less impossible
+  * Gels that take part of this alignment must implement an interface that provides the gel's intrinsic width and
+    height.
+  * The gels are automatically added to the UI layer, and will automatically be set to zombie when the layout is
+    discarded
+  * IMPORTANT: The gels will NOT constantly realign! Instead, their position is decided once when the layout is
+    formatted.
+  * The layout automatically formats if screen size changed (the LayoutManager watches this), or programmatically by
+    calling layout.requestFormat() (which simply sets a flag; reformatting takes place once per frame at most).
+  * Use builder pattern:
+  ```
+  val layout = App.layout.build {
+     // The initial layout is always a RelativeLayout
+     val anchor1 = add(Gel1()) {
+        // The gel is wrapped in a FrameLayout, which will be returned as anchor1
+        alignParentLeft = true // the parent is the screen in this case
+        alignParentRight = true // stretches the frame; not implemented for gels; but still relevant for layout
+        alignParentTop = true
+        marginLeft = 16
+        marginTop = 24
+     }
+     val anchor2 = add(Gel2()) {
+        below = anchor1 // put Gel2 below Gel1, same x
+        marginLeft = 16 // adds to anchor's x
+        marginTop = 8
+     }
+     val anchor3 = vertical {
+        rightOf = anchor2 // put the vertical layout to the right of Gel2
+        alignParentRight = true // stretches the vertical layout
+        // alignParentLeft = true // throws: contradicts rightOf
+        // alignParentBottom = true // throws; vertical constraint would imply scrollable area, not supported
+        marginLeft = 16
+        spacing = 8 // since this is a vertical layout, the spacing affects y between elements
+        justify = Justify.CENTRE
+        add(Gel3()) // no lambda allowed here
+        add(Gel4())
+        // initially don't allow nested layouts
+     }
+     horizontal {
+        below = anchor3
+     }
+     relative {
+        rightOf = anchor3
+     }
+  }
+  ```
 
 * Bugs
   * Log: "Unloading all 3450 of non-shared programmes..." BrickVolumeRendererImpl should be created by BrickVolume, not
@@ -35,8 +75,6 @@
 
 * Camera
   * Save and restore camera settings (for cutscenes)
-  * Phi and rho are never taken modulo; setting them to some value makes the camera rotate
-  * Way to control the speed of the camera (during cutscenes)
 
 * Bodies with constraints and procedural shapes
   * A dumbbell has two gels but may only have one renderer

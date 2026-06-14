@@ -2,7 +2,6 @@ package io.github.digorydoo.titanium.engine.camera
 
 import io.github.digorydoo.titanium.engine.brick.BrickShape
 import io.github.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
-import io.github.digorydoo.titanium.engine.camera.CameraProps.Mode
 import io.github.digorydoo.titanium.engine.core.App
 import kotlin.math.max
 
@@ -12,22 +11,22 @@ import kotlin.math.max
  */
 class CameraDirector(private val props: CameraProps) {
     fun moveCamera() {
-        when (props.mode) {
-            Mode.FIXED_SOURCE -> {
+        when (props.directingMode) {
+            CameraDirectingMode.FIXED_SOURCE -> {
                 props.setAnglesAndDistanceFromSource()
                 props.sourcePos.animate()
                 props.phi.jump()
                 props.rho.jump()
                 props.distance.jump()
             }
-            Mode.FIXED_DISTANCE -> {
+            CameraDirectingMode.FIXED_DISTANCE, CameraDirectingMode.MAP -> {
                 props.phi.animate()
                 props.rho.animate()
                 props.distance.animate()
                 props.setSourceFromAnglesAndDistance()
                 props.sourcePos.jump()
             }
-            Mode.SMART -> {
+            CameraDirectingMode.SMART -> {
                 props.phi.animate()
                 props.rho.animate()
                 props.distance.animate()

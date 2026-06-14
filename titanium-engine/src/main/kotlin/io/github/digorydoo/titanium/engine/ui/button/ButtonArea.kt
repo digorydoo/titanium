@@ -8,30 +8,32 @@ import io.github.digorydoo.titanium.engine.i18n.ITextId
 import io.github.digorydoo.titanium.engine.sound.EngineSampleId
 import io.github.digorydoo.titanium.engine.ui.ITEM_DEFAULT_HEIGHT
 import io.github.digorydoo.titanium.engine.ui.dialogue.DlgTextItemDef
-import io.github.digorydoo.titanium.engine.ui.dlg_item.DlgTextItemGel
+import io.github.digorydoo.titanium.engine.ui.dlg_item.DlgItemGel
 
 class ButtonArea(marginLeft: Int, marginTop: Int) {
-    private class Button(val gel: DlgTextItemGel, val onSelect: () -> Unit)
+    private class Button(val gel: DlgItemGel, val onSelect: () -> Unit)
 
     private val buttons = mutableListOf<Button>()
     private val willAddAt = MutableVector2f(marginLeft, marginTop)
     private var hilitedIdx = -1
 
     fun addButton(textId: ITextId, onSelect: () -> Unit) {
-        val gel = DlgTextItemGel(
-            def = DlgTextItemDef.build {
-                text = App.i18n.getString(textId)
-                autoDismiss = false
-                // We're not setting the dlg item's onSelect, because that onSelect is suspending while ours is not.
-                // Instead, we keep our onSelect outside the definition.
-            },
+        val def = DlgTextItemDef.build {
+            text = App.i18n.getString(textId)
+            autoDismiss = false
+            // We're not setting the dlg item's onSelect, because that onSelect is suspending while ours is not.
+            // Instead, we keep our onSelect outside the definition.
+        }
+        val gel = DlgItemGel.create(
+            def = def,
             alignment = Align.Alignment(
+                Align.Anchor.TOP_LEFT,
                 marginLeft = willAddAt.x.toInt(),
-                marginTop = willAddAt.y.toInt()
+                marginTop = willAddAt.y.toInt(),
             ),
             btnWidth = BTN_WIDTH,
             btnHeight = ITEM_DEFAULT_HEIGHT,
-            precomputedTextTex = null,
+            textTex = ButtonTextureFactory.makeTextTexture(def),
         )
 
         gel.onCreate(LayerKind.UI_BELOW_DLG)

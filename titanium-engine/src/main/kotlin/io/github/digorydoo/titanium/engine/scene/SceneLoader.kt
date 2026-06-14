@@ -2,7 +2,9 @@ package io.github.digorydoo.titanium.engine.scene
 
 import ch.digorydoo.kutils.logging.Log
 import io.github.digorydoo.titanium.engine.brick.BrickVolume
-import io.github.digorydoo.titanium.engine.camera.CameraProps.Mode
+import io.github.digorydoo.titanium.engine.camera.CameraDirectingMode
+import io.github.digorydoo.titanium.engine.camera.CameraInertia
+import io.github.digorydoo.titanium.engine.camera.CameraInputMode
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.file.BrickVolumeFileReader
 import io.github.digorydoo.titanium.engine.sound.EngineSampleId
@@ -52,7 +54,8 @@ class SceneLoader {
 
         // Set the camera mode for the loading screen.
         val camera = App.camera
-        camera.mode = Mode.FIXED_SOURCE
+        camera.directingMode = CameraDirectingMode.FIXED_SOURCE
+        camera.inputMode = CameraInputMode.OFF
         camera.setSource(20.0f, 20.0f, 20.0f, jump = true)
         camera.setTarget(10.0f, 10.0f, 0.0f, jump = true)
 
@@ -108,9 +111,13 @@ class SceneLoader {
                 content.bricks = loaded.bricks
                 content.finishLoading()
 
-                App.camera.mode = Mode.SMART
-                restoreFromSavegameIfNeeded()
+                App.camera.apply {
+                    directingMode = CameraDirectingMode.SMART
+                    inertia = CameraInertia.NORMAL
+                    inputMode = CameraInputMode.FULLY_CONTROLLABLE
+                }
 
+                restoreFromSavegameIfNeeded()
                 App.content.scene.enter(restoredState)
 
                 if (scene.hasSky) {
@@ -139,7 +146,11 @@ class SceneLoader {
 
     private fun restoreFromSavegameIfNeeded() {
         val state = restoredState ?: return
-        App.camera.mode = state.cameraMode ?: Mode.SMART
+
+        val camera = App.camera
+        state.cameraDirectingMode?.let { camera.directingMode = it }
+        state.cameraInertia?.let { camera.inertia = it }
+        state.cameraInputMode?.let { camera.inputMode }
 
         val cameraTarget = state.cameraTarget
         val cameraSource = state.cameraSource
@@ -147,10 +158,10 @@ class SceneLoader {
         val cameraRho = state.cameraRho
 
         if (cameraTarget != null) {
-            App.camera.setTarget(cameraTarget, jump = true)
+            camera.setTarget(cameraTarget, jump = true)
 
             if (cameraSource != null && cameraPhi != null && cameraRho != null) {
-                App.camera.setSourceRelativeToTarget(
+                camera.setSourceRelativeToTarget(
                     phi = cameraPhi,
                     rho = cameraRho,
                     distance = cameraSource.distanceTo(cameraTarget).toFloat(),
@@ -167,8 +178,8 @@ class SceneLoader {
     }
 
     private fun updateProgress() {
-        // We set the progress value to what should be the start of the *next* stage, in order that the progress bar can
-        // animate towards that value while the stage is being loaded.
+        // We set the progress value to what should be the start of the *next* stage, in order that the progress bar
+        // can animate towards that value while the stage is being loaded.
 
         val progress = when (stage) {
             Stage.BEGIN -> 0.2f

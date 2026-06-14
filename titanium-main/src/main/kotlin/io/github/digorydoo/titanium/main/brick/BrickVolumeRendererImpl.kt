@@ -5,6 +5,7 @@ import ch.digorydoo.kutils.vector.Vector3f
 import io.github.digorydoo.titanium.engine.brick.BrickModelData
 import io.github.digorydoo.titanium.engine.brick.BrickShape
 import io.github.digorydoo.titanium.engine.brick.BrickVolumeRenderer
+import io.github.digorydoo.titanium.engine.camera.CameraDirectingMode
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags
 import io.github.digorydoo.titanium.engine.shader.ShaderProgram.ProgramType
@@ -300,7 +301,7 @@ class BrickVolumeRendererImpl(
 
     private fun maxRenderDistance(shape: BrickShape) =
         when {
-            App.camera.isInTopDownMode -> Float.POSITIVE_INFINITY
+            App.camera.directingMode == CameraDirectingMode.MAP -> Float.POSITIVE_INFINITY
             else -> shape.relVolume.let {
                 when {
                     it <= 0.1f -> 42.0f // e.g. UPRIGHT_BAR_NW

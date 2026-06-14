@@ -52,7 +52,6 @@ class ShaderProgramImpl(
         checkGLError()
     }
 
-    @Suppress("removal")
     protected fun finalize() {
         // Check that unload has been called. We can't throw from finalize, so log only.
         if (id >= 0) Log.error(TAG, "still valid at finalize")

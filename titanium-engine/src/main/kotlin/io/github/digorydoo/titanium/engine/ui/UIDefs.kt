@@ -8,6 +8,7 @@ import io.github.digorydoo.titanium.engine.core.FIXED_ASPECT_RATIO
 const val DLG_TEXT_MARGIN_X = 16
 const val DLG_TEXT_MARGIN_Y = 16
 const val DLG_BOTTOM_MARGIN = 48
+const val EXTRA_BOTTOM_MARGIN_WHEN_CUTSCENE = 72 // also applies to dlg items
 const val DLG_LR_MARGIN = 8
 const val DLG_BTN_RIGHT_MARGIN = 80
 const val DLG_BTN_BOTTOM_MARGIN = 18
@@ -33,8 +34,8 @@ const val ITEM_MIN_WIDTH = 312
 const val ITEM_MARGIN_RIGHT = 92
 const val ITEM_MARGIN_TOP = 64 // comes into play when total height of items exceeds screen height
 const val ITEM_MARGIN_BOTTOM = 128
-const val ITEM_ICON_OFFSET_X = 56 // distance from right side of item to the left side of its icon
-const val ITEM_ICON_OFFSET_Y = 46
+const val ITEM_ICON_OFFSET_X = 16 // distance from right side of item to the left side of its icon
+const val ITEM_ICON_OFFSET_Y = 13
 
 val itemOtlColour = Colour.grey300
 
@@ -54,3 +55,8 @@ const val SNACKBAR_MARGIN_TOP = 64
 const val SNACKBAR_TEXT_PADDING = 8 // must be large enough for glyphs not overlapping the box
 const val SNACKBAR_DEFAULT_WIDTH = 800
 const val SNACKBAR_CORNER_SIZE = 16
+
+// GameHUD
+
+const val FOOTER_ICON_MARGIN_RIGHT = 92
+const val FOOTER_ICON_MARGIN_BOTTOM = 16

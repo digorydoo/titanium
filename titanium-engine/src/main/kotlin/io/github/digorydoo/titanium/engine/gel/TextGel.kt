@@ -58,20 +58,11 @@ class TextGel(text: String, alignment: Align.Alignment? = null): GraphicElement(
     )
 
     private val align = if (alignment == null) null else Align(
-        object: Align.Delegate() {
-            override val anchor = alignment.anchor
-            override val xOffset = alignment.xOffset
-            override val yOffset = alignment.yOffset
-            override val marginLeft = alignment.marginLeft
-            override val marginTop = alignment.marginTop
-            override val marginRight = alignment.marginRight
-            override val marginBottom = alignment.marginBottom
+        this,
+        alignment,
+        object: Align.Delegate {
             override val width = texture.width
             override val height = texture.height
-
-            override fun setPos(x: Int, y: Int) {
-                this@TextGel.moveTo(x, y, 0)
-            }
         }
     )
 

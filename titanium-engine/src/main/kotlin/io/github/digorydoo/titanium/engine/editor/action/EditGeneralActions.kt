@@ -3,7 +3,7 @@ package io.github.digorydoo.titanium.engine.editor.action
 import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.vector.MutableVector3i
 import io.github.digorydoo.titanium.engine.brick.Brick
-import io.github.digorydoo.titanium.engine.camera.CameraProps.Mode
+import io.github.digorydoo.titanium.engine.camera.CameraDirectingMode
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.editor.BrickSelection
 import io.github.digorydoo.titanium.engine.editor.EditorHUD
@@ -24,30 +24,29 @@ internal class EditGeneralActions(
         App.player?.moveTo(pos)
     }
 
-    fun setCameraMode(mode: Mode) {
-        val wasInTopDownMode = App.camera.isInTopDownMode
-        App.camera.mode = mode
+    fun setCameraMode(mode: CameraDirectingMode) {
+        val prevMode = App.camera.directingMode
+        App.camera.directingMode = mode
         hud.cameraModeChanged()
 
-        if (wasInTopDownMode) {
-            App.scene.lighting.set(Lighting.fineDay1800)
-            App.scene.lightingFollowsStoryTime = true
+        if (mode == CameraDirectingMode.MAP) {
+            App.scene.apply {
+                lightingFollowsStoryTime = false
+                lighting.set(Lighting.fineDay1800)
+                lighting.haziness = 0.0f
+                lighting.skyColour1.set(Colour.black)
+                lighting.skyColour2.set(Colour.black)
+            }
+
+            brickSelection.set(App.bricks.xsize / 2, App.bricks.ysize / 2, App.bricks.zsize - 1)
+            cursor.hide()
+        } else if (prevMode == CameraDirectingMode.MAP) {
+            App.scene.apply {
+                lighting.set(Lighting.fineDay1800)
+                lightingFollowsStoryTime = true
+            }
             cursor.show()
         }
-    }
-
-    fun setCameraModeTopDown() {
-        App.camera.setTopDownMode()
-        hud.cameraModeChanged()
-
-        App.scene.lightingFollowsStoryTime = false
-        App.scene.lighting.set(Lighting.fineDay1800)
-        App.scene.lighting.haziness = 0.0f
-        App.scene.lighting.skyColour1.set(Colour.black)
-        App.scene.lighting.skyColour2.set(Colour.black)
-
-        brickSelection.set(App.bricks.xsize / 2, App.bricks.ysize / 2, App.bricks.zsize - 1)
-        cursor.hide()
     }
 
     fun switchCameraTarget(backwards: Boolean) {

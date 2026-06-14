@@ -12,7 +12,7 @@ class AchievementsPage: MenuTabPage {
         require(message == null)
         message = TextGel(
             "The AchievementsPage",
-            alignment = Align.Alignment(marginLeft = 100, marginTop = 140)
+            alignment = Align.Alignment(Align.Anchor.TOP_LEFT, marginLeft = 100, marginTop = 140)
         ).also {
             it.onCreate(LayerKind.UI_BELOW_DLG)
             it.hide()

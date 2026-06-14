@@ -32,68 +32,68 @@ internal class KeyboardHandler(
     private fun handleKeysInBricksMode() {
         App.input.apply {
             when {
-                altPressed -> when {
-                    ctrlPressed -> Unit
-                    shiftPressed -> Unit
+                altIsDown -> when {
+                    ctrlIsDown -> Unit
+                    shiftIsDown -> Unit
                     // ALT
-                    isPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> moveBrickSelection(0, -1, 0)
-                    isPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> moveBrickSelection(0, 1, 0)
-                    isPressedWithRepeat(KeyboardKey.ARROW_UP) -> moveBrickSelection(-1, 0, 0)
-                    isPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> moveBrickSelection(1, 0, 0)
-                    isPressedWithRepeat(KeyboardKey.KEYPAD_MINUS) -> moveBrickSelection(0, 0, -1)
-                    isPressedWithRepeat(KeyboardKey.KEYPAD_PLUS) -> moveBrickSelection(0, 0, 1)
-                    isPressedWithRepeat(KeyboardKey.PAGE_UP) -> moveBrickSelection(-20, 0, 0)
-                    isPressedWithRepeat(KeyboardKey.PAGE_DOWN) -> moveBrickSelection(20, 0, 0)
-                    isPressedWithRepeat(KeyboardKey.HOME) -> moveBrickSelection(0, -20, 0)
-                    isPressedWithRepeat(KeyboardKey.END) -> moveBrickSelection(0, 20, 0)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> moveBrickSelection(0, -1, 0)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> moveBrickSelection(0, 1, 0)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_UP) -> moveBrickSelection(-1, 0, 0)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> moveBrickSelection(1, 0, 0)
+                    checkPressedWithRepeat(KeyboardKey.KEYPAD_MINUS) -> moveBrickSelection(0, 0, -1)
+                    checkPressedWithRepeat(KeyboardKey.KEYPAD_PLUS) -> moveBrickSelection(0, 0, 1)
+                    checkPressedWithRepeat(KeyboardKey.PAGE_UP) -> moveBrickSelection(-20, 0, 0)
+                    checkPressedWithRepeat(KeyboardKey.PAGE_DOWN) -> moveBrickSelection(20, 0, 0)
+                    checkPressedWithRepeat(KeyboardKey.HOME) -> moveBrickSelection(0, -20, 0)
+                    checkPressedWithRepeat(KeyboardKey.END) -> moveBrickSelection(0, 20, 0)
                 }
-                ctrlPressed -> when {
-                    shiftPressed -> Unit
+                ctrlIsDown -> when {
+                    shiftIsDown -> Unit
                     else -> when {
                         // CTRL
-                        isPressedOnce('i') -> actions.printInfo()
-                        isPressedOnce('m') -> actions.applyMaterialToSelectedBricks()
-                        isPressedOnce('n') -> actions.applyShapeToSelectedBricks()
-                        isPressedOnce('r') -> actions.rotateSelection()
+                        checkPressedOnce('i') -> actions.printInfo()
+                        checkPressedOnce('m') -> actions.applyMaterialToSelectedBricks()
+                        checkPressedOnce('n') -> actions.applyShapeToSelectedBricks()
+                        checkPressedOnce('r') -> actions.rotateSelection()
                     }
                 }
-                shiftPressed -> when {
+                shiftIsDown -> when {
                     // SHIFT
-                    isPressedOnce('q') -> actions.addAnotherSpawnPt()
-                    isPressedOnce(KeyboardKey.TAB) -> actions.jumpToPrevSpawnPt()
-                    isPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> extendBrickSelection(0, -1, 0)
-                    isPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> extendBrickSelection(0, 1, 0)
-                    isPressedWithRepeat(KeyboardKey.ARROW_UP) -> extendBrickSelection(-1, 0, 0)
-                    isPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> extendBrickSelection(1, 0, 0)
-                    isPressedWithRepeat(KeyboardKey.KEYPAD_MINUS) -> extendBrickSelection(0, 0, -1)
-                    isPressedWithRepeat(KeyboardKey.KEYPAD_PLUS) -> extendBrickSelection(0, 0, 1)
-                    isPressedWithRepeat(KeyboardKey.PAGE_UP) -> extendBrickSelection(-20, 0, 0)
-                    isPressedWithRepeat(KeyboardKey.PAGE_DOWN) -> extendBrickSelection(20, 0, 0)
-                    isPressedWithRepeat(KeyboardKey.HOME) -> extendBrickSelection(0, -20, 0)
-                    isPressedWithRepeat(KeyboardKey.END) -> extendBrickSelection(0, 20, 0)
+                    checkPressedOnce('q') -> actions.addAnotherSpawnPt()
+                    checkPressedOnce(KeyboardKey.TAB) -> actions.jumpToPrevSpawnPt()
+                    checkPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> extendBrickSelection(0, -1, 0)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> extendBrickSelection(0, 1, 0)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_UP) -> extendBrickSelection(-1, 0, 0)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> extendBrickSelection(1, 0, 0)
+                    checkPressedWithRepeat(KeyboardKey.KEYPAD_MINUS) -> extendBrickSelection(0, 0, -1)
+                    checkPressedWithRepeat(KeyboardKey.KEYPAD_PLUS) -> extendBrickSelection(0, 0, 1)
+                    checkPressedWithRepeat(KeyboardKey.PAGE_UP) -> extendBrickSelection(-20, 0, 0)
+                    checkPressedWithRepeat(KeyboardKey.PAGE_DOWN) -> extendBrickSelection(20, 0, 0)
+                    checkPressedWithRepeat(KeyboardKey.HOME) -> extendBrickSelection(0, -20, 0)
+                    checkPressedWithRepeat(KeyboardKey.END) -> extendBrickSelection(0, 20, 0)
                 }
                 // all modifiers up
-                isPressedOnce(KeyboardKey.BACKSPACE) -> actions.removeSelectedBricks()
-                isPressedOnce(KeyboardKey.ENTER) -> actions.movePlayerToCursorPos()
-                isPressedOnce(KeyboardKey.ESCAPE) -> menu.showMainMenu()
-                isPressedOnce(KeyboardKey.FWDDEL) -> actions.removeSelectedBricks()
-                isPressedOnce(KeyboardKey.TAB) -> actions.jumpToNextSpawnPt()
-                isPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> collapseBrickSelectionAndMove(0, -1, 0)
-                isPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> collapseBrickSelectionAndMove(0, 1, 0)
-                isPressedWithRepeat(KeyboardKey.ARROW_UP) -> collapseBrickSelectionAndMove(-1, 0, 0)
-                isPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> collapseBrickSelectionAndMove(1, 0, 0)
-                isPressedWithRepeat(KeyboardKey.KEYPAD_MINUS) -> collapseBrickSelectionAndMove(0, 0, -1)
-                isPressedWithRepeat(KeyboardKey.KEYPAD_PLUS) -> collapseBrickSelectionAndMove(0, 0, 1)
-                isPressedWithRepeat(KeyboardKey.PAGE_UP) -> collapseBrickSelectionAndMove(-20, 0, 0)
-                isPressedWithRepeat(KeyboardKey.PAGE_DOWN) -> collapseBrickSelectionAndMove(20, 0, 0)
-                isPressedWithRepeat(KeyboardKey.HOME) -> collapseBrickSelectionAndMove(0, -20, 0)
-                isPressedWithRepeat(KeyboardKey.END) -> collapseBrickSelectionAndMove(0, 20, 0)
-                isPressedOnce('m') -> menu.showMaterialMenu()
-                isPressedOnce('n') -> menu.showShapeMenu()
-                isPressedOnce('p') -> actions.pickShapeMaterial()
-                isPressedOnce('q') -> actions.setShapeAndMaterialOfSelectedBricks()
-                isPressedOnce('t') -> menu.showSpawnPtMenu()
-                isPressedOnce('w') -> menu.showWizardMenu()
+                checkPressedOnce(KeyboardKey.BACKSPACE) -> actions.removeSelectedBricks()
+                checkPressedOnce(KeyboardKey.ENTER) -> actions.movePlayerToCursorPos()
+                checkPressedOnce(KeyboardKey.ESCAPE) -> menu.showMainMenu()
+                checkPressedOnce(KeyboardKey.FWDDEL) -> actions.removeSelectedBricks()
+                checkPressedOnce(KeyboardKey.TAB) -> actions.jumpToNextSpawnPt()
+                checkPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> collapseBrickSelectionAndMove(0, -1, 0)
+                checkPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> collapseBrickSelectionAndMove(0, 1, 0)
+                checkPressedWithRepeat(KeyboardKey.ARROW_UP) -> collapseBrickSelectionAndMove(-1, 0, 0)
+                checkPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> collapseBrickSelectionAndMove(1, 0, 0)
+                checkPressedWithRepeat(KeyboardKey.KEYPAD_MINUS) -> collapseBrickSelectionAndMove(0, 0, -1)
+                checkPressedWithRepeat(KeyboardKey.KEYPAD_PLUS) -> collapseBrickSelectionAndMove(0, 0, 1)
+                checkPressedWithRepeat(KeyboardKey.PAGE_UP) -> collapseBrickSelectionAndMove(-20, 0, 0)
+                checkPressedWithRepeat(KeyboardKey.PAGE_DOWN) -> collapseBrickSelectionAndMove(20, 0, 0)
+                checkPressedWithRepeat(KeyboardKey.HOME) -> collapseBrickSelectionAndMove(0, -20, 0)
+                checkPressedWithRepeat(KeyboardKey.END) -> collapseBrickSelectionAndMove(0, 20, 0)
+                checkPressedOnce('m') -> menu.showMaterialMenu()
+                checkPressedOnce('n') -> menu.showShapeMenu()
+                checkPressedOnce('p') -> actions.pickShapeMaterial()
+                checkPressedOnce('q') -> actions.setShapeAndMaterialOfSelectedBricks()
+                checkPressedOnce('t') -> menu.showSpawnPtMenu()
+                checkPressedOnce('w') -> menu.showWizardMenu()
             }
         }
     }
@@ -101,45 +101,45 @@ internal class KeyboardHandler(
     private fun handleKeysInHeightMapMode() {
         App.input.apply {
             when {
-                altPressed -> when {
-                    ctrlPressed -> Unit
-                    shiftPressed -> Unit
+                altIsDown -> when {
+                    ctrlIsDown -> Unit
+                    shiftIsDown -> Unit
                     // ALT
-                    isPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> moveHeightMapSelection(0, -1)
-                    isPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> moveHeightMapSelection(0, 1)
-                    isPressedWithRepeat(KeyboardKey.ARROW_UP) -> moveHeightMapSelection(-1, 0)
-                    isPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> moveHeightMapSelection(1, 0)
-                    isPressedWithRepeat(KeyboardKey.PAGE_UP) -> moveHeightMapSelection(-20, 0)
-                    isPressedWithRepeat(KeyboardKey.PAGE_DOWN) -> moveHeightMapSelection(20, 0)
-                    isPressedWithRepeat(KeyboardKey.HOME) -> moveHeightMapSelection(0, -20)
-                    isPressedWithRepeat(KeyboardKey.END) -> moveHeightMapSelection(0, 20)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> moveHeightMapSelection(0, -1)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> moveHeightMapSelection(0, 1)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_UP) -> moveHeightMapSelection(-1, 0)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> moveHeightMapSelection(1, 0)
+                    checkPressedWithRepeat(KeyboardKey.PAGE_UP) -> moveHeightMapSelection(-20, 0)
+                    checkPressedWithRepeat(KeyboardKey.PAGE_DOWN) -> moveHeightMapSelection(20, 0)
+                    checkPressedWithRepeat(KeyboardKey.HOME) -> moveHeightMapSelection(0, -20)
+                    checkPressedWithRepeat(KeyboardKey.END) -> moveHeightMapSelection(0, 20)
 
-                    isPressedWithRepeat(KeyboardKey.KEYPAD_MINUS)
+                    checkPressedWithRepeat(KeyboardKey.KEYPAD_MINUS)
                     -> actions.modifyHeightOfSelectedSamples(-HM_SMALL_STEP)
 
-                    isPressedWithRepeat(KeyboardKey.KEYPAD_PLUS)
+                    checkPressedWithRepeat(KeyboardKey.KEYPAD_PLUS)
                     -> actions.modifyHeightOfSelectedSamples(HM_SMALL_STEP)
                 }
-                ctrlPressed -> Unit // CTRL, CTRL+SHIFT
-                shiftPressed -> when {
+                ctrlIsDown -> Unit // CTRL, CTRL+SHIFT
+                shiftIsDown -> when {
                     // SHIFT
-                    isPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> extendHeightMapSelection(0, -1)
-                    isPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> extendHeightMapSelection(0, 1)
-                    isPressedWithRepeat(KeyboardKey.ARROW_UP) -> extendHeightMapSelection(-1, 0)
-                    isPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> extendHeightMapSelection(1, 0)
-                    isPressedWithRepeat(KeyboardKey.PAGE_UP) -> extendHeightMapSelection(-20, 0)
-                    isPressedWithRepeat(KeyboardKey.PAGE_DOWN) -> extendHeightMapSelection(20, 0)
-                    isPressedWithRepeat(KeyboardKey.HOME) -> extendHeightMapSelection(0, -20)
-                    isPressedWithRepeat(KeyboardKey.END) -> extendHeightMapSelection(0, 20)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> extendHeightMapSelection(0, -1)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> extendHeightMapSelection(0, 1)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_UP) -> extendHeightMapSelection(-1, 0)
+                    checkPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> extendHeightMapSelection(1, 0)
+                    checkPressedWithRepeat(KeyboardKey.PAGE_UP) -> extendHeightMapSelection(-20, 0)
+                    checkPressedWithRepeat(KeyboardKey.PAGE_DOWN) -> extendHeightMapSelection(20, 0)
+                    checkPressedWithRepeat(KeyboardKey.HOME) -> extendHeightMapSelection(0, -20)
+                    checkPressedWithRepeat(KeyboardKey.END) -> extendHeightMapSelection(0, 20)
                 }
                 // all modifiers up
-                isPressedOnce(KeyboardKey.ESCAPE) -> state.heightMapSpawnPt?.let { menu.showEditSpawnPtMenu(it) }
-                isPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> collapseHeightMapSelectionAndMove(0, -1)
-                isPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> collapseHeightMapSelectionAndMove(0, 1)
-                isPressedWithRepeat(KeyboardKey.ARROW_UP) -> collapseHeightMapSelectionAndMove(-1, 0)
-                isPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> collapseHeightMapSelectionAndMove(1, 0)
-                isPressedWithRepeat(KeyboardKey.KEYPAD_MINUS) -> actions.modifyHeightOfSelectedSamples(-HM_LARGE_STEP)
-                isPressedWithRepeat(KeyboardKey.KEYPAD_PLUS) -> actions.modifyHeightOfSelectedSamples(HM_LARGE_STEP)
+                checkPressedOnce(KeyboardKey.ESCAPE) -> state.heightMapSpawnPt?.let { menu.showEditSpawnPtMenu(it) }
+                checkPressedWithRepeat(KeyboardKey.ARROW_LEFT) -> collapseHeightMapSelectionAndMove(0, -1)
+                checkPressedWithRepeat(KeyboardKey.ARROW_RIGHT) -> collapseHeightMapSelectionAndMove(0, 1)
+                checkPressedWithRepeat(KeyboardKey.ARROW_UP) -> collapseHeightMapSelectionAndMove(-1, 0)
+                checkPressedWithRepeat(KeyboardKey.ARROW_DOWN) -> collapseHeightMapSelectionAndMove(1, 0)
+                checkPressedWithRepeat(KeyboardKey.KEYPAD_MINUS) -> actions.modifyHeightOfSelectedSamples(-HM_LARGE_STEP)
+                checkPressedWithRepeat(KeyboardKey.KEYPAD_PLUS) -> actions.modifyHeightOfSelectedSamples(HM_LARGE_STEP)
             }
         }
     }
@@ -147,28 +147,28 @@ internal class KeyboardHandler(
     private fun handleCommonKeys() {
         App.input.apply {
             when {
-                altPressed -> Unit // ALT, ALT+CTRL, ALT+SHIFT
-                ctrlPressed -> when {
-                    shiftPressed -> when {
+                altIsDown -> Unit // ALT, ALT+CTRL, ALT+SHIFT
+                ctrlIsDown -> when {
+                    shiftIsDown -> when {
                         // CTRL+SHIFT
-                        isPressedOnce('z') -> undoStack.redo()
+                        checkPressedOnce('z') -> undoStack.redo()
                     }
                     else -> when {
                         // CTRL
-                        isPressedOnce('c') -> clipboard.copy()
-                        isPressedOnce('s') -> actions.saveToFile()
-                        isPressedOnce('v') -> clipboard.paste()
-                        isPressedOnce('x') -> clipboard.cut()
-                        isPressedOnce('z') -> undoStack.undo()
+                        checkPressedOnce('c') -> clipboard.copy()
+                        checkPressedOnce('s') -> actions.saveToFile()
+                        checkPressedOnce('v') -> clipboard.paste()
+                        checkPressedOnce('x') -> clipboard.cut()
+                        checkPressedOnce('z') -> undoStack.undo()
                     }
                 }
-                shiftPressed -> when {
+                shiftIsDown -> when {
                     // SHIFT
-                    isPressedOnce('y') -> actions.switchCameraTarget(true)
+                    checkPressedOnce('y') -> actions.switchCameraTarget(true)
                 }
                 // all modifiers up
-                isPressedOnce('c') -> menu.showCameraModeMenu()
-                isPressedOnce('y') -> actions.switchCameraTarget(false)
+                checkPressedOnce('c') -> menu.showCameraModeMenu()
+                checkPressedOnce('y') -> actions.switchCameraTarget(false)
             }
         }
     }

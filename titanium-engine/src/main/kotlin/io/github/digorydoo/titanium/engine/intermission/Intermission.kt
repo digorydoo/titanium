@@ -1,29 +1,28 @@
 package io.github.digorydoo.titanium.engine.intermission
 
 import ch.digorydoo.kutils.logging.Log
+import io.github.digorydoo.titanium.engine.camera.CameraInputMode
 import io.github.digorydoo.titanium.engine.core.App
+import io.github.digorydoo.titanium.engine.core.MainThreadDispatcher
 import io.github.digorydoo.titanium.engine.i18n.ITextId
 import io.github.digorydoo.titanium.engine.intermission.IntermissionManager.IntermissionAlreadyRunningException
 import io.github.digorydoo.titanium.engine.ui.dialogue.DlgDef
 import io.github.digorydoo.titanium.engine.ui.dialogue.DlgItemDef
 import io.github.digorydoo.titanium.engine.ui.dialogue.SuspendingOnSelect
-import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.*
 import kotlin.coroutines.resume
 
-class Intermission internal constructor(private val scope: CoroutineScope) {
+class Intermission internal constructor() {
     class DlgCancelledException: Exception("The dialogue was cancelled")
     class IntermissionAlreadyPausedException: Exception("An effect has already been scheduled")
     class CancellablePartAlreadyRunningException: Exception("A cancellable part is already running")
 
     internal var waitingFor: (() -> Unit)? = null; private set
 
+    private val scope = CoroutineScope(MainThreadDispatcher() + SupervisorJob())
     private var mainJob: Job? = null
     private var cancellable: Job? = null
-    internal var hasCancellable = false; private set // extra flag needed, see below
+    internal var canCancel = false; private set // extra flag needed, see below
 
     internal fun begin(lambda: suspend Intermission.() -> Unit): Job {
         App.process.requireMainThread()
@@ -41,38 +40,61 @@ class Intermission internal constructor(private val scope: CoroutineScope) {
 
     suspend fun cancellable(lambda: suspend Intermission.() -> Unit) {
         App.process.requireMainThread()
-        if (hasCancellable || cancellable != null) throw CancellablePartAlreadyRunningException()
+        if (canCancel || cancellable != null) throw CancellablePartAlreadyRunningException()
 
         Log.info(TAG, "About to enter cancellable section")
 
         // We need an extra flag, because launch executes immediately, thus cancellable won't be set until the
         // coroutine either pauses or completes!
-        hasCancellable = true
+        canCancel = true
+
+        // Camera input mode stays the same when the intermission starts. This is important for conversations; players
+        // may want to adjust the camera during a dialogue. However, a cancellable section indicates a cutscene, so we
+        // set inputMode to OFF during a cutscene, and restore it once we're out again. (If the cutscene changes other
+        // values of the camera, it's the intermission's responsibility to restore them later. We can't assume those
+        // settings should be the same after a cutscene.)
+        val camera = App.camera
+        val origInputMode = camera.inputMode
 
         val job = scope.launch {
             Log.info(TAG, "Inside cancellable section")
             App.process.requireMainThread()
+            camera.inputMode = CameraInputMode.OFF
+
+            sleep(0f) // skip one frame to let GameHUD update its internal state
             lambda()
+
             App.process.requireMainThread()
             Log.info(TAG, "Cancellable section about to end")
         }
 
         cancellable = job
-        hasCancellable = true
+        canCancel = true
 
         job.invokeOnCompletion { exc ->
+            App.process.requireMainThread()
             cancellable = null
-            hasCancellable = false
+            canCancel = false
+            App.dlg.cancelActiveDlg() // in case there was an active dlg, its paused coroutine is gone
+            camera.inputMode = origInputMode
 
-            if (exc != null) {
-                Log.error(TAG, "Cancellable section crashed: $exc")
-            } else {
-                Log.info(TAG, "Cancellable section ended")
+            when (exc) {
+                null -> Log.info(TAG, "Cancellable section ended")
+                is CancellationException -> Log.info(TAG, "Job was cancelled")
+                else -> Log.error(TAG, "Cancellable section crashed: $exc")
             }
         }
 
         // The nested Job is not immediately launched, so we need to join to ensure correct order of execution.
         job.join()
+    }
+
+    fun cancelIfCancellable() {
+        if (canCancel) {
+            // Note that the intermission may continue after the cancellable section, so the following line may not
+            // immediately return.
+            cancellable?.cancel()
+        }
     }
 
     @Suppress("unused")

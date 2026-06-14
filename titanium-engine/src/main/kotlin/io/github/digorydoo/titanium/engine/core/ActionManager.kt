@@ -103,7 +103,7 @@ class ActionManager {
             Log.info(TAG, "Showing action ${closestAction.verb}")
             App.hud.showAction(closestAction.verb, closestAction.target)
             shownAction = closestAction
-        } else if (App.input.selectBtn.pressedOnce) {
+        } else if (App.input.selectBtn.checkPressedOnce()) {
             Log.info(TAG, "Action input button pressed")
             App.hud.hideAction()
             shownAction = null

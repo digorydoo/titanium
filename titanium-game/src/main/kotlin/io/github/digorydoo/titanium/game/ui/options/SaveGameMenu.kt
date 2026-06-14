@@ -15,8 +15,9 @@ import io.github.digorydoo.titanium.engine.ui.SAVEGAME_THUMBNAIL_WIDTH
 import io.github.digorydoo.titanium.engine.ui.SUMMARY_BTN_HEIGHT
 import io.github.digorydoo.titanium.engine.ui.SUMMARY_BTN_MARGIN_TOP
 import io.github.digorydoo.titanium.engine.ui.SUMMARY_BTN_WIDTH
+import io.github.digorydoo.titanium.engine.ui.button.ButtonTextureFactory
 import io.github.digorydoo.titanium.engine.ui.dialogue.DlgSavegameItemDef
-import io.github.digorydoo.titanium.engine.ui.dlg_item.DlgSavegameItemGel
+import io.github.digorydoo.titanium.engine.ui.dlg_item.DlgItemGel
 import io.github.digorydoo.titanium.game.i18n.GameTextId
 
 class SaveGameMenu {
@@ -62,13 +63,14 @@ class SaveGameMenu {
         }
     }
 
-    private fun getThumbnailGel(smry: Summary): DlgSavegameItemGel {
-        return DlgSavegameItemGel(
-            def = DlgSavegameItemDef.fromSummary(smry),
+    private fun getThumbnailGel(smry: Summary): DlgItemGel {
+        val def = DlgSavegameItemDef.fromSummary(smry)
+        return DlgItemGel.create(
+            def = def,
             alignment = Align.Alignment(anchor = TOP_CENTRE, marginTop = SUMMARY_BTN_MARGIN_TOP),
             btnWidth = SUMMARY_BTN_WIDTH,
             btnHeight = SUMMARY_BTN_HEIGHT,
-            precomputedTextTex = null,
+            textTex = ButtonTextureFactory.makeTextTexture(def),
         ).apply {
             onCreate(LayerKind.UI_BELOW_DLG)
         }

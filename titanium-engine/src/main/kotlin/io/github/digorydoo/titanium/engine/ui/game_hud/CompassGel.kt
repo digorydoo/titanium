@@ -33,15 +33,15 @@ class CompassGel: GraphicElement() {
     override val renderer = App.factory.createUISpriteRenderer(props, antiAliasing = true)
 
     private val align = Align(
-        object: Align.Delegate() {
-            override val anchor = Align.Anchor.TOP_RIGHT
-            override val marginTop = MARGIN_TOP
-            override val marginRight = MARGIN_RIGHT
+        this,
+        Align.Alignment(
+            Align.Anchor.TOP_RIGHT,
+            marginTop = MARGIN_TOP,
+            marginRight = MARGIN_RIGHT,
+        ),
+        object: Align.Delegate {
             override val width = (props.frameSize.x * props.scaleFactor.x).toInt()
-
-            override fun setPos(x: Int, y: Int) {
-                this@CompassGel.moveTo(x, y, 0)
-            }
+            override val height = 0 // not needed
         }
     )
 

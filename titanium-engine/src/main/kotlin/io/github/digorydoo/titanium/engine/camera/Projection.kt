@@ -3,7 +3,7 @@ package io.github.digorydoo.titanium.engine.camera
 import ch.digorydoo.kutils.matrix.Matrix4f
 import ch.digorydoo.kutils.matrix.MutableMatrix4f
 import ch.digorydoo.kutils.vector.Vector3f
-import io.github.digorydoo.titanium.engine.camera.CameraProps.Kind
+import io.github.digorydoo.titanium.engine.camera.CameraProps.ProjectionMode
 import io.github.digorydoo.titanium.engine.core.FIXED_ASPECT_RATIO
 import io.github.digorydoo.titanium.engine.core.WORLD_TO_GL_FACTOR
 import kotlin.math.PI
@@ -19,9 +19,17 @@ class Projection {
     val matrix get() = _matrix as Matrix4f
 
     fun recompute(props: CameraProps) {
-        when (props.kind) {
-            Kind.PERSPECTIVE -> computePerspective(props.phi.current, props.rho.current, props.sourcePos.current)
-            Kind.ORTHOGONAL -> computeOrthogonal(props.phi.current, props.rho.current, props.sourcePos.current)
+        when (props.projectionMode) {
+            ProjectionMode.PERSPECTIVE -> computePerspective(
+                props.phi.current,
+                props.rho.current,
+                props.sourcePos.current
+            )
+            ProjectionMode.ORTHOGONAL -> computeOrthogonal(
+                props.phi.current,
+                props.rho.current,
+                props.sourcePos.current
+            )
         }
     }
 

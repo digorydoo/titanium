@@ -6,10 +6,12 @@ enum class EngineStateId(override val value: UShort): IStateId {
     CAMERA_RHO(3u),
     CAMERA_SOURCE_PT(4u),
     CAMERA_TARGET_PT(5u),
-    CAMERA_MODE(6u),
+    CAMERA_DIRECTING_MODE(6u),
     STORY_CLOCK_HOURS_HAND(7u),
     STORY_CLOCK_MINUTES_HAND(8u),
     STORY_CLOCK_SECONDS_HAND(9u),
+    CAMERA_INERTIA(10u),
+    CAMERA_INPUT_MODE(11u),
     ;
     // Use App.state.getStateId(intValue) to get either an EngineStateId or a GameStateId
 }

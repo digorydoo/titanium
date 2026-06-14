@@ -9,7 +9,6 @@ import io.github.digorydoo.titanium.engine.file.SaveGameFileWriter.Companion.POS
 import io.github.digorydoo.titanium.engine.file.SaveGameFileWriter.Companion.PREFIX
 import io.github.digorydoo.titanium.engine.file.SaveGameFileWriter.Summary
 import io.github.digorydoo.titanium.engine.state.StateManager.MutableSerializedState
-import io.github.digorydoo.titanium.engine.state.StateManager.SerializedState
 import io.github.digorydoo.titanium.engine.texture.ImageData
 import java.io.BufferedInputStream
 import java.io.DataInputStream
@@ -144,7 +143,7 @@ class SaveGameFileReader private constructor(
                 }
         }
 
-        fun readContent(fileName: String): SerializedState {
+        fun readContent(fileName: String): MutableSerializedState {
             val path = App.assets.pathToSaveGame(fileName)
             Log.info(TAG, "Reading content from $path")
 

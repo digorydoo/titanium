@@ -1,7 +1,8 @@
 package io.github.digorydoo.titanium.game.s000_start
 
 import ch.digorydoo.kutils.logging.Log
-import io.github.digorydoo.titanium.engine.camera.CameraProps.Mode.FIXED_DISTANCE
+import io.github.digorydoo.titanium.engine.camera.CameraDirectingMode
+import io.github.digorydoo.titanium.engine.camera.CameraInputMode
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.file.SaveGameFileReader
 import io.github.digorydoo.titanium.engine.intermission.Intermission
@@ -36,7 +37,8 @@ class StartScene: Scene(
         App.camera.apply {
             setTarget(27.0f, 27.0f, 6.0f, jump = true)
             setSourceRelativeToTarget(phi = -(0.8 * PI).toFloat(), rho = -1.2f, jump = true)
-            mode = FIXED_DISTANCE
+            directingMode = CameraDirectingMode.FIXED_DISTANCE
+            inputMode = CameraInputMode.CONSTRAINED
         }
 
         // Show the menu later to give the gels time to animate once, e.g. StreetLampGel needs to move its halo.

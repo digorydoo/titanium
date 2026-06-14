@@ -12,7 +12,7 @@ class KeyboardImpl: Keyboard() {
         }
 
         if (!isDownEvent) {
-            charState.pressed = false
+            charState.setReleased()
         }
 
         val key = glfwToKeyboardKey(glfwKey) ?: return
@@ -25,8 +25,7 @@ class KeyboardImpl: Keyboard() {
 
     fun onGLFWCharEvent(charCode: Int) {
         charPressedLast = Char(charCode)
-        charState.pressed = true
-        charState.handleTime = null
+        charState.setPressed()
     }
 
     companion object {

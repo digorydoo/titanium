@@ -85,15 +85,15 @@ class TimeDisplayGel: GraphicElement() {
     }
 
     private val align = Align(
-        object: Align.Delegate() {
-            override val anchor = Align.Anchor.TOP_RIGHT
-            override val marginTop = TIME_DISPLAY_MARGIN_TOP
-            override val marginRight = TIME_DISPLAY_MARGIN_RIGHT
+        this,
+        Align.Alignment(
+            Align.Anchor.TOP_RIGHT,
+            marginTop = TIME_DISPLAY_MARGIN_TOP,
+            marginRight = TIME_DISPLAY_MARGIN_RIGHT,
+        ),
+        object: Align.Delegate {
             override val width = TIME_DISPLAY_WIDTH
-
-            override fun setPos(x: Int, y: Int) {
-                this@TimeDisplayGel.moveTo(x, y, 0)
-            }
+            override val height = 0
         }
     )
 

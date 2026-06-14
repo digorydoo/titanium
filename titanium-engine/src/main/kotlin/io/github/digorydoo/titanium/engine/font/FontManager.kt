@@ -5,7 +5,14 @@ import ch.digorydoo.kutils.vector.MutableVector2f
 import java.nio.ByteBuffer
 
 interface FontManager {
-    enum class FontName { DIALOG_FONT, SNACKBAR_FONT, TOPIC_FONT, LARGE_HUD_FONT, SMALL_HUD_FONT }
+    enum class FontName {
+        DIALOG_FONT,
+        SNACKBAR_FONT,
+        TOPIC_FONT,
+        LARGE_HUD_FONT, // e.g. ActionInputIconGel: action of nearby object)
+        MEDIUM_HUD_FONT, // e.g. InputIconGel: footer of HUD
+        SMALL_HUD_FONT, // e.g. TextGel: small text of GameHUD and editor
+    }
 
     class FormattedText(
         val lines: List<String>,

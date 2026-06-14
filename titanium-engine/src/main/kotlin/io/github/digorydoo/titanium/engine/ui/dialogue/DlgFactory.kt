@@ -9,9 +9,8 @@ import io.github.digorydoo.titanium.engine.font.FontManager.FontName.DIALOG_FONT
 import io.github.digorydoo.titanium.engine.texture.Texture
 import io.github.digorydoo.titanium.engine.ui.*
 import io.github.digorydoo.titanium.engine.ui.button.ButtonTextureFactory
-import io.github.digorydoo.titanium.engine.ui.dlg_item.*
-import io.github.digorydoo.titanium.engine.ui.icon.DlgInputIconGel
-import io.github.digorydoo.titanium.engine.ui.icon.Icon.*
+import io.github.digorydoo.titanium.engine.ui.dlg_item.DlgItemGel
+import io.github.digorydoo.titanium.engine.ui.icon.InputIconGel
 import kotlin.math.ceil
 import kotlin.math.max
 
@@ -20,17 +19,20 @@ internal object DlgFactory {
 
     fun create(def: DlgDef): Dialogue {
         var dlgTextGel: DlgTextGel? = null
-        var dismissIcon: DlgInputIconGel? = null
+        var dismissIcon: InputIconGel? = null
         var itemWidth = 0
         val itemGels = mutableListOf<DlgItemGel>()
         var dismissItem: DlgItemGel? = null
 
+        val extraBottomMargin = when (App.hud.cutsceneStripsShown) {
+            true -> EXTRA_BOTTOM_MARGIN_WHEN_CUTSCENE
+            false -> 0
+        }
+
         if (def.items.isNotEmpty()) {
             val textTextures = createTextTextures(def.items)
             itemWidth = textTextures.minItemWidth
-
-            // The last item will get a yOffset of 0, the rest will be negative.
-            var yOffset = 0
+            var yOffset = -extraBottomMargin // yOffset will become more negative with items further above
 
             for (idx in def.items.size - 1 downTo 0) {
                 val item = def.items[idx]
@@ -79,7 +81,7 @@ internal object DlgFactory {
                 }
             }
 
-            val bgTop = screenHeight - bgTex.height - DLG_BOTTOM_MARGIN
+            val bgTop = screenHeight - bgTex.height - DLG_BOTTOM_MARGIN - extraBottomMargin
             val bgBtm = bgTop + bgTex.height
 
             dlgTextGel.moveTo(bgLeft, bgTop, 0.0f)
@@ -130,72 +132,44 @@ internal object DlgFactory {
     private fun createItemGel(
         def: DlgItemDef,
         yOffset: Int,
-        precomputedTextTex: Texture? = null, // null = create from item def
-        itemWidth: Int? = null, // null = automatic
-        btnHeight: Int? = null, // null = automatic
+        textTex: Texture,
+        itemWidth: Int?, // null = automatic
     ): DlgItemGel {
         val alignment = Align.Alignment(
-            anchor = Anchor.BOTTOM_RIGHT,
+            Anchor.BOTTOM_RIGHT,
             yOffset = yOffset,
             marginRight = ITEM_MARGIN_RIGHT,
             marginBottom = ITEM_MARGIN_BOTTOM,
         )
-        return when (def) {
-            is DlgTextItemDef -> DlgTextItemGel(
-                def = def,
-                alignment = alignment,
-                btnWidth = itemWidth ?: ITEM_MIN_WIDTH,
-                btnHeight = btnHeight ?: ITEM_DEFAULT_HEIGHT,
-                precomputedTextTex = precomputedTextTex,
-            )
-            is DlgBooleanItemDef -> DlgBooleanItemGel(
-                def = def,
-                alignment = alignment,
-                btnWidth = itemWidth ?: ITEM_MIN_WIDTH,
-                btnHeight = btnHeight ?: ITEM_DEFAULT_HEIGHT,
-                precomputedTextTex = precomputedTextTex,
-            )
-            is DlgIntItemDef -> DlgIntItemGel(
-                def = def,
-                alignment = alignment,
-                btnWidth = itemWidth ?: ITEM_MIN_WIDTH,
-                btnHeight = btnHeight ?: ITEM_DEFAULT_HEIGHT,
-                precomputedTextTex = precomputedTextTex,
-            )
-            is DlgFloatItemDef -> DlgFloatItemGel(
-                def = def,
-                alignment = alignment,
-                btnWidth = itemWidth ?: ITEM_MIN_WIDTH,
-                btnHeight = btnHeight ?: ITEM_DEFAULT_HEIGHT,
-                precomputedTextTex = precomputedTextTex,
-            )
-            is DlgSavegameItemDef -> DlgSavegameItemGel(
-                def = def,
-                alignment = alignment,
-                btnWidth = itemWidth ?: SUMMARY_BTN_WIDTH,
-                btnHeight = btnHeight ?: SUMMARY_BTN_HEIGHT,
-                precomputedTextTex = precomputedTextTex,
-            )
-        }
+        return DlgItemGel.create(
+            def = def,
+            alignment = alignment,
+            btnWidth = itemWidth ?: ITEM_MIN_WIDTH,
+            btnHeight = if (def is DlgSavegameItemDef) SUMMARY_BTN_HEIGHT else ITEM_DEFAULT_HEIGHT,
+            textTex = textTex,
+        )
     }
 
-    private fun createDismissIconForItem(yOffset: Int): DlgInputIconGel {
-        val screenSizeDp = App.resolutionMgr.screenSizeDp
-        return DlgInputIconGel(
-            iconWhenGamepad = B,
-            iconWhenKeyboard = ESC,
-            posX = screenSizeDp.x - ITEM_MARGIN_RIGHT - ITEM_ICON_OFFSET_X,
-            posY = screenSizeDp.y - ITEM_MARGIN_BOTTOM - ITEM_DEFAULT_HEIGHT + ITEM_ICON_OFFSET_Y + yOffset,
+    private fun createDismissIconForItem(yOffset: Int): InputIconGel {
+        return InputIconGel(
+            input = App.input.dismissBtn,
+            alignment = Align.Alignment(
+                Anchor.BOTTOM_RIGHT,
+                xOffset = -ITEM_MARGIN_RIGHT - ITEM_ICON_OFFSET_X,
+                yOffset = -ITEM_MARGIN_BOTTOM - ITEM_ICON_OFFSET_Y + yOffset,
+            ),
             glowEnabled = false,
         )
     }
 
     private fun createDismissIconForDlg(xOffset: Int, yOffset: Int) =
-        DlgInputIconGel(
-            iconWhenGamepad = A,
-            iconWhenKeyboard = RETURN,
-            posX = xOffset - DLG_BTN_RIGHT_MARGIN,
-            posY = yOffset - DLG_BTN_BOTTOM_MARGIN,
+        InputIconGel(
+            input = App.input.selectBtn,
+            alignment = Align.Alignment(
+                Anchor.TOP_LEFT,
+                xOffset = xOffset - DLG_BTN_RIGHT_MARGIN,
+                yOffset = yOffset - DLG_BTN_BOTTOM_MARGIN,
+            ),
             glowEnabled = true,
         )
 

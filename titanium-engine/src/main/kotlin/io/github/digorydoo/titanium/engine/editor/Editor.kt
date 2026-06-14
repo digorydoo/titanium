@@ -33,7 +33,7 @@ class Editor {
 
         val input = App.input
 
-        if (input.ctrlPressed && input.isPressedOnce('e')) {
+        if (input.ctrlIsDown && input.checkPressedOnce('e')) {
             if (isShown) {
                 hide()
             } else {

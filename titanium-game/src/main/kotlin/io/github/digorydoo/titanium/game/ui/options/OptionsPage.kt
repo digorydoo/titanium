@@ -102,11 +102,11 @@ class OptionsPage: MenuTabPage {
         val input = App.input
 
         when {
-            input.isPressedOnce(GamepadBtn.LJOY_UP) -> btnArea.hilitePrev()
-            input.isPressedOnce(GamepadBtn.LJOY_DOWN) -> btnArea.hiliteNext()
-            input.hatOrArrowUp.pressedWithRepeat -> btnArea.hilitePrev()
-            input.hatOrArrowDown.pressedWithRepeat -> btnArea.hiliteNext()
-            input.selectBtn.pressedOnce -> btnArea.selectHilited()
+            input.checkPressedOnce(GamepadBtn.LJOY_UP) -> btnArea.hilitePrev()
+            input.checkPressedOnce(GamepadBtn.LJOY_DOWN) -> btnArea.hiliteNext()
+            input.hatOrArrowUp.checkPressedWithRepeat() -> btnArea.hilitePrev()
+            input.hatOrArrowDown.checkPressedWithRepeat() -> btnArea.hiliteNext()
+            input.selectBtn.checkPressedOnce() -> btnArea.selectHilited()
         }
     }
 

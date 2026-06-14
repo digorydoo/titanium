@@ -3,7 +3,7 @@ package io.github.digorydoo.titanium.engine.editor.action
 import ch.digorydoo.kutils.vector.Vector3f
 import io.github.digorydoo.titanium.engine.brick.BrickMaterial
 import io.github.digorydoo.titanium.engine.brick.BrickShape
-import io.github.digorydoo.titanium.engine.camera.CameraProps.Mode
+import io.github.digorydoo.titanium.engine.camera.CameraDirectingMode
 import io.github.digorydoo.titanium.engine.editor.BrickSelection
 import io.github.digorydoo.titanium.engine.editor.EditorHUD
 import io.github.digorydoo.titanium.engine.editor.EditorState
@@ -61,12 +61,8 @@ internal class EditorActions(
         bricks.pickShapeMaterial()
     }
 
-    fun setCameraMode(mode: Mode) {
+    fun setCameraMode(mode: CameraDirectingMode) {
         general.setCameraMode(mode)
-    }
-
-    fun setCameraModeTopDown() {
-        general.setCameraModeTopDown()
     }
 
     fun switchCameraTarget(backwards: Boolean) {

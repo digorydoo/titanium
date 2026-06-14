@@ -44,6 +44,9 @@ enum class EngineTextId(
     DONE("DONE"),
     GAME_SAVED("GAME_SAVED"),
 
+    // GameHUD
+    HUD_SKIP_CUTSCENE("HUD_SKIP_CUTSCENE"),
+
     // Miscellaneous
     LOADING("LOADING"),
     MORE("MORE"), // with ellipsis

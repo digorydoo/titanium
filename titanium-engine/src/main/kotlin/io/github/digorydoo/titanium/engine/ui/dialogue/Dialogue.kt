@@ -9,11 +9,8 @@ import io.github.digorydoo.titanium.engine.sound.EngineSampleId
 import io.github.digorydoo.titanium.engine.ui.ITEM_MARGIN_BOTTOM
 import io.github.digorydoo.titanium.engine.ui.ITEM_MARGIN_TOP
 import io.github.digorydoo.titanium.engine.ui.ITEM_SPACING
-import io.github.digorydoo.titanium.engine.ui.dlg_item.CanAnimateSelectAndThen
-import io.github.digorydoo.titanium.engine.ui.dlg_item.CanIncrementDecrement
-import io.github.digorydoo.titanium.engine.ui.dlg_item.CanToggle
 import io.github.digorydoo.titanium.engine.ui.dlg_item.DlgItemGel
-import io.github.digorydoo.titanium.engine.ui.icon.DlgInputIconGel
+import io.github.digorydoo.titanium.engine.ui.icon.InputIconGel
 import kotlin.math.max
 
 /**
@@ -21,7 +18,7 @@ import kotlin.math.max
  */
 internal class Dialogue(
     private val dlgTextGel: DlgTextGel?, // must not be null if items is empty, otherwise we'd show nothing
-    private val dismissIcon: DlgInputIconGel?, // the icon sticks either to dismissItem or to the dlg
+    private val dismissIcon: InputIconGel?, // the icon sticks either to dismissItem or to the dlg
     private val items: List<DlgItemGel>,
     private val dismissItem: DlgItemGel?,
     private val onClose: ((DlgItemDef?) -> Unit)?,
@@ -60,19 +57,19 @@ internal class Dialogue(
     fun handle() {
         App.input.apply {
             when {
-                selectBtn.pressedOnce -> onSelectBtnPressed()
-                dismissBtn.pressedOnce -> onDismissBtnPressed()
+                selectBtn.checkPressedOnce() -> onSelectBtnPressed()
+                dismissBtn.checkPressedOnce() -> onDismissBtnPressed()
                 items.isNotEmpty() -> when {
-                    hatOrArrowUp.pressedWithRepeat -> hilitePrevItem()
-                    hatOrArrowDown.pressedWithRepeat -> hiliteNextItem()
-                    ljoyUp.pressedWithRepeat -> hilitePrevItem()
-                    ljoyDown.pressedWithRepeat -> hiliteNextItem()
+                    hatOrArrowUp.checkPressedWithRepeat() -> hilitePrevItem()
+                    hatOrArrowDown.checkPressedWithRepeat() -> hiliteNextItem()
+                    ljoyUp.checkPressedWithRepeat() -> hilitePrevItem()
+                    ljoyDown.checkPressedWithRepeat() -> hiliteNextItem()
 
-                    hatOrArrowLeft.pressedWithRepeat -> onDecrementBtnPressed(
-                        smallStep = isPressed(GamepadBtn.REAR_UPPER_LEFT) || altPressed
+                    hatOrArrowLeft.checkPressedWithRepeat() -> onDecrementBtnPressed(
+                        smallStep = checkPressed(GamepadBtn.REAR_UPPER_LEFT) || altIsDown
                     )
-                    hatOrArrowRight.pressedWithRepeat -> onIncrementBtnPressed(
-                        smallStep = isPressed(GamepadBtn.REAR_UPPER_LEFT) || altPressed
+                    hatOrArrowRight.checkPressedWithRepeat() -> onIncrementBtnPressed(
+                        smallStep = checkPressed(GamepadBtn.REAR_UPPER_LEFT) || altIsDown
                     )
                 }
             }
@@ -88,8 +85,8 @@ internal class Dialogue(
 
         val gel = hilitedGel ?: return
 
-        when (gel) {
-            is CanAnimateSelectAndThen -> {
+        when {
+            gel.canSelect -> {
                 if (gel == dismissItem || gel.autoDismiss) {
                     items.forEach {
                         it.fadeOut()
@@ -100,8 +97,7 @@ internal class Dialogue(
                     onSelectAnimEnded(gel)
                 }
             }
-            is CanToggle -> gel.toggle()
-            else -> Unit
+            gel.canToggle -> gel.toggle()
         }
     }
 
@@ -113,12 +109,12 @@ internal class Dialogue(
 
     private fun onIncrementBtnPressed(smallStep: Boolean = false) {
         val gel = hilitedGel ?: return
-        if (gel is CanIncrementDecrement) gel.increment(smallStep)
+        gel.increment(smallStep)
     }
 
     private fun onDecrementBtnPressed(smallStep: Boolean = false) {
         val gel = hilitedGel ?: return
-        if (gel is CanIncrementDecrement) gel.decrement(smallStep)
+        gel.decrement(smallStep)
     }
 
     private fun onDismissBtnPressed() {
@@ -136,12 +132,12 @@ internal class Dialogue(
                 it.fadeOut()
             }
 
-            if (gel is CanAnimateSelectAndThen) {
+            if (gel.canSelect) {
                 gel.animateSelectAndThen {
                     onSelectAnimEnded(gel)
                 }
             } else {
-                Log.warn(TAG, "Dismiss item does not implement CanAnimateSelectAndThen")
+                Log.warn(TAG, "Dismiss item returned false from canSelect")
                 onSelectAnimEnded(gel)
             }
         }

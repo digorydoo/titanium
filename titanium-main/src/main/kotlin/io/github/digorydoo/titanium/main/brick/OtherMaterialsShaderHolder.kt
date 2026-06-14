@@ -1,6 +1,7 @@
 package io.github.digorydoo.titanium.main.brick
 
 import io.github.digorydoo.titanium.engine.brick.BrickMaterial
+import io.github.digorydoo.titanium.engine.camera.CameraDirectingMode
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.scene.Lighting
 import io.github.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags
@@ -48,7 +49,7 @@ class OtherMaterialsShaderHolder(): ShaderHolder {
     }
 
     private fun maxRenderDistance(material: BrickMaterial) = when {
-        material.solid && App.camera.isInTopDownMode -> Float.POSITIVE_INFINITY
+        material.solid && App.camera.directingMode == CameraDirectingMode.MAP -> Float.POSITIVE_INFINITY
         else -> when (material) {
             BrickMaterial.CARPET_RED,
             BrickMaterial.CARPET_BLUE,

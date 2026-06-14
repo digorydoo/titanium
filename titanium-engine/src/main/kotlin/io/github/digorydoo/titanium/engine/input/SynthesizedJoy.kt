@@ -12,13 +12,13 @@ internal class SynthesizedJoy(private val keys: DirectionalKeys, private val key
     fun update() {
         _dir.apply {
             x = when {
-                keyboard.isPressed(keys.xNegativeKey) -> -1.0f
-                keyboard.isPressed(keys.xPositiveKey) -> 1.0f
+                keyboard.checkPressed(keys.xNegativeKey) -> -1.0f
+                keyboard.checkPressed(keys.xPositiveKey) -> 1.0f
                 else -> 0.0f
             }
             y = when {
-                keyboard.isPressed(keys.yNegativeKey) -> -1.0f
-                keyboard.isPressed(keys.yPositiveKey) -> 1.0f
+                keyboard.checkPressed(keys.yNegativeKey) -> -1.0f
+                keyboard.checkPressed(keys.yPositiveKey) -> 1.0f
                 else -> 0.0f
             }
             if (x != 0.0f && y != 0.0f) normalize()
