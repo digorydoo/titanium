@@ -1,5 +1,6 @@
 package io.github.digorydoo.titanium.engine.behaviours
 
+import ch.digorydoo.kutils.vector.MutableVector2i
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.gel.Behaviour
 import io.github.digorydoo.titanium.engine.gel.GraphicElement
@@ -51,9 +52,16 @@ class Align(
         val height: Int
     }
 
-    private val screenSizeDp = App.resolutionMgr.screenSizeDp
+    private val screenSizeDp = App.resolutionMgr.screenSizeDp // shared mutable object
+    private val prevScreenSizeDp = MutableVector2i()
 
     fun animate() {
+        if (screenSizeDp.x == prevScreenSizeDp.x && screenSizeDp.y == prevScreenSizeDp.y) {
+            return // no need to re-align
+        }
+
+        prevScreenSizeDp.set(screenSizeDp)
+
         val x = alignment.xOffset + when (alignment.anchor) {
             Anchor.TOP_LEFT,
             Anchor.BOTTOM_LEFT,
