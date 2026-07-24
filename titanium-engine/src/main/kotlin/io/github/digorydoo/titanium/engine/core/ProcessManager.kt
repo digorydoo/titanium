@@ -9,7 +9,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-abstract class ProcessManager {
+abstract class ProcessManager: GameLoop.Tick {
     private class EndOfFrameInfo(val lambda: () -> Unit, var skip: Int)
 
     private val mutex = Mutex() // all public functions of ProcessManager need to be thread-safe
@@ -65,9 +65,12 @@ abstract class ProcessManager {
         }
     }
 
-    fun runEndOfFrameLambdas() {
+    /**
+     * Called by GameLoopImpl at the end of each frame
+     */
+    override fun tick(token: GameLoop.Token) {
         var runList: MutableList<EndOfFrameInfo>? = null
-        requireMainThread() // AppImpl should call this at the end of each frame, and nobody else
+        requireMainThread()
 
         runBlocking {
             mutex.withLock {

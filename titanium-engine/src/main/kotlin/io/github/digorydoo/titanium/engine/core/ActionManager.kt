@@ -7,7 +7,7 @@ import io.github.digorydoo.titanium.engine.i18n.ITextId
 import kotlin.math.abs
 import kotlin.math.atan2
 
-class ActionManager {
+class ActionManager: GameLoop.Tick {
     interface ActionDelegate {
         fun onSelect(action: Action) // called when the user selects the action
     }
@@ -42,7 +42,7 @@ class ActionManager {
         }
     }
 
-    fun maintain() {
+    override fun tick(token: GameLoop.Token) {
         val player = App.player
 
         if (

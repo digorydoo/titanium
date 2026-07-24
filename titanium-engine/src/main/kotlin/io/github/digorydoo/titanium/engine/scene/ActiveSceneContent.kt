@@ -3,13 +3,14 @@ package io.github.digorydoo.titanium.engine.scene
 import io.github.digorydoo.titanium.engine.brick.BrickVolume
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.core.FrameCounter
+import io.github.digorydoo.titanium.engine.core.GameLoop
 import io.github.digorydoo.titanium.engine.gel.AbstrPlayerGel
 import io.github.digorydoo.titanium.engine.gel.GelLayer
 import io.github.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import io.github.digorydoo.titanium.engine.gel.GraphicElement
 import io.github.digorydoo.titanium.engine.i18n.EngineTextId
 
-class ActiveSceneContent {
+class ActiveSceneContent: GameLoop.Tick {
     var bricks: BrickVolume? = null
     var player: AbstrPlayerGel? = null
     lateinit var scene: Scene // will be init'ed when Main loads the first scene
@@ -59,31 +60,31 @@ class ActiveSceneContent {
         isLoading = false
     }
 
-    fun animate() {
-        App.dlg.handle()
+    override fun tick(token: GameLoop.Token) {
+        App.dlg.tick(token)
 
-        mainCollidableLayer.animate()
-        mainNonCollidableLayer.animate()
-        menuBackdropLayer.animate()
-        uiBelowDlgLayer.animate()
-        uiAboveDlgLayer.animate()
-        App.gameMenu.animate()
-        App.editor.animate()
-        App.camera.animate()
-        stellarObjectsLayer.animate() // must happen after camera.animate()
-        App.actions.maintain()
-        App.hud.animate() // must happen after actions.maintain()
+        mainCollidableLayer.tick(token)
+        mainNonCollidableLayer.tick(token)
+        menuBackdropLayer.tick(token)
+        uiBelowDlgLayer.tick(token)
+        uiAboveDlgLayer.tick(token)
+        App.gameMenu.tick(token)
+        App.editor.tick(token)
+        App.camera.tick(token)
+        stellarObjectsLayer.tick(token) // must happen after camera.tick()
+        App.actions.tick(token)
+        App.hud.tick(token) // must happen after actions.tick()
 
         if (!isLoading) {
             if (scene.lightingFollowsStoryTime && adaptLightingCounter.next() == 0) {
                 scene.lighting.adaptToStoryTime()
             }
 
-            App.spawnMgr.spawnGels()
+            App.spawnMgr.tick(token)
         }
     }
 
-    fun renderShadows() {
+    fun renderShadows(@Suppress("unused") token: GameLoop.Token) {
         // When coming here, the target framebuffer is the ShadowBuffer.
         App.shadowBuffer.prepareProjection()
         bricks?.renderShadows()
@@ -91,7 +92,7 @@ class ActiveSceneContent {
         mainNonCollidableLayer.renderShadows()
     }
 
-    fun renderRegular() {
+    fun renderRegular(@Suppress("unused") token: GameLoop.Token) {
         // Render solid objects
         bricks?.renderSolid()
         mainCollidableLayer.renderSolid()

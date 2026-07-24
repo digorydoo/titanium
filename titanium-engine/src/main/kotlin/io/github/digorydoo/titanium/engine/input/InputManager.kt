@@ -1,5 +1,6 @@
 package io.github.digorydoo.titanium.engine.input
 
+import io.github.digorydoo.titanium.engine.core.GameLoop
 import io.github.digorydoo.titanium.engine.input.gamepad.Gamepad
 import io.github.digorydoo.titanium.engine.input.keyboard.Keyboard
 
@@ -10,7 +11,7 @@ import io.github.digorydoo.titanium.engine.input.keyboard.Keyboard
 abstract class InputManager(
     protected val gamepad: Gamepad,
     protected val keyboard: Keyboard,
-) {
+): GameLoop.Tick {
     enum class InputMode { KEYBOARD, GAMEPAD }
 
     var mode = InputMode.KEYBOARD; protected set
@@ -30,7 +31,7 @@ abstract class InputManager(
         mode = InputMode.KEYBOARD
     }
 
-    fun update() {
+    override fun tick(token: GameLoop.Token) {
         gamepad.update() // always update so that we can check anyBtnPressed
 
         if (mode == InputMode.KEYBOARD) {

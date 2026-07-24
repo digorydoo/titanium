@@ -77,7 +77,7 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(-0.2000601f, hit.hitNormal12.y, TOLERANCE, "hitNormal12.y")
         assertEquals(0.0f, hit.hitNormal12.z, TOLERANCE, "hitNormal12.z")
 
-        // It should be properly normalised
+        // It should be properly normalized
         val n = hit.hitNormal12
         val len = sqrt(n.x * n.x + n.y * n.y + n.z * n.z)
         assertLessThan(len, 1.01f, "hitNormal12")
@@ -573,7 +573,7 @@ internal class CollideSphereVsCylinderTest {
         assertEquals(33.0f, hit.hitPt.y, TOLERANCE, "hitPt.y")
         assertEquals(24.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-        // The hitNormal12 is random and cannot be tested, but it should be properly normalised
+        // The hitNormal12 is random and cannot be tested, but it should be properly normalized
         val n = hit.hitNormal12
         val len = sqrt(n.x * n.x + n.y * n.y + n.z * n.z)
         assertLessThan(len, 1.01f, "hitNormal12")

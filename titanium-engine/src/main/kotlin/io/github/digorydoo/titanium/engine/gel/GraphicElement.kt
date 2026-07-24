@@ -48,7 +48,7 @@ abstract class GraphicElement(open val spawnPt: SpawnPt?, initialPos: Vector3f) 
     protected var visibleOnScreenshots = true
     private var active = true // whether to call onAnimateActive() or onAnimateInactive()
 
-    private var onCreateCalled = false
+    var onCreateCalled = false; private set
     val initialised get() = onCreateCalled && get<CreateConcurrently>()?.isPending != true
 
     var zombie = false; private set // true=sprite will be removed in the next frame

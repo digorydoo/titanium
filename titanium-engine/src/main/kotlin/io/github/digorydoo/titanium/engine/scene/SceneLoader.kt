@@ -7,6 +7,8 @@ import io.github.digorydoo.titanium.engine.camera.CameraInertia
 import io.github.digorydoo.titanium.engine.camera.CameraInputMode
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.file.BrickVolumeFileReader
+import io.github.digorydoo.titanium.engine.gel.GelLayer
+import io.github.digorydoo.titanium.engine.gel.SwishFadeGel
 import io.github.digorydoo.titanium.engine.sound.EngineSampleId
 import io.github.digorydoo.titanium.engine.state.StateManager.RestoredState
 import kotlinx.coroutines.delay
@@ -136,6 +138,7 @@ class SceneLoader {
                 }
 
                 System.gc() // to prevent initial hiccup
+                SwishFadeGel().onCreate(GelLayer.LayerKind.UI_BELOW_DLG)
                 stage = Stage.FINISHED
             }
             Stage.BEGIN, Stage.FINISHED -> {

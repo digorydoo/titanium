@@ -26,11 +26,14 @@ class Main(private val app: AppImpl) {
         singleton = this
     }
 
+    private var window = 0L
+    private val gameLoop = GameLoopImpl(app)
+
     fun run() {
         try {
             initialize()
             startGame()
-            loop()
+            gameLoop.loop(window)
         } catch (e: Exception) {
             Log.error(TAG, "Uncaught exception: ${e.message}\n${e.stackTraceToString()}")
             tearDown(removeLock = false)
@@ -39,9 +42,6 @@ class Main(private val app: AppImpl) {
 
         tearDown(removeLock = true)
     }
-
-    private var window = 0L
-    private var needsClear = 0
 
     private fun initialize() {
         val assets = app.assets
@@ -127,7 +127,7 @@ class Main(private val app: AppImpl) {
             if (window != this.window) {
                 Log.error(TAG, "onFramebufferSize called for window=$window, but our window is ${this.window}")
             } else {
-                needsClear = NEEDS_CLEAR_NUM_FRAMES
+                gameLoop.needsClear()
                 resolutionMgr.onFramebufferSize(fbWidth, fbHeight)
             }
         }
@@ -163,17 +163,17 @@ class Main(private val app: AppImpl) {
     }
 
     private fun onEnterWindowMode() {
-        needsClear = NEEDS_CLEAR_NUM_FRAMES
+        gameLoop.needsClear()
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL) // show cursor
     }
 
     private fun onEnterFullscreen() {
-        needsClear = NEEDS_CLEAR_NUM_FRAMES
+        gameLoop.needsClear()
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN) // hide cursor
     }
 
     private fun onViewportUpdated() {
-        needsClear = NEEDS_CLEAR_NUM_FRAMES
+        gameLoop.needsClear()
     }
 
     private fun onJoystick(joyId: Int, event: Int) {
@@ -241,14 +241,11 @@ class Main(private val app: AppImpl) {
     }
 
     private fun tearDown(removeLock: Boolean) {
-        val content = app.content
         val crashLock = app.crashLock
         val prefs = app.prefs
         val shadowBuffer = app.shadowBuffer
 
-        content.forEachGel { _, gel -> gel.setZombie() }
-        content.animate() // zombies will free their resources here
-
+        gameLoop.tearDown()
         prefs.saveIfNeeded()
 
         // Some objects implement finalize() to check whether resources have been properly freed.
@@ -277,62 +274,8 @@ class Main(private val app: AppImpl) {
         app.sceneLoader.load(scene, playSound = false)
     }
 
-    private fun loop() {
-        val content = app.content
-        val inputMgr = app.inputMgr
-        val intermissions = app.intermissions
-        val lamps = app.lamps
-        val process = app.process
-        val screenshots = app.screenshots
-        val shadowBuffer = app.shadowBuffer
-        val time = app.time
-
-        // Since the clear colour also affects the area outside the viewport, it should always be black.
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
-
-        while (!glfwWindowShouldClose(window)) {
-            glClear(GL_DEPTH_BUFFER_BIT)
-
-            if (needsClear > 0) {
-                // We need to clear both framebuffers to make sure the area outside the viewport is black.
-                Log.info(TAG, "Clearing frame buffers")
-                needsClear-- // we do this multiple times, because it sometimes doesn't immediately work (why?!)
-                glClear(GL_COLOR_BUFFER_BIT)
-                glfwSwapBuffers(window)
-                glClear(GL_COLOR_BUFFER_BIT)
-            } else if (!content.scene.hasSky) {
-                // When the sky is disabled, we need to clear the current framebuffer before starting to draw.
-                glClear(GL_COLOR_BUFFER_BIT)
-            }
-
-            time.maintain()
-            content.animate()
-            intermissions.handle()
-            lamps.maintain()
-
-            // Rendering shadows
-            if (content.scene.hasShadows) {
-                shadowBuffer.startDrawingInto()
-                content.renderShadows()
-                shadowBuffer.stopDrawingInto()
-            }
-
-            // Rendering regular objects
-            content.renderRegular()
-
-            // Finishing frame
-            process.runEndOfFrameLambdas()
-            screenshots.takeIfNecessary(window)
-
-            glfwSwapBuffers(window)
-            glfwPollEvents()
-            inputMgr.update()
-        }
-    }
-
     companion object {
         private val TAG = Log.Tag("Main")
-        private const val NEEDS_CLEAR_NUM_FRAMES = 3
 
         // Provide accessors for classes that need access to the concrete implementation of objects
         private var singleton: Main? = null

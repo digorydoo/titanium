@@ -1,8 +1,9 @@
 package io.github.digorydoo.titanium.engine.intermission
 
 import ch.digorydoo.kutils.logging.Log
+import io.github.digorydoo.titanium.engine.core.GameLoop
 
-class IntermissionManager {
+class IntermissionManager: GameLoop.Tick {
     class IntermissionAlreadyRunningException: Exception("An intermission is already running")
 
     private var intermission: Intermission? = null
@@ -28,7 +29,7 @@ class IntermissionManager {
             }
     }
 
-    fun handle() {
+    override fun tick(token: GameLoop.Token) {
         // If there is a paused coroutine, waitingFor will be not-null.
         intermission?.waitingFor?.invoke()
     }

@@ -5,6 +5,7 @@ import io.github.digorydoo.titanium.BuildConfig
 import io.github.digorydoo.titanium.engine.behaviours.Align
 import io.github.digorydoo.titanium.engine.behaviours.Align.Anchor
 import io.github.digorydoo.titanium.engine.core.App
+import io.github.digorydoo.titanium.engine.core.GameLoop
 import io.github.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import io.github.digorydoo.titanium.engine.gel.GraphicElement
 import io.github.digorydoo.titanium.engine.gel.NumberGel
@@ -18,7 +19,7 @@ import io.github.digorydoo.titanium.engine.ui.icon.InputIconGel
 /**
  * HUD = Heads Up Display
  */
-class GameHUD {
+class GameHUD: GameLoop.Tick {
     private enum class Mode { HIDDEN, FULL, SKIPPABLE_CUTSCENE, NON_SKIPPABLE_CUTSCENE }
 
     private var mode = Mode.HIDDEN
@@ -166,7 +167,7 @@ class GameHUD {
         actionTargetArrow?.show(target)
     }
 
-    fun animate() {
+    override fun tick(token: GameLoop.Token) {
         val newMode = when {
             App.gameMenu.isShown || App.content.isLoading -> Mode.HIDDEN
             App.intermissions.anyRunning -> when {

@@ -14,7 +14,7 @@ import kotlin.math.max
  * The total playing time refers to the real time passed in all sessions for a particular savegame. It is not currently
  * implemented.
  */
-class GameTime {
+class GameTime: GameLoop.Tick {
     var sessionTime = 0.0f; private set // number of seconds since session start (corrected by sessionTimeOffset)
     private var sessionStartNanos = 0L // nanoTime of session start
     private var sessionTimeOffset = 0.0f // seconds added to sessionTime to even out lost frames
@@ -66,7 +66,7 @@ class GameTime {
         else -> true
     }
 
-    fun maintain() {
+    override fun tick(token: GameLoop.Token) {
         var now = System.nanoTime()
 
         if (sessionStartNanos == 0L) {

@@ -13,6 +13,7 @@ interface ShaderProgram {
         UI_CIRCULAR_PROGRESS,
         UI_SOLID,
         UI_SPRITES,
+        UI_SWISH_FADE,
         WATER,
     }
 

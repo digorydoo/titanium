@@ -2,13 +2,14 @@ package io.github.digorydoo.titanium.engine.ui.dialogue
 
 import ch.digorydoo.kutils.logging.Log
 import io.github.digorydoo.titanium.engine.core.App
+import io.github.digorydoo.titanium.engine.core.GameLoop
 import io.github.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import io.github.digorydoo.titanium.engine.i18n.ITextId
 import io.github.digorydoo.titanium.engine.sound.EngineSampleId
 import io.github.digorydoo.titanium.engine.sound.SoundManager.SampleId
 import io.github.digorydoo.titanium.engine.ui.SnackbarGel
 
-class DlgManager {
+class DlgManager: GameLoop.Tick {
     private var activeDlg: Dialogue? = null
     var isInDlgMode = false; private set
     private var soundOnLeavingDlgMode: SampleId? = null
@@ -58,7 +59,7 @@ class DlgManager {
         SnackbarGel.create(text).also { it.onCreate(LayerKind.UI_ABOVE_DLG) }
     }
 
-    fun handle() {
+    override fun tick(token: GameLoop.Token) {
         val dlg = activeDlg
 
         if (dlg != null) {

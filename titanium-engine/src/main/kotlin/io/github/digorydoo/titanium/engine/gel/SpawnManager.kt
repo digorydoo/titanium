@@ -6,11 +6,12 @@ import ch.digorydoo.kutils.string.initCap
 import ch.digorydoo.kutils.vector.Vector3f
 import io.github.digorydoo.kstruct.KstructMap
 import io.github.digorydoo.titanium.engine.core.App
+import io.github.digorydoo.titanium.engine.core.GameLoop
 import io.github.digorydoo.titanium.engine.file.GelListFileReader
 import io.github.digorydoo.titanium.engine.file.GelListFileWriter
 import kotlin.math.max
 
-abstract class SpawnManager {
+abstract class SpawnManager: GameLoop.Tick {
     class SpawnPtAndDistance(val spawnPt: SpawnPt, val distance: Double)
 
     abstract val spawnObjTypeList: List<String>
@@ -78,8 +79,7 @@ abstract class SpawnManager {
         GelListFileWriter.writeFile(gelListFileName, spawnPts)
     }
 
-    // Called on each frame
-    fun spawnGels() {
+    override fun tick(token: GameLoop.Token) {
         spawnPts.forEach {
             try {
                 if (it.shouldSpawn()) {

@@ -14,6 +14,7 @@ import io.github.digorydoo.titanium.engine.sky.SkydomeRenderer
 import io.github.digorydoo.titanium.engine.sprite.UICircularProgressRenderer
 import io.github.digorydoo.titanium.engine.sprite.UISolidRenderer
 import io.github.digorydoo.titanium.engine.sprite.UISpriteRenderer
+import io.github.digorydoo.titanium.engine.sprite.UISwishFadeRenderer
 import io.github.digorydoo.titanium.engine.texture.Texture
 import io.github.digorydoo.titanium.game.core.SpawnObjType
 import io.github.digorydoo.titanium.game.gel.ball.BallSpawnPt
@@ -26,11 +27,7 @@ import io.github.digorydoo.titanium.game.gel.vase.VaseSpawnPt
 import io.github.digorydoo.titanium.main.brick.BrickVolumeRendererImpl
 import io.github.digorydoo.titanium.main.mesh.ComplexMeshRendererImpl
 import io.github.digorydoo.titanium.main.mesh.SimpleMeshRendererImpl
-import io.github.digorydoo.titanium.main.shader.PaperRendererImpl
-import io.github.digorydoo.titanium.main.shader.SkydomeRendererImpl
-import io.github.digorydoo.titanium.main.shader.UICircularProgressRendererImpl
-import io.github.digorydoo.titanium.main.shader.UISolidRendererImpl
-import io.github.digorydoo.titanium.main.shader.UISpriteRendererImpl
+import io.github.digorydoo.titanium.main.shader.*
 
 class FactoryImpl: Factory {
     override fun createBrickVolumeRenderer(translation: Vector3f, tex: Texture, modelData: BrickModelData) =
@@ -85,6 +82,9 @@ class FactoryImpl: Factory {
 
     override fun createUISolidRenderer(delegate: UISolidRenderer.Delegate) =
         UISolidRendererImpl(delegate)
+
+    override fun createUISwishFadeRenderer(delegate: UISwishFadeRenderer.Delegate) =
+        UISwishFadeRendererImpl(delegate)
 
     override fun createSpawnPt(raw: KstructMap): SpawnPt {
         val rawType = raw["type"]?.stringOrNull() ?: throw Exception("Missing type in raw spawnpt def")

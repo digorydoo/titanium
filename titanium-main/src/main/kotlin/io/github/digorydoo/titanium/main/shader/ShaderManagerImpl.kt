@@ -48,6 +48,7 @@ class ShaderManagerImpl: ShaderManager() {
             ProgramType.UI_CIRCULAR_PROGRESS -> "ui-circular-progress"
             ProgramType.UI_SOLID -> "ui-solid"
             ProgramType.UI_SPRITES -> "ui-sprite"
+            ProgramType.UI_SWISH_FADE -> "ui-swish-fade"
             ProgramType.WATER -> "water"
         }
 

@@ -4,6 +4,7 @@ import ch.digorydoo.kutils.colour.Colour
 import ch.digorydoo.kutils.rect.Recti
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.core.FIXED_ASPECT_RATIO
+import io.github.digorydoo.titanium.engine.core.GameLoop
 import io.github.digorydoo.titanium.engine.gel.GelLayer.LayerKind
 import io.github.digorydoo.titanium.engine.input.gamepad.GamepadBtn
 import io.github.digorydoo.titanium.engine.input.keyboard.KeyboardKey
@@ -14,7 +15,7 @@ import io.github.digorydoo.titanium.engine.ui.tab.MenuTabGel
 import io.github.digorydoo.titanium.engine.ui.tab.MenuTabIndicatorGel
 import io.github.digorydoo.titanium.engine.ui.tab.MenuTabPage
 
-abstract class GameMenu {
+abstract class GameMenu: GameLoop.Tick {
     var isShown = false; private set
     var screenshotWhenOpened: ImageData? = null; private set
 
@@ -31,7 +32,7 @@ abstract class GameMenu {
     private var contentArea: UIAreaGel? = null
     private var aboutToShow = false
 
-    fun animate() {
+    override fun tick(token: GameLoop.Token) {
         // Dialogues may be started from GameMenu, so if isInDlgMode or intermissions.anyRunning is set, we don't close
         // the GameMenu, but we must not handle its keyboard events either.
         if (App.dlg.isInDlgMode || App.intermissions.anyRunning || App.editor.isShown || App.isAboutToTakeScreenshot) {

@@ -2,12 +2,13 @@ package io.github.digorydoo.titanium.engine.camera
 
 import ch.digorydoo.kutils.vector.Vector3f
 import io.github.digorydoo.titanium.engine.brick.BrickVolume.Companion.WORLD_BRICK_SIZE
+import io.github.digorydoo.titanium.engine.core.GameLoop
 import io.github.digorydoo.titanium.engine.gel.GraphicElement
 
 /**
  * This class implements the facade that's used to access various aspects of the game camera.
  */
-class Camera {
+class Camera: GameLoop.Tick {
     private val props = CameraProps()
     private val director = CameraDirector(props)
     private val inputHandler = CameraInputHandler(props)
@@ -61,7 +62,7 @@ class Camera {
         props.setSourceRelativeToTarget(phi, rho, distance, jump)
     }
 
-    fun animate() {
+    override fun tick(token: GameLoop.Token) {
         props.targetGel?.let {
             props.targetPos.desired.set(it.pos)
             props.targetPos.desired.z += TARGET_Z_OFFSET

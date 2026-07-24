@@ -591,7 +591,7 @@ internal class CollideSphereVsSphereTest {
         assertEquals(33.0f, hit.hitPt.y, TOLERANCE, "hitPt.y")
         assertEquals(24.0f, hit.hitPt.z, TOLERANCE, "hitPt.z")
 
-        // The hitNormal12 is random and cannot be tested, but it should be properly normalised
+        // The hitNormal12 is random and cannot be tested, but it should be properly normalized
         val n = hit.hitNormal12
         val len = sqrt(n.x * n.x + n.y * n.y + n.z * n.z)
         assertLessThan(len, 1.01f, "hitNormal12")

@@ -1,0 +1,31 @@
+# No need to look for configs above this directory.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+max_line_length = 120
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# We could/should use com.diffplug.spotless to enforce formatting. Unfortunately, I can't find a good formatter.
+# ktfmt at ktlint are the best candidates I found so far. Problems (not all of them apply to both):
+#
+#    - Getters are forced on a separate line, making the declaration pointlessly verbose
+#    - A newline is forced after the equal sign of an assignment statement that has an elvis expression that does not
+#      fit on one line, and the elvis expression is pointlessly indented, making this extremely verbose
+#    - "private set" declarations are forced on a separate line, rendering it needlessly verbose
+#    - A newline at the start of a class body is not enforced even when the base class declaration was put on a
+#      separate line. This makes that declaration look as if it was part of the body.
+#    - Space around range operators are removed, which is harder to read than with spaces
+#    - ktlint with official style always forces arguments in function declarations on separate lines, making the
+#      declaration of simple functions extremely verbose.
+#    - ktlint with intellij_idea style incorrectly moves comments inside when statements, and forces an empty line
+#      after each case when there is a comment, which should not affect this
+#    - etc.
+#
+# [*.{kt,kts}]
+# ktlint_code_style = intellij_idea
+# ktlint_standard_no-wildcard-imports = disabled

@@ -5,12 +5,13 @@ import ch.digorydoo.kutils.vector.MutableVector3i
 import io.github.digorydoo.titanium.BuildConfig
 import io.github.digorydoo.titanium.engine.brick.BrickVolume.Companion.worldToBrick
 import io.github.digorydoo.titanium.engine.core.App
+import io.github.digorydoo.titanium.engine.core.GameLoop
 import io.github.digorydoo.titanium.engine.editor.action.EditorActions
 import io.github.digorydoo.titanium.engine.editor.cursor.CursorGelHolder
 import io.github.digorydoo.titanium.engine.editor.menu.EditorMenu
 import io.github.digorydoo.titanium.engine.sound.EngineSampleId
 
-class Editor {
+class Editor: GameLoop.Tick {
     private val state = EditorState()
     private val hud = EditorHUD(state)
     private val cursor = CursorGelHolder(state)
@@ -26,7 +27,7 @@ class Editor {
 
     var isShown = false; private set
 
-    fun animate() {
+    override fun tick(token: GameLoop.Token) {
         if (BuildConfig.isProduction) {
             return
         }

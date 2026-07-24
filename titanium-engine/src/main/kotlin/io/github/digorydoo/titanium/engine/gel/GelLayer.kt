@@ -2,8 +2,9 @@ package io.github.digorydoo.titanium.engine.gel
 
 import ch.digorydoo.kutils.logging.Log
 import io.github.digorydoo.titanium.engine.core.App
+import io.github.digorydoo.titanium.engine.core.GameLoop
 
-class GelLayer {
+class GelLayer: GameLoop.Tick {
     enum class LayerKind {
         MAIN_COLLIDABLE, MAIN_NON_COLLIDABLE, MENU_BACKDROP, UI_BELOW_DLG, UI_ABOVE_DLG, STELLAR_OBJECTS
     }
@@ -32,7 +33,7 @@ class GelLayer {
         (startIdx ..< gels.size).forEach { lambda(it, gels[it]) }
     }
 
-    fun animate() {
+    override fun tick(token: GameLoop.Token) {
         if (newGels.isNotEmpty()) {
             gels.addAll(newGels)
             newGels.clear()

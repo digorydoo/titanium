@@ -9,7 +9,7 @@ import ch.digorydoo.kutils.vector.Vector3f
  * lamp structure. Lamps are sorted according to distance. Renderers will then assign the n closest lamps to their
  * internal slots (which may vary between shaders).
  */
-class LampManager {
+class LampManager: GameLoop.Tick {
     interface Lamp {
         val pos: Vector3f
         val colour: Colour
@@ -49,7 +49,7 @@ class LampManager {
             else -> lamps.indexOfFirst { it.sqrDistance > wrapper.sqrDistance || it.lamp.intensity <= 0 }
         }
 
-    fun maintain() {
+    override fun tick(token: GameLoop.Token) {
         // Lamps do not change all the time. Just pick one lamp, re-evaluate its sqrDistance, and move it within the
         // list if necessary. The ordering of lamps will not be correct at all times, but the list of closest lamps
         // will be more stable, making shader updates less frequent.

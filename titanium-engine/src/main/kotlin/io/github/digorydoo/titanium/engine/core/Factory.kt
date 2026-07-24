@@ -13,6 +13,7 @@ import io.github.digorydoo.titanium.engine.sky.SkydomeRenderer
 import io.github.digorydoo.titanium.engine.sprite.UICircularProgressRenderer
 import io.github.digorydoo.titanium.engine.sprite.UISolidRenderer
 import io.github.digorydoo.titanium.engine.sprite.UISpriteRenderer
+import io.github.digorydoo.titanium.engine.sprite.UISwishFadeRenderer
 import io.github.digorydoo.titanium.engine.texture.Texture
 
 /**
@@ -48,6 +49,7 @@ interface Factory {
     fun createUISpriteRenderer(delegate: UISpriteRenderer.Delegate, antiAliasing: Boolean = false): UISpriteRenderer
     fun createUICircularProgressRenderer(delegate: UICircularProgressRenderer.Delegate): UICircularProgressRenderer
     fun createUISolidRenderer(delegate: UISolidRenderer.Delegate): UISolidRenderer
+    fun createUISwishFadeRenderer(delegate: UISwishFadeRenderer.Delegate): UISwishFadeRenderer
     fun createSpawnPt(raw: KstructMap): SpawnPt
 
     // createScene is inside SceneId
