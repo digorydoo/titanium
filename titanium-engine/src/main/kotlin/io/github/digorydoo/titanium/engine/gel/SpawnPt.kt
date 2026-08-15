@@ -1,6 +1,5 @@
 package io.github.digorydoo.titanium.engine.gel
 
-import ch.digorydoo.kutils.logging.Log
 import ch.digorydoo.kutils.math.toDegrees
 import ch.digorydoo.kutils.math.toRadians
 import ch.digorydoo.kutils.vector.MutableVector3f
@@ -17,10 +16,10 @@ abstract class SpawnPt private constructor(
     val pos: MutableVector3f,
     var rotation: Float,
     canCollide: Boolean, // affects both the GelLayer and GraphicElement::canCollide
-    private var autoSpawn: Boolean, // true = spawn gel when spawnpt is close to camera
+    private var autoSpawn: Boolean, // true = spawn gel when spawn pt is close to camera
     private var autoDespawn: Boolean, // true = gel will be removed when it's too far from camera
     private var maxCameraSqrDistForAutoSpawn: Double, // also affects min distance for despawn
-    private var preventRespawnWhenClose: Boolean, // true = do not respawn if camera is close to spawnpt
+    private var preventRespawnWhenClose: Boolean, // true = do not respawn if camera is close to spawn pt
 ) {
     constructor(raw: KstructMap): this(
         id = raw["id"]?.stringOrNull() ?: "",
@@ -151,7 +150,7 @@ abstract class SpawnPt private constructor(
         val cameraSqrDistance = pos.sqrDistanceTo(App.camera.sourcePos)
 
         if (cameraSqrDistance > maxCameraSqrDistForAutoSpawn) {
-            return false // spawnpt is too far away
+            return false // spawn pt is too far away
         }
 
         if (!suppressRespawnUntilSessionTime.isNaN()) {
@@ -211,14 +210,14 @@ abstract class SpawnPt private constructor(
     fun didRemoveGel() {
         require(spawnCount > 0) { "Spawn count out of sync: $spawnCount" }
         spawnCount--
-        Log.info(TAG, "didRemoveGel: SpawnPt $spawnObjTypeAsString: spawnCount=$spawnCount")
+        // Log.info(TAG, "didRemoveGel: SpawnPt $spawnObjTypeAsString: spawnCount=$spawnCount")
     }
 
     override fun toString() =
         "SpawnPt(id=$id, type=$spawnObjTypeAsString)"
 
     companion object {
-        private val TAG = Log.Tag("SpawnPt")
+        // private val TAG = Log.Tag("SpawnPt")
 
         private const val MIN_SECONDS_UNTIL_DESPAWN = 10.0f
         private const val MIN_SECONDS_UNTIL_RESPAWN = 1.0f

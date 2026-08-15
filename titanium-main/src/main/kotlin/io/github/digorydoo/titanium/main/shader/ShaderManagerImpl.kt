@@ -8,11 +8,10 @@ import io.github.digorydoo.titanium.main.opengl.checkGLError
 import org.lwjgl.opengl.GL20.*
 
 class ShaderManagerImpl: ShaderManager() {
-    private val cachedPrograms = ShaderProgramCache()
-    private val cachedShaders = ShaderCache()
-    private val allNonSharedPrograms = mutableListOf<ShaderProgramImpl>()
+    private val cachedPrograms = ShaderProgramCache() // FIXME should free on shutdown
+    private val cachedShaders = ShaderCache() // FIXME should free on shutdown
 
-    override fun getSharedProgram(type: ProgramType, flags: Set<ShaderFlags>?): ShaderProgram {
+    override fun getProgram(type: ProgramType, flags: Set<ShaderFlags>?): ShaderProgram {
         val entry = cachedPrograms[type, flags]
 
         if (entry != null) {
@@ -21,12 +20,6 @@ class ShaderManagerImpl: ShaderManager() {
 
         val p = makeProgram(type, flags)
         cachedPrograms[type, flags] = p
-        return p
-    }
-
-    override fun getNewProgram(type: ProgramType, flags: Set<ShaderFlags>?): ShaderProgram {
-        val p = makeProgram(type, flags)
-        allNonSharedPrograms.add(p as ShaderProgramImpl)
         return p
     }
 
@@ -97,12 +90,6 @@ class ShaderManagerImpl: ShaderManager() {
         }
 
         return shader
-    }
-
-    override fun unloadAllNonSharedPrograms() {
-        Log.info(TAG, "Unloading all ${allNonSharedPrograms.size} of non-shared programmes")
-        allNonSharedPrograms.forEach { it.unload() }
-        allNonSharedPrograms.clear()
     }
 
     companion object {

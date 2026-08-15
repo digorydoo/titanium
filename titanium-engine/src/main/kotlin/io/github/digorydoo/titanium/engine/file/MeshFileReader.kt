@@ -4,17 +4,11 @@ import ch.digorydoo.kutils.file.KDataInputStream
 import ch.digorydoo.kutils.logging.Log
 import ch.digorydoo.kutils.matrix.Matrix4f
 import ch.digorydoo.kutils.utils.newFloatBuffer
-import ch.digorydoo.kutils.utils.requireNotNull
 import ch.digorydoo.kutils.vector.Vector2f
 import ch.digorydoo.kutils.vector.Vector3f
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.file.FileMarker.*
-import io.github.digorydoo.titanium.engine.mesh.ComplexMesh
-import io.github.digorydoo.titanium.engine.mesh.MeshDivision
-import io.github.digorydoo.titanium.engine.mesh.MeshGeometry
-import io.github.digorydoo.titanium.engine.mesh.MeshMaterial
-import io.github.digorydoo.titanium.engine.mesh.MeshNode
-import io.github.digorydoo.titanium.engine.texture.Texture
+import io.github.digorydoo.titanium.engine.mesh.*
 import java.io.BufferedInputStream
 import java.io.DataInputStream
 import java.io.File
@@ -24,92 +18,146 @@ import java.nio.FloatBuffer
  * This class must be thread-safe!
  */
 class MeshFileReader private constructor(private val input: KDataInputStream<FileMarker>) {
-    private class IncompleteGeometry(private val owner: IncompleteMesh) {
-        var positions: IntArray? = null
-        var normals: IntArray? = null
-        var texCoords: IntArray? = null
+    private inner class IncompleteNode {
+        var id = ""
+        var geometryId = -1
+        var skeletonId = -1
+        var jointIdx = -1
+        var transform: Matrix4f? = null
+        val children = mutableListOf<IncompleteNode>()
 
-        fun toGeometry(): MeshGeometry? {
-            // If positions and normals are still null at this point, this means that the geometry is empty.
-            // This usually happens when a dummy mesh serves as a parent for nested meshes.
-            val positions = positions ?: return null
-            val normals = normals ?: return null
-            return MeshGeometry(
-                positions = owner.lookUpVector3f(positions),
-                normals = owner.lookUpVector3f(normals),
-                texCoords = texCoords?.let { owner.lookUpVector2f(it) },
+        fun toNode(): MeshNode {
+            var geometry: MeshGeometry? = null
+
+            if (geometryId > 0) {
+                finalGeometries.forEach {
+                    if (it.id == geometryId) {
+                        require(geometry == null) { "Geometry id not unique: $geometryId" }
+                        geometry = it
+                    }
+                }
+
+                requireNotNull(geometry) { "Geometry not found: id=$geometryId" }
+            }
+
+            var skeleton: Skeleton? = null
+
+            if (skeletonId > 0) {
+                finalSkeletons.forEach {
+                    if (it.id == skeletonId) {
+                        require(skeleton == null) { "Skeleton id not unique: $skeletonId" }
+                        skeleton = it
+                    }
+                }
+
+                requireNotNull(skeleton) { "Skeleton not found: id=$skeletonId" }
+            }
+
+            if (jointIdx < 0) {
+                require(skeleton == null) { "Node part of skeleton, but jointIdx=$jointIdx" }
+            } else {
+                requireNotNull(skeleton)
+                require(jointIdx in skeleton.joints.indices)
+            }
+
+            return MeshNode(
+                id = id,
+                localTransform = transform, // nullable
+                geometry = geometry, // nullable
+                children = children.map { it.toNode() },
+                skeletonId = skeletonId,
+                jointIdx = jointIdx,
             )
         }
     }
 
-    private class IncompleteNode {
-        var id = ""
-        var tex: Texture? = null
-        var transform: Matrix4f? = null
-        var geometry: IncompleteGeometry? = null
-        val children = mutableListOf<IncompleteNode>()
+    private inner class IncompleteGeometry {
+        var id = -1
+        var positions: IntArray? = null
+        var normals: IntArray? = null
+        var texCoords: IntArray? = null
+        var material: MeshMaterial? = null
 
-        fun toNode(): MeshNode = MeshNode(
-            id = id,
-            tex = tex,
-            transform = transform,
-            geometry = geometry?.toGeometry(),
-            children = children.map { it.toNode() }
-        )
+        fun toGeometry(): MeshGeometry {
+            require(id > 0) { "Geometry has no id" }
+
+            // If positions and normals are still null at this point, this means that the geometry is empty.
+            // This usually happens when a dummy mesh serves as a parent for nested meshes.
+            val positions = positions?.let { indexArrayToFloatBuffer3f(it) } ?: emptyFloatBuffer
+            val normals = normals?.let { indexArrayToFloatBuffer3f(it) } ?: emptyFloatBuffer
+
+            // texCoords are optional
+            val texCoords = texCoords?.let { indexArrayToFloatBuffer2f(it) }
+
+            // We expect MeshFileWriter to propagate parent materials down the tree; null indicates DEFAULT.
+            val material = material ?: MeshMaterial.DEFAULT
+
+            return MeshGeometry(
+                id = id,
+                positions = positions,
+                normals = normals,
+                texCoords = texCoords, // nullable
+                material = material,
+            )
+        }
     }
 
-    private class IncompleteDivision {
-        var material: MeshMaterial? = null
+    private class IncompleteJoint {
+        var invBindMatrix: Matrix4f? = null
+
+        fun toJoint(): SkelJoint {
+            return SkelJoint(invBindMatrix ?: Matrix4f.identity)
+        }
+    }
+
+    private class IncompleteSkeleton {
+        var id = -1
+        var bindShapeMatrix: Matrix4f? = null
+        val joints = mutableListOf<IncompleteJoint>()
+
+        fun toSkeleton(): Skeleton {
+            require(id > 0) { "Skeleton has no id" }
+            return Skeleton(
+                id = id,
+                bindShapeMatrix = bindShapeMatrix ?: Matrix4f.identity,
+                joints = joints.map { it.toJoint() },
+            )
+        }
+    }
+
+    private inner class IncompleteMesh {
+        val geometries = mutableListOf<IncompleteGeometry>()
+        val skeletons = mutableListOf<IncompleteSkeleton>()
         val nodes = mutableListOf<IncompleteNode>()
 
-        fun toDivision() = MeshDivision(
-            material = material!!,
-            nodes = nodes.map { it.toNode() }
-        )
-    }
+        fun toMesh(): ComplexMesh {
+            // Wrap geometries and skeletons first, because node will have to look them up
 
-    private class IncompleteMesh {
-        val divisions = mutableListOf<IncompleteDivision>()
-        val vec3fList = mutableListOf<Vector3f>()
-        val vec2fList = mutableListOf<Vector2f>()
+            require(finalGeometries.isEmpty())
+            geometries.forEach { finalGeometries.add(it.toGeometry()) }
 
-        fun toMesh() = ComplexMesh(
-            divisions = divisions.map { it.toDivision() }
-        )
+            require(finalSkeletons.isEmpty())
+            skeletons.forEach { finalSkeletons.add(it.toSkeleton()) }
 
-        fun lookUpVector3f(indices: IntArray): FloatBuffer {
-            val buf = newFloatBuffer(indices.size * 3)
-            buf.position(0)
+            require(finalSkeletons.size <= 1) // multiple skeletons not currently supported
 
-            for (idx in indices) {
-                val vec = vec3fList[idx]
-                buf.put(vec.x)
-                buf.put(vec.y)
-                buf.put(vec.z)
-            }
-
-            return buf
-        }
-
-        fun lookUpVector2f(indices: IntArray): FloatBuffer {
-            val buf = newFloatBuffer(indices.size * 2)
-            buf.position(0)
-
-            for (idx in indices) {
-                val vec = vec2fList[idx]
-                buf.put(vec.x)
-                buf.put(vec.y)
-            }
-
-            return buf
+            return ComplexMesh(
+                geometries = finalGeometries,
+                nodes = nodes.map { it.toNode() },
+                skeleton = finalSkeletons.firstOrNull(),
+            )
         }
     }
 
     private var mesh: IncompleteMesh? = null
-    private var division: IncompleteDivision? = null
     private var geometry: IncompleteGeometry? = null
-    private val geometries = mutableListOf<IncompleteGeometry?>()
+    private var finalGeometries = mutableListOf<MeshGeometry>()
+    private var finalSkeletons = mutableListOf<Skeleton>()
     private val nodeStack = mutableListOf<IncompleteNode>()
+    private var skeleton: IncompleteSkeleton? = null
+    private var joint: IncompleteJoint? = null
+    private var vec3fArray: Array<Vector3f>? = null
+    private var vec2fArray: Array<Vector2f>? = null
 
     fun read(): ComplexMesh {
         mesh = IncompleteMesh()
@@ -118,53 +166,92 @@ class MeshFileReader private constructor(private val input: KDataInputStream<Fil
         var finished = false
 
         while (!finished) {
-            val marker = input.readMarker()
-
-            when (marker) {
+            when (val marker = input.readMarker()) {
                 END_MESH_FILE -> finished = true
-                COLLECTED_POINT3F -> readCollectedPt3f()
-                COLLECTED_POINT2F -> readCollectedPt2f()
-                BEGIN_DIVISION -> beginDivision()
-                END_DIVISION -> endDivision()
-                BEGIN_NODE -> beginNode()
-                END_NODE -> endNode()
                 BEGIN_GEOMETRY -> beginGeometry()
                 END_GEOMETRY -> endGeometry()
-                GEOMETRY_REF -> readGeometryRef()
                 POSITIONS -> readPositions()
                 NORMALS -> readNormals()
                 TEXCOORDS -> readTexCoords()
                 MATERIAL -> readMaterial()
-                MATRIX -> readMatrix()
+                BEGIN_NODE -> beginNode()
+                END_NODE -> endNode()
+                NODE_TRANSFORM -> readNodeTransform()
+                GEOMETRY_REF -> readGeometryRef()
+                BEGIN_SKELETON -> beginSkeleton()
+                END_SKELETON -> endSkeleton()
+                COLLECTED_VEC3F -> readCollectedVec3f()
+                COLLECTED_VEC2F -> readCollectedVec2f()
+                SKELETON_REF -> readSkeletonRef()
+                BEGIN_JOINT -> beginJoint()
+                END_JOINT -> endJoint()
+                INV_BIND_MATRIX -> readInvBindMatrix()
+                BIND_SHAPE_MATRIX -> readBindShapeMatrix()
                 else -> throw Exception("Marker not handled: $marker")
             }
         }
 
+        require(geometry == null) { "Geometry not properly ended" }
+        require(nodeStack.isEmpty()) { "Node not properly ended" }
+        require(skeleton == null) { "Skeleton not properly ended" }
         return mesh!!.toMesh()
     }
 
-    private fun beginDivision() {
-        val mesh = mesh!!
-        require(division == null)
-
-        IncompleteDivision().let {
-            division = it
-            mesh.divisions.add(it)
-        }
+    private fun beginGeometry() {
+        require(geometry == null) { "Geometries cannot be nested" }
+        val geometry = IncompleteGeometry()
+        this.geometry = geometry
+        geometry.id = input.readUInt16().toInt()
     }
 
-    private fun endDivision() {
-        require(mesh != null)
-        require(division != null)
-        division = null
+    private fun endGeometry() {
+        val geometry = geometry
+        requireNotNull(geometry)
+
+        val mesh = mesh
+        requireNotNull(mesh)
+
+        mesh.geometries.add(geometry)
+        this.geometry = null
+    }
+
+    private fun readPositions() {
+        val geometry = geometry
+        requireNotNull(geometry)
+        require(geometry.positions == null)
+        geometry.positions = input.readUInt16ArrayAsInt()
+    }
+
+    private fun readNormals() {
+        val geometry = geometry
+        requireNotNull(geometry)
+        require(geometry.normals == null)
+        geometry.normals = input.readUInt16ArrayAsInt()
+    }
+
+    private fun readTexCoords() {
+        val geometry = geometry
+        requireNotNull(geometry)
+        geometry.texCoords = input.readUInt16ArrayAsInt()
+    }
+
+    private fun readMaterial() {
+        val geometry = geometry
+        requireNotNull(geometry)
+        require(geometry.material == null)
+
+        val matId = input.readUInt16().toInt()
+        geometry.material = MeshMaterial.fromInt(matId)
     }
 
     private fun beginNode() {
-        val division = division!!
+        val mesh = mesh
+        requireNotNull(mesh)
+
         val newNode = IncompleteNode()
 
         if (nodeStack.isEmpty()) {
-            division.nodes.add(newNode)
+            mesh.nodes.add(newNode)
         } else {
             nodeStack.last().children.add(newNode)
         }
@@ -174,110 +261,213 @@ class MeshFileReader private constructor(private val input: KDataInputStream<Fil
     }
 
     private fun endNode() {
-        require(nodeStack.isNotEmpty()) { "nodeStack is empty!" }
+        require(nodeStack.isNotEmpty())
         nodeStack.removeLast()
     }
 
-    private fun beginGeometry() {
-        val mesh = mesh!!
-        require(geometry == null) { "$BEGIN_GEOMETRY cannot be nested!" }
-        geometry = IncompleteGeometry(mesh)
-    }
+    private fun readNodeTransform() {
+        val node = nodeStack.last()
+        require(node.transform == null)
 
-    private fun endGeometry() {
-        val geo = geometry.requireNotNull("$END_GEOMETRY without matching $BEGIN_GEOMETRY seen!")
-        geometries.add(geo)
-        geometry = null
-    }
-
-    private fun readPositions() {
-        val geometry = geometry.requireNotNull("$POSITIONS requires a geometry!")
-        require(geometry.positions == null) { "Geometry already has a list of positions" }
-        geometry.positions = input.readUInt16ArrayAsInt()
-    }
-
-    private fun readNormals() {
-        val geometry = geometry.requireNotNull("$NORMALS requires a geometry!")
-        require(geometry.normals == null) { "Geometry already has a list of normals" }
-        geometry.normals = input.readInt32Array()
-    }
-
-    private fun readTexCoords() {
-        val geometry = geometry.requireNotNull("$TEXCOORDS requires a geometry!")
-        require(geometry.texCoords == null) { "Geometry already has a list of texCoords" }
-        geometry.texCoords = input.readUInt16ArrayAsInt()
-
-    }
-
-    private fun readMaterial() {
-        val division = division!!
-        require(division.material == null) { "Division already has a material" }
-        val matId = input.readUInt16().toInt()
-        division.material = MeshMaterial.fromInt(matId)
-    }
-
-    private fun readMatrix() {
-        require(nodeStack.isNotEmpty()) { "$MATRIX requires a node!" }
-        val last = nodeStack.last()
-        require(last.transform == null) { "Node already has a transform: ${last.id}" }
         val arr = input.readFloatArray()
-        require(arr.size == 16) { "Float array read as matrix has size ${arr.size}, should be 16" }
-        last.transform = Matrix4f(arr)
+        require(arr.size == 16)
+        node.transform = Matrix4f(arr)
     }
 
     private fun readGeometryRef() {
-        require(nodeStack.isNotEmpty()) { "$GEOMETRY_REF requires a node!" }
-        val last = nodeStack.last()
-        require(last.geometry == null) { "Node already has a geometry: ${last.id}" }
-
-        val geometryIdx = input.readUInt16().toInt()
-        require(geometryIdx in geometries.indices) { "Geometry idx ($geometryIdx) out of range (${geometries.size})" }
-
-        // Geometries may be reused by multiple nodes!
-        last.geometry = geometries[geometryIdx]
+        // Currently, only nodes can have a GEOMETRY_REF.
+        val node = nodeStack.last()
+        require(node.geometryId < 0)
+        node.geometryId = input.readUInt16().toInt() // will be verified later
     }
 
-    private fun readCollectedPt3f() {
-        val mesh = mesh!!
-        require(mesh.vec3fList.isEmpty()) { "pt3fList has already been filled!" }
-        val arr = input.readFloatArray()
-        require(arr.size % 3 == 0) { "readCollectedPt3f: array size is not a multiple of 3!" }
-
-        val numPts = arr.size / 3
-        var j = 0
-
-        (0 ..< numPts).forEach {
-            val x = arr[j++]
-            val y = arr[j++]
-            val z = arr[j++]
-            mesh.vec3fList.add(Vector3f(x, y, z))
-        }
-
-        require(j == arr.size)
-        require(mesh.vec3fList.size == numPts)
+    private fun readSkeletonRef() {
+        val node = nodeStack.last()
+        require(node.skeletonId < 0)
     }
 
-    private fun readCollectedPt2f() {
-        val mesh = mesh!!
-        require(mesh.vec2fList.isEmpty()) { "pt2fList has already been filled!" }
+    private fun beginSkeleton() {
+        require(skeleton == null) { "Skeletons cannot be nested" }
+        val skeleton = IncompleteSkeleton()
+        this.skeleton = skeleton
+        skeleton.id = input.readUInt16().toInt()
+    }
+
+    private fun endSkeleton() {
+        val skeleton = skeleton
+        requireNotNull(skeleton)
+
+        val mesh = mesh
+        requireNotNull(mesh)
+
+        mesh.skeletons.add(skeleton)
+        this.skeleton = null
+    }
+
+    private fun beginJoint() {
+        val skeleton = skeleton
+        requireNotNull(skeleton)
+
+        require(joint == null) { "Joints cannot be nested" }
+        val joint = IncompleteJoint()
+        this.joint = joint
+
+        val name = input.readUTF8()
+        val node = findNodeById(name)
+        requireNotNull(node)
+        require(node.skeletonId == skeleton.id)
+        require(node.jointIdx < 0)
+        node.jointIdx = skeleton.joints.size
+    }
+
+    private fun endJoint() {
+        val joint = joint
+        requireNotNull(joint)
+
+        val skeleton = skeleton
+        requireNotNull(skeleton)
+
+        skeleton.joints.add(joint)
+        this.joint = null
+    }
+
+    private fun readInvBindMatrix() {
+        val joint = joint
+        requireNotNull(joint)
+        require(joint.invBindMatrix == null)
+
         val arr = input.readFloatArray()
-        require(arr.size % 2 == 0) { "readCollectedPt2f: array size is not a multiple of 2!" }
+        require(arr.size == 16)
+        joint.invBindMatrix = Matrix4f(arr)
+    }
 
-        val numPts = arr.size / 2
-        var j = 0
+    private fun readBindShapeMatrix() {
+        val skeleton = skeleton
+        requireNotNull(skeleton)
+        require(skeleton.bindShapeMatrix == null)
 
-        (0 ..< numPts).forEach {
-            val x = arr[j++]
-            val y = arr[j++]
-            mesh.vec2fList.add(Vector2f(x, y))
+        val arr = input.readFloatArray()
+        require(arr.size == 16)
+        skeleton.bindShapeMatrix = Matrix4f(arr)
+    }
+
+    private fun findNodeById(id: String): IncompleteNode? {
+        val mesh = mesh
+        requireNotNull(mesh)
+
+        if (id.isEmpty()) return null
+
+        var result: IncompleteNode? = null
+
+        mesh.nodes.forEach { node ->
+            val found = node.findNodeById(id)
+
+            if (found != null) {
+                require(result == null) { "Node id not unique: $id" }
+                result = found
+            }
         }
 
-        require(j == arr.size)
-        require(mesh.vec2fList.size == numPts)
+        return result
+    }
+
+    private fun IncompleteNode.findNodeById(id: String): IncompleteNode? {
+        if (id.isEmpty()) return null
+        if (id == this.id) return this
+
+        var result: IncompleteNode? = null
+
+        children.forEach { child ->
+            val found = child.findNodeById(id)
+
+            if (found != null) {
+                require(result == null) { "Node id not unique: $id" }
+                result = found
+            }
+        }
+
+        return result
+    }
+
+    private fun readCollectedVec3f() {
+        require(vec3fArray == null)
+
+        val rawArr = input.readFloatArray()
+        require(rawArr.size % 3 == 0)
+
+        val numPts = rawArr.size / 3
+        val list = mutableListOf<Vector3f>()
+        var j = 0
+
+        (0 ..< numPts).forEach { _ ->
+            val x = rawArr[j++]
+            val y = rawArr[j++]
+            val z = rawArr[j++]
+            list.add(Vector3f(x, y, z))
+        }
+
+        require(j == rawArr.size)
+        require(list.size == numPts)
+        vec3fArray = list.toTypedArray()
+    }
+
+    private fun readCollectedVec2f() {
+        require(vec2fArray == null)
+
+        val rawArr = input.readFloatArray()
+        require(rawArr.size % 2 == 0)
+
+        val numPts = rawArr.size / 2
+        val list = mutableListOf<Vector2f>()
+        var j = 0
+
+        (0 ..< numPts).forEach { _ ->
+            val x = rawArr[j++]
+            val y = rawArr[j++]
+            list.add(Vector2f(x, y))
+        }
+
+        require(j == rawArr.size)
+        require(list.size == numPts)
+        vec2fArray = list.toTypedArray()
+    }
+
+    private fun indexArrayToFloatBuffer3f(indices: IntArray): FloatBuffer {
+        val vec3fArray = vec3fArray
+        requireNotNull(vec3fArray)
+
+        val buf = newFloatBuffer(indices.size * 3)
+        buf.position(0)
+
+        for (idx in indices) {
+            val vec = vec3fArray[idx]
+            buf.put(vec.x)
+            buf.put(vec.y)
+            buf.put(vec.z)
+        }
+
+        return buf
+    }
+
+    private fun indexArrayToFloatBuffer2f(indices: IntArray): FloatBuffer {
+        val vec2fArray = vec2fArray
+        requireNotNull(vec2fArray)
+
+        val buf = newFloatBuffer(indices.size * 2)
+        buf.position(0)
+
+        for (idx in indices) {
+            val vec = vec2fArray[idx]
+            buf.put(vec.x)
+            buf.put(vec.y)
+        }
+
+        return buf
     }
 
     companion object {
         private val TAG = Log.Tag("MeshFileReader")
+        private val emptyFloatBuffer = newFloatBuffer(0)
 
         /**
          * This function is internal, because callers should generally go through App.meshes.
@@ -291,7 +481,7 @@ class MeshFileReader private constructor(private val input: KDataInputStream<Fil
                 .let { DataInputStream(it) }
                 .use { MeshFileReader(KDataInputStream(it, FileMarker::fromUShort)).read() }
 
-            Log.info(TAG, "$fileName: ${mesh.divisions.size} divisions(s)")
+            Log.info(TAG, "$fileName: ${mesh.geometries.size} geometries(s)")
             return mesh
         }
     }

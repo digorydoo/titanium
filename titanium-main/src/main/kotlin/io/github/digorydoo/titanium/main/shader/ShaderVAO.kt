@@ -1,6 +1,7 @@
 package io.github.digorydoo.titanium.main.shader
 
 import ch.digorydoo.kutils.logging.Log
+import io.github.digorydoo.titanium.main.core.LeakDetector
 import io.github.digorydoo.titanium.main.opengl.checkGLError
 import org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray
 import org.lwjgl.opengl.GL30.glDeleteVertexArrays
@@ -9,6 +10,7 @@ import org.lwjgl.opengl.GL30.glGenVertexArrays
 // Wrapper around a GL vertex array object
 class ShaderVAO {
     private var id = -1
+    private val leakDetector = LeakDetector(TAG.name, initiallyValid = false)
 
     fun create() {
         require(id == -1) { "VAO already created" }
@@ -19,19 +21,15 @@ class ShaderVAO {
 
         id = arr[0]
         require(id >= 0) { "Failed to create VAO" }
+        leakDetector.resourceValid = true
     }
 
     fun free() {
         require(id >= 0) { "VAO is invalid" }
         glDeleteVertexArrays(id)
-        id = -1
         checkGLError()
-    }
-
-    @Suppress("removal")
-    protected fun finalize() {
-        // Check that unload has been called. We can't throw from finalize, so log only.
-        if (id >= 0) Log.error(TAG, "ShaderVAO still valid at finalize")
+        id = -1
+        leakDetector.resourceValid = false
     }
 
     fun bind() {

@@ -8,6 +8,11 @@ import io.github.digorydoo.titanium.engine.gel.GraphicElement
 /**
  * This class implements a gel behaviour that aligns the gel with one of the boundaries of the screen. Use this for UI
  * gels only, as it does not make sense in 3D space.
+ *
+ * Note: I did some work on a generic LayoutManager that should take care of UI layouts in a similar fashion as with
+ * Android API (LinearLayout, RelativeLayout). Such a LayoutManager would make the Align behaviour obsolete. However,
+ * the problem turned out to be rather complex, so I abandoned it after a month of work. The work in progress was
+ * removed in commit a7784786c98ac0b9f513f7548a9dfbaac74db0a9. See git history comments for details.
  */
 class Align(
     private val gel: GraphicElement,

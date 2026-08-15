@@ -52,7 +52,6 @@ class SceneLoader {
 
         App.spawnMgr.clear()
         App.sky.unload()
-        App.shaders.unloadAllNonSharedPrograms()
 
         // Set the camera mode for the loading screen.
         val camera = App.camera

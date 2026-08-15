@@ -61,7 +61,7 @@ class GelLayer: GameLoop.Tick {
 
             if (gel.zombie) {
                 try {
-                    Log.info(TAG, "About to remove $gel")
+                    // Log.info(TAG, "About to remove $gel")
                     anyToRemove = true
                     gel.onRemoveZombie()
                     gel.spawnPt?.didRemoveGel()

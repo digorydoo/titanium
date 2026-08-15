@@ -41,7 +41,10 @@ class CreateConcurrently(private val gel: GraphicElement, private val delegate: 
                 job = null // important, because GelLayer indirectly calls our isPending as a sanity check
 
                 if (caught != null) {
-                    Log.error(TAG, "Gel $gel crashed in CreateConcurrently: ${caught.message}\n$caught}")
+                    Log.error(
+                        TAG,
+                        "Gel $gel crashed in CreateConcurrently: ${caught.message}\n${caught.stackTraceToString()}"
+                    )
                     gel.setZombie()
                 } else if (gel.zombie) {
                     // This is not necessarily a bug since it just means someone else must have set it to zombie.

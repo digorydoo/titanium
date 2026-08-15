@@ -24,10 +24,7 @@ import io.github.digorydoo.titanium.game.gel.static_paper.StaticPaperSpawnPt
 import io.github.digorydoo.titanium.game.gel.street_lamp.StreetLampSpawnPt
 import io.github.digorydoo.titanium.game.gel.test.TestSpawnPt
 import io.github.digorydoo.titanium.game.gel.vase.VaseSpawnPt
-import io.github.digorydoo.titanium.main.brick.BrickVolumeRendererImpl
-import io.github.digorydoo.titanium.main.mesh.ComplexMeshRendererImpl
-import io.github.digorydoo.titanium.main.mesh.SimpleMeshRendererImpl
-import io.github.digorydoo.titanium.main.shader.*
+import io.github.digorydoo.titanium.main.renderer.*
 
 class FactoryImpl: Factory {
     override fun createBrickVolumeRenderer(translation: Vector3f, tex: Texture, modelData: BrickModelData) =
@@ -53,11 +50,13 @@ class FactoryImpl: Factory {
         antiAliasing: Boolean,
         cullFace: Boolean,
         depthTest: Boolean,
+        hasSkeleton: Boolean,
     ) = ComplexMeshRendererImpl(
         delegate,
         antiAliasing = antiAliasing,
         cullFace = cullFace,
         depthTest = depthTest,
+        hasSkeleton = hasSkeleton,
     )
 
     override fun createPaperRenderer(

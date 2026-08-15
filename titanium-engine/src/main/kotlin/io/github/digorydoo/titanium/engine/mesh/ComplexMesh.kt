@@ -2,12 +2,14 @@ package io.github.digorydoo.titanium.engine.mesh
 
 import ch.digorydoo.kutils.string.indentLines
 
-class ComplexMesh(val divisions: List<MeshDivision>) {
+class ComplexMesh(val geometries: List<MeshGeometry>, val nodes: List<MeshNode>, val skeleton: Skeleton?) {
     override fun toString() =
         indentLines(
             arrayOf(
                 "ComplexMesh {",
-                "divisions = [${indentLines(divisions.joinToString(", "))}]",
+                "geometries = [${indentLines(geometries.joinToString(", "))}]",
+                "nodes = [${indentLines(nodes.joinToString(", "))}]",
+                "skeleton = $skeleton",
                 "}",
             )
         )

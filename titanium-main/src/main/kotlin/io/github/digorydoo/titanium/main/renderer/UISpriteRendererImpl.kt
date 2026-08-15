@@ -1,4 +1,4 @@
-package io.github.digorydoo.titanium.main.shader
+package io.github.digorydoo.titanium.main.renderer
 
 import ch.digorydoo.kutils.logging.Log
 import ch.digorydoo.kutils.utils.toFloatBuffer
@@ -6,8 +6,11 @@ import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.core.FIXED_ASPECT_RATIO
 import io.github.digorydoo.titanium.engine.shader.ShaderProgram.ProgramType
 import io.github.digorydoo.titanium.engine.sprite.UISpriteRenderer
+import io.github.digorydoo.titanium.main.core.LeakDetector
 import io.github.digorydoo.titanium.main.opengl.checkGLError
+import io.github.digorydoo.titanium.main.shader.Shader
 import io.github.digorydoo.titanium.main.shader.ShaderAttributes.Attribute
+import io.github.digorydoo.titanium.main.shader.ShaderVBO
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE
 import org.lwjgl.opengl.GL14.GL_FUNC_ADD
@@ -24,20 +27,15 @@ class UISpriteRendererImpl(private val delegate: Delegate, private val antiAlias
         texCoordVBO.create(ShaderVBO.Type.DYNAMIC_DRAW)
     }
 
-    private var valid = true
+    private val leakDetector = LeakDetector(TAG.name, initiallyValid = true)
 
     override fun free() {
-        if (valid) {
+        if (leakDetector.resourceValid) {
             shader.free()
             positionVBO.free()
             texCoordVBO.free()
-            valid = false
+            leakDetector.resourceValid = false
         }
-    }
-
-    protected fun finalize() {
-        // Check that free has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error(TAG, "still valid at finalize")
     }
 
     private val positions = floatArrayOf(

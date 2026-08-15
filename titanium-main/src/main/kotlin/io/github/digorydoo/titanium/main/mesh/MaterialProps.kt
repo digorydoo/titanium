@@ -19,7 +19,7 @@ internal class MaterialProps(
     val tintColour: Colour = Colour.grey300,  // amount is NOT pre-multiplied
 ) {
     companion object {
-        fun fromMaterial(mat: MeshMaterial): MaterialProps = when (mat) {
+        fun get(mat: MeshMaterial): MaterialProps = when (mat) {
             MeshMaterial.DEFAULT -> greyStoneProps
             MeshMaterial.BLACK_CLOTH -> blackClothProps
             MeshMaterial.BLUE_METAL -> blueMetalProps

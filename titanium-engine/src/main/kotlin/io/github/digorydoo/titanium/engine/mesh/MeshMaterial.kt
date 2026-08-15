@@ -2,7 +2,7 @@ package io.github.digorydoo.titanium.engine.mesh
 
 // The Collada file needs to refer to the materials by name. Our .msh file will refer to them by value.
 enum class MeshMaterial(val value: Int) {
-    DEFAULT(0), // material used when mesh did not specifiy any material
+    DEFAULT(0), // material used when mesh did not specify any material
     RED_CLOTH(1),
     GREY_STONE(2),
     WOOD(3),

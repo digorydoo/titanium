@@ -1,4 +1,4 @@
-package io.github.digorydoo.titanium.main.brick
+package io.github.digorydoo.titanium.main.renderer
 
 import ch.digorydoo.kutils.logging.Log
 import ch.digorydoo.kutils.vector.Vector3f
@@ -10,6 +10,8 @@ import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags
 import io.github.digorydoo.titanium.engine.shader.ShaderProgram.ProgramType
 import io.github.digorydoo.titanium.engine.texture.Texture
+import io.github.digorydoo.titanium.main.brick.BrickShaderHoldersMap
+import io.github.digorydoo.titanium.main.core.LeakDetector
 import io.github.digorydoo.titanium.main.opengl.checkGLError
 import io.github.digorydoo.titanium.main.shader.Shader
 import io.github.digorydoo.titanium.main.shader.ShaderAttributes.Attribute
@@ -24,9 +26,8 @@ class BrickVolumeRendererImpl(
     private val tex: Texture,
     private val modelData: BrickModelData,
 ): BrickVolumeRenderer {
-    init {
-        Log.info(TAG, "BrickVolumeRendererImpl c'tor")
-    }
+    // Note: BrickVolumeRendererImpl is instantiated per BrickSubvolume, i.e. many times.
+    // The reason is that each BrickSubvolume has its own model data.
 
     private class SolidData {
         private val positionVBO = ShaderVBO()
@@ -102,25 +103,20 @@ class BrickVolumeRendererImpl(
         if (debuggingShadows) Log.warn(TAG, "BrickVolumeRendererImpl: debuggingShadows is enabled")
     }
 
-    private var valid = true
+    private val leakDetector = LeakDetector(TAG.name, initiallyValid = true)
 
     override fun free() {
-        if (valid) {
+        if (leakDetector.resourceValid) {
             solid.free()
             transparent.free()
             shaderHolders.free()
             shadowsShader.free()
-            valid = false
+            leakDetector.resourceValid = false
         }
     }
 
-    protected fun finalize() {
-        // Check that free has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error(TAG, "still valid at finalize")
-    }
-
     override fun prepare() {
-        require(valid)
+        require(leakDetector.resourceValid)
 
         modelData.rebuild(translation, tex.width, tex.height)
 
@@ -157,7 +153,7 @@ class BrickVolumeRendererImpl(
     }
 
     override fun renderShadows() {
-        require(valid)
+        require(leakDetector.resourceValid)
 
         val renderData = modelData.solidRenderData
         val numPositions = renderData.positions.limit() // limit <= capacity
@@ -205,7 +201,7 @@ class BrickVolumeRendererImpl(
     }
 
     override fun renderSolid() {
-        require(valid)
+        require(leakDetector.resourceValid)
 
         val renderData = modelData.solidRenderData
         val numPositions = renderData.positions.limit() // limit <= capacity
@@ -251,7 +247,7 @@ class BrickVolumeRendererImpl(
     }
 
     override fun renderTransparent() {
-        require(valid)
+        require(leakDetector.resourceValid)
 
         val renderData = modelData.transparentRenderData
         val numPositions = renderData.positions.limit() // limit <= capacity

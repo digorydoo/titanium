@@ -1,6 +1,7 @@
 package io.github.digorydoo.titanium.main.shader
 
 import ch.digorydoo.kutils.logging.Log
+import io.github.digorydoo.titanium.main.core.LeakDetector
 import io.github.digorydoo.titanium.main.opengl.checkGLError
 import org.lwjgl.opengl.GL20.*
 import java.nio.FloatBuffer
@@ -22,6 +23,7 @@ class ShaderVBO {
     }
 
     private var id = -1
+    private var leakDetector = LeakDetector(TAG.name, initiallyValid = false)
     private var type = Type.STATIC_DRAW
 
     fun create(type: Type) {
@@ -34,18 +36,15 @@ class ShaderVBO {
 
         id = arr[0]
         require(id >= 0) { "Failed to create VBO" }
+        leakDetector.resourceValid = true
     }
 
     fun free() {
         require(id >= 0) { "VBO is invalid" }
         glDeleteBuffers(id)
         id = -1
+        leakDetector.resourceValid = false
         checkGLError()
-    }
-
-    protected fun finalize() {
-        // Check that unload has been called. We can't throw from finalize, so log only.
-        if (id >= 0) Log.error(TAG, "ShaderVBO still valid at finalize")
     }
 
     fun bind() {

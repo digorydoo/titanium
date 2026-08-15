@@ -83,8 +83,8 @@ abstract class SpawnManager: GameLoop.Tick {
         spawnPts.forEach {
             try {
                 if (it.shouldSpawn()) {
-                    val dist = it.pos.distanceTo(App.camera.sourcePos)
-                    Log.info(TAG, "Spawning $it, spawnPt distance=${dist.toInt()}m")
+                    // val dist = it.pos.distanceTo(App.camera.sourcePos)
+                    // Log.info(TAG, "Spawning $it, spawnPt distance=${dist.toInt()}m")
                     it.spawn()
                 }
             } catch (e: Exception) {

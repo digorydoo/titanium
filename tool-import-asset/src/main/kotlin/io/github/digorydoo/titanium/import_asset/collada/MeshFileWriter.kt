@@ -7,247 +7,257 @@ import ch.digorydoo.kutils.vector.Vector3fSet
 import io.github.digorydoo.titanium.engine.file.FileMarker
 import io.github.digorydoo.titanium.engine.mesh.MeshMaterial
 import io.github.digorydoo.titanium.import_asset.WriterStats
+import io.github.digorydoo.titanium.import_asset.collada.ColladaDataAccessor.GeometryData
+import io.github.digorydoo.titanium.import_asset.collada.ColladaDataAccessor.SkelController
 import io.github.digorydoo.titanium.import_asset.collada.data.Geometry
-import io.github.digorydoo.titanium.import_asset.collada.data.VisualScene
 import io.github.digorydoo.titanium.import_asset.collada.data.VisualSceneNode
 import java.io.BufferedOutputStream
 import java.io.DataOutputStream
 import java.io.File
 
+// In theory, to apply the transformation to the normal would require the inverse transform:
+// transformedNormal = transpose(inverse(M3)) × normal
+// However, if we assume node matrices do not contain scaling, then we can directly use world
+// transforms. Therefore, if normals look odd, try baking transforms in Blender before exporting.
+
 class MeshFileWriter private constructor(
     private val stream: KDataOutputStream<FileMarker>,
     private val accessor: ColladaDataAccessor,
 ) {
-    private val pt3fSet = Vector3fSet()
-    private val pt2fSet = Vector2fSet()
-    private val geometriesActuallyUsed = mutableSetOf<Geometry>()
+    private val vec3fSet = Vector3fSet()
+    private val vec2fSet = Vector2fSet()
 
-    val stats: WriterStats = object: WriterStats() {
+    private var nextId = 1 // shared, i.e. ids will be distinct across all kinds of objects
+    private val mapGeometryToId = mutableMapOf<Geometry, Int>()
+    private val mapSkeletonToId = mutableMapOf<SkelController, Int>()
+
+    private val geometryDataCollected = mutableSetOf<Geometry>()
+    private val skeletonDataCollected = mutableSetOf<SkelController>()
+
+    private val stats: WriterStats = object: WriterStats() {
         override val numBytes get() = stream.bytesWritten
-        override val numGeometries get() = geometriesActuallyUsed.size
-        override val numVec3f get() = pt3fSet.size
-        override val numVec2f get() = pt2fSet.size
+        override val numGeometries get() = mapGeometryToId.size
+        override val numVec3f get() = vec3fSet.size
+        override val numVec2f get() = vec2fSet.size
     }
 
-    fun write() {
-        stats.clear()
-        pt3fSet.clear()
-        pt2fSet.clear()
-        geometriesActuallyUsed.clear()
+    private fun write() {
         require(stream.bytesWritten == 0) { "Stream doesn't start out empty!" }
 
-        // First pass: gather the data to be written
-
-        val visualScene = accessor.getActiveVisualScene()
-        visualScene.nodes.forEach { prepareNode(it) }
-
-        // No data should have been emitted yet
-
-        require(stream.bytesWritten == 0) { "bytesWritten != 0 after PREPARE" }
-
-        // Since we count most objects in the second pass, these counts must still be 0
-
-        require(stats.numNodes == 0) { "numNodes != 0 after PREPARE" }
-        require(stats.numPositions == 0) { "numPositions != 0 after PREPARE" }
-        require(stats.numNormals == 0) { "numNormals != 0 after PREPARE" }
-        require(stats.numTexCoords == 0) { "numTexCoords != 0 after PREPARE" }
-        require(stats.numMatrices == 0) { "numMatrices != 0 after PREPARE" }
-
-        // Second pass: Actually write the data
+        stats.clear()
+        vec3fSet.clear()
+        vec2fSet.clear()
+        nextId = 1
+        mapGeometryToId.clear()
+        mapSkeletonToId.clear()
+        geometryDataCollected.clear()
+        skeletonDataCollected.clear()
 
         stream.write(FileMarker.BEGIN_MESH_FILE)
 
-        stream.write(FileMarker.COLLECTED_POINT3F)
-        stream.write(pt3fSet.toFloatArray())
+        // Write the scene node hierarchy and collect geometries
 
-        stream.write(FileMarker.COLLECTED_POINT2F)
-        stream.write(pt2fSet.toFloatArray())
+        accessor.getActiveVisualScene().nodes.forEach {
+            writeNode(it, MeshMaterial.DEFAULT)
+        }
 
-        geometriesActuallyUsed.forEach { writeGeometry(it) }
+        // Collect vector data from all geometries and skeletons
 
-        MeshMaterial.entries.forEach { material ->
-            writeDivision(visualScene, material)
+        for ((geometry, _) in mapGeometryToId) {
+            collectVectorData(geometry)
+        }
+
+        for ((skeleton, _) in mapSkeletonToId) {
+            collectVectorData(skeleton)
+        }
+
+        writeCollectedVectorData()
+
+        // Write the geometries and skeletons using the indices from the collected vector data
+
+        for ((geometry, _) in mapGeometryToId) {
+            writeGeometry(geometry)
+        }
+
+        for ((skeleton, _) in mapSkeletonToId) {
+            writeSkeleton(skeleton)
         }
 
         stream.write(FileMarker.END_MESH_FILE)
     }
 
-    private fun prepareNode(node: VisualSceneNode) {
-        var geometryCount = 0
-
-        node.instanceGeometry
-            ?.let { accessor.getGeometry(it) }
-            ?.let { prepareGeometry(it) }
-            ?.also { geometryCount++ }
-
-        node.instanceController
-            ?.let { accessor.getSkelController(it) }
-            ?.let { accessor.getSkelGeometry(it) }
-            ?.let { prepareGeometry(it) }
-            ?.also { geometryCount++ }
-
-        require(geometryCount <= 1) { "Node using more than one geometry: ${node.id}" }
-
-        node.children.forEach { prepareNode(it) }
-    }
-
-    private fun writeDivision(visualScene: VisualScene, material: MeshMaterial) {
-        var didStartDivision = false
-
-        visualScene.nodes.forEach { node ->
-            if (hasAnyDataForMaterial(node, material, MeshMaterial.DEFAULT)) {
-                if (!didStartDivision) {
-                    stream.write(FileMarker.BEGIN_DIVISION)
-                    stream.writeUInt16(FileMarker.MATERIAL, material.value)
-                    stats.didUseMaterial(material)
-                    didStartDivision = true
-                }
-
-                writeNode(node, material, MeshMaterial.DEFAULT)
-            }
-        }
-
-        if (didStartDivision) {
-            stream.write(FileMarker.END_DIVISION)
-        }
-    }
-
-    private fun hasAnyDataForMaterial(
-        node: VisualSceneNode,
-        requiredMaterial: MeshMaterial,
-        materialOfParentNode: MeshMaterial,
-    ): Boolean {
+    private fun writeNode(node: VisualSceneNode, parentMaterial: MeshMaterial) {
         if (node.instanceCamera != null || node.instanceLight != null) {
-            return false
+            return
         }
-
-        val geometry = node.instanceGeometry?.let { accessor.getGeometry(it) }
-        val myMaterial: MeshMaterial
-
-        if (geometry != null) {
-            val gdata = accessor.getGeometryData(geometry)
-            myMaterial = gdata?.material ?: materialOfParentNode
-
-            if (myMaterial == requiredMaterial) {
-                return true
-            }
-        } else {
-            myMaterial = materialOfParentNode
-        }
-
-        // Even if this node's geometry is not meant for the material, one of its children may be.
-        return node.children.any { hasAnyDataForMaterial(it, requiredMaterial, myMaterial) }
-    }
-
-    private fun writeNode(
-        node: VisualSceneNode,
-        requiredMaterial: MeshMaterial,
-        materialOfParentNode: MeshMaterial,
-    ) {
-        // We assume hasAnyDataForMaterial is true for this node when this function was called.
-        // But this does not necessarily mean that our own geometry is meant for the material.
 
         stream.write(FileMarker.BEGIN_NODE, node.name)
         stats.numNodes++
 
-        val geometry = node.instanceGeometry?.let { accessor.getGeometry(it) }
-        val myMaterial: MeshMaterial
+        val skeleton = node.instanceController?.let { accessor.getNewSkelController(it) }
+        val skelGeometry = skeleton?.let { accessor.getSkelGeometry(it) }
+        val rigidGeometry = node.instanceGeometry?.let { accessor.getGeometry(it) }
+
+        if (skeleton != null && rigidGeometry != null) {
+            // This is unexpected, shouldn't ever happen.
+            throw Exception("Node $node has both a rigid geometry and a skeleton")
+        }
+
+        val geometry = skelGeometry ?: rigidGeometry // null if neither
+        var myMaterial = parentMaterial
 
         if (geometry != null) {
-            val gdata = accessor.getGeometryData(geometry)
-            myMaterial = gdata?.material ?: materialOfParentNode
+            var geomId = mapGeometryToId[geometry]
 
-            if (myMaterial == requiredMaterial) {
-                // This node has data for the required material.
-                writeGeometryRef(geometry)
-            }
-        } else {
-            myMaterial = materialOfParentNode
-        }
-
-        val skelCtrl = node.instanceController
-            ?.let { accessor.getSkelController(it) }
-
-        var matrix = node.matrix?.floatArray?.let { Matrix4f(it) } ?: Matrix4f.identity
-
-        if (skelCtrl != null) {
-            val skelGeometry = accessor.getSkelGeometry(skelCtrl)
-            writeGeometryRef(skelGeometry)
-
-            val skin = skelCtrl.controller.skin!!
-            val skelMatrix = skin.bindShapeMatrix?.floatArray?.let { Matrix4f(it) }
-
-            if (skelMatrix != null) {
-                matrix *= skelMatrix // is this correct? test object has identity in var matrix
+            if (geomId == null) {
+                geomId = nextId++
+                mapGeometryToId[geometry] = geomId
             }
 
-            val skelData = accessor.getSkelData(skin)
-            require(skelData.weightJointInput.semantic == "JOINT") // redundant check; to suppress unused local val
+            stream.writeUInt16(FileMarker.GEOMETRY_REF, geomId)
 
-            // TODO Actually export the vertex weights and counts.
+            // Propagate parent material down (will be needed later)
+            val gdata = accessor.getGeometryDataCached(geometry)
+            myMaterial = gdata?.material ?: parentMaterial
+            gdata?.material = myMaterial
         }
 
-        matrix.takeIf { !it.isIdentity() }
-            ?.let { writeMatrix(it) }
+        if (skeleton != null) {
+            var skelId = mapSkeletonToId[skeleton]
+
+            if (skelId == null) {
+                skelId = nextId++
+                mapSkeletonToId[skeleton] = skelId
+            }
+
+            stream.writeUInt16(FileMarker.SKELETON_REF, skelId)
+        }
+
+        val nodeTransform = node.matrix?.floatArray?.let { Matrix4f(it) }
+
+        if (nodeTransform != null && !nodeTransform.isIdentity()) {
+            writeMatrix(FileMarker.NODE_TRANSFORM, nodeTransform)
+        }
 
         node.children.forEach { child ->
-            if (hasAnyDataForMaterial(child, requiredMaterial, myMaterial)) {
-                writeNode(child, requiredMaterial, myMaterial)
-            }
+            writeNode(child, myMaterial)
         }
 
         stream.write(FileMarker.END_NODE)
     }
 
-    private fun prepareGeometry(geometry: Geometry) {
-        if (geometriesActuallyUsed.contains(geometry)) {
+    private fun collectVectorData(geometry: Geometry) {
+        if (geometryDataCollected.contains(geometry)) {
             stats.numGeometriesReused++
             return // this geometry's mesh is used more than once
         }
 
-        geometriesActuallyUsed.add(geometry)
-        val gdata = accessor.getGeometryData(geometry)
+        geometryDataCollected.add(geometry)
+        val gdata = accessor.getGeometryDataCached(geometry) ?: return
 
-        if (gdata != null) {
-            pt3fSet.addAll(gdata.positions)
-            pt3fSet.addAll(gdata.normals)
-            gdata.texCoords?.let { pt2fSet.addAll(it) }
-        }
+        vec3fSet.addAll(gdata.positions)
+        vec3fSet.addAll(gdata.normals)
+        gdata.texCoords?.let { vec2fSet.addAll(it) }
     }
 
-    private fun writeGeometryRef(geometry: Geometry) {
-        val idx = geometriesActuallyUsed.indexOf(geometry)
-        require(idx >= 0) { "Geometry wasn't added to list: ${geometry.id}" }
-        stream.writeUInt16(FileMarker.GEOMETRY_REF, idx)
+    private fun collectVectorData(skeleton: SkelController) {
+        if (skeletonDataCollected.contains(skeleton)) {
+            throw Exception("Skeleton unexpectedly used more than once")
+        }
+
+        skeletonDataCollected.add(skeleton)
+
+        // Currently no vector data; FIXME can this function be removed?
+        // val skin = skeleton.controller.skin!!
+        // val skelData = accessor.getSkelData(skin)
+    }
+
+    private fun writeCollectedVectorData() {
+        stream.write(FileMarker.COLLECTED_VEC3F)
+        stream.write(vec3fSet.toFloatArray())
+
+        stream.write(FileMarker.COLLECTED_VEC2F)
+        stream.write(vec2fSet.toFloatArray())
     }
 
     private fun writeGeometry(geometry: Geometry) {
-        stream.write(FileMarker.BEGIN_GEOMETRY)
+        val id = mapGeometryToId[geometry]
+        requireNotNull(id) { "Geometry wasn't assigned an id" }
 
-        val gdata = accessor.getGeometryData(geometry)
+        stream.writeUInt16(FileMarker.BEGIN_GEOMETRY, id)
 
-        if (gdata != null) {
-            val positionIndices = pt3fSet.findIndices(gdata.positions).toIntArray()
-            stream.writeIntArrayAsUInt16(FileMarker.POSITIONS, positionIndices)
-            stats.numPositions += gdata.positions.size
-
-            val normalIndices = pt3fSet.findIndices(gdata.normals).toIntArray()
-            stream.writeIntArrayAsInt32(FileMarker.NORMALS, normalIndices)
-            stats.numNormals += gdata.normals.size
-
-            gdata.texCoords?.let { texCoords ->
-                val texCoordsIndices = pt2fSet.findIndices(texCoords).toIntArray()
-                stream.writeIntArrayAsUInt16(FileMarker.TEXCOORDS, texCoordsIndices)
-                stats.numTexCoords += texCoords.size
-            }
+        accessor.getGeometryDataCached(geometry)?.let {
+            writeGeometryData(it)
         }
 
         stream.write(FileMarker.END_GEOMETRY)
     }
 
-    private fun writeMatrix(matrix: Matrix4f) {
-        stream.write(FileMarker.MATRIX)
-        stream.write(matrix.buffer)
+    private fun writeGeometryData(gdata: GeometryData) {
+        val material = gdata.material
+        requireNotNull(material) { "Parent material wasn't properly propagated to geometries" }
+        stats.didUseMaterial(material)
+
+        if (material != MeshMaterial.DEFAULT) {
+            stream.writeUInt16(FileMarker.MATERIAL, material.value)
+        }
+
+        vec3fSet.findIndices(gdata.positions) // throws if a position is not found
+            .toIntArray()
+            .let { stream.writeIntArrayAsUInt16(FileMarker.POSITIONS, it) }
+
+        vec3fSet.findIndices(gdata.normals)
+            .toIntArray()
+            .let { stream.writeIntArrayAsUInt16(FileMarker.NORMALS, it) }
+
+        stats.numPositions += gdata.positions.size
+        stats.numNormals += gdata.normals.size
+
+        gdata.texCoords?.let { texCoords ->
+            vec2fSet.findIndices(texCoords)
+                .toIntArray()
+                .let { stream.writeIntArrayAsUInt16(FileMarker.TEXCOORDS, it) }
+
+            stats.numTexCoords += texCoords.size
+        }
+    }
+
+    private fun writeSkeleton(skeleton: SkelController) {
+        val id = mapSkeletonToId[skeleton]
+        requireNotNull(id) { "Skeleton wasn't assigned an id" }
+
+        stream.writeUInt16(FileMarker.BEGIN_SKELETON, id)
+
+        val skin = skeleton.controller.skin!!
+        val bindShapeMatrix = skin.bindShapeMatrix?.floatArray?.let { Matrix4f(it) }
+
+        if (bindShapeMatrix != null && !bindShapeMatrix.isIdentity()) {
+            writeMatrix(FileMarker.BIND_SHAPE_MATRIX, bindShapeMatrix)
+        }
+
+        val skelData = accessor.getSkelDataCached(skeleton)
+
+        for (joint in skelData.joints) {
+            require(joint.name.isNotEmpty()) { "Joint name cannot be empty" }
+
+            val node = accessor.getNodeById(joint.name)
+            requireNotNull(node) { "Node of joint ${joint.name} not found" }
+
+            stream.write(FileMarker.BEGIN_JOINT, joint.name)
+
+            if (!joint.invBindMatrix.isIdentity()) {
+                writeMatrix(FileMarker.INV_BIND_MATRIX, joint.invBindMatrix)
+            }
+
+            stream.write(FileMarker.END_JOINT)
+        }
+
+        stream.write(FileMarker.END_SKELETON)
+    }
+
+    private fun writeMatrix(marker: FileMarker, mat: Matrix4f) {
+        stream.write(marker)
+        stream.write(mat.buffer)
         stats.numMatrices++
     }
 

@@ -36,6 +36,7 @@ interface Factory {
         antiAliasing: Boolean = false,
         cullFace: Boolean = true,
         depthTest: Boolean = true,
+        hasSkeleton: Boolean = false,
     ): ComplexMeshRenderer
 
     fun createPaperRenderer(

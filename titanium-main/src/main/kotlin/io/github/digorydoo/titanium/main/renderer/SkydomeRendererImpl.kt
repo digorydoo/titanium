@@ -1,11 +1,14 @@
-package io.github.digorydoo.titanium.main.shader
+package io.github.digorydoo.titanium.main.renderer
 
 import ch.digorydoo.kutils.logging.Log
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.shader.ShaderProgram.ProgramType
 import io.github.digorydoo.titanium.engine.sky.SkydomeRenderer
+import io.github.digorydoo.titanium.main.core.LeakDetector
 import io.github.digorydoo.titanium.main.opengl.checkGLError
+import io.github.digorydoo.titanium.main.shader.Shader
 import io.github.digorydoo.titanium.main.shader.ShaderAttributes.Attribute
+import io.github.digorydoo.titanium.main.shader.ShaderVBO
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER
 import org.lwjgl.opengl.GL15.glBindBuffer
@@ -24,26 +27,20 @@ class SkydomeRendererImpl(private val delegate: Delegate): SkydomeRenderer() {
         shader.connectToVBO(Attribute.ModelPos)
     }
 
-    private var valid = true
+    private val leakDetector = LeakDetector(TAG.name, initiallyValid = true)
 
     override fun free() {
-        if (valid) {
+        if (leakDetector.resourceValid) {
             shader.free()
             positionVBO.free()
-            valid = false
+            leakDetector.resourceValid = false
         }
-    }
-
-    @Suppress("removal")
-    protected fun finalize() {
-        // Check that free has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error(TAG, "still valid at finalize")
     }
 
     override fun renderShadows() {}
 
     override fun renderSolid() {
-        require(valid)
+        require(leakDetector.resourceValid)
 
         val numPositions = delegate.positions.limit() // limit <= capacity
 

@@ -3,7 +3,7 @@ package io.github.digorydoo.titanium.import_asset.collada.data
 import ch.digorydoo.kutils.string.indentLines
 
 class Skin {
-    var source = "" // #id of Mesh
+    var source = "" // #id of Geometry
     val sources = mutableListOf<SkinSource>()
     var bindShapeMatrix: Matrix? = null
     var joints: SkinJoints? = null

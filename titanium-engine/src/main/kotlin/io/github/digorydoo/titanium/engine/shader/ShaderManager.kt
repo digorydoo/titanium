@@ -23,17 +23,14 @@ abstract class ShaderManager {
         PSEUDO_ENV_MAP,
         SHADOWS,
         SHININESS,
+        SKELETON,
         SPECULAR_LIGHT,
         WINDOW_INTERIOR,
     }
 
     private val precompiler = ShaderPrecompiler()
 
-    // FIXME can I make all programs shared now that VBO and VAO are external????
-
-    abstract fun getSharedProgram(type: ProgramType, flags: Set<ShaderFlags>? = null): ShaderProgram
-    abstract fun getNewProgram(type: ProgramType, flags: Set<ShaderFlags>? = null): ShaderProgram
-    abstract fun unloadAllNonSharedPrograms()
+    abstract fun getProgram(type: ProgramType, flags: Set<ShaderFlags>? = null): ShaderProgram
 
     protected fun getPrecompiledShader(shaderFileName: String, flags: Set<ShaderFlags>?): String? {
         val path = App.assets.pathToShader(shaderFileName)

@@ -4,6 +4,7 @@ import ch.digorydoo.kutils.logging.Log
 import io.github.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags
 import io.github.digorydoo.titanium.engine.shader.ShaderProgram
 import io.github.digorydoo.titanium.engine.shader.ShaderProgram.ProgramType
+import io.github.digorydoo.titanium.main.core.LeakDetector
 import io.github.digorydoo.titanium.main.opengl.checkGLError
 import org.lwjgl.opengl.GL20.*
 
@@ -12,6 +13,7 @@ class ShaderProgramImpl(
     override val flags: Set<ShaderFlags>,
 ): ShaderProgram {
     private var id = -1
+    private val leakDetector = LeakDetector(TAG.name, initiallyValid = false)
 
     fun create(vertexShaderId: Int, fragmentShaderId: Int) {
         require(id < 0) { "Program $type already created" }
@@ -20,6 +22,7 @@ class ShaderProgramImpl(
         checkGLError()
 
         require(id >= 0) { "Failed to create id for program $type" }
+        leakDetector.resourceValid = true
 
         glAttachShader(id, vertexShaderId)
         checkGLError()
@@ -43,19 +46,16 @@ class ShaderProgramImpl(
         checkGLError()
     }
 
-    fun unload() {
-        Log.info(TAG, "Unloading program $type ($id)")
-        require(id >= 0) { "Program $type not loaded" }
-
-        glDeleteProgram(id)
-        id = -1
-        checkGLError()
-    }
-
-    protected fun finalize() {
-        // Check that unload has been called. We can't throw from finalize, so log only.
-        if (id >= 0) Log.error(TAG, "still valid at finalize")
-    }
+    // FIXME call this on shutdown from ShaderManager
+    // fun unload() {
+    //     Log.info(TAG, "Unloading program $type ($id)")
+    //     require(id >= 0) { "Program $type not loaded" }
+    //
+    //     glDeleteProgram(id)
+    //     id = -1
+    //     checkGLError()
+    //     leakDetector.resourceValid = false
+    // }
 
     fun use() {
         require(id >= 0) { "Program $type not loaded" }

@@ -4,35 +4,32 @@ import ch.digorydoo.kutils.logging.Log
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags
 import io.github.digorydoo.titanium.engine.shader.ShaderProgram.ProgramType
+import io.github.digorydoo.titanium.main.core.LeakDetector
 import io.github.digorydoo.titanium.main.shader.ShaderAttributes.Attribute
 
 class Shader(type: ProgramType, flags: Set<ShaderFlags>? = null) {
     val uniforms = ShaderUniforms()
     private val attributes = ShaderAttributes()
-    val program = App.shaders.getNewProgram(type, flags) as ShaderProgramImpl
+    val program = App.shaders.getProgram(type, flags) as ShaderProgramImpl
 
     // The ShaderVBO is not part of Shader, because sometimes we want the same model data to use with different shaders.
     // Is there a similar use case for the VAO? I think not, so I keep it here.
     private val vao = ShaderVAO()
-    private var valid = false
+
+    private val leakDetector = LeakDetector(TAG.name, initiallyValid = false)
 
     fun create() {
+        program.use()
         vao.create()
         program.findLocations(uniforms, attributes)
-        valid = true
+        leakDetector.resourceValid = true
     }
 
     fun free() {
-        if (valid) {
-            valid = false
+        if (leakDetector.resourceValid) {
             vao.free()
-            // program.free() -- doesn't exist, and program should be shared anyway FIXME use getSharedProgram
+            leakDetector.resourceValid = false
         }
-    }
-
-    protected fun finalize() {
-        // Check that unload has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error(TAG, "Wrapper of ${program.type} still valid at finalize")
     }
 
     fun bindVAO() {

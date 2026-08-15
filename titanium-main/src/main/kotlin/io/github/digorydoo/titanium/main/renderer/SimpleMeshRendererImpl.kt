@@ -1,16 +1,19 @@
-package io.github.digorydoo.titanium.main.mesh
+package io.github.digorydoo.titanium.main.renderer
 
 import ch.digorydoo.kutils.logging.Log
-import ch.digorydoo.kutils.matrix.MutableMatrix4f
+import ch.digorydoo.kutils.matrix.Matrix4f
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.mesh.SimpleMeshRenderer
-import io.github.digorydoo.titanium.engine.shader.ShaderProgram
+import io.github.digorydoo.titanium.engine.shader.ShaderProgram.ProgramType
+import io.github.digorydoo.titanium.main.core.LeakDetector
+import io.github.digorydoo.titanium.main.mesh.MaterialProps
 import io.github.digorydoo.titanium.main.opengl.checkGLError
 import io.github.digorydoo.titanium.main.shader.Shader
-import io.github.digorydoo.titanium.main.shader.ShaderAttributes
+import io.github.digorydoo.titanium.main.shader.ShaderAttributes.Attribute
 import io.github.digorydoo.titanium.main.shader.ShaderVBO
-import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL15
+import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER
+import org.lwjgl.opengl.GL15.glBindBuffer
 
 class SimpleMeshRendererImpl(
     private val delegate: Delegate,
@@ -18,7 +21,7 @@ class SimpleMeshRendererImpl(
     private val cullFace: Boolean,
     private val depthTest: Boolean,
 ): SimpleMeshRenderer() {
-    private val shader = Shader(ShaderProgram.ProgramType.MESH)
+    private val shader = Shader(ProgramType.MESH)
     private val positionVBO = ShaderVBO()
     private val normalVBO = ShaderVBO()
 
@@ -28,47 +31,39 @@ class SimpleMeshRendererImpl(
         normalVBO.create(ShaderVBO.Type.DYNAMIC_DRAW)
     }
 
-    private val rootTransform = MutableMatrix4f()
-    private val finalTransform = MutableMatrix4f()
-    private val rotationMatrix = MutableMatrix4f()
-    private var valid = true
+    private val leakDetector = LeakDetector(TAG.name, initiallyValid = true)
 
     override fun free() {
-        if (valid) {
+        if (leakDetector.resourceValid) {
             shader.free()
             positionVBO.free()
             normalVBO.free()
-            valid = false
+            leakDetector.resourceValid = false
         }
-    }
-
-    protected fun finalize() {
-        // Check that free has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error(TAG, "still valid at finalize")
     }
 
     override fun renderShadows() {}
 
     override fun renderSolid() {
-        require(valid)
+        require(leakDetector.resourceValid)
         val mesh = delegate.mesh ?: return
 
         checkGLError()
-        GL11.glDisable(GL11.GL_BLEND)
+        glDisable(GL_BLEND)
 
         if (depthTest) {
-            GL11.glEnable(GL11.GL_DEPTH_TEST)
-            GL11.glDepthFunc(GL11.GL_LESS)
+            glEnable(GL_DEPTH_TEST)
+            glDepthFunc(GL_LESS)
         } else {
-            GL11.glDisable(GL11.GL_DEPTH_TEST)
+            glDisable(GL_DEPTH_TEST)
         }
 
         if (cullFace) {
-            GL11.glEnable(GL11.GL_CULL_FACE)
-            GL11.glCullFace(GL11.GL_BACK) // culls the back face
-            GL11.glFrontFace(GL11.GL_CCW)
+            glEnable(GL_CULL_FACE)
+            glCullFace(GL_BACK) // culls the back face
+            glFrontFace(GL_CCW)
         } else {
-            GL11.glDisable(GL11.GL_CULL_FACE)
+            glDisable(GL_CULL_FACE)
         }
 
         shader.program.use()
@@ -85,7 +80,10 @@ class SimpleMeshRendererImpl(
             setHaziness(lgt.haziness)
             setBrightness(lgt.brightness)
             setContrast(lgt.contrast)
+
             setCameraSourcePos()
+            setProjection()
+            setScaleFactor(delegate.scaleFactor)
             setTranslation(delegate.renderPos)
         }
 
@@ -96,13 +94,6 @@ class SimpleMeshRendererImpl(
             return
         }
 
-        // FIXME should be done in shader
-        rootTransform.setScaleTranslation(delegate.scaleFactor, delegate.renderPos)
-        rotationMatrix.setRotationZ(delegate.rotationPhi, clear = false)
-        rootTransform.multiply(rotationMatrix)
-        finalTransform.set(App.camera.projMatrix)
-        finalTransform.multiply(rootTransform)
-
         // FIXME inefficient: we pass down the mesh every time even though it generally won't change
         // FIXME inefficient! Pass everything down once, then do the transformations in shader!
 
@@ -112,13 +103,13 @@ class SimpleMeshRendererImpl(
         shader.bindVAO()
         positionVBO.bind()
         positionVBO.setData(positions)
-        shader.connectToVBO(ShaderAttributes.Attribute.ModelPos)
+        shader.connectToVBO(Attribute.ModelPos)
 
         normalVBO.bind()
         normalVBO.setData(normals)
-        shader.connectToVBO(ShaderAttributes.Attribute.Normal)
+        shader.connectToVBO(Attribute.Normal)
 
-        val props = MaterialProps.fromMaterial(mat)
+        val props = MaterialProps.get(mat)
 
         shader.uniforms.apply {
             setAmbientLightAmount(props.ambientLightAmount)
@@ -131,42 +122,16 @@ class SimpleMeshRendererImpl(
             setEmittingLight(props.emittingLight.red, props.emittingLight.green, props.emittingLight.blue)
             setTintAmount(props.tintAmount)
             setTintColour(props.tintColour)
-            setProjection(finalTransform)
+            setTransform(Matrix4f.identity) // necessary, because we share the shader with ComplexMeshRendererImpl
             setRotationPhi(delegate.rotationPhi)
         }
 
-        val tex = mesh.tex
-        val texCoords = mesh.texCoords
-
-        if (tex == null || texCoords == null) {
-            // Shader does not currently implement texture mapping.
-            // program.setTexIntensity(0.0f)
-        } else {
-            // TODO throw Exception("Shader does not currently implement texture mapping")
-            // val lgt = App.scene.lighting
-            // program.setTexCoordData(texCoords)
-            // program.bindTexCoordData()
-            // program.setTextureSamplerUnit() // our tex goes into uniform Texture
-            //
-            // program.setTexIntensity(lgt.texIntensity * mat.texIntensity)
-            //
-            // tex.apply()
-            //
-            // val filter = if (antiAliasing) GL_LINEAR else GL_NEAREST
-            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter)
-            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter)
-            //
-            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
-            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
-            // checkGLError()
-        }
-
-        GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, numPositions / 3)
+        glDrawArrays(GL_TRIANGLES, 0, numPositions / 3)
         checkGLError()
 
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0) // unbind
-        GL11.glDisable(GL11.GL_CULL_FACE)
-        GL11.glDisable(GL11.GL_DEPTH_TEST)
+        glBindBuffer(GL_ARRAY_BUFFER, 0) // unbind
+        glDisable(GL_CULL_FACE)
+        glDisable(GL_DEPTH_TEST)
     }
 
     override fun renderTransparent() {}

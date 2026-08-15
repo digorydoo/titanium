@@ -1,14 +1,14 @@
 package io.github.digorydoo.titanium.import_asset.collada
 
+import io.github.digorydoo.kokuban.ShellCommandError
+import io.github.digorydoo.kokuban.ttyFaint
+import io.github.digorydoo.kokuban.ttyGreen
+import io.github.digorydoo.kokuban.ttyRed
 import io.github.digorydoo.titanium.import_asset.WriterStats
 import io.github.digorydoo.titanium.import_asset.collada.data.ColladaData
 import io.github.digorydoo.titanium.import_asset.collada.data.VisualSceneNode
 import io.github.digorydoo.titanium.import_asset.options.ImportColladaOptions
 import io.github.digorydoo.titanium.import_asset.options.Options.Verbosity
-import io.github.digorydoo.kokuban.ShellCommandError
-import io.github.digorydoo.kokuban.ttyFaint
-import io.github.digorydoo.kokuban.ttyGreen
-import io.github.digorydoo.kokuban.ttyRed
 import java.io.File
 
 class ColladaFileConverter(private val options: ImportColladaOptions) {
@@ -109,7 +109,7 @@ class ColladaFileConverter(private val options: ImportColladaOptions) {
                 printGeometryInfo(accessor)
             }
 
-            stats.let { printStats(it) }
+            printStats(stats)
         }
     }
 

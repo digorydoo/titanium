@@ -1,14 +1,17 @@
-package io.github.digorydoo.titanium.main.shader
+package io.github.digorydoo.titanium.main.renderer
 
 import ch.digorydoo.kutils.logging.Log
 import ch.digorydoo.kutils.utils.toFloatBuffer
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.shader.PaperRenderer
 import io.github.digorydoo.titanium.engine.shader.Renderer.BlendMode
-import io.github.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags.ALWAYS_FAR_Z
+import io.github.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags
 import io.github.digorydoo.titanium.engine.shader.ShaderProgram.ProgramType
+import io.github.digorydoo.titanium.main.core.LeakDetector
 import io.github.digorydoo.titanium.main.opengl.checkGLError
+import io.github.digorydoo.titanium.main.shader.Shader
 import io.github.digorydoo.titanium.main.shader.ShaderAttributes.Attribute
+import io.github.digorydoo.titanium.main.shader.ShaderVBO
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE
 import org.lwjgl.opengl.GL14.GL_FUNC_ADD
@@ -23,7 +26,7 @@ class PaperRendererImpl(
 ): PaperRenderer() {
     private val shader = Shader(
         ProgramType.PAPER,
-        if (stellarObject) setOf(ALWAYS_FAR_Z) else null
+        if (stellarObject) setOf(ShaderFlags.ALWAYS_FAR_Z) else null
     )
     private val positionVBO = ShaderVBO()
     private val texCoordVBO = ShaderVBO()
@@ -34,21 +37,15 @@ class PaperRendererImpl(
         texCoordVBO.create(ShaderVBO.Type.DYNAMIC_DRAW)
     }
 
-    private var valid = true
+    private val leakDetector = LeakDetector(TAG.name, initiallyValid = true)
 
     override fun free() {
-        if (valid) {
+        if (leakDetector.resourceValid) {
             shader.free()
             positionVBO.free()
             texCoordVBO.free()
-            valid = false
+            leakDetector.resourceValid = false
         }
-    }
-
-    @Suppress("removal")
-    protected fun finalize() {
-        // Check that free has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error(TAG, "still valid at finalize")
     }
 
     private val positions = floatArrayOf(
@@ -133,12 +130,12 @@ class PaperRendererImpl(
     override fun renderShadows() {}
 
     override fun renderSolid() {
-        require(valid)
+        require(leakDetector.resourceValid)
         if (blendMode != BlendMode.ADD) render()
     }
 
     override fun renderTransparent() {
-        require(valid)
+        require(leakDetector.resourceValid)
         if (blendMode == BlendMode.ADD && delegate.opacity > 0.0f) render()
     }
 

@@ -1,38 +1,40 @@
-package io.github.digorydoo.titanium.main.shader
+package io.github.digorydoo.titanium.main.renderer
 
 import ch.digorydoo.kutils.logging.Log
 import ch.digorydoo.kutils.utils.toFloatBuffer
 import io.github.digorydoo.titanium.engine.core.App
 import io.github.digorydoo.titanium.engine.shader.ShaderProgram.ProgramType
-import io.github.digorydoo.titanium.engine.sprite.UISolidRenderer
+import io.github.digorydoo.titanium.engine.sprite.UICircularProgressRenderer
+import io.github.digorydoo.titanium.main.core.LeakDetector
 import io.github.digorydoo.titanium.main.opengl.checkGLError
+import io.github.digorydoo.titanium.main.shader.Shader
 import io.github.digorydoo.titanium.main.shader.ShaderAttributes.Attribute
+import io.github.digorydoo.titanium.main.shader.ShaderVBO
 import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE
 import org.lwjgl.opengl.GL14.GL_FUNC_ADD
 import org.lwjgl.opengl.GL14.glBlendEquation
 
-class UISolidRendererImpl(private val delegate: Delegate): UISolidRenderer() {
-    private val shader = Shader(ProgramType.UI_SOLID)
+class UICircularProgressRendererImpl(private val delegate: Delegate): UICircularProgressRenderer() {
+    private val shader = Shader(ProgramType.UI_CIRCULAR_PROGRESS)
     private val positionVBO = ShaderVBO()
+    private val texCoordVBO = ShaderVBO()
 
     init {
         shader.create()
         positionVBO.create(ShaderVBO.Type.DYNAMIC_DRAW)
+        texCoordVBO.create(ShaderVBO.Type.DYNAMIC_DRAW)
     }
 
-    private var valid = true
+    private val leakDetector = LeakDetector(TAG.name, initiallyValid = true)
 
     override fun free() {
-        if (valid) {
+        if (leakDetector.resourceValid) {
             shader.free()
             positionVBO.free()
-            valid = false
+            texCoordVBO.free()
+            leakDetector.resourceValid = false
         }
-    }
-
-    protected fun finalize() {
-        // Check that free has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error(TAG, "still valid at finalize")
     }
 
     private val positions = floatArrayOf(
@@ -40,6 +42,13 @@ class UISolidRendererImpl(private val delegate: Delegate): UISolidRenderer() {
         0.0f, 0.0f, 0.0f,
         0.0f, 0.0f, 0.0f,
         0.0f, 0.0f, 0.0f,
+    ).toFloatBuffer()
+
+    private val texCoords = floatArrayOf(
+        0.0f, 1.0f,
+        0.0f, 0.0f,
+        1.0f, 1.0f,
+        1.0f, 0.0f
     ).toFloatBuffer()
 
     // FIXME inefficient, use uniforms
@@ -81,6 +90,13 @@ class UISolidRendererImpl(private val delegate: Delegate): UISolidRenderer() {
         }
     }
 
+    private fun updateTexCoords() {
+        texCoordVBO.bind()
+        texCoordVBO.setData(texCoords)
+        shader.bindVAO()
+        shader.connectToVBO(Attribute.TexCoord)
+    }
+
     override fun renderShadows() {}
     override fun renderSolid() {}
 
@@ -92,7 +108,20 @@ class UISolidRendererImpl(private val delegate: Delegate): UISolidRenderer() {
         updatePositions()
         checkGLError()
 
-        shader.uniforms.setColourWithAlpha(delegate.colour)
+        updateTexCoords()
+        checkGLError()
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR) // GL_LINEAR = anti-aliasing
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+
+        shader.uniforms.apply {
+            setTintColour(delegate.colour)
+            setProgress(delegate.progress)
+            setPenSize(delegate.penSize / delegate.frameSize.x)
+        }
 
         glDisable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
@@ -104,6 +133,6 @@ class UISolidRendererImpl(private val delegate: Delegate): UISolidRenderer() {
     }
 
     companion object {
-        private val TAG = Log.Tag("UISolidRendererImpl")
+        private val TAG = Log.Tag("UICircularProgressRendererImpl")
     }
 }

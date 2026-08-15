@@ -20,6 +20,7 @@ import io.github.digorydoo.titanium.engine.texture.TextureManager
 import io.github.digorydoo.titanium.engine.ui.dialogue.DlgManager
 import io.github.digorydoo.titanium.engine.ui.game_hud.GameHUD
 import io.github.digorydoo.titanium.engine.ui.game_menu.GameMenu
+import java.lang.ref.Cleaner
 
 const val FIXED_ASPECT_RATIO = 16.0f / 9.0f
 const val WORLD_TO_GL_FACTOR = 0.1125f // zoom factor for world coords; does not affect dialogues or menus
@@ -61,6 +62,8 @@ abstract class AbstrApp {
     abstract val state: StateManager
     abstract val textures: TextureManager
     abstract val time: GameTime
+
+    val cleaner = Cleaner.create()!!
 
     // Provide some getters for ease of access of some very common values
     val bricks get() = content.bricks ?: throw BricksNotLoadedException()

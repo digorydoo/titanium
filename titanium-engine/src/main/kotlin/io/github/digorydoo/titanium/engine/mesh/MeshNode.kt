@@ -4,17 +4,16 @@ import ch.digorydoo.kutils.logging.Log
 import ch.digorydoo.kutils.matrix.Matrix4f
 import ch.digorydoo.kutils.matrix.MutableMatrix4f
 import ch.digorydoo.kutils.string.indentLines
-import io.github.digorydoo.titanium.engine.texture.Texture
 
 class MeshNode(
     val id: String,
-    val tex: Texture?,
-    val transform: Matrix4f?, // transformation as loaded from mesh file
+    val localTransform: Matrix4f?,
     val geometry: MeshGeometry?, // multiple nodes may point to the same geometry
     val children: List<MeshNode>?,
+    val skeletonId: Int, // if > 0, this node is a joint of this skeleton
+    val jointIdx: Int, // if > 0, this is the index of the joint
 ) {
-    val combinedTransform = MutableMatrix4f() // written during rendering
-    val finalTransform = MutableMatrix4f() // dito
+    val worldTransform = MutableMatrix4f() // written during rendering
 
     fun find(childId: String): MeshNode? {
         if (childId.isEmpty()) return null
@@ -42,9 +41,10 @@ class MeshNode(
             arrayOf(
                 "MeshNode {",
                 "id = \"$id\"",
-                "tex = $tex",
-                "transform = \n${indentLines("$transform", 2, false)}",
+                "transform = \n${indentLines("$localTransform", 2, false)}",
                 "geometry = ${indentLines("$geometry")}",
+                "skeletonId=$skeletonId",
+                "jointIdx=$jointIdx",
                 "children = [${indentLines(children?.joinToString("\n") ?: "")}]",
                 "}",
             )

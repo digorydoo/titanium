@@ -8,8 +8,8 @@ import io.github.digorydoo.titanium.engine.shader.ShaderManager.ShaderFlags
 import io.github.digorydoo.titanium.engine.shader.ShaderProgram.ProgramType
 import io.github.digorydoo.titanium.engine.texture.Texture
 import io.github.digorydoo.titanium.main.brick.BrickShaderHoldersMap.ShaderHolder
-import io.github.digorydoo.titanium.main.brick.BrickVolumeRendererImpl.Companion.MAX_RENDER_DISTANCE
 import io.github.digorydoo.titanium.main.opengl.checkGLError
+import io.github.digorydoo.titanium.main.renderer.BrickVolumeRendererImpl.Companion.MAX_RENDER_DISTANCE
 import io.github.digorydoo.titanium.main.shader.Shader
 import io.github.digorydoo.titanium.main.shader.ShaderAttributes.Attribute
 import org.lwjgl.opengl.GL11.*

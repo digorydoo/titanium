@@ -1,7 +1,7 @@
 package io.github.digorydoo.titanium.import_asset.collada
 
+import ch.digorydoo.kutils.matrix.Matrix4f
 import ch.digorydoo.kutils.utils.requireExactlyOne
-import ch.digorydoo.kutils.utils.requireHash
 import ch.digorydoo.kutils.utils.requireNotNull
 import io.github.digorydoo.titanium.engine.mesh.MeshMaterial
 import io.github.digorydoo.titanium.import_asset.collada.data.*
@@ -11,23 +11,23 @@ class ColladaDataAccessor(private val data: ColladaData) {
         val positions: FloatArray,
         val normals: FloatArray,
         val texCoords: FloatArray?,
-        val material: MeshMaterial?,
+        var material: MeshMaterial?,
     )
 
     class SkelController(
-        @Suppress("unused") val skeleton: VisualSceneNode,
+        val skeleton: VisualSceneNode,
         val controller: Controller,
     )
 
-    class SkelData(
-        @Suppress("unused") val jointSource: SkinSource,
-        @Suppress("unused") val poseMatrixSource: SkinSource,
-        @Suppress("unused") val weightsSource: SkinSource,
-        @Suppress("unused") val jointAccessor: SkinTechCommonAccessor,
-        @Suppress("unused") val poseAccessor: SkinTechCommonAccessor,
-        val weightJointInput: MeshInput,
-        @Suppress("unused") val weightsAccessor: SkinTechCommonAccessor,
+    class SkelData(val joints: List<Joint>)
+
+    class Joint(
+        val name: String, // id of <node>
+        val invBindMatrix: Matrix4f,
     )
+
+    private val mapGeometryToData = mutableMapOf<Geometry, GeometryData>()
+    private val mapSkeletonToData = mutableMapOf<SkelController, SkelData>()
 
     fun getActiveVisualScene(): VisualScene {
         val scene = data.scene.requireNotNull("data.scene")
@@ -39,7 +39,8 @@ class ColladaDataAccessor(private val data: ColladaData) {
             .requireExactlyOne("visualScene with visualSceneId=$visualSceneId")
     }
 
-    fun getSkelController(instance: InstanceController): SkelController {
+    // TODO should we cache this?
+    fun getNewSkelController(instance: InstanceController): SkelController {
         val ctrl = getController(instance)
         val skelId = instance.skeleton!!.value.requireHash("skelId")
         val skel = getNodeById(skelId)
@@ -62,28 +63,41 @@ class ColladaDataAccessor(private val data: ColladaData) {
         return null
     }
 
-    private fun getNodeById(nodeId: String): VisualSceneNode? {
+    fun getNodeById(nodeId: String): VisualSceneNode? {
+        if (nodeId.isEmpty()) return null
+
+        var result: VisualSceneNode? = null
+
         data.visualScenes.forEach { visualScene ->
             visualScene.nodes.forEach { node ->
                 val found = getNodeById(nodeId, node)
-                if (found != null) return found
+
+                if (found != null) {
+                    require(result == null) { "More than one node found with id=$nodeId" }
+                    result = found
+                }
             }
         }
 
-        return null
+        return result
     }
 
     private fun getNodeById(nodeId: String, startWith: VisualSceneNode): VisualSceneNode? {
-        if (startWith.id == nodeId) {
-            return startWith
-        }
+        if (nodeId.isEmpty()) return null
+        if (startWith.id == nodeId) return startWith
+
+        var result: VisualSceneNode? = null
 
         startWith.children.forEach { child ->
             val found = getNodeById(nodeId, child)
-            if (found != null) return found
+
+            if (found != null) {
+                require(result == null) { "More than one node found with id=$nodeId" }
+                result = found
+            }
         }
 
-        return null
+        return result
     }
 
     private fun getController(instance: InstanceController): Controller {
@@ -102,84 +116,86 @@ class ColladaDataAccessor(private val data: ColladaData) {
             .requireExactlyOne("geometry with id=$geometryId")
     }
 
-    fun getGeometryData(geometry: Geometry): GeometryData? {
-        val ctx = "Geometry ${geometry.id}"
-        val mesh = geometry.mesh.requireNotNull("$ctx: mesh")
+    fun getGeometryDataCached(geometry: Geometry): GeometryData? {
+        return mapGeometryToData.getOrPut(geometry) {
+            val ctx = "Geometry ${geometry.id}"
+            val mesh = geometry.mesh.requireNotNull("$ctx: mesh")
 
-        // if triangles is null, it may be a parent with no mesh data of its own
-        val triangles = mesh.triangles ?: return null
+            // if triangles is null, it may be a parent with no mesh data of its own
+            val triangles = mesh.triangles ?: return null
 
-        val material = triangles.material
-            .takeIf { it.isNotEmpty() }
-            ?.let { parseMaterial(it) }
+            val material = triangles.material
+                .takeIf { it.isNotEmpty() }
+                ?.let { parseMaterial(it) }
 
-        val vertexSrc = getVertexSource(mesh, triangles, "$ctx: vertexSrc")
-        val normalSrc = getNormalSource(mesh, triangles, "$ctx: normalSrc")
-        val texCoordSrc = getTexCoordSource(mesh, triangles, "$ctx: texCoordSrc")
+            val vertexSrc = getVertexSource(mesh, triangles, "$ctx: vertexSrc")
+            val normalSrc = getNormalSource(mesh, triangles, "$ctx: normalSrc")
+            val texCoordSrc = getTexCoordSource(mesh, triangles, "$ctx: texCoordSrc")
 
-        val (vertexArr, vertexSrcAccessor) = getArrayAndAccessor(vertexSrc, "$ctx: vertexSrc")
-        val (normalArr, normalSrcAccessor) = getArrayAndAccessor(normalSrc, "$ctx: normalSrc")
+            val (vertexArr, vertexSrcAccessor) = getArrayAndAccessor(vertexSrc, "$ctx: vertexSrc")
+            val (normalArr, normalSrcAccessor) = getArrayAndAccessor(normalSrc, "$ctx: normalSrc")
 
-        val (texCoordArr, texCoordSrcAccessor) =
-            if (texCoordSrc == null) Pair(null, null)
-            else getArrayAndAccessor(texCoordSrc, "$ctx: texCoordSrc")
+            val (texCoordArr, texCoordSrcAccessor) =
+                if (texCoordSrc == null) Pair(null, null)
+                else getArrayAndAccessor(texCoordSrc, "$ctx: texCoordSrc")
 
-        requireParams(vertexSrcAccessor.params, arrayOf("X", "Y", "Z"), "$ctx: vertexSrcAccessor")
-        requireParams(normalSrcAccessor.params, arrayOf("X", "Y", "Z"), "$ctx: normalSrcAccessor")
+            requireParams(vertexSrcAccessor.params, arrayOf("X", "Y", "Z"), "$ctx: vertexSrcAccessor")
+            requireParams(normalSrcAccessor.params, arrayOf("X", "Y", "Z"), "$ctx: normalSrcAccessor")
 
-        if (texCoordSrcAccessor != null) {
-            requireParams(texCoordSrcAccessor.params, arrayOf("S", "T"), "$ctx: texCoordSrcAccessor")
-        }
+            if (texCoordSrcAccessor != null) {
+                requireParams(texCoordSrcAccessor.params, arrayOf("S", "T"), "$ctx: texCoordSrcAccessor")
+            }
 
-        val triangleMeshIntArray = triangles.p.requireNotNull("$ctx: triangleMeshIntArray")
-        val triangleArr = triangleMeshIntArray.intArray
+            val triangleMeshIntArray = triangles.p.requireNotNull("$ctx: triangleMeshIntArray")
+            val triangleArr = triangleMeshIntArray.intArray
 
-        val numCornersPerTriangle = 3
-        val expectedSize = triangles.count * numCornersPerTriangle * (2 + if (texCoordSrcAccessor == null) 0 else 1)
+            val numCornersPerTriangle = 3
+            val expectedSize = triangles.count * numCornersPerTriangle * (2 + if (texCoordSrcAccessor == null) 0 else 1)
 
-        require(triangleArr.size == expectedSize) {
-            "$ctx: triangleArr: Size is ${triangleArr.size}, expected was $expectedSize\n"
-        }
+            require(triangleArr.size == expectedSize) {
+                "$ctx: triangleArr: Size is ${triangleArr.size}, expected was $expectedSize\n"
+            }
 
-        val positions = FloatArray(triangles.count * numCornersPerTriangle * vertexSrcAccessor.stride) { 0.0f }
-        val normals = FloatArray(triangles.count * numCornersPerTriangle * normalSrcAccessor.stride) { 0.0f }
+            val positions = FloatArray(triangles.count * numCornersPerTriangle * vertexSrcAccessor.stride) { 0.0f }
+            val normals = FloatArray(triangles.count * numCornersPerTriangle * normalSrcAccessor.stride) { 0.0f }
 
-        // Due to a bug in linter, I can't join the following declaration with the if statement
-        var texCoords: FloatArray? = null
+            // Due to a bug in linter, I can't join the following declaration with the if statement
+            var texCoords: FloatArray? = null
 
-        if (texCoordSrcAccessor != null) {
-            texCoords = FloatArray(triangles.count * numCornersPerTriangle * texCoordSrcAccessor.stride) { 0.0f }
-        }
+            if (texCoordSrcAccessor != null) {
+                texCoords = FloatArray(triangles.count * numCornersPerTriangle * texCoordSrcAccessor.stride) { 0.0f }
+            }
 
-        var meshIdx = 0
-        var positionIdx = 0
-        var normalIdx = 0
-        var texCoordIdx = 0
+            var meshIdx = 0
+            var positionIdx = 0
+            var normalIdx = 0
+            var texCoordIdx = 0
 
-        for (triangleIdx in 0 ..< triangles.count) {
-            for (corner in 0 ..< numCornersPerTriangle) {
-                // Vertex
-                val avi = triangleArr[meshIdx++]
-                positions[positionIdx++] = vertexArr[avi * 3] // x
-                positions[positionIdx++] = vertexArr[avi * 3 + 1] // y
-                positions[positionIdx++] = vertexArr[avi * 3 + 2] // z
+            for (triangleIdx in 0 ..< triangles.count) {
+                for (corner in 0 ..< numCornersPerTriangle) {
+                    // Vertex
+                    val avi = triangleArr[meshIdx++]
+                    positions[positionIdx++] = vertexArr[avi * 3] // x
+                    positions[positionIdx++] = vertexArr[avi * 3 + 1] // y
+                    positions[positionIdx++] = vertexArr[avi * 3 + 2] // z
 
-                // Normal
-                val ani = triangleArr[meshIdx++]
-                normals[normalIdx++] = normalArr[ani * 3] // x
-                normals[normalIdx++] = normalArr[ani * 3 + 1] // y
-                normals[normalIdx++] = normalArr[ani * 3 + 2] // z
+                    // Normal
+                    val ani = triangleArr[meshIdx++]
+                    normals[normalIdx++] = normalArr[ani * 3] // x
+                    normals[normalIdx++] = normalArr[ani * 3 + 1] // y
+                    normals[normalIdx++] = normalArr[ani * 3 + 2] // z
 
-                // TexCoord
-                if (texCoords != null) {
-                    val ati = triangleArr[meshIdx++]
-                    texCoords[texCoordIdx++] = texCoordArr!![ati * 2] // s
-                    texCoords[texCoordIdx++] = texCoordArr[ati * 2 + 1] // t
+                    // TexCoord
+                    if (texCoords != null) {
+                        val ati = triangleArr[meshIdx++]
+                        texCoords[texCoordIdx++] = texCoordArr!![ati * 2] // s
+                        texCoords[texCoordIdx++] = texCoordArr[ati * 2 + 1] // t
+                    }
                 }
             }
-        }
 
-        return GeometryData(positions, normals, texCoords, material)
+            GeometryData(positions, normals, texCoords, material)
+        }
     }
 
     private fun parseMaterial(name: String): MeshMaterial {
@@ -245,31 +261,14 @@ class ColladaDataAccessor(private val data: ColladaData) {
             .requireExactlyOne("$ctx: Source for texCoordSrcId=$texCoordSrcId")
     }
 
-    private fun getArrayAndAccessor(source: MeshSource, ctx: String): Pair<FloatArray, MeshTechCommonAccessor> {
-        val techCommon = source.techCommon.requireNotNull("$ctx: techCommon")
-        val accessor = techCommon.accessor.requireNotNull("$ctx: accessor")
-        val params = accessor.params
-        val meshFloatArray = source.meshFloatArray.requireNotNull("$ctx: meshFloatArray")
-        val arr = meshFloatArray.floatArray
-
-        require(arr.size == accessor.count * accessor.stride) { "$ctx: arr: size doesn't match count * stride" }
-        require(params.size == accessor.stride) { "$ctx: accessor param count must equal stride" }
-
-        return Pair(arr, accessor)
-    }
-
-    private fun requireParams(params: List<MeshAccessorParam>, expected: Array<String>, ctx: String) {
-        require(params.size == expected.size) { "$ctx: params.size is ${params.size}, expected was ${expected.size}" }
-
-        params.forEachIndexed { i, param ->
-            require(param.name == expected[i]) { "$ctx: param[$i] is \"${param.name}\", expected was ${expected[i]}" }
-        }
-    }
-
     private fun getJointSource(skin: Skin): SkinSource? {
-        val jointSrcId = skin.joints?.jointInput?.source?.requireHash("jointSourceId")
-        return skin.sources.find { it.id == jointSrcId }
-            ?.also { require(it.floatArray == null) }
+        val srcId = skin.joints?.jointInput?.source?.requireHash("jointSourceId")
+        return skin.sources.find { it.id == srcId }
+    }
+
+    private fun getInvBindMatricesSource(skin: Skin): SkinSource? {
+        val srcId = skin.joints?.invBindMatrixInput?.source?.requireHash("bindPoses")
+        return skin.sources.find { it.id == srcId }
     }
 
     private fun getJointAccessor(jointSrc: SkinSource): SkinTechCommonAccessor {
@@ -340,19 +339,95 @@ class ColladaDataAccessor(private val data: ColladaData) {
         return acc
     }
 
-    fun getSkelData(skin: Skin): SkelData {
-        val jointSource = getJointSource(skin)!!
-        val poseMatrixSource = getPoseMatrixSource(skin)!!
-        val weightsSource = getWeightsSource(skin)!!
+    private fun getArrayAndAccessor(source: MeshSource, ctx: String): Pair<FloatArray, MeshTechCommonAccessor> {
+        val techCommon = source.techCommon.requireNotNull("$ctx: techCommon")
+        val accessor = techCommon.accessor.requireNotNull("$ctx: accessor")
+        val params = accessor.params
+        val meshFloatArray = source.meshFloatArray.requireNotNull("$ctx: meshFloatArray")
+        val arr = meshFloatArray.floatArray
 
-        return SkelData(
-            jointSource,
-            poseMatrixSource,
-            weightsSource,
-            jointAccessor = getJointAccessor(jointSource),
-            poseAccessor = getPoseAccessor(poseMatrixSource, jointSource.nameArray!!),
-            weightJointInput = getWeightJointInput(skin, jointSource.id),
-            weightsAccessor = getWeightsAccessor(skin, weightsSource),
-        )
+        require(arr.size == accessor.count * accessor.stride) { "$ctx: arr: size doesn't match count * stride" }
+        require(params.size == accessor.stride) { "$ctx: accessor param count must equal stride" }
+
+        return Pair(arr, accessor)
+    }
+
+    fun getSkelDataCached(skeleton: SkelController): SkelData {
+        return mapSkeletonToData.getOrPut(skeleton) {
+            // val poseMatrixSource = getPoseMatrixSource(skin)!!
+            // val weightsSource = getWeightsSource(skin)!!
+            // val jointAccessor = getJointAccessor(jointSource)
+            // val poseAccessor = getPoseAccessor(poseMatrixSource, jointSource.nameArray!!)
+            // val weightJointInput = getWeightJointInput(skin, jointSource.id)
+            // val weightsAccessor = getWeightsAccessor(skin, weightsSource)
+
+            val skin = skeleton.controller.skin!!
+
+            val bindPosesInput = skin.joints?.invBindMatrixInput
+            requireNotNull(bindPosesInput) { "Skeleton with no invBindMatrixInput" }
+            require(bindPosesInput.semantic == "INV_BIND_MATRIX") // if this fails, XML parser picked wrong input
+
+            val bindPosesSrcId = bindPosesInput.source
+            require(bindPosesSrcId == "#bindPoses")
+
+            val bindPosesSrc = skin.sources.find { it.id == bindPosesSrcId }
+            requireNotNull(bindPosesSrc) { "Skeleton bindPoses not found" }
+
+            val allInvBindMatrices = bindPosesSrc.floatArray?.floatArray
+            requireNotNull(allInvBindMatrices) { "Skeleton bindPoses doesn't have a floatArray" }
+
+            val posesTechAccessor = bindPosesSrc.techCommon?.accessor
+            requireNotNull(posesTechAccessor) { "Skeleton posesTechAccessor not found" }
+
+            val invBindMatrixStride = posesTechAccessor.stride
+            require(invBindMatrixStride > 0) { "Invalid invBindMatrixStride" }
+            require(invBindMatrixStride == 16) { "invBindMatrix is not a mat4" }
+
+            val invBindMatrixCount = posesTechAccessor.count
+            require(invBindMatrixCount > 0) { "Invalid invBindMatrixCount" }
+
+            val jointInput = skin.joints?.jointInput
+            requireNotNull(jointInput) { "Skeleton with no jointInput" }
+            require(jointInput.semantic == "JOINT") // if this fails, XML parser picked wrong input
+
+            val jointNamesSrcId = jointInput.source
+            require(jointNamesSrcId == "#jointNames")
+
+            val jointNamesSrc = skin.sources.find { it.id == jointNamesSrcId }
+            requireNotNull(jointNamesSrc) { "Source of jointNames not found" }
+
+            val jointNames = jointNamesSrc.nameArray
+            requireNotNull(jointNames) { "Source of jointNames does not have a nameArray" }
+            require(jointNames.count == jointNames.names.size) { "Skeleton has inconsistent joint count" }
+            require(jointNames.count == invBindMatrixCount) { "Skeleton has inconsistent invBindMatrixCount" }
+            require(jointNames.count > 0) { "Skeleton with no joints" }
+
+            val joints = jointNames.names.mapIndexed { idx, name ->
+                val startIdx = idx * invBindMatrixStride
+                val invBindMatrix = Matrix4f(allInvBindMatrices.sliceArray(startIdx ..< startIdx + 16))
+                Joint(name, invBindMatrix)
+            }
+
+            return SkelData(joints)
+        }
+    }
+
+    companion object {
+        private fun String.requireHash(ctx: String): String {
+            require(this.startsWith("#")) { "$ctx: Expected # prefix, but got: $this" }
+            return this.substring(1)
+        }
+
+        private fun requireParams(params: List<MeshAccessorParam>, expected: Array<String>, ctx: String) {
+            require(params.size == expected.size) {
+                "$ctx: params.size is ${params.size}, expected was ${expected.size}"
+            }
+
+            params.forEachIndexed { i, param ->
+                require(param.name == expected[i]) {
+                    "$ctx: param[$i] is \"${param.name}\", expected was ${expected[i]}"
+                }
+            }
+        }
     }
 }

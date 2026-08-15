@@ -15,7 +15,7 @@ if [[ ! -d "$BASEDIR" ]]; then
    exit 1
 fi
 
-JAR="$BASEDIR/import_asset/build/libs/import_asset.jar"
+JAR="$BASEDIR/tool-import-asset/build/libs/tool-import-asset.jar"
 
 if [[ "$OS_TYPE" == "Cygwin" ]]; then
    JAR="$(cygpath -w "$JAR")"

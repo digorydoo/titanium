@@ -3,6 +3,7 @@ package io.github.digorydoo.titanium.main.texture
 import ch.digorydoo.kutils.logging.Log
 import io.github.digorydoo.titanium.engine.texture.ImageData
 import io.github.digorydoo.titanium.engine.texture.Texture
+import io.github.digorydoo.titanium.main.core.LeakDetector
 import io.github.digorydoo.titanium.main.opengl.checkGLError
 import io.github.digorydoo.titanium.main.texture.TextureManagerImpl.SamplerUnit
 import org.lwjgl.opengl.GL11.*
@@ -25,33 +26,27 @@ class TextureImpl(
     override val height get() = imgData.height
 
     private var pushNeeded = true
-    private var valid = true
+    private val leakDetector = LeakDetector(TAG.name, initiallyValid = true)
 
     override fun freeRequireUnshared() {
         require(!shared) { "Cannot free shared texture: $this" }
-        if (valid) freeNow()
+        if (leakDetector.resourceValid) freeNow()
     }
 
     override fun dangerouslyFree() {
-        if (valid) freeNow()
+        if (leakDetector.resourceValid) freeNow()
     }
 
     private fun freeNow() {
-        require(valid)
-        valid = false
+        require(leakDetector.resourceValid)
         // Log.info(TAG, "Freeing $this")
         glDeleteTextures(texId)
         checkGLError()
-    }
-
-    @Suppress("removal")
-    protected fun finalize() {
-        // Check that free has been called. We can't throw from finalize, so log only.
-        if (valid) Log.error(TAG, "still valid at finalize: $this")
+        leakDetector.resourceValid = false
     }
 
     override fun apply() {
-        require(valid)
+        require(leakDetector.resourceValid)
 
         if (pushNeeded) {
             pushData()
@@ -65,7 +60,7 @@ class TextureImpl(
     }
 
     private fun pushData() {
-        require(valid)
+        require(leakDetector.resourceValid)
 
         pushNeeded = false
 
@@ -90,7 +85,7 @@ class TextureImpl(
     }
 
     override fun drawInto(lambda: ImageData.() -> Unit) {
-        require(valid)
+        require(leakDetector.resourceValid)
         imgData.lambda()
         pushNeeded = true
     }
